@@ -10,7 +10,7 @@ title: "Format Spec: TGIFILE.ART"
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample file:** `scooby\TGIFILE.ART` on the Showdown disc  
 **File size:** 144,592,896 bytes (≈ 144 MB)  
-**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 primary risk area; see "Engine Lineage" section for generation classification.
+**Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 primary risk area; see "Engine Lineage" section for generation classification.
 
 This file is the primary technical risk for the engine. The two-level index
 structure is now understood (see Findings). The remaining unknown is the
@@ -19,7 +19,7 @@ a recognizable image, Phase 2 should not start.
 
 **Generation scope:** this format spec covers **Gen 1** titles only.
 Jinx (Gen 2) and Case File #1 (Gen 3) use the `MMFW` wrapper container
-format — see [`mmfw-container.md`](mmfw-container) for that spec. The
+format — see [`mmfw-container.md`](mmfw-container.md) for that spec. The
 two formats are not interchangeable; the ScummVM engine will need both
 parsers selected by the detection-time generation flag.
 
@@ -93,8 +93,8 @@ Observations:
 
 - **Showdown (Gen 1):** documented above. `TGIFILE.ART` present at disc root.
 - **Phantom:** disc inspection pending; toolchain (Rich Header) matches Showdown identically — Phantom is classified Gen 1 and is *predicted* to use `TGIFILE.ART`, but the archive header hasn't been hex-checked yet. Lock in next time the disc is mounted with `Format-Hex E:\scooby\TGIFILE.ART -Count 8` and compare against `45 00 00 00`.
-- **Jinx (Gen 2):** uses `MMFW`-wrapped archives (`Mummy.MMF`, `HD.MMA`, `HD.MMP`) — confirmed not `TGIFILE.ART`. See [`mmfw-container.md`](mmfw-container).
-- **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container).
+- **Jinx (Gen 2):** uses `MMFW`-wrapped archives (`Mummy.MMF`, `HD.MMA`, `HD.MMP`) — confirmed not `TGIFILE.ART`. See [`mmfw-container.md`](mmfw-container.md).
+- **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container.md).
 
 The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation does not generalize to Gen 2/3 via this spec — those need the separate MMFW parser.
 
@@ -116,7 +116,7 @@ The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation do
 2. Try viewing raw payload as 640×480×1 (8-bit palette) — if a valid image
    appears, skip compression analysis.
 3. Load `Scooby.exe` in Ghidra and find the `TGIFILE.ART` open/read call
-   to trace the decode path (see [scooby-exe](scooby-exe)).
+   to trace the decode path (see [scooby-exe](scooby-exe.md)).
 4. Once one entry decodes cleanly, cross-check against *Phantom of the
    Knight* `TGIFILE.ART` to confirm the format generalizes.
 
@@ -129,5 +129,5 @@ engine, visually matching in-game output.
 
 ## References
 
-- Vision doc: [Project Vision](../01-VISION) — Phase 1, primary risk area
-- Companion specs: [audio-archives](audio-archives), [scooby-exe](scooby-exe)
+- Vision doc: [Project Vision](../01-VISION.md) — Phase 1, primary risk area
+- Companion specs: [audio-archives](audio-archives.md), [scooby-exe](scooby-exe.md)

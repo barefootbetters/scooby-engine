@@ -15,7 +15,7 @@ title: "Format Spec: MMFW Container"
 - `F:\Scripts and Resources\MuseumCD.MMP` (92 MB) — Case File #1, content type: "Pictures"
 - `F:\Scripts and Resources\MuseumCD.MMA` (25 MB) — Case File #1, audio
 
-**Vision doc reference:** [Project Vision](../01-VISION) — Engine Lineage section
+**Vision doc reference:** [Project Vision](../01-VISION.md) — Engine Lineage section
 
 This is the archive container that **replaced** Gen 1's `TGIFILE.ART`
 format starting with Jinx at the Sphinx (Oct 2001). It carries a typed
@@ -93,7 +93,7 @@ Other tags expected but not yet observed (predict from filename patterns): `MMFW
 
 | Gen | Title | Archive files | Format spec |
 |---|---|---|---|
-| 1 | Showdown | `TGIFILE.ART`, `Music.dat`, `Sfx.dat`, `Voice.dat` | [`tgifile-art.md`](tgifile-art) (+ [`audio-archives.md`](audio-archives) for Gen 1 audio) |
+| 1 | Showdown | `TGIFILE.ART`, `Music.dat`, `Sfx.dat`, `Voice.dat` | [`tgifile-art.md`](tgifile-art.md) (+ [`audio-archives.md`](audio-archives.md) for Gen 1 audio) |
 | 1 | Phantom | unverified, predicted same as Showdown | same as Showdown |
 | 2 | Jinx | `Mummy*.MMF`, `HD.MMA`, `HD.MMP`, `Mummy_HD.MMF`, `Mummy.mms` | this doc |
 | 3 | Case File #1 | `MuseumCD.MMP`, `MuseumCD.MMA` | this doc |
@@ -103,5 +103,5 @@ Other tags expected but not yet observed (predict from filename patterns): `MMFW
 
 ## References
 
-- Vision doc: [Project Vision](../01-VISION) — Engine Lineage section
-- Companion specs: [`tgifile-art.md`](tgifile-art) (Gen 1 archive format), [`audio-archives.md`](audio-archives), [`scooby-exe.md`](scooby-exe)
+- Vision doc: [Project Vision](../01-VISION.md) — Engine Lineage section
+- Companion specs: [`tgifile-art.md`](tgifile-art.md) (Gen 1 archive format), [`audio-archives.md`](audio-archives.md), [`scooby-exe.md`](scooby-exe.md)

@@ -5,7 +5,7 @@ title: "EC-002: probe_art.py Harness"
 
 # EC-002: `probe_art.py` decode-strategy harness
 
-**Paired WP:** [WP-002](../work-packets/WP-002-tgifile-art-decoder)
+**Paired WP:** [WP-002](../work-packets/WP-002-tgifile-art-decoder.md)
 **Purpose:** Ordered enumeration of decode strategies to try against `TGIFILE.ART` entry 0, with stop conditions so the WP doesn't sink into infinite codec-guessing.
 
 This checklist applies whether or not WP-001's Ghidra trace succeeded. If it did, run only the strategies the trace points at. If it didn't, work the list top-to-bottom; each strategy has a time-box.
@@ -14,10 +14,10 @@ This checklist applies whether or not WP-001's Ghidra trace succeeded. If it did
 
 ## Pre-flight
 
-- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight.md) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Python 3.x with `Pillow` installed
 - [ ] WP-003 ran first if possible — palette extraction from the pre-payload region dramatically simplifies the "what pixel format?" question
-- [ ] Reference screenshot from a Scooby Showdown YouTube longplay saved at `docs/assets/screenshots/showdown-screens/` — used for visual comparison (see [WP-009](../work-packets/WP-009-reference-screenshots))
+- [ ] Reference screenshot from a Scooby Showdown YouTube longplay saved at `docs/assets/screenshots/showdown-screens/` — used for visual comparison (see [WP-009](../work-packets/WP-009-reference-screenshots.md))
 - [ ] `tools/probe_art.py` skeleton exists with: (a) entry extractor that reads the header and dumps entry N to a raw `.bin` file, (b) a registry of decode strategies to try
 
 ## Phase A — Extract first (no decoding yet, time-box: 30 min)
@@ -94,7 +94,7 @@ If B1–B5 all fail:
 - [ ] `tools/probe_art.py` cleaned up — keep only the successful decode path, comment-out the failures, leave a one-line note explaining what was tried
 - [ ] `tgifile-art.md` Findings → "Per-entry payload" populated with: algorithm name, pixel format, palette source, decode pseudocode or working Python excerpt
 - [ ] WP-002 exit criteria #1–#4 verified
-- [ ] WP-002 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX)
+- [ ] WP-002 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX.md)
 
 ## Phase D — Cross-title spot check (stretch, time-box: 30 min)
 

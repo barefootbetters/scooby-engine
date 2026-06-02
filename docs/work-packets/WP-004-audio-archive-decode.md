@@ -19,7 +19,7 @@ Locate the index table inside `Music.dat`, `Sfx.dat`, and `Voice.dat`; identify 
 
 ## Background
 
-Shared 12-byte header structure is understood (version=1, entry_count, data_size — see [`docs/formats/audio-archives.md`](../formats/audio-archives)). Bytes `0x0C`–`0x4F` are zero in all three files. The actual index table has not been located.
+Shared 12-byte header structure is understood (version=1, entry_count, data_size — see [`docs/formats/audio-archives.md`](../formats/audio-archives.md)). Bytes `0x0C`–`0x4F` are zero in all three files. The actual index table has not been located.
 
 Open questions about the third header field:
 
@@ -63,7 +63,7 @@ Out of scope:
 
 - [`tools/probe_audio.py`](../../tools/probe_audio.py) — extraction + scanning harness
 - At least one extracted clip at `tools/samples/audio-clip-0.<ext>` (extension reflecting identified codec)
-- Updated [`docs/formats/audio-archives.md`](../formats/audio-archives) — Findings
+- Updated [`docs/formats/audio-archives.md`](../formats/audio-archives.md) — Findings
 
 ## Notes
 

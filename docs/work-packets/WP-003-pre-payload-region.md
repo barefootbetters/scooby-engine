@@ -19,7 +19,7 @@ Identify the contents of the 1,045,046-byte region between the end of the `TGIFI
 
 ## Background
 
-The asset entry table ends at offset `0x0F48` (3,912 bytes after the start). The first asset payload starts at offset `0x10017E` (1,048,958 bytes). That leaves ~1 MB of unaccounted bytes currently labeled "packed/padded region" in [`docs/formats/tgifile-art.md`](../formats/tgifile-art).
+The asset entry table ends at offset `0x0F48` (3,912 bytes after the start). The first asset payload starts at offset `0x10017E` (1,048,958 bytes). That leaves ~1 MB of unaccounted bytes currently labeled "packed/padded region" in [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md).
 
 One megabyte is a lot of padding. The strong working hypothesis is that this region contains the palette table — and if true, WP-002 gets much easier because palette-indexed decode becomes the obvious first thing to try.
 
@@ -53,7 +53,7 @@ Out of scope:
 
 ## Deliverables
 
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — Findings section with characterized region
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Findings section with characterized region
 - If a palette is extracted: `tools/samples/tgifile-art-palette-0.bin`
 
 ## Notes

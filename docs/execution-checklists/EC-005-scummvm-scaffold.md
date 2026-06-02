@@ -5,7 +5,7 @@ title: "EC-005: ScummVM Scaffold Checklist"
 
 # EC-005: ScummVM fork + `engines/scooby/` scaffold checklist
 
-**Paired WP:** [WP-010](../work-packets/WP-010-scummvm-scaffold)
+**Paired WP:** [WP-010](../work-packets/WP-010-scummvm-scaffold.md)
 **Purpose:** Step-by-step checklist for forking ScummVM, creating a
 compilable empty engine skeleton, and pinning the baseline commit hash.
 
@@ -19,7 +19,7 @@ each failure as early as possible.
 
 ## Pre-flight
 
-- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight.md) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Windows build toolchain installed — record which one: __________
   - mingw-w64 (most common contributor path): `gcc --version`
   - or MSVC: `cl /?`
@@ -80,7 +80,7 @@ git checkout -b scooby-engine
 Create the directory and all required files. Copy patterns from an existing
 simple engine (e.g. `engines/access/` or `engines/agi/`) for reference on
 `module.mk` and `configure.engine` syntax. See
-[`docs/02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION) §10 for the
+[`docs/02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION.md) §10 for the
 exact patterns required.
 
 - [ ] `engines/scooby/` directory created
@@ -172,7 +172,7 @@ git push -u origin scooby-engine
 
 - [ ] `docs/02-SCUMMVM-INTEGRATION.md` "ScummVM version pin" field confirmed populated (done in Step 3)
 - [ ] `docs/02-SCUMMVM-INTEGRATION.md` §9 debug channel table verified against actual channel names in `scooby.cpp` — they must match exactly
-- [ ] WP-010 status updated to ✅ Done in [`WORK_INDEX`](../work-packets/WORK_INDEX)
+- [ ] WP-010 status updated to ✅ Done in [`WORK_INDEX`](../work-packets/WORK_INDEX.md)
 
 ---
 

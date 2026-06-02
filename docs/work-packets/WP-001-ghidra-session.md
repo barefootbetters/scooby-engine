@@ -8,7 +8,7 @@ title: "WP-001: Ghidra Session"
 **Status:** 📝 Drafted
 **Phase:** 1 — Format Research
 **Depends on:** WP-003 (palette hunt — run first; may eliminate palette-hunt scope from this session), WP-007 (strings dump — recommended; primes Steps 3–4)
-**Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session)
+**Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session.md)
 **Estimated effort:** 1 day (Ghidra auto-analysis included)
 
 ---
@@ -56,8 +56,8 @@ Out of scope:
 
 ## Deliverables
 
-- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe) — Findings sections.
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — decode algorithm sub-section.
+- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) — Findings sections.
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — decode algorithm sub-section.
 - Ghidra project file at `C:\www\scooby\ghidra\scooby.gpr`.
 
 ## Notes

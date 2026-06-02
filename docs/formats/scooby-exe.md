@@ -8,7 +8,7 @@ title: "Format Spec: Scooby.exe"
 **Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending  
 **Source discs:** five candidate titles (see Cross-title comparison below)  
 **Per-title binary names:** `Scooby.exe` (Showdown/Phantom/Jinx), `Case File #1.exe` (Case File #1)  
-**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 work item; Engine Lineage section for generation classification.
+**Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 work item; Engine Lineage section for generation classification.
 
 This is not a file-format spec in the traditional sense — `Scooby.exe` is a
 Windows PE32 binary. This document tracks what we learn from disassembling
@@ -196,6 +196,6 @@ Phantom disc settles it.
 
 ## References
 
-- Vision doc: [Project Vision](../01-VISION)
-- Companion specs: [tgifile-art](tgifile-art), [audio-archives](audio-archives)
+- Vision doc: [Project Vision](../01-VISION.md)
+- Companion specs: [tgifile-art](tgifile-art.md), [audio-archives](audio-archives.md)
 - Ghidra project: `C:\www\scooby\ghidra\scooby.gpr` (to be created)

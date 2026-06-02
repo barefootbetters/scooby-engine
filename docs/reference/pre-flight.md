@@ -8,9 +8,9 @@ title: "Pre-Flight Gate — Scooby Engine WP"
 > **REFERENCE — Reusable readiness gate. Not an execution prompt.**
 >
 > **Subordination (descending authority):**
-> 1. [docs/01-VISION](../01-VISION) — vision, goals, scope, decisions log
-> 2. [docs/02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION) — upstream integration contract
-> 3. [docs/work-packets/WORK_INDEX](../work-packets/WORK_INDEX) — WP + EC catalog and ordering
+> 1. [docs/01-VISION](../01-VISION.md) — vision, goals, scope, decisions log
+> 2. [docs/02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION.md) — upstream integration contract
+> 3. [docs/work-packets/WORK_INDEX](../work-packets/WORK_INDEX.md) — WP + EC catalog and ordering
 >
 > If this doc conflicts with any of the above, the higher-authority doc wins.
 
@@ -55,7 +55,7 @@ Replace `WP-XXX` with the actual WP ID. Every section must carry concrete conten
 - **WP:** `WP-XXX`
 - **Title:** `<short>`
 - **Pre-flight date:** `<YYYY-MM-DD>`
-- **Targets generation(s):** Gen 1 / Gen 2 / Gen 3 / N-A (per [vision §Engine Lineage](../01-VISION#engine-lineage-2026-06-finding))
+- **Targets generation(s):** Gen 1 / Gen 2 / Gen 3 / N-A (per [vision §Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding))
 - **Targets disc(s):** Showdown / Phantom / Jinx / Case File #1 / Case File #2 / Case File #3 / N-A
 
 ### Pre-flight intent

@@ -5,7 +5,7 @@ title: "EC-001: Ghidra Session Checklist"
 
 # EC-001: Ghidra session — `Scooby.exe` analysis checklist
 
-**Paired WP:** [WP-001](../work-packets/WP-001-ghidra-session)
+**Paired WP:** [WP-001](../work-packets/WP-001-ghidra-session.md)
 **Purpose:** Step-by-step checklist for executing WP-001 without scope sprawl into general game-logic disassembly.
 
 The Ghidra session has a habit of sprawling — once the binary is open, every interesting function is tempting. This checklist exists to keep the session scoped to the WP-001 goal: characterize the toolchain, map the runtime surface, and trace the `TGIFILE.ART` decode function. Anything else is logged for a future WP and **not pursued in this session**.
@@ -14,12 +14,12 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 
 ## Pre-flight
 
-- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight.md) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Ghidra installed; version recorded here: __________
 - [ ] PE inspector available (`CFF Explorer`, `PE-bear`, or Python `pefile`)
 - [ ] `Scooby.exe` extracted from mounted Showdown ISO to a known local path; path recorded here: __________
 - [ ] Ghidra projects directory exists at `C:\www\scooby\ghidra\`
-- [ ] [`docs/formats/scooby-exe.md`](../formats/scooby-exe) open in a second window for note-taking
+- [ ] [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) open in a second window for note-taking
 
 ## Step 1 — Rich Header / toolchain check (time-box: 15 min)
 
@@ -79,7 +79,7 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 - [ ] All five steps' outcomes recorded in `scooby-exe.md` and (for Step 5) `tgifile-art.md`
 - [ ] Ghidra project saved
 - [ ] WP-001 exit criteria #1–#5 all satisfied
-- [ ] WP-001 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX)
+- [ ] WP-001 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX.md)
 - [ ] WP-002 unblocked: either the decode algorithm is captured (best case) or the WP-002 strategy switches to blind decode (fallback case)
 
 ## Out-of-scope captures

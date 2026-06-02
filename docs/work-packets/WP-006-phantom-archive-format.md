@@ -39,9 +39,9 @@ know yet which side of the cut Phantom lands on.
 
 Locking this in matters for:
 
-- [`docs/01-VISION.md`](../01-VISION) Engine Lineage table — currently
+- [`docs/01-VISION.md`](../01-VISION.md) Engine Lineage table — currently
   shows Phantom as Gen 1 with archive format flagged unverified
-- [`docs/formats/tgifile-art.md`](../formats/tgifile-art) Cross-title
+- [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) Cross-title
   verification section
 - The Phantom row in the eventual `ADGameDescription` detection table's
   generation flag
@@ -73,18 +73,18 @@ Out of scope:
 ## Exit criteria
 
 1. The verdict is binary — Phantom is **Gen 1** or Phantom is **Gen 2** — recorded in both:
-   - [`docs/01-VISION.md`](../01-VISION) Engine Lineage table (the Phantom row's "Archive" cell stops saying "unverified")
-   - [`docs/formats/tgifile-art.md`](../formats/tgifile-art) Cross-title verification section (the Phantom bullet stops saying "predicted")
+   - [`docs/01-VISION.md`](../01-VISION.md) Engine Lineage table (the Phantom row's "Archive" cell stops saying "unverified")
+   - [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) Cross-title verification section (the Phantom bullet stops saying "predicted")
 2. The hex bytes that produced the verdict are pasted into the appropriate format spec (`tgifile-art.md` if Gen 1, `mmfw-container.md` if Gen 2).
 
 ## Deliverables
 
-- Updated [`docs/01-VISION.md`](../01-VISION) — Engine Lineage table Phantom row
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — Cross-title verification
-- Possibly updated [`docs/formats/mmfw-container.md`](../formats/mmfw-container) — only if Phantom turns out to be Gen 2
+- Updated [`docs/01-VISION.md`](../01-VISION.md) — Engine Lineage table Phantom row
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Cross-title verification
+- Possibly updated [`docs/formats/mmfw-container.md`](../formats/mmfw-container.md) — only if Phantom turns out to be Gen 2
 
 ## Notes
 
 - **Expected result:** Gen 1. The build-pipeline upgrade that introduced Gen 2 (newer linker 8168, dropped MASM 6.14 + cvtres) coincides with the archive format change, and Phantom's Rich Header shows the *old* toolchain (linker 8047). If the format follows the toolchain, Phantom is Gen 1.
-- **If the result is unexpectedly Gen 2,** that's meaningful: it would mean the engine evolved during a single linker build cycle, with archive format changing at a different cadence than toolchain. Worth a one-paragraph follow-up in [`docs/formats/scooby-exe.md`](../formats/scooby-exe) Findings → cross-generation analysis.
-- **Worth caching while you're at it:** since you'll have the Phantom disc mounted, copy `Scooby.exe` (and the archive file you Format-Hex'd) into `tools/exes/phantom/` per the [tools/exes/ README](../../tools/exes/README). Future analysis won't need to re-mount.
+- **If the result is unexpectedly Gen 2,** that's meaningful: it would mean the engine evolved during a single linker build cycle, with archive format changing at a different cadence than toolchain. Worth a one-paragraph follow-up in [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) Findings → cross-generation analysis.
+- **Worth caching while you're at it:** since you'll have the Phantom disc mounted, copy `Scooby.exe` (and the archive file you Format-Hex'd) into `tools/exes/phantom/` per the [tools/exes/ README](../../tools/exes/README.md). Future analysis won't need to re-mount.

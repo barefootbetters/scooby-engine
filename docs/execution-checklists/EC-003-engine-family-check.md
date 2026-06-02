@@ -5,7 +5,7 @@ title: "EC-003: Engine-Family Check Protocol"
 
 # EC-003: Engine-family check protocol
 
-**Paired WP:** [WP-005](../work-packets/WP-005-engine-family-check)
+**Paired WP:** [WP-005](../work-packets/WP-005-engine-family-check.md)
 **Purpose:** Procedural checklist for diffing Case File #1 and Case File #2 disc contents against Showdown, producing a binary engine-compatibility verdict per disc.
 
 The trap this checklist exists to prevent: hand-waving "looks similar" verdicts. Compatibility is a structural question with a structural answer. If the answer comes back as "INDETERMINATE," that's a real verdict — record it; don't fudge it to COMPATIBLE.
@@ -86,7 +86,7 @@ Do not pick COMPATIBLE if the data is INDETERMINATE. The vision's Phase 5 scope 
   - If both INCOMPATIBLE: move Case Files to "Excluded" tier; PR scope is TerraGlyph trio only
   - If mixed: split — name which Case File goes where
   - If any INDETERMINATE: leave under "Conditional" with a note that WP-001 extension is the resolver
-- [ ] WP-005 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX)
+- [ ] WP-005 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX.md)
 
 ## Definition of done
 

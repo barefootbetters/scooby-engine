@@ -5,7 +5,7 @@ title: "EC-004: object.ini Catalog Checklist"
 
 # EC-004: `object.ini` + `Scooby.eng` asset catalog checklist
 
-**Paired WP:** [WP-008](../work-packets/WP-008-object-ini-catalog)
+**Paired WP:** [WP-008](../work-packets/WP-008-object-ini-catalog.md)
 **Purpose:** Step-by-step checklist for executing WP-008 without skipping the
 manual structure survey that determines the entire parse strategy.
 
@@ -19,12 +19,12 @@ manual survey that locks in the correct approach before any code is written.
 
 ## Pre-flight
 
-- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight.md) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] `object.ini` accessible — either from mounted Showdown ISO or copied to `tools/samples/`; path recorded here: __________
 - [ ] `Scooby.eng` accessible at same location
 - [ ] Python 3 available: `python --version`
 - [ ] `tools/samples/` directory exists (or will be created in Step 5)
-- [ ] [WP-007](../work-packets/WP-007-strings-and-imports) complete — string dump from `Scooby.exe` is useful for cross-checking asset name strings found in `object.ini`
+- [ ] [WP-007](../work-packets/WP-007-strings-and-imports.md) complete — string dump from `Scooby.exe` is useful for cross-checking asset name strings found in `object.ini`
 
 ---
 
@@ -111,4 +111,4 @@ Do **not** write any code yet.
 - [ ] `tools/samples/asset-catalog.json` exists and is valid JSON
 - [ ] `docs/formats/scooby-exe.md` → Findings has the "`object.ini` interpreter behavior" subsection
 - [ ] Asset reference format is documented — the single most important finding from this WP
-- [ ] WP-008 status updated to ✅ Done in [`WORK_INDEX`](../work-packets/WORK_INDEX)
+- [ ] WP-008 status updated to ✅ Done in [`WORK_INDEX`](../work-packets/WORK_INDEX.md)

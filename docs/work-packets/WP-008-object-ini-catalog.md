@@ -8,7 +8,7 @@ title: "WP-008: object.ini Asset Catalog"
 **Status:** 📦 Queued
 **Phase:** Pre-Work (before WP-002)
 **Depends on:** —
-**Companion EC:** [EC-004](../execution-checklists/EC-004-object-ini-catalog)
+**Companion EC:** [EC-004](../execution-checklists/EC-004-object-ini-catalog.md)
 **Estimated effort:** Half-day
 
 ---
@@ -82,7 +82,7 @@ Out of scope:
 - [`tools/parse_ini.py`](../../tools/parse_ini.py) — `object.ini` parser
 - [`tools/parse_eng.py`](../../tools/parse_eng.py) — `Scooby.eng` parser
 - [`tools/samples/asset-catalog.json`](../../tools/samples/asset-catalog.json) — combined output
-- Findings note in [`docs/formats/scooby-exe.md`](../formats/scooby-exe) → "`object.ini` interpreter behavior"
+- Findings note in [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) → "`object.ini` interpreter behavior"
 
 ## Notes
 

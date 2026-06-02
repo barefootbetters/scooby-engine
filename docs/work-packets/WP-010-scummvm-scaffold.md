@@ -8,7 +8,7 @@ title: "WP-010: ScummVM Fork & Engine Scaffold"
 **Status:** 📦 Queued
 **Phase:** Pre-Work (before Phase 2; benefits Phase 1)
 **Depends on:** —
-**Companion EC:** [EC-005](../execution-checklists/EC-005-scummvm-scaffold)
+**Companion EC:** [EC-005](../execution-checklists/EC-005-scummvm-scaffold.md)
 **Estimated effort:** Half-day
 
 ---
@@ -96,7 +96,7 @@ Out of scope:
 
 - `barefootbetters/scummvm` fork on GitHub, `scooby-engine` branch,
   `engines/scooby/` skeleton
-- Updated [`docs/02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION) — commit hash + debug channel names
+- Updated [`docs/02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION.md) — commit hash + debug channel names
 
 ## Notes
 

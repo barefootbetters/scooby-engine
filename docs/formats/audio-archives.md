@@ -9,7 +9,7 @@ title: "Format Spec: Audio Archives"
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample files:** `scooby\Music.dat` (91.7 MB), `scooby\Sfx.dat` (30.7 MB), `scooby\Voice.dat` (103.8 MB) on the Showdown disc
 
-**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 work item
+**Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 work item
 
 For Phase 1, codec identification is sufficient. Full decode integration
 can defer to Phase 3 if ScummVM already supports the identified codec.
@@ -101,6 +101,6 @@ external player (ffmpeg / VLC).
 
 ## References
 
-- Vision doc: [Project Vision](../01-VISION) — Phase 1, audio archives
+- Vision doc: [Project Vision](../01-VISION.md) — Phase 1, audio archives
 - ScummVM audio subsystem: `audio/` in the ScummVM tree
-- Companion specs: [tgifile-art](tgifile-art), [scooby-exe](scooby-exe)
+- Companion specs: [tgifile-art](tgifile-art.md), [scooby-exe](scooby-exe.md)
