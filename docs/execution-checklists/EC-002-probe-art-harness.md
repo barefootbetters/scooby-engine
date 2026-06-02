@@ -14,6 +14,7 @@ This checklist applies whether or not WP-001's Ghidra trace succeeded. If it did
 
 ## Pre-flight
 
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Python 3.x with `Pillow` installed
 - [ ] WP-003 ran first if possible — palette extraction from the pre-payload region dramatically simplifies the "what pixel format?" question
 - [ ] Reference screenshot from a Scooby Showdown YouTube longplay saved at `tools/samples/showdown-reference.png` — used for visual comparison

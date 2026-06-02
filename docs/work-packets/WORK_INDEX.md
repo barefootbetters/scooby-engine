@@ -118,6 +118,7 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 - Vision and phase plan: [docs/01-VISION](../01-VISION)
 - ScummVM integration contract: [docs/02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION)
+- Pre-flight gate: [docs/reference/pre-flight](../reference/pre-flight)
 - Format specs: [docs/formats/tgifile-art](../formats/tgifile-art), [audio-archives](../formats/audio-archives), [scooby-exe](../formats/scooby-exe), [mmfw-container](../formats/mmfw-container)
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports), [WP-008](WP-008-object-ini-catalog), [WP-009](WP-009-reference-screenshots), [WP-010](WP-010-scummvm-scaffold)
 

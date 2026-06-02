@@ -19,6 +19,7 @@ manual survey that locks in the correct approach before any code is written.
 
 ## Pre-flight
 
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] `object.ini` accessible — either from mounted Showdown ISO or copied to `tools/samples/`; path recorded here: __________
 - [ ] `Scooby.eng` accessible at same location
 - [ ] Python 3 available: `python --version`

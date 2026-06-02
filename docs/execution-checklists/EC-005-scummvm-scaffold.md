@@ -19,6 +19,7 @@ each failure as early as possible.
 
 ## Pre-flight
 
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Windows build toolchain installed — record which one: __________
   - mingw-w64 (most common contributor path): `gcc --version`
   - or MSVC: `cl /?`

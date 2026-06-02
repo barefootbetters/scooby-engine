@@ -14,6 +14,7 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 
 ## Pre-flight
 
+- [ ] Pre-flight verdict: **READY** — complete [docs/reference/pre-flight](../reference/pre-flight) and commit the filled-in copy before proceeding; `NOT READY` blocks this session
 - [ ] Ghidra installed; version recorded here: __________
 - [ ] PE inspector available (`CFF Explorer`, `PE-bear`, or Python `pefile`)
 - [ ] `Scooby.exe` extracted from mounted Showdown ISO to a known local path; path recorded here: __________
