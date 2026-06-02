@@ -9,6 +9,13 @@ tools/samples/*
 !tools/samples/README.md
 !tools/samples/.gitkeep
 
+# Local copies of Scooby.exe and other game binaries pulled from mounted ISOs
+# for analysis (rich_header.py, Ghidra, etc.). Copyrighted game binaries
+# — never commit. The README documents the workflow.
+tools/exes/*
+!tools/exes/README.md
+!tools/exes/.gitkeep
+
 # Findings dirs that may contain partial extractions or disc listings
 docs/findings/*
 !docs/findings/README.md
