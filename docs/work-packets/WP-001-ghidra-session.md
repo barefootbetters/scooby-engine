@@ -1,9 +1,14 @@
+---
+layout: default
+title: "WP-001: Ghidra Session"
+---
+
 # WP-001: Ghidra session — `Scooby.exe` imports + `TGIFILE.ART` decode trace
 
 **Status:** 📝 Drafted
 **Phase:** 1 — Format Research
 **Depends on:** —
-**Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session.md)
+**Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session)
 **Estimated effort:** 1 day (Ghidra auto-analysis included)
 
 ---
@@ -51,8 +56,8 @@ Out of scope:
 
 ## Deliverables
 
-- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) — Findings sections.
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — decode algorithm sub-section.
+- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe) — Findings sections.
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — decode algorithm sub-section.
 - Ghidra project file at `C:\www\scooby\ghidra\scooby.gpr`.
 
 ## Notes

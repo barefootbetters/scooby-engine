@@ -1,9 +1,14 @@
+---
+layout: default
+title: "WP-005: Engine-Family Check"
+---
+
 # WP-005: Engine-family check across Case File ISOs
 
 **Status:** 📝 Drafted
 **Phase:** 1 — Format Research
 **Depends on:** —
-**Companion EC:** [EC-003](../execution-checklists/EC-003-engine-family-check.md)
+**Companion EC:** [EC-003](../execution-checklists/EC-003-engine-family-check)
 **Estimated effort:** Half-day
 
 ---
@@ -53,8 +58,8 @@ Out of scope:
 ## Deliverables
 
 - File listing diffs at `docs/findings/case-file-disc-diff.md` (new file, brief)
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — cross-title section
-- Possible update to [`docs/01-VISION.md`](../01-VISION.md) Phase 5 scope rule
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — cross-title section
+- Possible update to [`docs/01-VISION.md`](../01-VISION) Phase 5 scope rule
 
 ## Notes
 

@@ -1,9 +1,14 @@
+---
+layout: default
+title: "WP-002: TGIFILE.ART Decoder"
+---
+
 # WP-002: `TGIFILE.ART` payload decoder + first image extraction
 
 **Status:** 📝 Drafted
 **Phase:** 1 — Format Research
 **Depends on:** WP-001 (preferred — gives decode algorithm directly; can be started without if Ghidra path is blocked)
-**Companion EC:** [EC-002](../execution-checklists/EC-002-probe-art-harness.md)
+**Companion EC:** [EC-002](../execution-checklists/EC-002-probe-art-harness)
 **Estimated effort:** Half-day if WP-001 succeeds; 1–2 days if blind-decoding
 
 ---
@@ -56,7 +61,7 @@ Out of scope:
 
 - [`tools/probe_art.py`](../../tools/probe_art.py) — extraction + decode harness
 - [`tools/samples/tgifile-art-entry0.png`](../../tools/samples/) — first successful decode
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Findings section
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art) — Findings section
 
 ## Notes
 
