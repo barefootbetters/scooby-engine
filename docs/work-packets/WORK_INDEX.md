@@ -18,9 +18,9 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 ## Current state
 
-**Current phase:** Phase 1 — Format Research
+**Current phase:** Phase 0 → Phase 1 — Pre-Work then Format Research
 **Primary blocker:** WP-002 (TGIFILE.ART payload decode). Phase 2 cannot start until at least one TGIFILE.ART entry is extracted to a recognizable image.
-**Next unblocked:** WP-001 Ghidra deep-dive (Step 1 PE Rich Header complete; full Ghidra trace still pending).
+**Next unblocked:** Phase 0 pre-work. Execute in order: WP-007 (15 min) → WP-003 → WP-008 + WP-009 → WP-010 → WP-001. All four Phase 0 WPs are newly added — see Phase 0 section below.
 
 ### Phase 1 findings landed (2026-06)
 
@@ -31,13 +31,30 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 ---
 
+## Phase 0 — Pre-Work (run before WP-001)
+
+These WPs require no Ghidra, no format decoding, and no binary analysis. They
+build the ground-truth references that make Phase 1 debugging tractable, and
+pin the ScummVM API target before implementation decisions are made. None block
+each other; recommended execution order is left-to-right in the table.
+
+| WP | Title | Status | Deps | EC | Notes |
+|---|---|---|---|---|---|
+| [WP-007](WP-007-strings-and-imports) | `Scooby.exe` strings dump + import table | 📦 Queued | — | — | 15–30 min; primes EC-001 Steps 3–4; run first |
+| [WP-003](WP-003-pre-payload-region) | Pre-payload region scan (palette hunt) | 📝 Drafted | WP-007 (recommended) | — | **Run before WP-001** — may drop the palette-hunt scope from the Ghidra session entirely |
+| [WP-008](WP-008-object-ini-catalog) | `object.ini` + `Scooby.eng` asset catalog | 📦 Queued | — | — | Half-day; grounds "visually matches" decoder verification |
+| [WP-009](WP-009-reference-screenshots) | Reference screenshot library (*Showdown*) | 📦 Queued | WP-008 (for naming) | — | 1–2 hrs; required by EC-002 pre-flight |
+| [WP-010](WP-010-scummvm-scaffold) | ScummVM fork + empty `engines/scooby/` scaffold | 📦 Queued | — | — | Half-day; pins commit hash; defines debug channel names before Ghidra annotations |
+
+---
+
 ## Phase 1 — Format Research
 
 | WP | Title | Status | Deps | EC | Notes |
 |---|---|---|---|---|---|
-| [WP-001](WP-001-ghidra-session) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 🚧 In Progress | — | [EC-001](../execution-checklists/EC-001-ghidra-session) | EC-001 Step 1 (PE Rich Header) ✅ done — toolchain identified across 4 titles. Steps 2–5 (Ghidra load, imports, file-I/O labeling, TGIFILE.ART decode trace) still pending. |
+| [WP-001](WP-001-ghidra-session) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 🚧 In Progress | WP-003, WP-007 (recommended) | [EC-001](../execution-checklists/EC-001-ghidra-session) | EC-001 Step 1 (PE Rich Header) ✅ done — toolchain identified across 4 titles. Steps 2–5 (Ghidra load, imports, file-I/O labeling, TGIFILE.ART decode trace) still pending. |
 | [WP-002](WP-002-tgifile-art-decoder) | `TGIFILE.ART` payload decoder + first image extraction | 📝 Drafted | WP-001 (preferred, not strict) | [EC-002](../execution-checklists/EC-002-probe-art-harness) | Phase 1 exit criterion #1 |
-| [WP-003](WP-003-pre-payload-region) | Inspect the 1 MB region between asset entries and first payload (palette hunt) | 📝 Drafted | — | — | Half-day; may dramatically shortcut WP-002 if it contains palette data |
+| [WP-003](WP-003-pre-payload-region) | Inspect the 1 MB region between asset entries and first payload (palette hunt) | 📝 Drafted | — | — | Also listed in Phase 0 — **run before WP-001**, not in parallel; may dramatically shortcut WP-002 |
 | [WP-004](WP-004-audio-archive-decode) | Audio archive index + codec identification | 📝 Drafted | — | — | Phase 1 exit criterion #3 |
 | [WP-005](WP-005-engine-family-check) | Engine-family check across Case File ISOs | 🚧 In Progress | — | [EC-003](../execution-checklists/EC-003-engine-family-check) | Case File #1 done — one engine lineage across three generations confirmed; code-level TerraGlyph→IBS inheritance confirmed. Case File #2 verification still owed. |
 | [WP-006](WP-006-phantom-archive-format) | Phantom archive format verification (Gen 1 vs Gen 2) | 📝 Drafted | — | — | One-minute `Format-Hex` check; locks in Phantom's generation classification |
@@ -52,11 +69,11 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 | Provisional scope | Anchored to |
 |---|---|
-| Fork `scummvm/scummvm`; pin commit hash in `02-SCUMMVM-INTEGRATION.md` | [`02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION) §1, §11 |
-| Create `engines/scooby/` skeleton with `module.mk`, `configure.engine`, `POTFILES` | §10 |
-| `MetaEngineDetection` + `MetaEngine` subclasses; engine class with empty `run()` | §1, §2 |
+| Fork `scummvm/scummvm`; pin commit hash in `02-SCUMMVM-INTEGRATION.md` | **Moved to WP-010 (Phase 0)** |
+| Create `engines/scooby/` skeleton with `module.mk`, `configure.engine`; debug channel stubs | **Moved to WP-010 (Phase 0)** |
+| `MetaEngineDetection` + `MetaEngine` subclasses; engine class with empty `run()` | [`02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION) §1, §2 |
 | `ADGameDescription` table populated from Phase 1 findings, **carrying a per-entry generation flag** (Gen 1/2/3) per the engine lineage finding | §3 |
-| Debug channels registered | §9 |
+| `POTFILES` (after translatable strings exist) | §10 |
 
 ---
 
@@ -102,6 +119,7 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 - Vision and phase plan: [docs/01-VISION](../01-VISION)
 - ScummVM integration contract: [docs/02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION)
 - Format specs: [docs/formats/tgifile-art](../formats/tgifile-art), [audio-archives](../formats/audio-archives), [scooby-exe](../formats/scooby-exe), [mmfw-container](../formats/mmfw-container)
+- Phase 0 WPs: [WP-007](WP-007-strings-and-imports), [WP-008](WP-008-object-ini-catalog), [WP-009](WP-009-reference-screenshots), [WP-010](WP-010-scummvm-scaffold)
 
 ---
 

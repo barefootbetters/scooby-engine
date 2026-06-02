@@ -7,7 +7,7 @@ title: "WP-001: Ghidra Session"
 
 **Status:** 📝 Drafted
 **Phase:** 1 — Format Research
-**Depends on:** —
+**Depends on:** WP-003 (palette hunt — run first; may eliminate palette-hunt scope from this session), WP-007 (strings dump — recommended; primes Steps 3–4)
 **Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session)
 **Estimated effort:** 1 day (Ghidra auto-analysis included)
 
