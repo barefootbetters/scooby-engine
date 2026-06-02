@@ -1,3 +1,8 @@
+---
+layout: default
+title: "Vision — Scooby-Doo ScummVM Engine"
+---
+
 # Vision: ScummVM Engine for The Learning Company Scooby-Doo Games
 
 **Project:** `scooby` engine for ScummVM
@@ -31,8 +36,7 @@ supported title — point ScummVM at their disc or ripped ISO, and play.
 All Scooby-Doo CD-ROM adventure titles published by The Learning Company /
 Passport / Knowledge Adventure between 2000 and 2003, plus a 2007 re-release.
 Engine sharing across the set is partially confirmed (TerraGlyph trio) and
-partially open (Case Files) — see the provenance check below. ISOs live in
-`C:\pcloud\SCOOBY\`.
+partially open (Case Files) — see the provenance check below.
 
 | Title | Year | ISO file | Size | Notes |
 |---|---|---|---|---|

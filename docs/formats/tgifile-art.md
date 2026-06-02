@@ -1,10 +1,15 @@
+---
+layout: default
+title: "Format Spec: TGIFILE.ART"
+---
+
 # Format Spec: `TGIFILE.ART`
 
 **Status:** Structural hypothesis confirmed — payload compression unresolved  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
-**Sample file:** `C:\pcloud\SCOOBY\Scooby Doo Showdown in Ghost Town.iso` → `scooby\TGIFILE.ART`  
+**Sample file:** `scooby\TGIFILE.ART` on the Showdown disc  
 **File size:** 144,592,896 bytes (≈ 144 MB)  
-**Vision doc reference:** [`docs/01-VISION.md`](../01-VISION.md) — Phase 1 primary risk area
+**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 primary risk area
 
 This file is the primary technical risk for the engine. The two-level index
 structure is now understood (see Findings). The remaining unknown is the
@@ -100,7 +105,7 @@ confirm format is identical before implementing the parser.
 2. Try viewing raw payload as 640×480×1 (8-bit palette) — if a valid image
    appears, skip compression analysis.
 3. Load `Scooby.exe` in Ghidra and find the `TGIFILE.ART` open/read call
-   to trace the decode path (see [`scooby-exe.md`](scooby-exe.md)).
+   to trace the decode path (see [scooby-exe](scooby-exe)).
 4. Once one entry decodes cleanly, cross-check against *Phantom of the
    Knight* `TGIFILE.ART` to confirm the format generalizes.
 
@@ -113,5 +118,5 @@ engine, visually matching in-game output.
 
 ## References
 
-- Vision doc: [`docs/01-VISION.md`](../01-VISION.md) — Phase 1, primary risk area
-- Companion specs: [`audio-archives.md`](audio-archives.md), [`scooby-exe.md`](scooby-exe.md)
+- Vision doc: [Project Vision](../01-VISION) — Phase 1, primary risk area
+- Companion specs: [audio-archives](audio-archives), [scooby-exe](scooby-exe)

@@ -1,10 +1,15 @@
+---
+layout: default
+title: "Format Spec: Scooby.exe"
+---
+
 # Format Spec: `Scooby.exe`
 
 **Status:** Pre-investigation — not yet loaded into Ghidra  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
-**Sample file:** `C:\pcloud\SCOOBY\Scooby Doo Showdown in Ghost Town.iso` → `scooby\Scooby.exe`  
+**Sample file:** `scooby\Scooby.exe` on the Showdown disc  
 **File size:** 487,473 bytes (≈ 476 KB)  
-**Vision doc reference:** [`docs/01-VISION.md`](../01-VISION.md) — Phase 1 work item
+**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 work item
 
 This is not a file-format spec in the traditional sense — `Scooby.exe` is a
 Windows PE32 binary. This document tracks what we learn from disassembling
@@ -119,6 +124,6 @@ A short written note in Findings covering:
 
 ## References
 
-- Vision doc: [`docs/01-VISION.md`](../01-VISION.md)
-- Companion specs: [`tgifile-art.md`](tgifile-art.md), [`audio-archives.md`](audio-archives.md)
+- Vision doc: [Project Vision](../01-VISION)
+- Companion specs: [tgifile-art](tgifile-art), [audio-archives](audio-archives)
 - Ghidra project: `C:\www\scooby\ghidra\scooby.gpr` (to be created)

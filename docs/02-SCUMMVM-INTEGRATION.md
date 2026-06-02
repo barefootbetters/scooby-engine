@@ -1,7 +1,12 @@
+---
+layout: default
+title: "ScummVM Integration Contract"
+---
+
 # ScummVM Integration Contract
 
 **Status:** Scaffold — sections populated as Phase 2 implementation lands
-**ScummVM version pin:** TBD — set when `scummvm/scummvm` is forked into `C:\www\scummvm\`. Record commit hash here so the contract is reproducible.
+**ScummVM version pin:** TBD — set when `scummvm/scummvm` is forked. Record commit hash here so the contract is reproducible.
 **Engine location:** `engines/scooby/` (within the ScummVM fork)
 **Vision doc reference:** [`docs/01-VISION.md`](01-VISION.md) — "Engine Contract (ScummVM Requirements)" section is the high-altitude principles; this doc owns the concrete API surface.
 

@@ -6,6 +6,12 @@ baseurl: "/scooby-engine"
 theme: minima
 
 markdown: kramdown
+
+defaults:
+  - scope:
+      path: "docs"
+    values:
+      layout: default
 permalink: pretty
 
 # GitHub Pages-safe plugins
