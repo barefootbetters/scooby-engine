@@ -114,6 +114,22 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 ---
 
+## Reference Screenshots — *Showdown in Ghost Town* (WP-009)
+
+One screenshot per distinct room, captured from a YouTube longplay. Used as visual ground truth for WP-002's decoder (EC-002 pre-flight). Stored at [`docs/assets/screenshots/showdown-screens/`](../assets/screenshots/showdown-screens/README) — tracked in git, served by GitHub Pages.
+
+Screenshots populate here once WP-009 runs. Embed syntax for adding a row:
+
+```markdown
+| ![Room name](../assets/screenshots/showdown-screens/room-slug.png) | Room name | `room-slug` |
+```
+
+| Screenshot | Room | ID |
+|---|---|---|
+| *(WP-009 not yet run)* | | |
+
+---
+
 ## References
 
 - Vision and phase plan: [docs/01-VISION](../01-VISION)

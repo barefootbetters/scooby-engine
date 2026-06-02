@@ -61,22 +61,35 @@ Out of scope:
 
 ## Exit criteria
 
-1. `tools/samples/showdown-screens/` exists with ≥ 8 distinct room
+1. `docs/assets/screenshots/showdown-screens/` exists with ≥ 8 distinct room
    background screenshots, covering the main gameplay areas.
 2. Files are named consistently — by `object.ini` room ID (preferred)
-   or by descriptive slug (e.g. `hotel_lobby`, `ghost_mine_entrance`).
-3. `tools/samples/showdown-screens/README.md` exists listing each file,
+   or by descriptive slug (e.g. `hotel-lobby`, `ghost-mine-entrance`).
+3. `docs/assets/screenshots/showdown-screens/README.md` is updated listing each file,
    its room ID or slug, and the YouTube timestamp it was sourced from.
 4. At least one screenshot is clearly a full-room background (not a
    partial view or transition frame) — this is the primary decoder target.
+5. Screenshots are visible on the GitHub Pages site at
+   `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
+   and render in WORK_INDEX gallery section.
 
 ## Deliverables
 
-- `tools/samples/showdown-screens/<room-id>.png` × ≥ 8
-- `tools/samples/showdown-screens/README.md` — provenance + timestamp log
+- `docs/assets/screenshots/showdown-screens/<room-id>.png` × ≥ 8
+- `docs/assets/screenshots/showdown-screens/README.md` — provenance + timestamp log (pre-seeded; add rows as captures are taken)
 
 ## Notes
 
+- **Why `docs/assets/`, not `tools/samples/`:** `tools/` is excluded from the
+  GitHub Pages build (`_config.yml`) and `tools/samples/*` is gitignored.
+  Screenshots in `tools/` would never commit and never appear on the site.
+  `docs/assets/screenshots/` is tracked, served by Pages, and referenceable
+  from any markdown file with a relative path.
+- **Copyright:** These are screen captures from publicly available YouTube
+  footage, used for reverse-engineering reference — fair use, consistent with
+  how ScummVM documents all supported games. No files extracted from the
+  game disc are stored here. Do not store disc-extracted binaries, audio, or
+  decoded images alongside these screenshots.
 - Screen resolution does not need to match the original game resolution.
   YouTube 720p is fine — visual pattern matching (silhouettes, color
   palette, character placement) is sufficient to verify a decoded asset.
@@ -89,7 +102,8 @@ Out of scope:
   decoded image is later disputed (e.g. different region disc has different
   art), you can trace the screenshot to its exact source frame and confirm
   whether the visual discrepancy is a decoding error or a version difference.
-- Naming by room ID now saves reconciliation time later. If WP-008 produced
-  a catalog with a `hotel_lobby` room ID, name the screenshot that. If
+- Naming by room ID saves reconciliation time later. If WP-008 produced
+  a catalog with a `hotel_lobby` room ID, name the screenshot `hotel-lobby.png`
+  (use hyphens for filesystem-safe slugs, underscores are fine too). If
   WP-008 hasn't run yet, use a descriptive slug and add a rename pass once
   WP-008 completes.
