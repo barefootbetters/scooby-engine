@@ -1,0 +1,48 @@
+title: "Scooby-Doo ScummVM Engine"
+description: "Reverse engineering The Learning Company's Scooby-Doo CD-ROMs for ScummVM"
+url: "https://barefootbetters.github.io"
+baseurl: "/scooby-engine"
+
+theme: minima
+
+markdown: kramdown
+permalink: pretty
+
+# GitHub Pages-safe plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+
+# Auto-rewrite .md links in existing docs so they resolve to rendered .html pages
+relative_links:
+  enabled: true
+  collections: false
+
+# Top nav — minima reads this; nav_links is not a minima key
+header_pages:
+  - docs/01-VISION.md
+  - docs/02-SCUMMVM-INTEGRATION.md
+  - docs/work-packets/WORK_INDEX.md
+
+# Exclude anything that shouldn't ship to the Pages site:
+# - Build/dev files
+# - Python tooling (rendered raw would be confusing)
+# - Anything matching original game-data filename patterns (safety net)
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - tools/
+  - "*.iso"
+  - "*.ART"
+  - "*.dat"
+  - "*.exe"
+  - "*.dll"
+  - Scooby.eng
+  - object.ini
+  - BK.*
+
+minima:
+  skin: classic

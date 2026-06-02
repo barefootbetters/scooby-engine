@@ -1,0 +1,73 @@
+# =============================================================
+#  Extracted game assets — NEVER commit
+# =============================================================
+# Decoded images, audio clips, and other artifacts produced by tools/probe_*.py
+# are derived from copyrighted Warner Bros. / Hanna-Barbera material.
+# They live locally for decoder verification only; the policy README stays
+# in git so the discipline is visible.
+tools/samples/*
+!tools/samples/README.md
+!tools/samples/.gitkeep
+
+# Findings dirs that may contain partial extractions or disc listings
+docs/findings/*
+!docs/findings/README.md
+!docs/findings/.gitkeep
+
+# =============================================================
+#  Original game data — safety net
+# =============================================================
+# Backstop against accidentally copying disc contents into the repo.
+# Live discs / ISOs live at C:\pcloud\SCOOBY\ — outside this repo.
+*.iso
+Scooby.exe
+Scooby.eng
+TGIFILE.ART
+Music.dat
+Sfx.dat
+Voice.dat
+object.ini
+BK.*
+binkw32.dll
+
+# =============================================================
+#  Jekyll / GitHub Pages
+# =============================================================
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.sass-cache/
+vendor/
+
+# =============================================================
+#  Python (tools/)
+# =============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+*.egg-info/
+
+# =============================================================
+#  Ghidra projects — large, personal, hold proprietary analysis state
+# =============================================================
+ghidra/
+*.gpr
+*.rep/
+*.lock
+
+# =============================================================
+#  OS / editor
+# =============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
