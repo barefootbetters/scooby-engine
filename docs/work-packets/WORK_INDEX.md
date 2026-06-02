@@ -42,9 +42,9 @@ each other; recommended execution order is left-to-right in the table.
 |---|---|---|---|---|---|
 | [WP-007](WP-007-strings-and-imports) | `Scooby.exe` strings dump + import table | 📦 Queued | — | — | 15–30 min; primes EC-001 Steps 3–4; run first |
 | [WP-003](WP-003-pre-payload-region) | Pre-payload region scan (palette hunt) | 📝 Drafted | WP-007 (recommended) | — | **Run before WP-001** — may drop the palette-hunt scope from the Ghidra session entirely |
-| [WP-008](WP-008-object-ini-catalog) | `object.ini` + `Scooby.eng` asset catalog | 📦 Queued | — | — | Half-day; grounds "visually matches" decoder verification |
+| [WP-008](WP-008-object-ini-catalog) | `object.ini` + `Scooby.eng` asset catalog | 📦 Queued | — | [EC-004](../execution-checklists/EC-004-object-ini-catalog) | Half-day; grounds "visually matches" decoder verification |
 | [WP-009](WP-009-reference-screenshots) | Reference screenshot library (*Showdown*) | 📦 Queued | WP-008 (for naming) | — | 1–2 hrs; required by EC-002 pre-flight |
-| [WP-010](WP-010-scummvm-scaffold) | ScummVM fork + empty `engines/scooby/` scaffold | 📦 Queued | — | — | Half-day; pins commit hash; defines debug channel names before Ghidra annotations |
+| [WP-010](WP-010-scummvm-scaffold) | ScummVM fork + empty `engines/scooby/` scaffold | 📦 Queued | — | [EC-005](../execution-checklists/EC-005-scummvm-scaffold) | Half-day; pins commit hash; defines debug channel names before Ghidra annotations |
 
 ---
 

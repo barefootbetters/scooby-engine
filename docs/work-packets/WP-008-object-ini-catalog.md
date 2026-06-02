@@ -8,7 +8,7 @@ title: "WP-008: object.ini Asset Catalog"
 **Status:** 📦 Queued
 **Phase:** Pre-Work (before WP-002)
 **Depends on:** —
-**Companion EC:** — (Python scripting; no checklist needed)
+**Companion EC:** [EC-004](../execution-checklists/EC-004-object-ini-catalog)
 **Estimated effort:** Half-day
 
 ---

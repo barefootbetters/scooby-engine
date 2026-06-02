@@ -8,7 +8,7 @@ title: "WP-010: ScummVM Fork & Engine Scaffold"
 **Status:** 📦 Queued
 **Phase:** Pre-Work (before Phase 2; benefits Phase 1)
 **Depends on:** —
-**Companion EC:** — (well-defined steps; no separate checklist needed)
+**Companion EC:** [EC-005](../execution-checklists/EC-005-scummvm-scaffold)
 **Estimated effort:** Half-day
 
 ---
