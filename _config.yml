@@ -1,6 +1,6 @@
 title: "Scooby-Doo ScummVM Engine"
 description: "Reverse engineering The Learning Company's Scooby-Doo CD-ROMs for ScummVM"
-url: "https://barefootbetters.github.io"
+url: "https://github.barefootbetters.com"
 baseurl: "/scooby-engine"
 
 theme: minima

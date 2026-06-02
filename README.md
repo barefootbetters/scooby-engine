@@ -7,7 +7,7 @@ Reverse-engineering and engine implementation project to run
 **Status: Phase 1 — Format Research** · [Progress site →][pages]
 
 [mobygames]: https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/
-[pages]: https://barefootbetters.github.io/scooby-engine/
+[pages]: https://github.barefootbetters.com/scooby-engine/
 
 ---
 
