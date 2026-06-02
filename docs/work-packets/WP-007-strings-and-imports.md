@@ -15,70 +15,217 @@ title: "WP-007: Strings & Import Table"
 
 ## Goal
 
-Before opening Ghidra, extract all string literals and the full PE import
-table from `Scooby.exe` and record them in `docs/formats/scooby-exe.md`.
-This primes EC-001 Steps 3–4 so the Ghidra session navigates to known
-locations rather than discovering from scratch.
+Produce a deterministic, tool-independent baseline of:
+
+1. All printable string literals (≥ 6 chars)
+2. The full PE import table
+
+…from `Scooby.exe`, and persist them in a structured, reviewable format in
+`docs/formats/scooby-exe.md`.
+
+This enables EC-001 Steps 3–4 to navigate directly to known string and IAT
+anchors rather than discovering them ad hoc in Ghidra.
+
+---
 
 ## Background
 
-EC-001 Step 4 instructs searching Ghidra's Defined Strings for
-`"TGIFILE.ART"`. That search is faster and more confident when you already
-know: (a) which filename strings exist, (b) roughly how many call sites to
-expect, and (c) what the complete file I/O API set looks like.
+EC-001 Step 4 relies on locating known filename strings (e.g. `TGIFILE.ART`)
+in Ghidra. Pre-extracting strings provides:
 
-The import table also resolves a question that affects the `Common::File`
-wrapper: if the exe uses `CreateFileA` (ANSI) but not `CreateFileW`
-(Unicode), all disc paths are ANSI — relevant for how path resolution is
-handled in the ScummVM engine.
+- Known search anchors
+- Expected result counts (sanity check inside Ghidra)
+- Visibility into asset naming patterns and path conventions
 
-Both pieces of information are available in under 30 minutes without
-touching a disassembler.
+The import table determines:
+
+- File I/O API surface (`CreateFileA` vs `CreateFileW`)
+- Multimedia dependencies (DirectX, Bink/Smacker, etc.)
+- CRT/runtime footprint
+
+These materially influence WP-001 reverse engineering strategy and the
+eventual `Common::File` abstraction design.
+
+---
 
 ## Scope
 
-In scope:
-- Run `strings` (or Python `pefile` string extraction) on `Scooby.exe` — extract all printable sequences ≥ 6 chars
-- Export the full import table using `pefile`, CFF Explorer, or `dumpbin /IMPORTS` — record DLL name + function name for every import
-- Record findings in two new sections of `docs/formats/scooby-exe.md` → Findings
+### In scope
 
-Out of scope:
-- Any disassembly or decompilation (WP-001)
-- Analysis of what each function does (Ghidra scope)
-- Cross-title import comparison (optional stretch goal only)
+1. Extract all printable ASCII strings ≥ 6 characters from `Scooby.exe`
+2. Extract complete import table (DLL + function name or ordinal)
+3. Normalize and group results
+4. Record outputs in `docs/formats/scooby-exe.md` under **Findings**
+
+### Out of scope
+
+- Any disassembly or Ghidra work (WP-001)
+- Behavioral analysis of imports
+- Cross-title comparison (optional stretch only)
+
+---
 
 ## Dependencies
 
-- `Scooby.exe` extracted from the mounted Showdown ISO (or at `tools/exes/showdown/Scooby.exe`)
-- One of: Python `pefile` (`pip install pefile`), CFF Explorer, PE-bear, or MSVC `dumpbin`
+- `Scooby.exe` at one of:
+  - `tools/exes/showdown/Scooby.exe`
+  - Mounted Showdown ISO extraction
+- Extraction method (choose one and document which was used):
+  - Python `pefile` (`pip install pefile`)
+  - `dumpbin /IMPORTS` (MSVC toolchain)
+  - PE-bear / CFF Explorer
+
+---
+
+## Execution (deterministic)
+
+### 1. Strings extraction
+
+**Option A — Python (preferred; reproducible, no tool dependency):**
+
+```python
+import string
+
+def extract_strings(path, min_len=6):
+    with open(path, 'rb') as f:
+        data = f.read()
+    result, current = [], []
+    for b in data:
+        c = chr(b)
+        if c in string.printable and c not in '\r\n\t\x0b\x0c':
+            current.append(c)
+        else:
+            if len(current) >= min_len:
+                result.append(''.join(current))
+            current = []
+    if len(current) >= min_len:
+        result.append(''.join(current))
+    return sorted(set(result))
+
+for s in extract_strings('Scooby.exe'):
+    print(s)
+```
+
+**Option B — Sysinternals `strings.exe`:**
+
+```
+strings.exe -n 6 Scooby.exe > strings-out.txt
+```
+
+**Normalization rules (both options):**
+
+- Deduplicate (set)
+- Sort ascending
+- Preserve original casing
+- Do not trim paths or filenames
+
+### 2. Import table extraction
+
+**Baseline — Python / pefile:**
+
+```python
+import pefile
+
+pe = pefile.PE('Scooby.exe')
+for entry in pe.DIRECTORY_ENTRY_IMPORT:
+    dll = entry.dll.decode(errors='ignore')
+    for imp in entry.imports:
+        name = imp.name.decode(errors='ignore') if imp.name else f'ord#{imp.ordinal}'
+        print(f"{dll}::{name}")
+```
+
+**Normalization rules:**
+
+- Format: `DLL::Function`
+- One entry per line
+- Preserve ordinal-only entries as `DLL::ord#N`
+- Sort by DLL name, then function name
+
+---
+
+## Output specification (MANDATORY)
+
+Update `docs/formats/scooby-exe.md` → Findings with both sections below.
+The structure is required — prose-only findings fail exit criteria.
+
+### Section: Findings → String literals
+
+Required subsections:
+
+- **File / asset names** — filename strings (`TGIFILE.ART`, `object.ini`, etc.)
+- **Paths / directories** — any directory or drive-letter strings
+- **Error / debug strings** — error messages, assertions, log prefixes
+- **Other notable strings** — anything that doesn't fit the above
+
+Required conclusions block:
+
+```md
+#### Conclusions
+
+- Encoding: [ANSI | Unicode | Mixed | Unknown]
+- Registry usage: [Yes — keys: ... | No]
+- Hardcoded paths: [Yes — examples: ... | No]
+- Asset resolution strategy: [String-based | Index-based | Unknown]
+- Anchor strings confirmed for Ghidra: [list ≥ 3, e.g. TGIFILE.ART, object.ini, Music.dat]
+```
+
+### Section: Findings → Import table
+
+Required grouping (omit a group only if the exe has zero entries for it):
+
+```md
+- KERNEL32.dll
+  - CreateFileA
+  - ReadFile
+  - SetFilePointer
+  ...
+```
+
+Groups:
+
+- **Win32 File I/O** (kernel32: `CreateFile`, `ReadFile`, `WriteFile`, `SetFilePointer`, etc.)
+- **Memory / Process** (kernel32: `VirtualAlloc`, `HeapAlloc`, `GetProcAddress`, etc.)
+- **Graphics / DirectX** (ddraw.dll, d3d*.dll, etc.)
+- **Audio / Video** (dsound.dll, Bink/Smacker imports, etc.)
+- **CRT / Standard Library** (msvcrt.dll, etc.)
+- **Other** (anything not in the above)
+
+---
 
 ## Exit criteria
 
-1. `docs/formats/scooby-exe.md` → Findings → "String literals" section populated with:
-   all filename strings (e.g. `TGIFILE.ART`, `object.ini`, `Music.dat`),
-   error-message strings, and any asset-name or path strings.
-2. `docs/formats/scooby-exe.md` → Findings → "Import table" section populated with:
-   all imported DLLs and functions, grouped by category (Win32 file I/O, DirectX, CRT, Bink).
-3. The string-literals section explicitly answers: are all file paths ANSI or Unicode?
-   Any registry keys? Any hardcoded disc paths?
+1. ✅ Strings list is deduplicated, sorted, derived via documented method, and
+   stored in the required subsection structure in `scooby-exe.md`.
+2. ✅ Import table is complete (no missing DLL blocks), normalized to
+   `DLL::Function`, and grouped by category.
+3. ✅ Conclusions block explicitly answers all four questions: encoding,
+   registry usage, hardcoded paths, asset resolution strategy.
+4. ✅ All outputs are reproducible by re-running the documented command/script
+   against the same binary without modification.
+5. ✅ At least 3 anchor strings are named in the Conclusions block for use as
+   immediate Ghidra navigation targets in EC-001.
+
+Any criterion not met = WP not done. Partial findings with open conclusions
+remain 🚧 In Progress.
+
+---
 
 ## Deliverables
 
-- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe) — two new Findings sections
+- Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe) — two structured Findings sections
+
+---
 
 ## Notes
 
-- Quick `pefile` one-liner for imports:
-  ```python
-  import pefile
-  pe = pefile.PE('Scooby.exe')
-  for entry in pe.DIRECTORY_ENTRY_IMPORT:
-      for imp in entry.imports:
-          print(entry.dll_name.decode(), imp.name.decode() if imp.name else f'ord#{imp.ordinal}')
-  ```
-- String literals that look like asset names — e.g. `"room_library"`, `"cursor_hand"` — are
-  particularly valuable: they reveal whether the exe resolves assets by logical string name
-  (which makes WP-008's catalog directly load-bearing) or by numeric index.
-- Cross-title stretch: if Phantom, Jinx, and Case File #1 exes are already in `tools/exes/`,
-  running the same extraction takes 2 extra minutes and surfaces any import surface changes
-  between generations (e.g. Jinx adding Smacker imports, Case File #1 adding libexpat).
+- Asset-like strings (e.g. `"room_library"`, `"cursor_hand"`) are **high signal**:
+  they indicate string-based lookup paths and should be called out explicitly in
+  the asset-resolution-strategy conclusion. This directly determines how
+  load-bearing WP-008's catalog is.
+- Absence of `CreateFileW` strongly implies ANSI-only path handling — record
+  this explicitly in the Conclusions block rather than leaving it as an
+  inference during WP-001.
+- Cross-title stretch (optional, must not block completion): running the same
+  extraction on Phantom / Jinx / Case File #1 exes takes 2 extra minutes and
+  can confirm import surface evolution across generations (e.g. Jinx adding
+  Smacker, Case File #1 adding libexpat.dll).
