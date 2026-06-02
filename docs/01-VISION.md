@@ -81,6 +81,51 @@ comparing file structures (`TGIFILE.ART`, `Scooby.exe`, `object.ini`).
 
 ---
 
+## Engine Lineage (2026-06 finding)
+
+Phase 1 cross-title analysis (Rich Header on each title's main binary +
+archive magic-byte inspection — see
+[`docs/formats/scooby-exe.md`](formats/scooby-exe.md) Findings) reveals
+**one engine lineage across three format generations**:
+
+| Gen | Titles | Toolchain | Archive | Config | Cutscenes |
+|---|---|---|---|---|---|
+| **1** | Showdown (2000), Phantom (2001) | VC5 + Linker 5.10 build 8047 | `TGIFILE.ART` (raw count + index) | INI text (`object.ini`, `Scooby.eng`) | Bink |
+| **2** | Jinx (2001) | VC5 + Linker 5.10 build 8168 | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
+| **3** | Case File #1 (2002) | VC5 + Linker 5.10 builds 8168 + 8797 + one VC6 file | `MMFW` continues | XML via `libexpat.dll` | raw `.avi` |
+
+The Gen 1 → Gen 2 jump (mid-2001) coincides with a TerraGlyph build
+pipeline upgrade — new linker build, dropped legacy tools (MASM 6.14,
+cvtres), cleaner single-environment build. The Gen 2 → Gen 3 jump
+(late 2001 / 2002) coincides with the TerraGlyph shutdown and
+ImageBuilder Software (IBS) taking over development — confirmed
+concretely by:
+
+- IBS shipping Jinx-era compiled object files into Case File #1 (the
+  Linker 5.10 build 8168 entries appear in both binaries' Rich Headers)
+- IBS adding their own code on top with an updated toolchain (Linker
+  5.10 build 8797, plus one VC6-compiled source file)
+- IBS introducing XML configuration via `libexpat.dll`
+- The Case File #1 disc carrying an `IBSlogo.avi` alongside `TLClogo.avi`
+
+The TerraGlyph engine codebase continued through IBS via **direct code
+inheritance** (object files literally embedded), not just architectural
+reuse. This is the strongest possible engine-family signal.
+
+**Predictions for unverified titles:**
+
+- Case File #2 (2003): Gen 3 — likely same IBS toolchain mix, MMFW + XML + AVI
+- Phantom (2001): currently classified Gen 1 based on toolchain match to Showdown; archive format unverified (could be Gen 1 `TGIFILE.ART` or early Gen 2 `MMFW`). One-minute Format-Hex check next time the disc is mounted will lock it in.
+- Case File #3 (2007 Encore Flash re-release) and Activity Challenge: remain out of scope (different engine families entirely).
+
+**Implementation implication:** the `scooby` ScummVM engine covers one
+engine lineage with format-version-aware adapters — three archive
+parsers, two config parsers, three video paths — not three separate
+engines. The detection table (`ADGameDescription`) carries a `gen`
+flag per entry; the engine branches at the format-version boundaries.
+
+---
+
 ## Why This Is Feasible
 
 Most engine reverse engineering projects start from fully opaque binary
@@ -232,13 +277,15 @@ behavior as data — exploit that.
 - **Audio codec.** If `Music.dat` uses a licensed codec (Miles Sound System,
   patent-encumbered MP3 frames, etc.), playback may not fit ScummVM's existing
   backends cleanly.
-- **Cross-title divergence (developer-era split).** TerraGlyph developed
-  the 2000–2001 trio (Showdown, Phantom, Jinx) and shut down in 2001. The
-  Case File titles (2002–2003) shipped under a different studio post-closure.
-  Whether they inherited TerraGlyph's engine is unverified. Plan on
-  potentially two engine families, not one. Single-title support
-  (Showdown) is the minimum bar; covering all five originals is a stretch
-  goal conditional on Phase 1 file-structure comparison.
+- **Cross-title divergence (resolved 2026-06).** Phase 1 cross-title
+  analysis confirms one engine lineage spanning three format generations
+  (Gen 1 Showdown/Phantom, Gen 2 Jinx, Gen 3 Case Files). IBS inherited
+  TerraGlyph's compiled object files into Case File #1, confirming
+  code-level continuity. The engine implementation needs format-version-
+  aware parsers (one per generation per axis: archive, config, video)
+  but is not split across multiple engines. See "Engine Lineage" section
+  above for the full table. Residual risk: Case File #2 not yet
+  verified; Phantom's archive format not yet locked to Gen 1 vs Gen 2.
 - **Schedule realism.** This is a first-time ScummVM engine on an undocumented
   format. The reference engine, [BOLT](https://wiki.scummvm.org/index.php/BOLT),
   took years to get upstream. Phase ordering below is firm; durations are
@@ -320,11 +367,16 @@ Exit criteria:
 
 ### Phase 5 — Polish & Contribution
 
-Scope rule:
-- **Minimum:** full support for *Showdown in Ghost Town*.
-- **Extended (expected):** the TerraGlyph trilogy — Showdown, Phantom, Jinx — assumed to share an engine.
-- **Conditional:** Case Files #1 and #2, only if Phase 1's engine-family check showed structural compatibility.
-- **Excluded unless proven otherwise:** Case File #3 (Flash re-release) and Activity Challenge.
+Scope rule (revised per Engine Lineage finding above):
+- **Minimum:** full support for *Showdown in Ghost Town* (Gen 1).
+- **Extended (high confidence):** Showdown + Phantom (Gen 1 — identical toolchain).
+- **Extended (medium confidence):** + Jinx (Gen 2 — requires `MMFW` container parser as a sibling to the Gen 1 `TGIFILE.ART` parser).
+- **Stretch:** + Case Files #1 and #2 (Gen 3 — requires Gen 2 MMFW parser, XML config via libexpat, and `.avi` cutscene path alongside the Gen 1 Bink path).
+- **Excluded:** Case File #3 (2007 Encore Flash re-release) and Activity Challenge.
+
+Each generation extends the engine with one new adapter per axis; the
+shared engine core handles room/scene management, cursor/inventory,
+and puzzle state across all generations.
 
 Work items:
 - Test in-scope titles; generate `ADGameDescription` entries for each.

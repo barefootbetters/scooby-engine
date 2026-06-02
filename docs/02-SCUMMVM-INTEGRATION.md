@@ -73,13 +73,23 @@ a PR unless every one of these is true:
 
 ## 3. Game detection table (`ADGameDescription`)
 
-**Requirement:** Define an `ADGameDescription` array (or extended variant) keying detection on `Scooby.exe`, `TGIFILE.ART`, and `object.ini`. Match on file presence + size; MD5 only for version differentiation. Never match on ISO filename or disc directory layout.
+**Requirement:** Define an extended `ADGameDescription` array (`AdvancedMetaEngineDetection` with a per-entry `gen` flag — see below). Signature files vary by engine generation per the Phase 1 Engine Lineage finding in [`docs/01-VISION.md`](01-VISION.md#engine-lineage-2026-06-finding):
 
-**Upstream reference:** `engines/advancedDetector.h`; `engines/<engine>/detection_tables.h` patterns across existing engines.
+| Generation | Titles | Signature files |
+|---|---|---|
+| Gen 1 | Showdown, Phantom | `Scooby.exe`, `TGIFILE.ART`, `object.ini`, `Scooby.eng` |
+| Gen 2 | Jinx | `Scooby.exe` (in title-named subdir), `Mummy*.MMF`, `HD.MMA`, `HD.MMP` |
+| Gen 3 | Case File #1, Case File #2 | `Case File #N.exe`, `*.MMP`, `*.MMA`, `libexpat.dll`, `*.xml` launcher configs |
 
-**Acceptance criterion:** Each of the five candidate ISOs is either correctly detected (TerraGlyph trio + Case Files if Phase 1 confirms shared engine) or correctly rejected (Case File #3 Flash re-release). No false positives on a directory containing unrelated DOS/Windows-era game files.
+Match on file presence + size; MD5 only for version differentiation. Never match on ISO filename or disc directory layout.
 
-**Implementation notes:** *TBD. Cross-reference `docs/formats/tgifile-art.md` Findings section for the MD5 / size values to embed here once Phase 1 completes.*
+**Per-entry generation flag.** Each detection-table row carries a `gen` field (or equivalent flag in the `flags` bitfield) recording which generation the title belongs to. The engine reads this at startup and selects the appropriate archive parser, config parser, and cutscene path. This is the load-bearing piece — without it, the engine would need either runtime format sniffing (slow + brittle) or per-title hardcoded paths (PR-blocking).
+
+**Upstream reference:** `engines/advancedDetector.h`; `engines/<engine>/detection_tables.h` patterns across existing engines. For multi-format engines see existing engines with a `flags` field carrying format-version info (e.g. AGI's `GType_*` field).
+
+**Acceptance criterion:** Each of the five in-scope candidate ISOs is detected with the correct generation flag (Showdown=1, Phantom=1, Jinx=2, Case File #1=3, Case File #2=3 predicted). Case File #3 (Flash re-release) is correctly rejected. No false positives on a directory containing unrelated DOS/Windows-era game files.
+
+**Implementation notes:** *TBD. Cross-reference `docs/formats/tgifile-art.md` (Gen 1) and `docs/formats/mmfw-container.md` (Gen 2/3) for the MD5 / size values to embed here. The `gen` flag is the cleanest extension point — Phase 3 archive code can dispatch on it without expanding the detection table again later.*
 
 ---
 

@@ -6,15 +6,22 @@ title: "Format Spec: TGIFILE.ART"
 # Format Spec: `TGIFILE.ART`
 
 **Status:** Structural hypothesis confirmed — payload compression unresolved  
+**Engine generation:** **Gen 1** (Showdown 2000, Phantom 2001 — Phantom's archive format unverified but predicted Gen 1)  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample file:** `scooby\TGIFILE.ART` on the Showdown disc  
 **File size:** 144,592,896 bytes (≈ 144 MB)  
-**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 primary risk area
+**Vision doc reference:** [Project Vision](../01-VISION) — Phase 1 primary risk area; see "Engine Lineage" section for generation classification.
 
 This file is the primary technical risk for the engine. The two-level index
 structure is now understood (see Findings). The remaining unknown is the
 per-entry payload compression scheme. Until at least one entry decodes to
 a recognizable image, Phase 2 should not start.
+
+**Generation scope:** this format spec covers **Gen 1** titles only.
+Jinx (Gen 2) and Case File #1 (Gen 3) use the `MMFW` wrapper container
+format — see [`mmfw-container.md`](mmfw-container) for that spec. The
+two formats are not interchangeable; the ScummVM engine will need both
+parsers selected by the detection-time generation flag.
 
 ---
 
@@ -82,10 +89,14 @@ Observations:
   script under `tools/probe_art.py` that tries common decode strategies
   (raw RLE with 0xF0 as control, LZ with sliding window, raw 8-bit palette).
 
-### Cross-title verification
+### Cross-title verification (2026-06)
 
-Not yet performed. The `TGIFILE.ART` filename appears on all six ISOs —
-confirm format is identical before implementing the parser.
+- **Showdown (Gen 1):** documented above. `TGIFILE.ART` present at disc root.
+- **Phantom:** disc inspection pending; toolchain (Rich Header) matches Showdown identically — Phantom is classified Gen 1 and is *predicted* to use `TGIFILE.ART`, but the archive header hasn't been hex-checked yet. Lock in next time the disc is mounted with `Format-Hex E:\scooby\TGIFILE.ART -Count 8` and compare against `45 00 00 00`.
+- **Jinx (Gen 2):** uses `MMFW`-wrapped archives (`Mummy.MMF`, `HD.MMA`, `HD.MMP`) — confirmed not `TGIFILE.ART`. See [`mmfw-container.md`](mmfw-container).
+- **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container).
+
+The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation does not generalize to Gen 2/3 via this spec — those need the separate MMFW parser.
 
 ---
 

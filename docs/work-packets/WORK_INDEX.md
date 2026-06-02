@@ -15,7 +15,14 @@
 
 **Current phase:** Phase 1 — Format Research
 **Primary blocker:** WP-002 (TGIFILE.ART payload decode). Phase 2 cannot start until at least one TGIFILE.ART entry is extracted to a recognizable image.
-**Next unblocked:** WP-001 (Ghidra session) → unlocks WP-002 with the decode algorithm directly. WP-003 / WP-004 / WP-005 are parallel-safe with WP-001 and can run any time.
+**Next unblocked:** WP-001 Ghidra deep-dive (Step 1 PE Rich Header complete; full Ghidra trace still pending).
+
+### Phase 1 findings landed (2026-06)
+
+- **Engine generations identified.** Cross-title Rich Header + archive-format inspection (Showdown / Phantom / Jinx / Case File #1) reveals **one engine lineage spanning three format generations** — Gen 1 (Showdown, Phantom), Gen 2 (Jinx), Gen 3 (Case File #1). See [Engine Lineage in vision](../01-VISION.md#engine-lineage-2026-06-finding) and [scooby-exe.md cross-title comparison](../formats/scooby-exe.md#cross-title-toolchain-comparison-engine-generations).
+- **Code-level inheritance from TerraGlyph to ImageBuilder Software confirmed.** Case File #1's binary embeds Jinx-era compiled object files directly (identical MSVC 5.0 build 8034 + Linker 5.10 build 8168 entries between Jinx and Case File #1). Documented in [scooby-exe.md](../formats/scooby-exe.md).
+- **`MMFW` archive container documented.** New Gen 2/3 format spec at [`mmfw-container.md`](../formats/mmfw-container.md). Replaces `TGIFILE.ART` starting with Jinx (Oct 2001).
+- **Scope rule revised.** Phase 5 scope tightened to ordered tiers: Minimum (Showdown), Extended-high-confidence (+ Phantom), Extended-medium-confidence (+ Jinx, requires Gen 2 parser), Stretch (+ Case Files, requires Gen 3 adapters).
 
 ---
 
@@ -23,11 +30,12 @@
 
 | WP | Title | Status | Deps | EC | Notes |
 |---|---|---|---|---|---|
-| [WP-001](WP-001-ghidra-session.md) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 📝 Drafted | — | [EC-001](../execution-checklists/EC-001-ghidra-session.md) | Highest-leverage Phase 1 move; gives decode algorithm directly |
+| [WP-001](WP-001-ghidra-session.md) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 🚧 In Progress | — | [EC-001](../execution-checklists/EC-001-ghidra-session.md) | EC-001 Step 1 (PE Rich Header) ✅ done — toolchain identified across 4 titles. Steps 2–5 (Ghidra load, imports, file-I/O labeling, TGIFILE.ART decode trace) still pending. |
 | [WP-002](WP-002-tgifile-art-decoder.md) | `TGIFILE.ART` payload decoder + first image extraction | 📝 Drafted | WP-001 (preferred, not strict) | [EC-002](../execution-checklists/EC-002-probe-art-harness.md) | Phase 1 exit criterion #1 |
 | [WP-003](WP-003-pre-payload-region.md) | Inspect the 1 MB region between asset entries and first payload (palette hunt) | 📝 Drafted | — | — | Half-day; may dramatically shortcut WP-002 if it contains palette data |
 | [WP-004](WP-004-audio-archive-decode.md) | Audio archive index + codec identification | 📝 Drafted | — | — | Phase 1 exit criterion #3 |
-| [WP-005](WP-005-engine-family-check.md) | Engine-family check across Case File ISOs | 📝 Drafted | — | [EC-003](../execution-checklists/EC-003-engine-family-check.md) | Answers Phase 1 exit criterion #4; scope-defining |
+| [WP-005](WP-005-engine-family-check.md) | Engine-family check across Case File ISOs | ✅ Done (Case File #1) / 🚧 In Progress (Case File #2 not yet checked) | — | [EC-003](../execution-checklists/EC-003-engine-family-check.md) | Verdict: one engine lineage across three generations (Gen 1/2/3). Code-level inheritance from TerraGlyph to IBS confirmed in Case File #1. Case File #2 verification still owed. |
+| WP-006 *(new, follow-on)* | Phantom archive format verification (Gen 1 vs Gen 2) | 📦 Queued | — | — | One-minute `Format-Hex` check; locks in Phantom's generation classification |
 
 **Phase 1 exit gate:** see [`docs/01-VISION.md`](../01-VISION.md) → "Phase 1 — Format Research" exit criteria. Summary: one `TGIFILE.ART` entry rendered to PNG/BMP, structure documented in `docs/formats/`, audio codec named, engine-family question answered.
 
@@ -42,7 +50,7 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 | Fork `scummvm/scummvm` into `C:\www\scummvm\`; pin commit hash in `02-SCUMMVM-INTEGRATION.md` | [`02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION.md) §1, §11 |
 | Create `engines/scooby/` skeleton with `module.mk`, `configure.engine`, `POTFILES` | §10 |
 | `MetaEngineDetection` + `MetaEngine` subclasses; engine class with empty `run()` | §1, §2 |
-| `ADGameDescription` table populated from Phase 1 findings (MD5/sizes from `tgifile-art.md`) | §3 |
+| `ADGameDescription` table populated from Phase 1 findings, **carrying a per-entry generation flag** (Gen 1/2/3) per the engine lineage finding | §3 |
 | Debug channels registered | §9 |
 
 ---
@@ -51,10 +59,12 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 | Provisional scope |
 |---|
-| `TGIFILE.ART` parser as `Common::Archive` subclass |
+| `TGIFILE.ART` parser as `Common::Archive` subclass (Gen 1) |
+| `MMFW` container parser as `Common::Archive` subclass (Gen 2 / Gen 3) |
 | Audio loader through `Audio::Mixer` |
-| `Scooby.eng` parser |
-| `object.ini` parser into engine structs |
+| `Scooby.eng` parser (Gen 1 / Gen 2) |
+| `object.ini` parser into engine structs (Gen 1 / Gen 2) |
+| XML config parser (Gen 3) — likely wraps ScummVM's bundled libxml or a small in-engine parser |
 
 ---
 
