@@ -5,7 +5,7 @@ title: "WP-003: Pre-Payload Region"
 
 # WP-003: Inspect the 1 MB pre-payload region (palette hunt)
 
-**Status:** 📝 Drafted
+**Status:** ✅ Done (2026-06-02)
 **Phase:** 1 — Format Research
 **Depends on:** —
 **Unblocks (recommended, not strict):** WP-001 (Ghidra session can drop palette-hunt scope if this finds the palette), WP-002 (decoder gets a head-start on first decode strategy)
@@ -13,6 +13,7 @@ title: "WP-003: Pre-Payload Region"
 **Pre-flight required:** Yes — this WP writes facts into [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md). See [pre-flight gate](../reference/pre-flight.md) → "format documentation under `docs/formats/**` that locks a fact." Paired pre-flight at [pre-flight-WP-003-2026-06-02](../reference/pre-flight-WP-003-2026-06-02.md) (verdict READY); paired session prompt at [session-WP-003-2026-06-02](../sessions/session-WP-003-2026-06-02.md).
 **Targets generation(s):** Gen 1 (Showdown). `TGIFILE.ART` is Gen-1-only; Gen 2/3 use the MMFW family (see [mmfw-container](../formats/mmfw-container.md)). Phantom's archive format is still unverified per [scooby-exe §Pending: Phantom archive format](../formats/scooby-exe.md#pending-phantom-archive-format) — this WP does not extend to Phantom until WP-006 locks the generation classification.
 **Estimated effort:** 1–2 hours
+**Actual effort:** ~2 hours (matched estimate). Findings landed in [tgifile-art.md §Pre-payload region — engine name table](../formats/tgifile-art.md#pre-payload-region--engine-name-table); spec correction landed in [tgifile-art.md §Header layout](../formats/tgifile-art.md#header-layout); strings cross-check landed in [tgifile-art.md §Gen 1 (Showdown) — Strings cross-check (WP-007 hand-off)](../formats/tgifile-art.md#gen-1-showdown--strings-cross-check-wp-007-hand-off).
 
 ---
 
