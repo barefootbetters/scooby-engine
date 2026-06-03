@@ -131,10 +131,23 @@ Mode                 LastWriteTime         Length Name
 - **Cached EXE:** `tools/exes/showdown/Scooby.exe` (487,473 bytes ≈ 476 KB)
 - **Original disc name:** `Scooby.exe` at `E:\scooby\Scooby.exe` (no rename needed)
 - **SHA-256:** `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478`
-- **Additional cached files:** `tools/exes/showdown/Scooby.eng` (2,823 bytes, the engine error-strings file) and `tools/exes/showdown/object.ini` (25,196 bytes, the interactive-object table — 1,405 lines per [scooby-exe](../../docs/formats/scooby-exe.md)). Both small, both already characterized; cached locally for Gen 1↔Gen 2↔Gen 3 textual diffs without re-mounting. Gitignored.
+- **Additional cached text files:** `tools/exes/showdown/Scooby.eng` (2,823 bytes, the engine error-strings file) and `tools/exes/showdown/object.ini` (25,196 bytes, the interactive-object table — 1,405 lines per [scooby-exe](../../docs/formats/scooby-exe.md)). Both small, both already characterized; cached locally for Gen 1↔Gen 2↔Gen 3 textual diffs without re-mounting. Gitignored.
+- **Additional cached payload + runtime files (2026-06-02 — Showdown disc fully cached):** TGIFILE.ART, Music.dat, Sfx.dat, Voice.dat, and binkw32.dll cached under `tools/exes/showdown/`. Sizes match the disc inventory exactly. After this cache the Showdown disc never needs to be re-mounted for any drafted Phase 1 WP — the table below is the source-of-truth identity lock per the same SHA-256 discipline as the cached EXE.
 - **Captured:** 2026-06-02
 
-**Size delta vs Phantom:** Showdown is **exactly 4,096 bytes larger** than Phantom (487,473 − 483,377 = 4,096 = 0x1000, one PE section-alignment unit). Suggestive of a single section-size or padding difference between the two Gen 1 binaries — not the "+6 MASM 6.13 (build 8966) compilations" Phantom has over Showdown per the [cross-title toolchain comparison](../../docs/formats/scooby-exe.md#cross-title-toolchain-comparison-engine-generations) (those would tend to *grow* Phantom, not shrink it). Worth a one-line follow-up during WP-001 to characterize what differs; not blocking for WP-007.
+**Showdown cached-payload identity table** (all gitignored, all on the Showdown disc at `E:\scooby\`):
+
+| File | Local path | Size (bytes) | SHA-256 | Unblocks |
+|---|---|---|---|---|
+| `TGIFILE.ART` | `tools/exes/showdown/TGIFILE.ART` | 144,592,896 | `B3006E127B4EFA19CF419E92A97A8AA0A565378243CBE396ABA9707F3310C807` | [WP-003](../../docs/work-packets/WP-003-pre-payload-region.md) palette-hunt + [WP-002](../../docs/work-packets/WP-002-tgifile-art-decoder.md) decoder |
+| `Music.dat` | `tools/exes/showdown/Music.dat` | 96,182,128 | `43CC40E83F97782BDCFCE4150498BB42399AC8E37FADC0B88CE2E64A1B63EB1E` | [WP-004](../../docs/work-packets/WP-004-audio-archive-decode.md) audio index + codec |
+| `Sfx.dat` | `tools/exes/showdown/Sfx.dat` | 32,197,616 | `D6E92447688AA84DA2BC8C22C00F2E0BA5ABAA9FDADFE4E6A7F979C8A924FDCC` | [WP-004](../../docs/work-packets/WP-004-audio-archive-decode.md) |
+| `Voice.dat` | `tools/exes/showdown/Voice.dat` | 108,814,868 | `9DB041E42BE3E2C90650829C8FBD8DCA84DF5BC9B7EB46253CA893760761630E` | [WP-004](../../docs/work-packets/WP-004-audio-archive-decode.md) |
+| `binkw32.dll` | `tools/exes/showdown/binkw32.dll` | 286,208 | `1FD7EF7873C8A3BE7E2F127B306D0D24D7D88E20CF9188894EFF87B5AF0D495F` | [WP-001](../../docs/work-packets/WP-001-ghidra-session.md) Bink version-string lookup |
+
+**Skipped this round** (not blocking any drafted WP): 43 `BK.*` Bink cutscene files (~140 MB total). These are gameplay video assets, separately addressable via the same workflow when a future WP (Phase 4 cutscene playback verification, or a content-completeness check) needs them. The 0-byte `showdown.cd` disc-presence marker and the AOL/messagemate bundled-software directories are out of scope permanently — bundled retail-promotional content, not engine-relevant.
+
+**Size delta vs Phantom:** Showdown's `Scooby.exe` is **exactly 4,096 bytes larger** than Phantom's (487,473 − 483,377 = 4,096 = 0x1000, one PE section-alignment unit). Suggestive of a single section-size or padding difference between the two Gen 1 binaries — not the "+6 MASM 6.13 (build 8966) compilations" Phantom has over Showdown per the [cross-title toolchain comparison](../../docs/formats/scooby-exe.md#cross-title-toolchain-comparison-engine-generations) (those would tend to *grow* Phantom, not shrink it). Worth a one-line follow-up during WP-001 to characterize what differs; not blocking for WP-007.
 
 **Disc inventory — root (`E:\`):**
 
