@@ -51,6 +51,19 @@ Do **not** write any code yet.
 - [ ] Are there any multi-value lines (comma-separated? quoted? backslash-continued)?
 - [ ] Record the section structure and asset reference format in a scratch note. This note becomes the findings section in Step 6.
 
+### Parser mode lock (gate — do not skip)
+
+Convert the survey above into a single committed decision before any code runs. Re-opening this gate later means rewriting the parser, not patching it.
+
+- [ ] Select parser mode based on the observed asset reference format:
+  - **MODE_A** — Direct TGIFILE name-table strings (`OBJ_*`, `ROOM_*`, `ANIM_*`). Catalog labels decoded entries directly; no lookup layer.
+  - **MODE_B** — Friendly string names that do *not* match the WP-003 convention (e.g. `ghost_mine_entrance`). Catalog must carry a friendly-name → TGIFILE-name map.
+  - **MODE_C** — Numeric indices in the 0–452 range. Direct mapping to `TGIFILE.ART` OBJ entries per WP-003.
+  - **MODE_D** — Unknown / encoded / mixed. **Block implementation**; record the encoding as a new unknown for WP-001 and stop here.
+- [ ] Record selected mode: __________
+- [ ] Record one-sentence justification (the concrete evidence from the survey): __________
+- [ ] Do **not** proceed to Step 2 until a mode is selected and recorded above.
+
 **Outcome:** You know the section structure and asset-reference format. The parser design is now decided.
 
 ---
@@ -83,6 +96,10 @@ Do **not** write any code yet.
   - UTF-8?
   - Null-terminated with length prefixes?
   - Record the encoding format observed: __________
+- [ ] Identify and record the delimiter / record framing explicitly (don't infer it from the parser working):
+  - Pattern: `[NNNN]` markers / null-terminated blocks / length-prefixed records / other: __________
+  - Message ID type: numeric decimal / numeric hex / string: __________
+  - Text encoding: ASCII / UTF-8 / other: __________
 - [ ] Create `tools/parse_eng.py`
 - [ ] Parse to `{message_id: text}` JSON
 - [ ] Spot-check 5 IDs: do the text strings match what you'd expect for those IDs?
@@ -97,6 +114,13 @@ Do **not** write any code yet.
 - [ ] Write combined output to `tools/samples/asset-catalog.json`
 - [ ] Validate JSON is well-formed: `python -m json.tool tools\samples\asset-catalog.json > nul`
 - [ ] Count total entries: __ rooms, __ objects, __ cursors, __ inventory items
+- [ ] **Cross-check every asset reference against the WP-003 name table** (`tools/samples/wp003-name-table.txt`). Record concrete numbers — these are the WP-008 exit-criterion #6 metric, not a sanity check:
+  - Total asset references in `object.ini`: __
+  - Matched against WP-003 name table: __
+  - Match rate: __ %
+  - Unmatched count: __
+- [ ] Export the unmatched list to `tools/samples/unmatched-assets.txt` (gitignored, regenerable). One reference per line; empty file is acceptable and itself a finding.
+- [ ] Note the match rate in the Step 6 findings: high (≥95%) → engine is name-driven against `TGIFILE.ART`; low → record the divergence as a new unknown for WP-001.
 
 ---
 

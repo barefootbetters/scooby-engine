@@ -22,6 +22,13 @@ becomes the ground-truth reference for decoder verification: when
 `probe_art.py` decodes TGIFILE.ART entry N, you can look up what that
 entry is supposed to represent.
 
+Because of [WP-003](WP-003-pre-payload-region.md)'s baseline (engine
+name table is 1:1 with the OBJ entry table), this WP is also a **truth
+test**: it determines whether the engine is **name-driven** (string
+references resolved through the name table) or **index-driven** (numeric
+references that hit `TGIFILE.ART` entries directly). That answer
+constrains WP-001 decoder design and WP-002's labeling strategy.
+
 ## Background
 
 Without a logical asset map, Phase 1 exit criterion #1 — "visually matches
@@ -82,6 +89,61 @@ In scope:
   table; any name in one but not the other is a finding worth recording.
 - `tools/samples/asset-catalog.json` — combined output
 
+### Output schema (v1)
+
+The catalog JSON is a stable contract for downstream tools (WP-002
+probe labeling, WP-003 name-table cross-check). Top-level shape:
+
+```json
+{
+  "rooms":     { "<room_id>":   { ... } },
+  "objects":   { "<object_id>": { ... } },
+  "cursors":   { "<cursor_id>": { ... } },
+  "inventory": { "<item_id>":   { ... } }
+}
+```
+
+Room entry:
+
+```json
+{
+  "id": "<string|int>",
+  "name": "<string|null>",
+  "background_assets": ["<asset_ref>"],
+  "objects": ["<object_id>"],
+  "exits": { "<direction_or_trigger>": "<room_id>" }
+}
+```
+
+Object entry:
+
+```json
+{
+  "id": "<string|int>",
+  "room": "<room_id>",
+  "graphics": ["<asset_ref>"],
+  "sounds": ["<asset_ref>"],
+  "cursor": "<cursor_id|null>"
+}
+```
+
+`<asset_ref>` is whichever literal form `object.ini` uses (string name
+or numeric index — locked in EC-004 Step 1). Unknown keys inside a known
+section type are preserved under `extra_fields` rather than dropped.
+
+### Failure handling
+
+Parser policy (no silent drift):
+- Unknown section type → log warning, continue (record under
+  `unknown_sections` in output for the findings note).
+- Unknown key inside a known section → preserve under `extra_fields`.
+- Unparseable line inside a known section → **hard error, fail fast**
+  (do not skip; the file is small enough that ambiguity must be resolved,
+  not papered over).
+- Duplicate IDs within a section → **hard error**.
+- Malformed JSON output → **hard error** (validated via
+  `python -m json.tool` per EC-004 Step 5).
+
 Out of scope:
 - Mapping logical asset names to `TGIFILE.ART` entry indices (that mapping
   comes from WP-001/WP-002 once the exe's lookup mechanism is known)
@@ -110,6 +172,14 @@ Out of scope:
    - Asset reference format: string name? numeric index? something else?
    - Room count and object count
    - How much logic appears to be data-driven vs. implicit
+6. **Name-table cross-check report.** Records, as concrete numbers:
+   - Total asset references found in `object.ini`: __
+   - Matches against the WP-003 name table: __ (and as %)
+   - Unmatched references exported to
+     `tools/samples/unmatched-assets.txt` (gitignored).
+   A high match rate confirms the engine is name-driven against
+   `TGIFILE.ART`; a low match rate is itself the finding and feeds
+   back into WP-001's scope.
 
 ## Deliverables
 
@@ -132,3 +202,10 @@ Out of scope:
 - Stretch: run the same parsers on Phantom's `object.ini` (if extracted). Section
   structure match → cross-title asset-catalog format compatibility confirmed before
   any binary analysis.
+- **Deterministic asset-naming rule for WP-002 hand-off.** If `object.ini`'s
+  references match the WP-003 name table 1:1, decoded `TGIFILE.ART` entries
+  should be written as `entry_<index>_<sanitized_name>.png` (e.g.
+  `entry_000_DAPHNE_A.png`). Sanitization: uppercase preserved verbatim;
+  any character outside `[A-Za-z0-9_]` replaced with `_`. Locking the rule
+  here prevents a naming debate in WP-002 and keeps probe outputs
+  diff-friendly across iterations.

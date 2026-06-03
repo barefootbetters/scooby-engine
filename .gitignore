@@ -1,10 +1,21 @@
 # =============================================================
-#  Extracted game assets — NEVER commit
+#  tools/samples/ — local-only outputs
 # =============================================================
-# Decoded images, audio clips, and other artifacts produced by tools/probe_*.py
-# are derived from copyrighted Warner Bros. / Hanna-Barbera material.
-# They live locally for decoder verification only; the policy README stays
-# in git so the discipline is visible.
+# Two categories of output land here; both are blocked by the blanket
+# rule below, with only README.md and .gitkeep allowed through:
+#
+#   1. Decoded copyrighted artifacts (tools/probe_*.py outputs — PNGs of
+#      TGIFILE.ART entries, audio clips from Music.dat / Sfx.dat /
+#      Voice.dat, raw palette dumps). Derived from Warner Bros. /
+#      Hanna-Barbera material; never commit. See tools/samples/README.md
+#      for the copyright posture.
+#   2. Regenerable diagnostic outputs (asset-catalog.json,
+#      unmatched-assets.txt, wp003-name-table.txt). Not copyrighted
+#      derivatives, but reproducible from SHA-256-locked source binaries
+#      via the tooling under tools/; committing them adds noise and
+#      drifts from the canonical regeneration.
+#
+# The policy README stays in git so the discipline is visible.
 tools/samples/*
 !tools/samples/README.md
 !tools/samples/.gitkeep
