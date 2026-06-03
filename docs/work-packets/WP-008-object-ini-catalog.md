@@ -33,6 +33,34 @@ Both source files are **human-readable, available today, with zero RE
 dependency**. This is pure data engineering. The earlier it runs, the more
 useful WP-002 and WP-003 outputs become.
 
+**WP-003 baseline (2026-06-02) — partial pre-answer to the "asset reference format" question.**
+[WP-003](WP-003-pre-payload-region.md) characterized the `TGIFILE.ART`
+pre-payload region as the engine's resource-name catalog and established
+that the **OBJ section of that name table is 1:1 with the asset entry
+table** (453 OBJ records, IDs contiguous 0–452, matching `asset_count` —
+see [tgifile-art.md §Pre-payload region](../formats/tgifile-art.md#pre-payload-region--engine-name-table)).
+This means `entry[i]` in `TGIFILE.ART` is the payload for OBJ id `i`. Two
+practical consequences for WP-008:
+
+1. **`object.ini` references almost certainly use either `OBJ_<name>` strings
+   or numeric OBJ IDs 0–452.** The "indirect / encoded references" branch
+   in §Notes is now much less likely — WP-003 didn't find an encoded
+   indirection layer. The catalog's primary verification surface becomes
+   "do `object.ini`'s asset references match the TGIFILE.ART OBJ name table
+   1:1?"
+2. **Concrete naming priors WP-003 observed in the name table:**
+   - ROOMs use `ROOM_P<NN>[<sub>]` (e.g. `ROOM_P21_Boot_Hill1`,
+     `ROOM_P25A_Chase_B2_Closeup`), plus a small set of named engine rooms
+     (`ROOM_Options`, `ROOM_Quit`, `ROOM_Credits`, `ROOM_Cheat`)
+   - OBJs use `OBJ_<name>` (e.g. `OBJ_DAPHNE_A`, `OBJ_P40_TO_P33`)
+   - ANIMs use `ANIM_<category><name>` (e.g. `ANIM_CURSORARROW`,
+     `ANIM_TOOLBARCOMPUTER_IDLE`, `ANIM_FRED_ENDWALK_DL_A1`)
+
+If `object.ini`'s strings match these patterns, the catalog can label
+decoded `TGIFILE.ART` entries directly (e.g. `entry_000_DAPHNE_A.png`)
+without any further reverse engineering. If they diverge, that divergence
+is itself a finding worth recording.
+
 ## Scope
 
 In scope:
@@ -46,6 +74,12 @@ In scope:
 - `tools/parse_eng.py` — reads `Scooby.eng`, emits `{message_id: text}` JSON
 - Cross-reference: match message IDs appearing in `object.ini` to their
   text strings from `Scooby.eng`
+- **Cross-reference: match `object.ini` ROOM/OBJ/ANIM references against
+  the `TGIFILE.ART` name table** (per [WP-003 §Pre-payload region](../formats/tgifile-art.md#pre-payload-region--engine-name-table)).
+  The extracted name table is preserved at `tools/samples/wp003-name-table.txt`
+  (gitignored, regenerable from the SHA-256-locked source binary). The check
+  is: every asset name in `object.ini` should appear in the WP-003 name
+  table; any name in one but not the other is a finding worth recording.
 - `tools/samples/asset-catalog.json` — combined output
 
 Out of scope:

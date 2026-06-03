@@ -25,6 +25,7 @@ manual survey that locks in the correct approach before any code is written.
 - [ ] Python 3 available: `python --version`
 - [ ] `tools/samples/` directory exists (or will be created in Step 5)
 - [ ] [WP-007](../work-packets/WP-007-strings-and-imports.md) complete — string dump from `Scooby.exe` is useful for cross-checking asset name strings found in `object.ini`
+- [ ] [WP-003](../work-packets/WP-003-pre-payload-region.md) complete — TGIFILE.ART name table available (extracted to `tools/samples/wp003-name-table.txt`, gitignored). 811 ROOM/OBJ/ANIM names from the continuous block are the strongest cross-check input for `object.ini`'s asset references; expected naming conventions are `OBJ_<name>` / `ROOM_P<NN>[<sub>]` / `ANIM_<category><name>`. See [tgifile-art.md §Pre-payload region](../formats/tgifile-art.md#pre-payload-region--engine-name-table) for the schema.
 
 ---
 
@@ -37,8 +38,14 @@ Do **not** write any code yet.
 - [ ] Identify key-value separator: `=` or `:` or space-delimited?
 - [ ] Identify and count section types: rooms? objects? cursors? inventory? global settings?
 - [ ] Pick one room section — read it top to bottom. How are assets referenced?
-  - [ ] String names (e.g. `bg=ghost_mine_entrance`) → note it
-  - [ ] Numeric IDs (e.g. `bg=47`) → note it
+  - [ ] String names matching the WP-003 name-table convention (e.g.
+        `bg=OBJ_DAPHNE_A`, `room=ROOM_P21_Boot_Hill1`) → note it; the
+        catalog can label decoded TGIFILE.ART entries directly
+  - [ ] String names NOT matching the WP-003 convention (e.g.
+        `bg=ghost_mine_entrance` — a friendlier short name) → note it;
+        the catalog will need a name→TGIFILE.ART-name lookup table
+  - [ ] Numeric IDs (e.g. `bg=47`) → note it; if 0–452 they map directly
+        to TGIFILE.ART OBJ entries per [WP-003](../work-packets/WP-003-pre-payload-region.md)
   - [ ] Something else entirely → describe it and record before proceeding
 - [ ] Does any key value look like a message ID that would appear in `Scooby.eng`?
 - [ ] Are there any multi-value lines (comma-separated? quoted? backslash-continued)?
