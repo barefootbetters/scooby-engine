@@ -6,9 +6,13 @@ title: "WP-009: Reference Screenshot Library"
 # WP-009: Reference screenshot library (*Showdown in Ghost Town*)
 
 **Status:** 📦 Queued
-**Phase:** Pre-Work (before WP-002)
+**Phase:** 0 — Pre-Work (before WP-002)
 **Depends on:** WP-008 ✅ (room IDs available — see §Notes)
-**Companion EC:** — (no EC; inline operator checklist in §Execution)
+**Unblocks (recommended, not strict):** [EC-002](../execution-checklists/EC-002-probe-art-harness.md) pre-flight (decoder visual comparison target), [WP-001](WP-001-ghidra-session.md) §Scripted-room render branch trace, Phase 3 `*_Room.cpp` reimplementation (scripted-room ground truth)
+**Companion EC:** — (no EC; inline operator checklist in §Execution. Estimated effort ≤ 2 hrs and no sequential decision branches per [wp-lifecycle §Phase 1 — Drafting](../reference/wp-lifecycle.md#companion-ec-file-if-warranted).)
+**Pre-flight required:** No — [pre-flight.md §When pre-flight is required](../reference/pre-flight.md#when-pre-flight-is-required) explicitly exempts "screenshot/reference-image captures." This WP commits PNG/WebP image assets + a Jekyll gallery page; it does not touch `docs/formats/**`, `engines/scooby/**`, or commit tool scripts under `tools/**`, and it locks no engine-generation classification.
+**Targets generation(s):** Gen 1 (*Showdown in Ghost Town* only) — per [01-VISION §Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding). Captures from other titles (Phantom Gen 1, Jinx Gen 2, Case File Gen 3) are explicitly out of scope; each gets its own WP if/when needed.
+**Targets disc(s):** Showdown
 **Estimated effort:** 1–2 hours
 
 ---
@@ -306,7 +310,11 @@ once; check each item as completed.
       row with the `<a><img width="320"></a>` embed
 - [ ] Fill in the row's Timestamp, Match Status, and Notes columns
 
-**Close-out**
+**Close-out** (substantive docs-only WP — commits go direct to `main`
+per [wp-lifecycle §0 Triage](../reference/wp-lifecycle.md#0-triage-10-seconds);
+split into two commits per [§Two-commit topology](../reference/wp-lifecycle.md#two-commit-topology-for-code-wps).
+There is no branch and no PR for this WP — the discipline is provided
+by §Scope, the inline checklist, and the two-commit split.)
 
 - [ ] Required-tier check (Exit criterion #1): all 16 TGIFILE.ART-backed
       rooms either captured or marked `Gap` with an explicit reason;
@@ -316,16 +324,70 @@ once; check each item as completed.
 - [ ] Confirm at least one Required-tier capture is a full-room static
       background suitable for EC-002 visual comparison (Exit criterion #5)
 - [ ] Add 1–2 thumbnail teasers to the WORK_INDEX "Reference
-      Screenshots" section linking to the gallery
-- [ ] `git add` the PNG/WebP files + `index.md` changes + WORK_INDEX
-      change; commit
-- [ ] Push and verify the gallery renders at
-      `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
-      with all images loading
-- [ ] Flip WP status from 📦 Queued → ✅ Done in WORK_INDEX
+      Screenshots" section linking to the gallery (this teaser edit
+      lands in **Commit B**, not Commit A — keep the WORK_INDEX delta
+      with the status flip)
+
+**Commit A — the deliverable**
+
+- [ ] `git add` the PNG/WebP files in `docs/assets/screenshots/showdown-screens/`
+      and the `index.md` changes
+- [ ] Verify scope lock: `git diff --cached --name-only` shows ONLY paths
+      under `docs/assets/screenshots/showdown-screens/`. Anything else
+      = scope violation; `git restore --staged` it
+- [ ] Commit: `docs: WP-009 — Showdown reference screenshot library`
+      (body summarizes Required-tier coverage count, sprite anchor,
+      Stretch-tier coverage count, any Unmatched captures)
+- [ ] `git push origin main`
+
+**Commit B — the close**
+
+- [ ] Update `WP-009-reference-screenshots.md` header: Status →
+      ✅ Done (YYYY-MM-DD), add Actual effort, add Findings landed in /
+      Headline answer lines per the WP-007/WP-008 pattern
+- [ ] Update `WORK_INDEX.md`: flip WP-009 row to ✅ Done; add 1–2
+      teaser thumbnails to the Reference Screenshots section; update
+      §Current state if the close shifts the next-step calculus
+- [ ] `git add` the two doc changes
+- [ ] Verify scope lock: `git diff --cached --name-only` shows ONLY
+      `docs/work-packets/WP-009-reference-screenshots.md` and
+      `docs/work-packets/WORK_INDEX.md`
+- [ ] Commit: `docs: close WP-009 — flip to ✅ Done`
+- [ ] `git push origin main`
+
+**Verify Pages render**
+
+- [ ] Open `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
+      after the Pages build completes; confirm all embedded images load
+      (no broken-image icons in the live render) — this satisfies Exit
+      criterion #7. If anything renders broken, fix and ship a third
+      commit (`docs: WP-009 — fix gallery render`); the close stays
+      landed.
 
 ## Notes
 
+- **Governance scope.** This WP is a substantive docs-only WP per
+  [wp-lifecycle §0 Triage](../reference/wp-lifecycle.md#0-triage-10-seconds):
+  the committed surface is image assets + a Jekyll page under
+  `docs/assets/`, plus a WORK_INDEX status flip. No branch, no PR;
+  commits direct to `main` per the triage path. Pre-flight is not
+  required ([pre-flight.md exempts screenshot/reference-image
+  captures](../reference/pre-flight.md#when-pre-flight-is-required)),
+  so steps 6–7 of the wp-lifecycle end-to-end workflow (pre-flight
+  artifact, session prompt) are skipped here. The §Execution checklist
+  is the operational equivalent.
+- **Generation discipline (per [wp-lifecycle §Phase 3 — Discipline](../reference/wp-lifecycle.md#discipline)
+  + [pre-flight.md Risk review §Generation conflation](../reference/pre-flight.md#risk-review)).**
+  Every screenshot and every reference in this WP is **Gen 1**
+  (*Showdown in Ghost Town*). The 37 canonical room IDs come from the
+  Gen 1 `object.ini` catalog; `OBJ_DAPHNE_A` is `TGIFILE.ART` entry[0]
+  in the Gen 1 archive format; the scripted-room `*_Room.cpp` paths
+  (`Horseshoe_Corral_Room.cpp`, `Pie_Noon_Room.cpp`) are from the Gen 1
+  `\Scooby\GBH\` source tree. Captures from Gen 1 Phantom, Gen 2 Jinx,
+  or Gen 3 Case File titles are out of scope and would belong to
+  separate WPs. Do NOT cross-canonicalize a Phantom-longplay frame
+  against a Showdown room ID, even if the visual is similar — they're
+  different binaries with different (though related) asset graphs.
 - **Why `docs/assets/`, not `tools/samples/`:** `tools/` is excluded from the
   GitHub Pages build (`_config.yml`) and `tools/samples/*` is gitignored.
   Screenshots in `tools/` would never commit and never appear on the site.
