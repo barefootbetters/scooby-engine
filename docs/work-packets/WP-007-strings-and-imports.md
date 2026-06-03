@@ -5,14 +5,17 @@ title: "WP-007: Strings & Import Table"
 
 # WP-007: `Scooby.exe` strings dump + import table extract
 
-**Status:** 📦 Queued
+**Status:** ✅ Done (2026-06-02)
 **Phase:** 0 — Pre-Work (before WP-001)
 **Depends on:** —
 **Unblocks (recommended, not strict):** WP-003, WP-001
 **Companion EC:** — (single 15–30 min session; no checklist needed)
 **Pre-flight required:** Yes — this WP writes facts into `docs/formats/scooby-exe.md`. See [pre-flight gate](../reference/pre-flight.md) → "format documentation under `docs/formats/**` that locks a fact."
+**Pre-flight artifact:** [pre-flight-WP-007-2026-06-02-b](../reference/pre-flight-WP-007-2026-06-02-b.md) — verdict READY against commit `f3cd590`.
+**Session prompt:** [session-WP-007-2026-06-02](../sessions/session-WP-007-2026-06-02.md).
 **Targets generation(s):** Gen 1 (Showdown primary). Gen 1 (Phantom), Gen 2 (Jinx), Gen 3 (Case File #1) covered as in-scope cross-title runs — see §Cross-title runs.
-**Estimated effort:** 20–40 min (single-title 15–20 min; +5–10 min per additional title)
+**Estimated effort:** 20–40 min (single-title 15–20 min; +5–10 min per additional title). **Actual: ~30 min** (cross-title runs added negligible time; the bulk of the session was authoring the structured Findings in [scooby-exe](../formats/scooby-exe.md)).
+**Findings landed in:** [scooby-exe.md §Binary identity](../formats/scooby-exe.md#binary-identity-wp-007-baseline) (4 rows + SHA-256 lock) · [§String literals](../formats/scooby-exe.md#string-literals-wp-007) (per-title subsections + Conclusions blocks) · [§Import table](../formats/scooby-exe.md#import-table-wp-007) (per-title grouped imports + Conclusions blocks) · [§Cross-title runtime dependencies](../formats/scooby-exe.md#cross-title-runtime-dependencies) (TBD/predicted cells replaced with import-verdict cells).
 
 ---
 

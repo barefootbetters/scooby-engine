@@ -20,7 +20,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 **Current phase:** Phase 0 → Phase 1 — Pre-Work then Format Research
 **Primary blocker:** WP-002 (TGIFILE.ART payload decode). Phase 2 cannot start until at least one TGIFILE.ART entry is extracted to a recognizable image.
-**Next unblocked:** Phase 0 pre-work. Execute in order: WP-007 (15 min) → WP-003 → WP-008 + WP-009 → WP-010 → WP-001. All four Phase 0 WPs are newly added — see Phase 0 section below.
+**Next unblocked:** Phase 0 pre-work. WP-007 ✅ landed 2026-06-02. Remaining order: WP-003 → WP-008 + WP-009 → WP-010 → WP-001. The WP-007 baseline (strings + imports per title, cross-title runtime-dependencies table now import-verdict not disc-presence) is now available to WP-001 (EC-001 Step 3 becomes a cross-check, not a re-extraction) and to WP-003 (pre-payload region scan can cross-check asset-name candidates against `tools/exes/showdown/strings-ansi.txt`).
 
 ### Phase 1 findings landed (2026-06)
 
@@ -28,6 +28,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 - **Code-level inheritance from TerraGlyph to ImageBuilder Software confirmed.** Case File #1's binary embeds Jinx-era compiled object files directly (identical MSVC 5.0 build 8034 + Linker 5.10 build 8168 entries between Jinx and Case File #1). Documented in [scooby-exe](../formats/scooby-exe.md).
 - **`MMFW` archive container documented.** New Gen 2/3 format spec at [mmfw-container](../formats/mmfw-container.md). Replaces `TGIFILE.ART` starting with Jinx (Oct 2001).
 - **Scope rule revised.** Phase 5 scope tightened to ordered tiers: Minimum (Showdown), Extended-high-confidence (+ Phantom), Extended-medium-confidence (+ Jinx, requires Gen 2 parser), Stretch (+ Case Files, requires Gen 3 adapters).
+- **WP-007 baseline landed (2026-06-02).** [`Scooby.exe` strings + import-table baseline](../formats/scooby-exe.md#binary-identity-wp-007-baseline) across all four cached binaries — Showdown (Gen 1), Phantom (Gen 1), Jinx (Gen 2), Case File #1 (Gen 3). Load-bearing corrections to the [cross-title runtime-dependencies table](../formats/scooby-exe.md#cross-title-runtime-dependencies): Jinx and Case File #1 do NOT statically import Bink/Smacker/QuickTime — Gen 2 uses MSVFW32 DrawDib for AVI playback, Gen 3 uses `ole32`/`libexpat` (COM filter-graph + XML config). Gen 2/3 also dropped registry usage (`ADVAPI32.dll` not imported) and load DirectSound dynamically. Phantom's import table is byte-identical to Showdown's. Source-tree path strings reveal `C:\Scooby\GBH\` (Showdown), `C:\Scooby\FBF\` (Phantom), `C:\Projects\SCOOBY\mummy\Mmfw\` (Jinx), `F:\Scooby\Museum\framework\` (Case File #1) — same `MMVisualCursor.cpp` filename in Jinx + Case File #1 is direct source-level inheritance evidence on top of the earlier Rich-Header `MSVC 5.0 build 8034` match.
 
 ---
 
@@ -40,8 +41,8 @@ each other; recommended execution order is left-to-right in the table.
 
 | WP | Title | Status | Deps | EC | Notes |
 |---|---|---|---|---|---|
-| [WP-007](WP-007-strings-and-imports.md) | `Scooby.exe` strings dump + import table | 📦 Queued | — | — | 15–30 min; primes EC-001 Steps 3–4; run first |
-| [WP-003](WP-003-pre-payload-region.md) | Pre-payload region scan (palette hunt) | 📝 Drafted | WP-007 (recommended) | — | **Run before WP-001** — may drop the palette-hunt scope from the Ghidra session entirely |
+| [WP-007](WP-007-strings-and-imports.md) | `Scooby.exe` strings dump + import table | ✅ Done (2026-06-02) | — | — | ~30 min actual (matched WP body's 20–40 min estimate, vs. the original 15–30 min Phase 0 placeholder). Findings landed in [scooby-exe](../formats/scooby-exe.md) §Binary identity / §String literals / §Import table; cross-title runtime-dependencies table now carries import-verdict cells (no remaining TBD/predicted). Primes EC-001 Steps 3–4. |
+| [WP-003](WP-003-pre-payload-region.md) | Pre-payload region scan (palette hunt) | 📝 Drafted | WP-007 ✅ (recommended) | — | **Run before WP-001** — may drop the palette-hunt scope from the Ghidra session entirely. WP-007 baseline ✅ — asset-name candidates from the pre-payload region can now be cross-checked against `tools/exes/showdown/strings-ansi.txt` per WP-007 §Hand-off to WP-003. |
 | [WP-008](WP-008-object-ini-catalog.md) | `object.ini` + `Scooby.eng` asset catalog | 📦 Queued | — | [EC-004](../execution-checklists/EC-004-object-ini-catalog.md) | Half-day; grounds "visually matches" decoder verification |
 | [WP-009](WP-009-reference-screenshots.md) | Reference screenshot library (*Showdown*) | 📦 Queued | WP-008 (for naming) | — | 1–2 hrs; required by EC-002 pre-flight |
 | [WP-010](WP-010-scummvm-scaffold.md) | ScummVM fork + empty `engines/scooby/` scaffold | 📦 Queued | — | [EC-005](../execution-checklists/EC-005-scummvm-scaffold.md) | Half-day; pins commit hash; defines debug channel names before Ghidra annotations |
@@ -52,7 +53,7 @@ each other; recommended execution order is left-to-right in the table.
 
 | WP | Title | Status | Deps | EC | Notes |
 |---|---|---|---|---|---|
-| [WP-001](WP-001-ghidra-session.md) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 🚧 In Progress | WP-003, WP-007 (recommended) | [EC-001](../execution-checklists/EC-001-ghidra-session.md) | EC-001 Step 1 (PE Rich Header) ✅ done — toolchain identified across 4 titles. Steps 2–5 (Ghidra load, imports, file-I/O labeling, TGIFILE.ART decode trace) still pending. |
+| [WP-001](WP-001-ghidra-session.md) | Ghidra session: `Scooby.exe` imports + `TGIFILE.ART` decode trace | 🚧 In Progress | WP-003, WP-007 ✅ (recommended) | [EC-001](../execution-checklists/EC-001-ghidra-session.md) | EC-001 Step 1 (PE Rich Header) ✅ done — toolchain identified across 4 titles. WP-007 baseline ✅ — Step 3 (Imports table review) is now a cross-check against [scooby-exe §Import table](../formats/scooby-exe.md#import-table-wp-007), not a re-extraction. Steps 2, 4, 5 (Ghidra load, file-I/O labeling, TGIFILE.ART decode trace) still pending. |
 | [WP-002](WP-002-tgifile-art-decoder.md) | `TGIFILE.ART` payload decoder + first image extraction | 📝 Drafted | WP-001 (preferred, not strict) | [EC-002](../execution-checklists/EC-002-probe-art-harness.md) | Phase 1 exit criterion #1 |
 | [WP-003](WP-003-pre-payload-region.md) | Inspect the 1 MB region between asset entries and first payload (palette hunt) | 📝 Drafted | — | — | Also listed in Phase 0 — **run before WP-001**, not in parallel; may dramatically shortcut WP-002 |
 | [WP-004](WP-004-audio-archive-decode.md) | Audio archive index + codec identification | 📝 Drafted | — | — | Phase 1 exit criterion #3 |
