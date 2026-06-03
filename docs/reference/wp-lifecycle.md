@@ -205,6 +205,106 @@ The pre-flight artifact stays on `main` permanently. It's the audit record of wh
 
 ---
 
+## End-to-end operator workflow
+
+Phases 1–4 above describe the discrete artifacts a WP produces. This section strings them together into the actual loop a session runs from "next WP picked off the queue" to "close commit lands on main."
+
+The loop has off-ramps (NOT READY pre-flight → §Abandonment if the blocker doesn't clear) and conditionals (no EC for small WPs, no fork-sync for docs-only WPs, no PR for trivial fixes). Walk the path that fits the work; skipping a step is fine if the rationale is explicit. The order is the order — moving steps around generally means moving review surfaces around, which is what the order is protecting.
+
+### 0. Triage (10 seconds)
+
+- **Trivial fix** — link rot, typo, status flip, docs hygiene that locks no fact: skip to step 9 against `main`. The "one WP per branch" rule has an explicit carve-out for this; see §Phase 3 Discipline.
+- **Substantive WP** — locks a fact, edits engine code, commits a tool script, claims a generation classification: full loop below.
+- **Scope check:** does the WP touch `engines/scooby/**`? If yes, step 1 fires against the scummvm fork. If no (docs-repo-only WP), step 1 is a no-op.
+
+### 1. Sync (conditional)
+
+For WPs touching `engines/scooby/**`: run [`tools/Sync-Fork.ps1`](../../tools/Sync-Fork.ps1) against the scummvm fork to bring local `main` level with `scummvm/scummvm` and rebase the feature branch on top.
+
+For scooby-docs-repo-only WPs (every Phase 0–1 WP to date): `git switch main && git pull --ff-only origin main` against this repo. There is no upstream fork; the script does not apply.
+
+### 2. Draft WP
+
+Per §Phase 1 — Drafting. The supersession check is non-optional — three 15-second checks (WORK_INDEX scan, format-doc scan, `git log --oneline --all --grep=<slug>`); a hit means stop and extend the existing WP rather than draft a parallel one. Reserve the WP number, write `docs/work-packets/WP-NNN-<slug>.md`, add the row to [WORK_INDEX](../work-packets/WORK_INDEX.md) at 📝 Drafted.
+
+### 3. Draft EC (conditional)
+
+Per §Phase 1 — Drafting. Only when estimated effort > 2 hours, > 5 sequential steps with time-boxing, or sprawl risk. ECs are operational, not decision-making — a "decide whether X" clause belongs in the WP body, not the EC.
+
+### 4. Review + revise (one activity, possibly multiple passes)
+
+Self-review first — read the WP + EC end-to-end with fresh eyes against [01-VISION](../01-VISION.md) and [02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION.md) for alignment, and against [WORK_INDEX](../work-packets/WORK_INDEX.md) for phase fit.
+
+For substantive WPs, spawn an Agent (subagent_type `code-reviewer`) for an independent pass. The agent reads the WP + EC + the authority docs cold and flags inconsistencies the author can't easily see. Apply findings inline; iterate until the WP + EC are internally consistent and don't conflict with the authority docs.
+
+This is one activity, not two ("review" + "apply suggestions"). Real review is iterative.
+
+### 5. Branch
+
+`git switch -c wp-NNN-<slug>`. From here, everything lands on the branch, not on `main`. The §Phase 3 "one WP per branch" rule activates here; skip only for the trivial fixes that triage already routed past.
+
+### 6. Pre-flight
+
+Copy [docs/reference/pre-flight.md](pre-flight.md) → `docs/reference/pre-flight-WP-NNN-YYYY-MM-DD.md` (suffix `-b`, `-c`, etc. for same-day re-runs). Fill in every section; verdict at the bottom.
+
+**Off-ramp — NOT READY:** sign and commit the artifact (it stays on `main` as the audit record). Update the WP's WORK_INDEX row to ⏸ Blocked or note the next action in the artifact's §Path to resolution. Workflow ends here for this attempt; the next attempt cites the NOT READY in its Header per §Phase 2.
+
+### 7. Session prompt
+
+Copy [docs/sessions/session-TEMPLATE.md](../sessions/session-TEMPLATE.md) → `docs/sessions/session-WP-NNN-YYYY-MM-DD.md`. Operationalize the pre-flight per §Phase 3 — Session prompt: Repo + disc state → Pre-execution checks; Scope lock → Execution rules; Risk review top mitigations → "you MUST..." rules. Commit pre-flight + session prompt together (one commit on the branch).
+
+### 8. Execute
+
+Pass the session prompt as the first message to a fresh Claude Code session (or run inline in the current one). Commits happen *during* execution per the §Two-commit topology — they are not a separate later step. The session enforces the scope-lock allowlist by running `git diff --cached --name-only` against the allowlist before each commit.
+
+### 9. Close inside the session (still on the branch)
+
+Before opening the PR, the executing session updates three places — this is §Phase 4 — Close work, executed inside the session that did the implementation:
+
+- **WP-NNN body**: Status → ✅ Done, actual effort recorded, "Findings landed in" links added
+- **WORK_INDEX**: row → ✅ Done; downstream `Depends on:` cells annotated ✅; §Current state updated if the project's next-step calculus shifted
+- **Pre-flight artifact**: §Lessons learned filled in (one line, or "No lessons learned" explicitly — leaving it blank is a governance gap)
+
+Splitting close into a separate session adds round-trips without separating any review surface; the implementation session has the most context for the close.
+
+### 10. PR (substantive WPs only)
+
+`gh pr create` from the branch into `main`. Self-review the PR diff in GitHub's UI — it surfaces things the working tree doesn't (large diffs read differently when laid out as a single page; binary file additions are flagged explicitly; the cumulative shape of the change is visible at once instead of file-by-file).
+
+Skip for trivial fixes that triage routed past — direct-to-main is fine for the cases the §Phase 3 Discipline carve-out lists.
+
+### 11. Squash-merge + branch cleanup
+
+`gh pr merge --squash --delete-branch` does merge + push to `main` + delete remote and local branch in one command. Separate "approve", "squash-merge", "push to main", "delete branch" steps describe the same git operation; collapsing them keeps the workflow honest about what's happening.
+
+For solo operation, approval is a self-approval — the discipline is in re-reading the PR diff (step 10), not in the social ritual of clicking Approve.
+
+### 12. Next-WP handoff (usually nothing)
+
+Most cases: no action. §Current state in WORK_INDEX was updated in step 9 and that's the handoff surface; the next session reads it and knows where to start.
+
+Exception: if execution surfaced something the next WP genuinely needs that doesn't fit WORK_INDEX prose — a non-obvious anomaly, a follow-up candidate worth scoping — add it as a one-line heads-up in the next WP's §Background, or spawn a follow-up task via `mcp__ccd_session__spawn_task`. Do **not** write a separate "session context" doc — it duplicates lessons-learned + WORK_INDEX prose and drifts independently from both.
+
+### 13. Tidy (named, not vague)
+
+- `git status --short` after merge — confirms raw extracts under `tools/exes/**` and `tools/samples/**` are still gitignored (zero files staged), and no session-local detritus is left in the working tree
+- Drop any session-local stashes (`git stash list` → `git stash drop`) or branches that didn't get cleaned up by `--delete-branch`
+
+That's the scope. Directory-casing normalization, archived logs, cache pruning, etc. are session-level concerns — they ride along inside step 8 if needed, not in workflow-level tidy.
+
+### Off-ramps the loop can take
+
+| Off-ramp | Triggered by | Lands at |
+|---|---|---|
+| **Triage skip-to-main** | Step 0 — trivial fix, no fact-locking | Direct commit on `main`, no branch, no PR |
+| **NOT READY** | Step 6 — pre-flight verdicts NOT READY | NOT READY artifact committed; WORK_INDEX row → ⏸ Blocked or next-action noted; workflow ends |
+| **Supersession** | Step 2 — supersession check finds the work has shipped or is in flight | Stop drafting; extend the existing WP or close the loop with no new WP |
+| **Abandonment** | Any step after the WP+row landed on `main`, where execution stops being viable | §Abandonment ritual below — retraction commit if the WP row is on `main` |
+
+The off-ramps are first-class — taking one is a complete and valid outcome, not a failure. The audit trail (NOT READY artifact, retraction commit, supersession note in WP §Background) is what makes the loop's history reconstructable.
+
+---
+
 ## Abandonment
 
 Drafting and execution get interrupted for many reasons — a higher-priority finding lands first, the WP's premise dissolves under inspection, the operator's attention shifts to a different generation. The four states below cover cleanup per state, in ascending order of "how far did this go before abandoning."
