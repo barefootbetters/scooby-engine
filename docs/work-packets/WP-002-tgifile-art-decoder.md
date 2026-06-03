@@ -21,6 +21,45 @@ Decode at least one `TGIFILE.ART` entry from *Showdown in Ghost Town* to a recog
 
 `TGIFILE.ART` structure is understood (69 groups, 453 asset entries, 8-byte `(start, end)` records — see `docs/formats/tgifile-art.md`). The remaining unknown is the per-entry payload compression. Opening bytes of entry 0 (`F0 0C 25 5C 12 AE F0 08`) match no standard codec.
 
+**WP-003 baseline (2026-06-02) — first-decode strategy revised.** [WP-003](WP-003-pre-payload-region.md)
+established three facts that change how this WP should approach the first decode:
+
+1. **Entry 0 is `OBJ_DAPHNE_A`**, not an unnamed background. WP-003 confirmed
+   `entry[i]` is the payload for OBJ id `i`, and the OBJ name table maps
+   id 0 → `OBJ_DAPHNE_A`. The "first image" target is a character sprite
+   (Daphne, presumably idle or one walk-cycle frame), not a full-screen
+   background. Visual verification should look for a Daphne-shaped
+   silhouette, not a room. WP-009's reference screenshot library should
+   include at least one clear Daphne sprite shot.
+2. **Palette is NOT in the pre-payload region.** WP-003 ran exhaustive
+   stride-3 / stride-4 / 768-byte / 1024-byte scans on `0x0F44`–`0x10017E`
+   and found nothing palette-shaped. Palette discovery now has two
+   leading candidates: (a) per-asset leading bytes inside each
+   payload — the palette is co-located with the asset; (b) the 20-byte
+   per-record metadata field at offsets 48–67 of name-table records —
+   the palette index or a small per-resource palette lives there. The
+   "blind decode-guessing" strategy should test (a) first by probing
+   for a 256-entry RGB or RGBA block in the first 768–1024 bytes of
+   entry 0's payload.
+3. **The 20-byte metadata field carries `(6534, 6078, 6078, 0, 0)`** on
+   at least one record (`ANIM_BIG_HEAD_BG_P09DAPHNE` at file `0xE644`),
+   plausibly `(width, height_a, height_b)`. If the per-record metadata
+   on `OBJ_DAPHNE_A`'s name-table record carries similar values, that's
+   a free pre-decode dimensions hint. Worth reading the metadata field
+   of name-table records on the OBJ section before running blind decode.
+
+Two additional test corpus opportunities WP-003 surfaced:
+
+- **F0-opcode packed data interleaved in the pre-payload mixed region**
+  (`0xE6CC`–`0x10017E`, ~990 KB) uses the same compression signature as
+  the asset payloads. Smaller chunks may be easier to test against
+  than the 6 MB entry 0 — useful for fast iteration on the decode
+  algorithm before committing to a full-asset decode pass.
+- **Header offsets corrected** — `asset_count` is at `0x0118` (not
+  `0x011C`); the asset entry table is at `0x011C`–`0x0F43`. The decoder
+  should read entry records from the corrected offsets per
+  [tgifile-art.md §Header layout](../formats/tgifile-art.md#header-layout).
+
 Three viable strategies:
 
 | Strategy | Time | Confidence | Trigger |
@@ -35,7 +74,9 @@ In scope:
 - `tools/probe_art.py` — Python harness for extracting and attempting to decode entries
 - Decoder implementation in Python sufficient to render one entry to PNG/BMP
 - Visual comparison against a screenshot from gameplay or a YouTube longplay
-- Palette discovery (whether from the pre-payload region per WP-003 or from the decode logic itself)
+- **Palette discovery** — WP-003 ruled out the pre-payload region (no 256-entry RGB / RGBA palette anywhere in `0x0F44`–`0x10017E`). Investigate **(a) per-asset leading bytes** (probe for a 256×3 or 256×4 block at the start of entry 0's payload) and **(b) the 20-byte per-record metadata field** at offsets 48–67 of name-table records (may carry a palette index or small palette per resource). One of these is the right answer; both are cheap to test.
+- **Reading the 20-byte metadata field on `OBJ_DAPHNE_A`'s name-table record** at the start of decode to grab any free dimensions / palette-index hint (per WP-003 §Record format)
+- Output filenames should use the WP-003 name table (e.g. `tgifile-art-entry000-OBJ_DAPHNE_A.png`) for self-describing decode outputs
 - Recording the decode algorithm in `docs/formats/tgifile-art.md`
 
 Out of scope:
@@ -46,7 +87,7 @@ Out of scope:
 ## Dependencies
 
 - `Scooby.exe` decode trace from WP-001 (preferred)
-- Pre-payload region findings from WP-003 (palette table likely lives there)
+- Pre-payload region findings from WP-003 (✅ landed 2026-06-02 — name table, header offsets corrected, negative palette finding, 20-byte metadata field surfaced)
 - Python 3.x with `Pillow` for PNG output
 - Hex viewer for sanity-checking decoded byte patterns
 

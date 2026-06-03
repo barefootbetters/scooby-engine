@@ -94,10 +94,27 @@ Out of scope:
   YouTube 720p is fine — visual pattern matching (silhouettes, color
   palette, character placement) is sufficient to verify a decoded asset.
   You are not doing pixel-exact comparison.
-- If WP-003 has run and a palette was found: glance at the palette color
-  distribution vs. the screenshots before decoding. If the palette's
-  dominant colors match the screenshots, it's a strong pre-confirmation
-  that the indexed-color decode strategy will work.
+- **WP-003 (2026-06-02) — negative palette finding.** No palette exists in
+  the `TGIFILE.ART` pre-payload region; palette discovery moved into
+  WP-002 (per-asset leading bytes or per-record metadata). The "compare
+  palette colors against screenshots before decoding" shortcut therefore
+  does not apply at this stage — once WP-002 locates the palette, the
+  pre-decode color-distribution sanity check becomes available again
+  and is still worth running.
+- **WP-003 also unlocked canonical ROOM naming** (`ROOM_P21_Boot_Hill1`,
+  `ROOM_P25A_Chase_B2_Closeup`, etc. — 42 ROOMs total, IDs `0x1B`–`0x44`,
+  plus engine-room entries like `ROOM_Options`/`ROOM_Quit`/`ROOM_Credits`).
+  The full list is at `tools/samples/wp003-name-table.txt` (gitignored,
+  regenerable from the SHA-256-locked source binary). If screenshots are
+  named with these IDs / suffixes (e.g. `P21-boot-hill1.png` or
+  `P25A-chase-b2-closeup.png`), the cross-reference to WP-008's catalog
+  is automatic and the WP-008-runs-first ordering becomes optional rather
+  than load-bearing.
+- **WP-003 also revised the "first decode" target.** `entry[0]` is
+  `OBJ_DAPHNE_A` — a character sprite, not a background. The screenshot
+  library should include at least one clear shot of Daphne (idle or
+  walk-cycle) so WP-002 has a visual comparison target for its first
+  decode pass.
 - The YouTube timestamp in the README matters for reproducibility: if a
   decoded image is later disputed (e.g. different region disc has different
   art), you can trace the screenshot to its exact source frame and confirm

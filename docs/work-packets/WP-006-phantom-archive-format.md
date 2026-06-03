@@ -54,9 +54,12 @@ In scope:
 - Identify archive file(s) at the disc root or under `scooby\`
 - Run `Format-Hex` on the first 16 bytes of the largest archive file
 - Compare against:
-  - Gen 1 marker: `45 00 00 00` (Showdown's `TGIFILE.ART` opening)
+  - Gen 1 marker: `45 00 00 00` (Showdown's `TGIFILE.ART` opening — `group_count` = 69)
   - Gen 2 marker: ASCII `MMFW` at offset 0
-- Update the two doc references with the verdict
+- **If the first-marker check is Gen 1, run two additional structural checks** (per [WP-003](WP-003-pre-payload-region.md) baseline — the prior version of this WP would have given a Gen 1 verdict on coincidence-prone evidence). These turn a 4-byte coincidence into a structural verdict:
+  1. **Header layout check** — Phantom's `TGIFILE.ART` should match the corrected Gen 1 layout from [tgifile-art.md §Header layout](../formats/tgifile-art.md#header-layout): `asset_count` at offset `0x0118` (uint32LE, plausible small integer in the low-thousands range; Showdown's is 453). If it's at `0x011C` instead, Phantom is a Gen 1.5 variant worth recording, not vanilla Gen 1.
+  2. **Name-table check** — bytes at offset `0x0F60` should begin with the 68-byte name-record pattern (4-byte `uint32LE` id with type-tag high byte in `{0x10, 0x20, 0x31–0x3F}`, followed by an ASCII string starting with `ROOM_`, `OBJ_`, or `ANIM_`). If the first record at `0x0F60` decodes as a `ROOM_*` name, Phantom is structurally Gen 1.
+- Update the two doc references with the verdict (plus any structural surprises)
 
 Out of scope:
 - Decoding any Phantom archive payload (that's Phase 2+ once Showdown's
@@ -76,6 +79,7 @@ Out of scope:
    - [`docs/01-VISION.md`](../01-VISION.md) Engine Lineage table (the Phantom row's "Archive" cell stops saying "unverified")
    - [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) Cross-title verification section (the Phantom bullet stops saying "predicted")
 2. The hex bytes that produced the verdict are pasted into the appropriate format spec (`tgifile-art.md` if Gen 1, `mmfw-container.md` if Gen 2).
+3. **If verdict is Gen 1:** the two structural checks from §Scope (header layout per WP-003 corrected offsets + name-table sanity at `0x0F60`) both pass, OR any deviation is documented as a "Phantom Gen 1.x variant" finding in [tgifile-art.md](../formats/tgifile-art.md).
 
 ## Deliverables
 
