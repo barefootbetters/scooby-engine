@@ -80,6 +80,7 @@ Confirm every prereq WP listed in `WORK_INDEX` for `WP-XXX` is `✅ Done`. Read 
 - [ ] Disc-on-hand for each target title is mounted / extracted to a known path; paths recorded below
 - [ ] If the WP re-uses a Ghidra `.gpr`: the file exists, the analysis state matches what the WP body assumes, and the file is not open in another Ghidra instance
 - [ ] If the WP re-uses prior tool output (e.g., a committed extract under `tools/samples/`): the input hash matches what the WP assumes
+- [ ] **If the WP updates an existing `docs/formats/**.md`:** cross-check at least one non-trivial offset cited in the target doc against the actual binary, before the verdict. SHA-256 match confirms binary identity but does **not** catch spec drift (existing doc has wrong offset, future findings silently inherit the error). Decode one cited field (e.g. `uint32LE` count at offset X) and compare against the doc's claimed value. WP-003 closed against `tgifile-art.md` whose `asset_count` offset was off by +4 bytes — caught mid-session by the session prompt's step-1 sanity check, but cheaper to catch at the gate. See [pre-flight-WP-003-2026-06-02 §Lessons learned](pre-flight-WP-003-2026-06-02.md#after-execution--lessons-learned).
 
 ISO / extract paths in use:
 
