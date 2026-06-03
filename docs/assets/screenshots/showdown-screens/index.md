@@ -89,14 +89,36 @@ Every gallery row uses this 6-column schema per WP-009 §Deliverables:
 | Preview | Room ID | Source Video | Timestamp | Match Status | Notes |
 |---|---|---|---|---|---|
 
-- **Match Status** ∈ {`Canonical`, `Unmatched`, `Uncertain`}
-  - `Canonical` — filename is an exact WP-008 catalog ID
-  - `Unmatched` — `UNMATCHED_`-prefixed filename; justify in Notes
-  - `Uncertain` — canonical filename with a capture-to-ID caveat
-- **Gap rows** — for canonical IDs not captured in the longplay, leave
-  Preview / Timestamp blank, set Match Status: `—`, and use Notes for
-  one of: `Not reached in longplay` / `Not observable in source video` /
-  `Uncertain match`.
+- **Match Status** ∈ {`Canonical`, `Unmatched`, `Gap`}
+  - `Canonical` — filename is an exact WP-008 catalog ID; capture committed
+  - `Unmatched` — `UNMATCHED_`-prefixed filename; capture committed in
+    the Unmatched table at the bottom; the canonical row stays `Gap`
+    until the file can be resolved to a canonical ID and renamed
+  - `Gap` — canonical ID not captured in this pass; Preview and
+    Timestamp blank, Notes carries one of: `Not reached in longplay` /
+    `Not observable in source video`
+- There is no `Uncertain` status. "Uncertain but probably matches" is
+  not a valid third path — if you can't canonicalize confidently, save
+  as `UNMATCHED_<slug>` and leave the canonical row as `Gap`.
+
+---
+
+## Tier guidance
+
+Each room row is one of two tiers (per WP-009 §Scope):
+
+- **Required tier** — TGIFILE.ART-backed rooms. PNG required. These are
+  WP-002 decoder comparison targets.
+- **Stretch tier** — code-rendered rooms (no TGIFILE.ART entry). PNG or
+  high-quality WebP. These are WP-001 Ghidra / Phase 3 reimplementation
+  reference.
+
+Pre-known Stretch-tier rows below are flagged "scripted — no TGIFILE.ART
+entry" in the Notes column based on the WP-008 baseline. The remaining
+rows' tier becomes definitive when WP-001 / WP-002 lands; until then,
+treat them as Required unless your capture pass discovers otherwise. Add
+a "Required" or "Stretch" tag to the Notes column when capturing so the
+tier is visible without cross-referencing.
 
 ---
 

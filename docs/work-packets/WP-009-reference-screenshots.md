@@ -54,7 +54,35 @@ Phases B1–B6), the savings compound.
 
 ## Scope
 
-In scope:
+This WP has two tiers, addressing two distinct downstream consumers:
+
+- **Required tier — decoder anchors (WP-002 consumer):**
+  - All 16 `TGIFILE.ART`-backed canonical rooms from the WP-008 catalog
+    (the rooms where `entry[i]` payloads exist — primary decoder
+    comparison targets).
+  - At least one character sprite capture, `OBJ_DAPHNE_A.png` minimum
+    (`entry[0]` of `TGIFILE.ART` — WP-002 first-decode target). Sprites
+    are a small auxiliary set within this WP, not a separate WP: the
+    operator is already in the longplay with capture tooling open, and
+    rerouting them to a WP-002 pre-flight forces a second session.
+  - Files in this tier are committed as **PNG** (lossless). Lossy
+    compression here would introduce artifacts that could be mistaken
+    for decoding errors; the decoder also outputs PNG, so same-format
+    comparison is the natural fit.
+
+- **Stretch tier — gameplay reference (WP-001 / Phase 3 consumer):**
+  - The remaining 21 code-rendered canonical rooms (per [WP-008 §Notes —
+    21 ROOMs render via per-room code paths](#notes)). These have no
+    `TGIFILE.ART` entry; they're visual ground truth for the per-room
+    `*_Room.cpp` traces in WP-001 Ghidra and the Phase 3 reimplementation.
+  - Capture opportunistically as the longplay reaches each room.
+  - Files in this tier may be **PNG or high-quality WebP** (≥ 90 quality,
+    no visible artifacts). Lossless isn't load-bearing here — there's no
+    decoder comparison, only human visual reference.
+
+### Per-tier scope details
+
+In scope (both tiers):
 - Locate a *Showdown in Ghost Town* YouTube longplay (search "Scooby-Doo
   Showdown in Ghost Town full game longplay" — several exist)
 - Capture one clean stationary frame per visually distinct room per the
@@ -64,37 +92,40 @@ In scope:
     when the captured room corresponds to one (verbatim, e.g.
     `ROOM_P21_Boot_Hill1.png`). Source of truth: `tools/samples/asset-catalog.json`
     `rooms` map (gitignored — regenerate per WP-008 §Notes if missing).
-  - If no match can be confidently made, name the file
+  - If no canonical match can be confidently made, name the file
     `UNMATCHED_<descriptive-slug>.png` and log the reason in the
-    provenance table (e.g. `UNMATCHED_intro-cutscene-frame.png`).
-  - No silent guessing, no approximate matches, no half-canonical
-    filenames. Every file is either canonical or `UNMATCHED_`-prefixed.
+    provenance table (e.g. `UNMATCHED_phantom-chase-corridor.png` for
+    a chase-sequence frame that doesn't clearly map to any of the
+    `ROOM_P*_Chase_*` IDs).
+  - "Uncertain but probably matches" is NOT a third path — if you can't
+    canonicalize confidently, it's `UNMATCHED_`. The status stays
+    `Unmatched` until a later pass resolves it to a canonical ID and
+    the file is renamed. No silent guessing, no half-canonical names.
+- The gallery scaffold has already been pre-seeded: `index.md` carries
+  all 37 canonical room IDs as `*(pending capture)*` rows in five area
+  tables, plus the `OBJ_DAPHNE_A` row in the Character sprites section
+  and an empty Unmatched captures table. Capture work is fill-in-cells,
+  not table construction.
 - Store in `docs/assets/screenshots/showdown-screens/` (git-tracked,
   served by Pages — see §Notes for why not `tools/samples/`)
-- Produce `docs/assets/screenshots/showdown-screens/index.md` — renamed
-  from the existing `README.md` placeholder — as the gallery page:
-  embeds each image at constrained display width with the provenance
-  schema in §Deliverables. This `index.md` IS the canonical gallery
-  page served by GitHub Pages and is the primary deliverable of this WP.
 - Add **one or two** representative thumbnail teasers to the WORK_INDEX
   "Reference Screenshots" section, each linking to the gallery page.
-  Do NOT inline the full 16+ image set in WORK_INDEX (it would bloat
-  the master ledger; previous WORK_INDEX-rendering passes have already
-  pulled large galleries out of that file).
+  Do NOT inline the full 16+ image set in WORK_INDEX.
 
-**Screenshot quality requirements:**
+**Capture quality requirements (both tiers):**
 
-- Minimum source quality: 720p (YouTube 720p PNG export is the floor).
+- Minimum source quality: 720p (YouTube 720p export is the floor).
 - No compression artifacts that obscure shapes or colors — if the
   longplay's source quality is borderline, find a higher-quality
   longplay rather than capturing the artifact.
 - Frame must be sharp (not mid-motion).
 - Cropping is allowed ONLY to remove black borders / letterboxing —
   do not crop scene content (a cropped scene-content frame compromises
-  decoder visual comparison).
+  decoder visual comparison and Phase 3 reference).
 
 Out of scope:
-- Every animation frame, sprite pose, or inventory icon (Phase 4)
+- Every animation frame, sprite pose, or inventory icon beyond the
+  single Required-tier sprite anchor (Phase 4)
 - UI-only screenshots (inventory screen, options screen)
 - Cutscene frames — Bink decoder is handled separately
 - Phantom, Jinx, or Case File screenshots (separate WPs if needed)
@@ -107,73 +138,88 @@ Out of scope:
 
 ## Exit criteria
 
-1. **Coverage achieved.**
-   - ≥ 16 TGIFILE.ART-backed rooms captured (the rooms in the WP-008
-     catalog that have backing `entry[i]` payloads — primary WP-002
-     decoder targets).
-   - Attempt made to capture all 37 `destinationroom=` IDs present in
-     the longplay (the additional 21 are scripted/code-rendered rooms;
-     they're the visual ground truth for WP-001 Ghidra traces and Phase
-     3 `*_Room.cpp` reimplementation).
-   - Any of the 37 canonical IDs NOT captured MUST be listed in the
-     provenance table with one of these explicit reasons:
+1. **Required-tier coverage achieved (binary gate — WP cannot close
+   without this).**
+   - All 16 `TGIFILE.ART`-backed canonical rooms captured as PNG files.
+   - At least one character sprite anchor captured as `OBJ_DAPHNE_A.png`
+     (or substituted sprite if `OBJ_DAPHNE_A` is unobservable in the
+     longplay — log substitution reason in the Notes column).
+   - Any Required-tier ID NOT captured MUST be listed in the provenance
+     table with Match Status `Gap` and one of these explicit reasons:
      - `Not reached in longplay`
      - `Not observable in source video` (UI overlay, scene too brief,
        always behind transition)
-     - `Uncertain match` (something visually similar appeared but
-       couldn't be canonicalized — see `UNMATCHED_` fallback)
-   - Partial coverage is acceptable ONLY if all gaps are explicitly
-     logged in the provenance table.
+   - The Required tier has no "uncertain" escape — every Required-tier
+     row is either a captured canonical file or a `Gap` row with a
+     reason. (Uncertain captures are saved as `UNMATCHED_<slug>` and
+     listed in the Unmatched table; they do NOT satisfy Required-tier
+     coverage.)
 
-2. **Naming compliance (binary).**
+2. **Stretch-tier coverage logged.**
+   - For each of the 21 code-rendered canonical rooms, the gallery row
+     is either a captured file (PNG or high-quality WebP) or a `Gap`
+     row with the same reason set as Required tier.
+   - Partial coverage is acceptable at this tier; the gate is honest
+     accounting, not completion.
+
+3. **Naming compliance (binary, both tiers).**
    - Every committed file is either:
-     - A WP-008 canonical room ID verbatim (e.g.
-       `ROOM_P21_Boot_Hill1.png`, `ROOM_P12_Saloon.png`), OR
-     - Prefixed `UNMATCHED_<descriptive-slug>.png` with a `Match Status:
-       Unmatched` row in the provenance table and a justification in
-       the Notes column.
+     - A WP-008 canonical room or object ID verbatim (e.g.
+       `ROOM_P21_Boot_Hill1.png`, `OBJ_DAPHNE_A.png`), OR
+     - Prefixed `UNMATCHED_<descriptive-slug>.png` (or `.webp`) with a
+       `Match Status: Unmatched` row in the Unmatched captures table
+       and a justification in the Notes column.
    - No silent slugs, no near-canonical names (`ROOM_P21_BootHill.png`
      when the catalog says `ROOM_P21_Boot_Hill1`), no half-matches.
 
-3. **Gallery page rendered.**
-   - `docs/assets/screenshots/showdown-screens/index.md` (renamed from
-     `README.md` so the URL resolves cleanly) renders on the Pages site,
-     using the provenance schema in §Deliverables — every row shows an
-     embedded preview alongside Room ID / Source Video / Timestamp /
-     Match Status / Notes.
+4. **Gallery page rendered.**
+   - `docs/assets/screenshots/showdown-screens/index.md` (pre-renamed
+     from `README.md`) renders on the Pages site, using the provenance
+     schema in §Deliverables — every row shows an embedded preview
+     alongside Room ID / Source Video / Timestamp / Match Status /
+     Notes.
    - This `index.md` IS the canonical gallery page; it is the primary
      deliverable of this WP, not a side artifact.
 
-4. **Decoder-target validation.**
-   - At least one captured image is:
-     - A full-room static background (not a sprite-only frame, not a
-       partial view, not a transition).
-     - Clear and unobstructed (per §Goal capture rules).
-     - Suitable for direct visual comparison with decoded `TGIFILE.ART`
-       output — this is the frame EC-002 pre-flight will pull when
-       running decode strategies.
-   - At least one `OBJ_DAPHNE_A` (or other character sprite) capture is
-     present — `entry[0]` of `TGIFILE.ART` is `OBJ_DAPHNE_A`, so this
-     is the WP-002 first-decode comparison target. See §Notes.
+5. **Decoder-anchor validation (Required-tier sanity check).**
+   - At least one Required-tier capture is a full-room static background
+     (not a partial view, not a transition), clear and unobstructed per
+     §Goal capture rules — suitable for direct visual comparison with
+     decoded `TGIFILE.ART` output. This is the frame EC-002 pre-flight
+     will pull when running decode strategies.
+   - The `OBJ_DAPHNE_A` (or substitute) sprite anchor is present and
+     clear — `entry[0]` of `TGIFILE.ART` is `OBJ_DAPHNE_A`, so this is
+     the WP-002 first-decode comparison target. See §Notes.
 
-5. **WORK_INDEX teaser updated.**
+6. **WORK_INDEX teaser updated.**
    - WORK_INDEX "Reference Screenshots" section carries one or two
      representative thumbnail teasers, each linking to the gallery
      page. The full 16+ image set does NOT live inline in WORK_INDEX.
 
-6. **Pages render verified.**
+7. **Pages render verified.**
    - Gallery page is visible at
      `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
      and all embedded images load (no broken images in the live render).
 
 ## Deliverables
 
-- `docs/assets/screenshots/showdown-screens/<room-id>.png` × ≥ 16
-  (full-size PNGs, typically 1280×720 from YouTube 720p; commit these
-  as-is — they're the canonical assets).
+- **Required-tier files** (PNG, lossless):
+  - `docs/assets/screenshots/showdown-screens/<ROOM_id>.png` × 16
+    (TGIFILE.ART-backed canonical rooms; full-size, typically 1280×720
+    from YouTube 720p).
+  - `docs/assets/screenshots/showdown-screens/OBJ_DAPHNE_A.png` × 1
+    (or substituted sprite if `OBJ_DAPHNE_A` is unobservable; note in
+    table).
+- **Stretch-tier files** (PNG or high-quality WebP):
+  - `docs/assets/screenshots/showdown-screens/<ROOM_id>.{png,webp}` × up
+    to 21 (code-rendered canonical rooms; opportunistic).
+- **Unmatched files** (PNG or WebP, same tier as the room they would
+  belong to if canonicalized):
+  - `docs/assets/screenshots/showdown-screens/UNMATCHED_<slug>.{png,webp}` × any
 - `docs/assets/screenshots/showdown-screens/index.md` — gallery page +
-  provenance log. Renamed from `README.md` (already pre-renamed in the
-  WP-009 prep pass; git tracks the move).
+  provenance log. Pre-renamed from `README.md` in the WP-009 prep pass;
+  the scaffold (37 canonical room IDs + sprite anchor row + Unmatched
+  table) is already in place.
 
 **Provenance schema (mandatory).**
 
@@ -184,10 +230,10 @@ The `index.md` provenance table MUST include exactly these columns:
 
 Where:
 
-- **Preview** — `<a href="<file>.png"><img src="<file>.png" width="320"></a>`
-  (full-size PNG linked from the inline thumbnail; HTML width caps the
-  *displayed* size only — the underlying PNG is still full resolution
-  for decoder comparison).
+- **Preview** — `<a href="<file>"><img src="<file>" width="320"></a>`
+  (full-size file linked from the inline thumbnail; HTML width caps the
+  *displayed* size only — the underlying file is still full resolution
+  for downstream comparison).
 - **Room ID** — canonical ID in backticks, e.g. `` `ROOM_P21_Boot_Hill1` ``.
   For unmatched captures, use the `UNMATCHED_<slug>` filename here.
 - **Source Video** — link to the YouTube longplay. The same longplay
@@ -197,20 +243,27 @@ Where:
   needed for a specific room).
 - **Timestamp** — `mm:ss` or `hh:mm:ss` into the source video. Required
   for every captured row; reproducibility hinges on this column.
-- **Match Status** — one of: `Canonical`, `Unmatched`, `Uncertain`.
-  `Canonical` = filename is an exact WP-008 catalog ID. `Unmatched` =
-  `UNMATCHED_`-prefixed filename. `Uncertain` = canonical filename but
-  the capture-to-ID mapping has a caveat (e.g. picked closest visual
-  match between two similar chase rooms).
+- **Match Status** — one of: `Canonical`, `Unmatched`, `Gap`.
+  - `Canonical` — filename is an exact WP-008 catalog ID, capture is
+    committed.
+  - `Unmatched` — `UNMATCHED_`-prefixed filename, capture is committed
+    in the Unmatched table; the canonical row stays as `Gap` until the
+    file can be resolved to a canonical ID and renamed.
+  - `Gap` — canonical ID not captured; Preview and Timestamp are blank,
+    Notes carries one of the explicit reason strings from Exit
+    criterion #1.
+  - There is no `Uncertain` status. "Uncertain but probably matches" is
+    not a valid path — if you can't canonicalize confidently, save as
+    `UNMATCHED_<slug>` and leave the canonical row as `Gap`.
 - **Notes** — any ambiguity, capture limitation, or context the next
   reader needs (UI partially obscuring scene, two visually similar rooms
-  hard to distinguish, etc.). For gap rows (canonical IDs not captured),
-  use the explicit reason strings from Exit criterion #1.
+  hard to distinguish, etc.). For `Gap` rows, use the explicit reason
+  strings from Exit criterion #1.
 
-Page-weight sanity check: full-size PNGs run ~1–2 MB each; 16+ images
-unconstrained would push the page past 30 MB. The `width="320"` embed
-keeps the rendered page light without compromising the underlying
-asset.
+Page-weight sanity check: full-size PNGs run ~1–2 MB each; WebP at
+quality 90 runs ~150–300 KB. The `width="320"` embed keeps the rendered
+gallery light regardless of file format; the underlying file is
+unchanged.
 
 ## Execution
 
@@ -226,34 +279,46 @@ once; check each item as completed.
 - [ ] Open `tools/samples/asset-catalog.json` (regenerate if missing
       per WP-008 §Notes) and keep the `rooms` map visible for ID lookup
 - [ ] Open `docs/assets/screenshots/showdown-screens/index.md` for
-      editing alongside the longplay
+      editing alongside the longplay — the scaffold is already
+      pre-seeded with all 37 canonical room IDs and the sprite anchor
+      row; this WP is fill-in-cells, not table construction
+- [ ] Identify which 16 rooms are TGIFILE.ART-backed (Required tier)
+      vs which 21 are code-rendered (Stretch tier) per
+      [WP-008 §Notes](#notes); mark Required-tier rows in the scaffold
+      if helpful
 
 **Per-room capture loop** (repeat for each distinct room encountered)
 
 - [ ] Pause the longplay on a clean stationary frame (per §Goal
       capture rules: no transitions, no motion blur, no UI obstructing
       geometry)
-- [ ] Confirm the room matches a WP-008 canonical ID; if uncertain, use
-      the `UNMATCHED_<slug>.png` fallback
-- [ ] Capture full-size PNG (no scene-content cropping; black-border
-      crop only)
-- [ ] Save as `docs/assets/screenshots/showdown-screens/<canonical-or-UNMATCHED-name>.png`
-- [ ] Replace the `*(pending capture)*` cell in `index.md` with the
-      `<a><img width="320"></a>` embed
+- [ ] Match the room to a WP-008 canonical ID with confidence:
+  - If confident → file is `<canonical-id>.png` (Required tier) or
+    `<canonical-id>.{png,webp}` (Stretch tier), Match Status `Canonical`
+  - If NOT confident → file is `UNMATCHED_<slug>.{png,webp}`, Match
+    Status `Unmatched`, row added to the Unmatched table; the canonical
+    row stays as `Gap` until resolved
+- [ ] Capture at full source resolution (no scene-content cropping;
+      black-border crop only). Required tier: PNG. Stretch tier: PNG or
+      WebP quality ≥ 90.
+- [ ] Save to `docs/assets/screenshots/showdown-screens/`
+- [ ] Replace the `*(pending capture)*` cell in the appropriate table
+      row with the `<a><img width="320"></a>` embed
 - [ ] Fill in the row's Timestamp, Match Status, and Notes columns
 
 **Close-out**
 
-- [ ] Review the gallery table — every committed file appears as a
-      row; every uncaptured canonical ID has a gap row with an explicit
-      reason from Exit criterion #1
-- [ ] Confirm at least one full-room background capture exists (Exit
-      criterion #4 — decoder comparison target)
-- [ ] Confirm at least one `OBJ_DAPHNE_A` (or other character sprite)
-      capture exists (WP-002 first-decode target — see §Notes)
+- [ ] Required-tier check (Exit criterion #1): all 16 TGIFILE.ART-backed
+      rooms either captured or marked `Gap` with an explicit reason;
+      `OBJ_DAPHNE_A` (or substitute) sprite anchor present
+- [ ] Stretch-tier check (Exit criterion #2): each of the 21
+      code-rendered rooms either captured or marked `Gap`
+- [ ] Confirm at least one Required-tier capture is a full-room static
+      background suitable for EC-002 visual comparison (Exit criterion #5)
 - [ ] Add 1–2 thumbnail teasers to the WORK_INDEX "Reference
       Screenshots" section linking to the gallery
-- [ ] `git add` the PNGs + `index.md` changes + WORK_INDEX change; commit
+- [ ] `git add` the PNG/WebP files + `index.md` changes + WORK_INDEX
+      change; commit
 - [ ] Push and verify the gallery renders at
       `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
       with all images loading

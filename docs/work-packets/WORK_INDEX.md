@@ -119,17 +119,17 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 ## Reference Screenshots — *Showdown in Ghost Town* (WP-009)
 
-One screenshot per distinct room, captured from a YouTube longplay. Used as visual ground truth for WP-002's decoder (EC-002 pre-flight). Stored at [`docs/assets/screenshots/showdown-screens/`](../assets/screenshots/showdown-screens/README.md) — tracked in git, served by GitHub Pages.
+One screenshot per distinct room, captured from a YouTube longplay. Required tier serves WP-002's decoder (EC-002 pre-flight); stretch tier serves WP-001 Ghidra / Phase 3 reimplementation. Full gallery lives at [`docs/assets/screenshots/showdown-screens/`](../assets/screenshots/showdown-screens/index.md) — tracked in git, served by GitHub Pages.
 
-Screenshots populate here once WP-009 runs. Embed syntax for adding a row:
+This section carries only 1–2 representative thumbnails as a teaser linking to the gallery; the full 16+ image set does NOT live inline here (it would bloat WORK_INDEX). Embed syntax for adding a teaser row:
 
 ```markdown
-| ![Room name](../assets/screenshots/showdown-screens/room-slug.png) | Room name | `room-slug` |
+| ![Room name](../assets/screenshots/showdown-screens/ROOM_P21_Boot_Hill1.png) | Boot Hill 1 | `ROOM_P21_Boot_Hill1` |
 ```
 
 | Screenshot | Room | ID |
 |---|---|---|
-| *(WP-009 not yet run)* | | |
+| *(WP-009 not yet run — see [gallery scaffold](../assets/screenshots/showdown-screens/index.md))* | | |
 
 ---
 
