@@ -213,7 +213,7 @@ The loop has off-ramps (NOT READY pre-flight → §Abandonment if the blocker do
 
 ### 0. Triage (10 seconds)
 
-- **Trivial fix** — link rot, typo, status flip, docs hygiene that locks no fact: skip to step 9 against `main`. The "one WP per branch" rule has an explicit carve-out for this; see §Phase 3 Discipline.
+- **Trivial fix** — link rot, typo, status flip, docs hygiene that locks no fact: edit + `git commit` + `git push origin main` directly. No branch, no pre-flight, no session prompt, no PR. The "one WP per branch" rule has an explicit carve-out for this; see §Phase 3 Discipline. Forgetting the push is the failure mode here — GitHub Pages builds from `origin/main`, so an unpushed direct-to-main commit looks "done" locally but isn't visible to anyone.
 - **Substantive WP** — locks a fact, edits engine code, commits a tool script, claims a generation classification: full loop below.
 - **Scope check:** does the WP touch `engines/scooby/**`? If yes, step 1 fires against the scummvm fork. If no (docs-repo-only WP), step 1 is a no-op.
 
@@ -296,7 +296,7 @@ That's the scope. Directory-casing normalization, archived logs, cache pruning, 
 
 | Off-ramp | Triggered by | Lands at |
 |---|---|---|
-| **Triage skip-to-main** | Step 0 — trivial fix, no fact-locking | Direct commit on `main`, no branch, no PR |
+| **Triage skip-to-main** | Step 0 — trivial fix, no fact-locking | Direct commit on `main` + `git push origin main`, no branch, no PR |
 | **NOT READY** | Step 6 — pre-flight verdicts NOT READY | NOT READY artifact committed; WORK_INDEX row → ⏸ Blocked or next-action noted; workflow ends |
 | **Supersession** | Step 2 — supersession check finds the work has shipped or is in flight | Stop drafting; extend the existing WP or close the loop with no new WP |
 | **Abandonment** | Any step after the WP+row landed on `main`, where execution stops being viable | §Abandonment ritual below — retraction commit if the WP row is on `main` |
