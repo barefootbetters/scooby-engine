@@ -148,7 +148,14 @@ Mode                 LastWriteTime         Length Name
 - **Cached EXE:** `tools/exes/showdown/Scooby.exe` (487,473 bytes ≈ 476 KB)
 - **Original disc name:** `Scooby.exe` at `E:\scooby\Scooby.exe` (no rename needed)
 - **SHA-256:** `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478`
-- **Additional cached text files:** `tools/exes/showdown/Scooby.eng` (2,823 bytes, the engine error-strings file) and `tools/exes/showdown/object.ini` (25,196 bytes, the interactive-object table — 1,405 lines per [scooby-exe](../../docs/formats/scooby-exe.md)). Both small, both already characterized; cached locally for Gen 1↔Gen 2↔Gen 3 textual diffs without re-mounting. Gitignored.
+- **Additional cached text files:** `tools/exes/showdown/Scooby.eng` (2,823 bytes, the engine error-strings file) and `tools/exes/showdown/object.ini` (25,196 bytes, the interactive-object table — 1,405 lines per [scooby-exe](../../docs/formats/scooby-exe.md)). Both small, both already characterized; cached locally for Gen 1↔Gen 2↔Gen 3 textual diffs without re-mounting. Gitignored. SHA-256s recorded for WP-008 audit (the [`object.ini` interpreter behavior](../../docs/formats/scooby-exe.md#objectini-interpreter-behavior) Findings subsection derives from these binaries):
+
+  | File | Local path | Size (bytes) | SHA-256 |
+  |---|---|---|---|
+  | `Scooby.eng` | `tools/exes/showdown/Scooby.eng` | 2,823 | `EE9BE93A024FF9B7F5EA1C2445B711FB7C13CEF61A079A4609EDF1201CBAB19B` |
+  | `object.ini` | `tools/exes/showdown/object.ini` | 25,196 | `027928BB0219B9EADFEC1E066278D9BD3521B48B3E2D420DD7FEA69558A41C49` |
+
+  Note: `Scooby.eng`'s SHA-256 is **byte-identical** to Phantom's `SCOOBY.ENG` row in the [Phantom cached-payload identity table](#phantom-gen-1) — Gen 1 ships the same system-error string table across both titles.
 - **Additional cached payload + runtime files (2026-06-02 — Showdown disc fully cached):** TGIFILE.ART, Music.dat, Sfx.dat, Voice.dat, and binkw32.dll cached under `tools/exes/showdown/`. Sizes match the disc inventory exactly. After this cache the Showdown disc never needs to be re-mounted for any drafted Phase 1 WP — the table below is the source-of-truth identity lock per the same SHA-256 discipline as the cached EXE.
 - **Captured:** 2026-06-02
 

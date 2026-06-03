@@ -5,11 +5,14 @@ title: "WP-008: object.ini Asset Catalog"
 
 # WP-008: `object.ini` + `Scooby.eng` logical asset catalog
 
-**Status:** 📦 Queued
+**Status:** ✅ Done (2026-06-03)
 **Phase:** Pre-Work (before WP-002)
 **Depends on:** —
 **Companion EC:** [EC-004](../execution-checklists/EC-004-object-ini-catalog.md)
 **Estimated effort:** Half-day
+**Actual effort:** ~3 hours (single session, 2026-06-03)
+**Findings landed in:** [scooby-exe.md → `object.ini` interpreter behavior](../formats/scooby-exe.md#objectini-interpreter-behavior)
+**Headline answer:** Engine is **name-driven**. 100 % of `object.ini` asset references are strings in the WP-003 name-table convention (`ROOM_*`/`OBJ_*`/`ANIM_*`); zero numeric indices. 77.27 % cross-check match rate (221 / 286) against the `TGIFILE.ART` name table — the 65 unmatched are scripted/engine-rendered rooms, invisible hotspot objects, and inventory-specific cursor animations that live in other name-keyed stores.
 
 ---
 

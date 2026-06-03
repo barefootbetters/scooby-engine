@@ -675,7 +675,101 @@ These three are the canonical COM-client initialization triad. Combined with the
 
 ### `object.ini` interpreter behavior
 
-*TBD — data-driven or not? What categories of logic live in the exe?*
+#### Gen 1 (Showdown)
+
+Source binaries (committed to memory at the SHA-level, not the byte-level — files are not staged):
+
+| File | Path | Size (bytes) | SHA-256 |
+|---|---|---|---|
+| `object.ini` | `tools/exes/showdown/object.ini` | 25,196 | `027928BB0219B9EADFEC1E066278D9BD3521B48B3E2D420DD7FEA69558A41C49` |
+| `Scooby.eng` | `tools/exes/showdown/Scooby.eng` | 2,823 | `EE9BE93A024FF9B7F5EA1C2445B711FB7C13CEF61A079A4609EDF1201CBAB19B` |
+
+The `Scooby.eng` row is **byte-identical between Showdown and Phantom** (same SHA-256, same 2,823-byte size) — a cross-Gen-1 finding pre-recorded in the [WP-008 pre-flight](../reference/pre-flight-WP-008-2026-06-03.md#repo--disc-state). Gen 1 ships a shared system-error string table across both titles. All `object.ini` behavior claims below are scoped to Showdown's binary; Phantom's `OBJECT.INI` is a different SHA / different size (28,788 bytes) and runs at its own WP if/when it's pulled in.
+
+Catalog produced by [`tools/parse_ini.py`](../../tools/parse_ini.py) + [`tools/parse_eng.py`](../../tools/parse_eng.py); raw outputs (`tools/samples/asset-catalog.json`, `tools/samples/unmatched-assets.txt`) stay local-only per the WP-008 copyright posture. Findings below cite **counts, patterns, and structure** only.
+
+##### Section structure (the surprise)
+
+The file is **not** organized by entity type. It is a flat list of **215 `[OBJ_*]` sections**. There are zero top-level `[ROOM_*]`, `[CURSOR_*]`, `[INVENTORY_*]`, or `[GLOBAL]` sections. Entity-type discrimination happens through the `ID=` field on each `[OBJ_*]` section. Five values exist:
+
+| `ID=` value | Count | Role |
+|---|---|---|
+| `exitobject` | 77 | Room-to-room navigation triggers (carry `destinationroom=`, `character=`, `direction=`, per-character `direction` overrides) |
+| `clickableobject` | 103 | Interactive hotspots (carry `sequence=`, `priority=`, `layer=`, `rolloveranim=`) |
+| `inventoryobject` | 11 | Pickable items (carry `toolbaranim=`, `usecursor=`, `pickupanim/sfx/movie=`) |
+| `requiresobject` | 13 | Hotspots gated by an inventory cursor (carry `requiredanim=`) |
+| `simpleobject` | 11 | Pure visual hotspots (carry `sequence=`, `priority=`, `layer=`) |
+
+Total: 215. Total v1-schema buckets after synthesis: **215 objects · 37 rooms · 23 cursors · 11 inventory** (`tools/samples/asset-catalog.json` `counts` block). The `rooms`/`cursors` buckets are derived during the post-parse cross-reference pass: rooms from the unique `destinationroom=` values, cursors from unique `ANIM_CURSOR*` references.
+
+Section-attribute keys observed: `ID`, `character`, `daphne`, `destinationroom`, `direction`, `fred`, `layer`, `movie`, `pickupanim`, `pickupmovie`, `pickupsfx`, `priority`, `requiredanim`, `rolloveranim`, `scene`, `scooby`, `scrappyid`, `sequence`, `shaggy`, `toolbaranim`, `usecursor`, `velma`. No quoting, no multi-value lines, no backslash continuations. Sentinel values: `<none>` and `-1`.
+
+##### Asset-reference format — the load-bearing finding
+
+**The engine is name-driven.** Every asset reference in `object.ini` is a string in the WP-003 `TGIFILE.ART` name-table convention — `ROOM_*` for rooms, `ANIM_*` for animations, `OBJ_*` as the section-header convention itself. No numeric indices appear as asset references. The few numerics that do appear (`movie=-1`, `pickupmovie=-1`, `layer=1`, `priority=100`) are engine sentinels or render-order metadata, not asset-store lookups.
+
+Parser mode selected per the [EC-004 Step 1 parser-mode-lock gate](../execution-checklists/EC-004-object-ini-catalog.md#parser-mode-lock-gate--do-not-skip): **MODE_A** — Direct TGIFILE name-table strings.
+
+##### WP-003 name-table cross-check (Exit criterion #6)
+
+The exit criterion specifies a four-number metric: total / matched / unmatched / rate. Computed against the [`TGIFILE.ART` pre-payload name table](tgifile-art.md#pre-payload-region--engine-name-table) regenerated at `tools/samples/wp003-name-table.txt` (811 records: 42 ROOM, 453 OBJ, 316 ANIM):
+
+| Metric | Value |
+|---|---|
+| Total asset references in `object.ini` | **286** |
+| Matched against WP-003 name table | **221** |
+| Unmatched | **65** |
+| Match rate | **77.27 %** |
+
+77 % is below the pre-flight's "≥95 % → unambiguous name-driven evidence" threshold, but the 65 unmatched are not evidence of a non-name-driven mechanism — they are a coverage gap. Every unmatched reference is still a `ROOM_*`/`OBJ_*`/`ANIM_*` string in the WP-003 convention; the references just don't have corresponding `TGIFILE.ART` payloads. Bucketed:
+
+| Unmatched bucket | Count | What it tells us |
+|---|---|---|
+| `ROOM_*` referenced by `destinationroom=` but absent from WP-003's 42-ROOM table | 21 | Includes `ROOM_Main_Menu` plus 20 `ROOM_P{NN}_<descriptive>` rooms. Either these rooms have no pre-rendered backgrounds (scripted/engine-rendered scenes — `ROOM_P30_Horseshoe_Corral`, `ROOM_P32_Pie_Noon` are minigames per the source-tree paths `\Scooby\GBH\Horseshoe_Corral_Room.cpp` and `\Scooby\GBH\Pie_Noon_Room.cpp` in the [Showdown strings findings](#showdown-gen-1)), or their backgrounds live in a separate archive. |
+| `OBJ_*` section headers (hotspot / exit / overlay) with no `TGIFILE.ART` art payload | 25 | Names ending in `_HOTSPOT*`, `_TO_P*`, `_OVERLAY` — invisible click targets that don't need pre-rendered art. Corroborates the [Showdown strings finding](#showdown-gen-1) of `Failed to locate id %s` / `Failed to locate object name %s` as the engine's string-keyed lookup error path — not every `[OBJ_*]` ID is expected to resolve to an art entry. |
+| `ANIM_CURSOR<NAME>` and `ANIM_TOOLBAR<NAME>` for inventory items | 19 | All 11 `OBJ_INV_*` items reference a `ANIM_CURSOR<NAME>` + a `ANIM_TOOLBAR<NAME>`. **System** toolbar animations (`ANIM_TOOLBARCOMPUTER_IDLE`, `ANIM_TOOLBARSCRAPPY_IDLE`, `ANIM_TOOLBARMAGGLASS_IDLE`, etc.) **do** match the WP-003 table; the inventory-item variants do not. Either inventory animations live in a separate asset store, or `TGIFILE.ART` only carries the system toolbar animations and the inventory ones are generated/composited at runtime. New unknown for WP-001. |
+
+So the answer to WP-008's load-bearing question — **"is the engine name-driven (string references resolved through the WP-003 name table) or index-driven (numeric references that hit `TGIFILE.ART` entries directly)?"** — is **name-driven**, full stop. The 77 % match rate refines but does not refute this: `TGIFILE.ART` is one of multiple name-keyed asset stores. WP-002's `probe_art.py` can label decoded `TGIFILE.ART` entries directly via the WP-003 name table (per the [WP-008 §Notes deterministic naming rule](../work-packets/WP-008-object-ini-catalog.md#notes)); the 65 unmatched references just won't have a corresponding decoded entry to label.
+
+##### Failure-handling synthetic-input checks
+
+[`tools/parse_ini.py --self-test`](../../tools/parse_ini.py) runs four synthetic-input cases corresponding to the four policy lines in [WP-008 §Failure handling](../work-packets/WP-008-object-ini-catalog.md#failure-handling):
+
+| Synthetic input | Expected behavior | Verified |
+|---|---|---|
+| Duplicate `[OBJ_A]` section | Hard-fail (`ParseError("duplicate section …")`) | ✅ |
+| Unknown key `mysteryfield=42` inside known `[OBJ_X]` section | Preserved under `extra_fields` | ✅ |
+| Malformed line `this line has no equals sign` inside known section | Hard-fail (`ParseError("unparseable line …")`) | ✅ |
+| Unknown section type `[GLOBAL]` | Warned, recorded under `unknown_sections`; subsequent K/V lines silently skipped until next known section | ✅ |
+
+##### `Scooby.eng` integration
+
+`Scooby.eng` parses cleanly with [`tools/parse_eng.py`](../../tools/parse_eng.py): 10 messages, IDs `0001` and `0010`–`0018`, all system-error/init strings. All 5 spot-checked strings appear verbatim in `Scooby.exe`'s `strings-ansi.txt` (lines 1674–1683 per the [Showdown strings findings](#showdown-gen-1)), confirming the engine loads `Scooby.eng` at startup and renders these strings as-is for hardware-init / DirectX failure paths. The file documents its own format in its first ~25 lines (`^` comment marker, `[NNNN]` message-ID declaration, "line breaks taken literally" inside a message). Encoding: pure ASCII (0 high-bit bytes across all 2,823 bytes), CRLF line endings.
+
+**No `object.ini` field is shaped like a `Scooby.eng` message ID.** The combined catalog records `object_ini_to_eng_resolutions: 0`. `Scooby.eng` is not a runtime localization table for `object.ini` strings; it is purely the boot/error-message table for `Scooby.exe`'s system-error paths (the `0010`–`0018` block matches the DirectDraw/DirectSound/CD-ROM failure surface called out in the [Known facts](#known-facts) section above and corroborated by the binary's import table). In-game dialogue text is not in `Scooby.eng`; it lives in `voice.dat` or in scripted dialogue elsewhere (a new unknown to scope as part of [WP-004](../work-packets/WP-004-audio-archives.md)).
+
+##### Data-driven vs implicit
+
+`object.ini` carries **the asset-binding layer** end-to-end: every interactive object, every room exit, every cursor swap, every inventory item is named here. What it does *not* carry:
+
+- **Puzzle state machines.** No conditional `requires=item_X then unlock_Y` structure exists — `requiresobject`'s only state is `requiredanim=<cursor>`, which gates the input event, not the puzzle outcome.
+- **Room-to-room transition rules** beyond the immediate `destinationroom=`. No "if Scooby has the lantern, Tunnel_Dark becomes Tunnel_Lit" logic.
+- **Background art bindings.** Rooms have no `bg=` field — the engine resolves the room background through a different lookup (most likely the canonical room name → `TGIFILE.ART` entry, which the WP-003 cross-check confirms is the bulk of the matched references on the room side).
+- **The 5 `ID=` values are leaf categories**, not a state machine. Whatever ties a hotspot click to a puzzle outcome lives in the exe (or in a scripted dialogue file not yet parsed).
+
+So the data-driven hypothesis stated under [Hypotheses (unverified)](#hypotheses-unverified) — *"Most gameplay rules are driven by `object.ini`, with the exe acting as interpreter"* — is **partially confirmed and importantly refined**: the *asset-binding and navigation graph* is data-driven, but the *puzzle/state logic* is not. WP-001 (Ghidra session) needs to find the function that consumes `object.ini` (likely the loader that triggers on the `Failed to load room.` error string per the [Showdown strings findings](#showdown-gen-1)) and the function that resolves cursor-key + click-target combinations to script invocations (probably keyed by the `scrappyid=Global.Scrappy.*` field, which suggests a script-table identifier resolved from a different file).
+
+##### Deterministic asset-naming rule for WP-002 hand-off
+
+Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
+
+| Raw name (from WP-003 name table / `object.ini`) | Sanitized | Hypothetical `probe_art.py` output |
+|---|---|---|
+| `OBJ_DAPHNE_A` | `OBJ_DAPHNE_A` | `entry_<idx>_OBJ_DAPHNE_A.png` |
+| `OBJ_P40_TO_P33` | `OBJ_P40_TO_P33` | `entry_<idx>_OBJ_P40_TO_P33.png` |
+| `ANIM_CURSORARROW` | `ANIM_CURSORARROW` | `entry_<idx>_ANIM_CURSORARROW.png` |
+
+No name observed required actual sanitization (no spaces, no punctuation, no non-`[A-Za-z0-9_]` characters) — the engine names are already filename-safe. The sanitization function ships in `parse_ini.py` as a documented no-op identity on the observed inputs; the rule is recorded for forward-compat with names from any future WP that finds them.
 
 ### Threading and event model
 
