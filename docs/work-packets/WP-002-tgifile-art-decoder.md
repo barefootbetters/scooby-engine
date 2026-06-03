@@ -48,6 +48,8 @@ established three facts that change how this WP should approach the first decode
    a free pre-decode dimensions hint. Worth reading the metadata field
    of name-table records on the OBJ section before running blind decode.
 
+**WP-008 baseline (2026-06-03) — labeling rule confirmed + coverage expectations sharpened.** The [Showdown `object.ini` analysis](../formats/scooby-exe.md#objectini-interpreter-behavior) confirmed the engine is name-driven (MODE_A), so the deterministic naming rule from [WP-008 §Notes](WP-008-object-ini-catalog.md#notes) — `entry_<index>_<wp003_name>.png`, sanitization preserving uppercase verbatim, anything outside `[A-Za-z0-9_]` → `_` — applies directly. Confirmed clean: every observed name (`OBJ_DAPHNE_A`, `OBJ_P40_TO_P33`, `ANIM_CURSORARROW`) is already filename-safe; sanitization is a no-op on every observed input. The 65 unmatched references from the WP-008 cross-check (21 scripted/engine `ROOM_*`, 25 invisible-hotspot `OBJ_*`, 19 inventory-specific `ANIM_*`) are **not expected to resolve to decoded `TGIFILE.ART` entries** — they're hotspots without art payloads, scripted rooms rendered by per-room functions (see [WP-001 §Background](WP-001-ghidra-session.md#background)), and inventory animations that live in another store. EC-002's probe coverage should treat their absence as expected, not as a decoder bug; verifying zero of them produce decoded output is itself a finding worth recording.
+
 Two additional test corpus opportunities WP-003 surfaced:
 
 - **F0-opcode packed data interleaved in the pre-payload mixed region**

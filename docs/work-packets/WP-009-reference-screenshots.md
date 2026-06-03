@@ -7,7 +7,7 @@ title: "WP-009: Reference Screenshot Library"
 
 **Status:** 📦 Queued
 **Phase:** Pre-Work (before WP-002)
-**Depends on:** WP-008 (for room ID naming — can run without it using descriptive slugs)
+**Depends on:** WP-008 ✅ (room IDs available — see §Notes)
 **Companion EC:** — (manual capture; no checklist needed)
 **Estimated effort:** 1–2 hours
 
@@ -110,6 +110,34 @@ Out of scope:
   `P25A-chase-b2-closeup.png`), the cross-reference to WP-008's catalog
   is automatic and the WP-008-runs-first ordering becomes optional rather
   than load-bearing.
+- **WP-008 (2026-06-03) — canonical room list now in the catalog.**
+  The asset catalog at `tools/samples/asset-catalog.json` (gitignored,
+  regenerable via `py -3 tools/parse_ini.py tools/exes/showdown/object.ini
+  --catalog --eng tools/exes/showdown/Scooby.eng --name-table
+  tools/samples/wp003-name-table.txt --out tools/samples/asset-catalog.json`)
+  carries the 37 canonical `destinationroom=` IDs actually referenced
+  by `object.ini` — a strict subset of the 42 ROOM entries in WP-003's
+  name table. Use these 37 as the screenshot-naming source of truth
+  (e.g. `ROOM_P21_Boot_Hill1.png`, `ROOM_P12_Saloon.png`,
+  `ROOM_Main_Menu.png`). The 5 ROOM entries in WP-003 not referenced
+  by `object.ini` (`ROOM_Cheat`, `ROOM_Options`, `ROOM_Quit`,
+  `ROOM_Credits`, etc.) are reachable through menu/system paths and
+  worth capturing if encountered, but they're not on the room-by-room
+  gameplay path.
+- **WP-008 (2026-06-03) — 21 ROOMs render via per-room code paths.**
+  Per the [scooby-exe.md `object.ini` Findings](../formats/scooby-exe.md#objectini-interpreter-behavior),
+  21 of the 37 `destinationroom=` values point at rooms that have **no
+  `TGIFILE.ART` entry** — including `ROOM_Main_Menu`,
+  `ROOM_P01_Town_Center`, `ROOM_P12_Saloon`,
+  `ROOM_P30_Horseshoe_Corral` (minigame), `ROOM_P32_Pie_Noon`
+  (minigame). For these rooms the WP-002 decoder will NOT produce a
+  matching background, because there isn't one — they're rendered by
+  per-room code (`\Scooby\GBH\Horseshoe_Corral_Room.cpp`,
+  `Pie_Noon_Room.cpp`, etc. per the [Showdown source-tree
+  strings](../formats/scooby-exe.md#showdown-gen-1)). Capture
+  screenshots of these anyway: they're the visual ground truth for
+  the per-room code paths that WP-001 will trace in Ghidra and
+  ScummVM-side Phase 3 will need to reimplement.
 - **WP-003 also revised the "first decode" target.** `entry[0]` is
   `OBJ_DAPHNE_A` — a character sprite, not a background. The screenshot
   library should include at least one clear shot of Daphne (idle or

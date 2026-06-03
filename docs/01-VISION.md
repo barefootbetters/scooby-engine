@@ -294,6 +294,23 @@ Phase 4 scope. Prefer the data-driven path whenever it's feasible. The
 1,405-line `object.ini` strongly suggests TerraGlyph already exposed most
 behavior as data — exploit that.
 
+**WP-008 baseline (2026-06-03) — refines the A/B split with evidence.** The
+Showdown `object.ini` analysis ([scooby-exe.md §`object.ini` interpreter
+behavior](formats/scooby-exe.md#objectini-interpreter-behavior)) confirms
+the **asset-binding and navigation graph** are pure path A — every
+asset reference is a string in the WP-003 name-table convention
+(`ROOM_*`/`OBJ_*`/`ANIM_*`), no numeric indices, 215 OBJ entries
+discriminated by an `ID=` field with 5 values. But the **puzzle / state
+logic is not in `object.ini`** — no conditional `if-X-then-Y` structure
+exists, `requiresobject` only gates input events not outcomes, and the
+`scrappyid=Global.Scrappy.*` field references a script identifier
+resolved elsewhere. So path A handles binding + navigation; path B
+(Ghidra trace of the `Scooby.eng` "Failed to load room." loader and the
+`scrappyid` script resolver) is unavoidable for puzzle / state behavior.
+The 1,405-line comment above is correct in spirit but should be read as
+"most of the asset / navigation layer is data" — not "most of the game
+logic is data."
+
 ---
 
 ## Risks & Unknowns

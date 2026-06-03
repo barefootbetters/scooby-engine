@@ -63,6 +63,55 @@ from the pre-payload region; it's expected to read from inside an asset
 payload at or after `0x10017E`, or from the 20-byte metadata field on
 OBJ records.
 
+**WP-008 baseline (2026-06-03) — four additional Ghidra-session targets.**
+The Showdown `object.ini` analysis ([scooby-exe.md §`object.ini`
+interpreter behavior](../formats/scooby-exe.md#objectini-interpreter-behavior))
+confirmed the engine is name-driven (every reference is a string in the
+WP-003 convention) and produced four concrete loose ends that only the
+exe can resolve:
+
+- **`object.ini` consumer / loader.** The 215 `[OBJ_*]` sections are
+  discriminated by an `ID=` field with 5 values (`exitobject`,
+  `clickableobject`, `inventoryobject`, `requiresobject`,
+  `simpleobject`). The interpreter almost certainly has a switch on
+  this string — find it by xref-ing the `Failed to load room.` error
+  string in `strings-ansi.txt`. Adjacent to that switch should be the
+  `(name → asset)` hash-table lookup that resolves
+  `destinationroom=ROOM_*` and `rolloveranim=ANIM_*` values to runtime
+  asset records.
+- **`scrappyid` script-table resolver.** `exitobject` entries carry
+  `scrappyid=Global.Scrappy.<scene>_<entry>` (e.g.
+  `Global.Scrappy.Town_Center_to_Street3`). This is a script-system
+  identifier, not an asset name — there's no `Scrappy.*` table in
+  `object.ini` or `Scooby.eng`. The store is a new unknown; tracing
+  what reads the `scrappyid` value during room-exit handling will
+  surface it (most likely embedded in the binary or in a not-yet-found
+  data file).
+- **Inventory-anim resolution path.** The 11 `OBJ_INV_*` entries each
+  reference `ANIM_TOOLBAR<NAME>` + `ANIM_CURSOR<NAME>` (e.g.
+  `ANIM_TOOLBARBLANKET`, `ANIM_CURSORBLANKET`) — none of which appear
+  in the WP-003 `TGIFILE.ART` name table. System toolbar animations
+  (`ANIM_TOOLBARCOMPUTER_IDLE`, `ANIM_TOOLBARSCRAPPY_IDLE`) *do* appear
+  in the WP-003 table. So inventory art is in a separate store or is
+  composited at runtime from base assets + per-item parameters. Find
+  the function that resolves `toolbaranim=`/`usecursor=` for inventory
+  objects.
+- **Scripted-room background path.** 21 of 37 `destinationroom=` values
+  point at rooms with no entry in the WP-003 `TGIFILE.ART` ROOM table
+  — including `ROOM_Main_Menu`, `ROOM_P01_Town_Center`,
+  `ROOM_P12_Saloon`, `ROOM_P30_Horseshoe_Corral` (the Horseshoe Corral
+  minigame), `ROOM_P32_Pie_Noon`. These rooms render via a different
+  path — likely procedural / GBH-module code (the source-tree paths
+  `\Scooby\GBH\Horseshoe_Corral_Room.cpp` and `Pie_Noon_Room.cpp` in
+  the [Showdown strings findings](../formats/scooby-exe.md#showdown-gen-1)
+  align with this). Find the room loader's branch between "load from
+  `TGIFILE.ART`" and "invoke per-room render function."
+
+All four are name-string xref targets — they should be straightforward
+to find once Ghidra has analyzed the binary and the
+[scooby-exe.md §Showdown string anchors](../formats/scooby-exe.md#showdown-gen-1)
+table is in front of you.
+
 ## Scope
 
 In scope:
@@ -75,6 +124,10 @@ In scope:
 - **Locating and labeling the OBJ-id → asset-entry resolver** (one-line indexer; cleanest landing zone for asset-name → file-offset resolution)
 - **Recording any code accessing offsets 48–67 of name-table records** (resolves the 20-byte metadata schema; the field is non-zero on at least one ANIM record per WP-003)
 - **Checking whether the 69-entry group descriptor table (0x0004–0x0117) is read at runtime** (still uncharacterized post-WP-003)
+- **Locating and labeling the `object.ini` consumer** — the switch on `ID=` value (5 cases per WP-008) plus the adjacent `(name → asset)` hash-table lookup; xref-anchor the `Failed to load room.` error string
+- **Locating and labeling the `scrappyid` script-table resolver** — what reads `Global.Scrappy.*` strings during room-exit handling (new unknown surfaced by WP-008)
+- **Locating the inventory-anim resolver** — what handles `ANIM_TOOLBAR<NAME>` / `ANIM_CURSOR<NAME>` lookups for `OBJ_INV_*` objects, since these names don't appear in the WP-003 `TGIFILE.ART` name table
+- **Locating the scripted-room render branch** — the room-loader switch between "decode from `TGIFILE.ART`" and "invoke per-room render function" for the 21 rooms with no `TGIFILE.ART` ROOM entry (`ROOM_Main_Menu`, `ROOM_P01_Town_Center`, `ROOM_P12_Saloon`, etc.)
 - Decompiling the decode function to readable pseudo-C
 - Recording findings into `docs/formats/scooby-exe.md` → Findings section
 
