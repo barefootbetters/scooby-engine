@@ -134,6 +134,7 @@ Screenshots populate here once WP-009 runs. Embed syntax for adding a row:
 
 - Vision and phase plan: [docs/01-VISION](../01-VISION.md)
 - ScummVM integration contract: [docs/02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION.md)
+- WP lifecycle: [docs/reference/wp-lifecycle](../reference/wp-lifecycle.md)
 - Pre-flight gate: [docs/reference/pre-flight](../reference/pre-flight.md)
 - Format specs: [docs/formats/tgifile-art](../formats/tgifile-art.md), [audio-archives](../formats/audio-archives.md), [scooby-exe](../formats/scooby-exe.md), [mmfw-container](../formats/mmfw-container.md)
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports.md), [WP-008](WP-008-object-ini-catalog.md), [WP-009](WP-009-reference-screenshots.md), [WP-010](WP-010-scummvm-scaffold.md)

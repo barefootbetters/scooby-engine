@@ -27,6 +27,8 @@ A binary readiness gate that runs **before** a WP execution session is opened. I
 
 Pre-flight is an audit artifact — fill it in and commit it so a future reader can reconstruct why execution was authorized without re-reading transcripts.
 
+Pre-flight sits inside the broader WP lifecycle. See [wp-lifecycle](wp-lifecycle.md) for the drafting steps that precede this gate and the execution + close steps that follow — including the "stale READY when main moves" pattern and the four-state abandonment ritual.
+
 **Save the filled-in copy as:** `docs/reference/pre-flight-WP-XXX-YYYY-MM-DD.md`
 (where `XXX` is the WP number and `YYYY-MM-DD` is today's date). Commit it to `main` before opening the execution session.
 
