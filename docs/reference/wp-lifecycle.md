@@ -214,7 +214,8 @@ The loop has off-ramps (NOT READY pre-flight → §Abandonment if the blocker do
 ### 0. Triage (10 seconds)
 
 - **Trivial fix** — link rot, typo, status flip, docs hygiene that locks no fact: edit + `git commit` + `git push origin main` directly. No branch, no pre-flight, no session prompt, no PR. The "one WP per branch" rule has an explicit carve-out for this; see §Phase 3 Discipline. Forgetting the push is the failure mode here — GitHub Pages builds from `origin/main`, so an unpushed direct-to-main commit looks "done" locally but isn't visible to anyone.
-- **Substantive WP** — locks a fact, edits engine code, commits a tool script, claims a generation classification: full loop below.
+- **Substantive docs-only WP** — fact-locking work that produces no `engines/scooby/**` change. The committed surface is docs (`docs/formats/**`, `docs/work-packets/**`, `docs/reference/**`, `docs/sessions/**`) plus optionally small tool scripts under `tools/*.py` whose outputs are gitignored. Full loop *except* steps 5 (branch), 10 (PR), 11 (squash-merge). Commits go direct to `main` per the two-commit topology, with `git push origin main` after each (or batched at close — but never silently). Pre-flight + session prompt + scope-lock allowlist provide the discipline that branch + PR would otherwise add. WP-007 (four binaries' worth of strings/imports findings + two extraction scripts) and WP-003 (`tgifile-art.md` Findings expansion + spec correction) are this path's precedents.
+- **Substantive code WP** — touches `engines/scooby/**`, or commits non-trivial code that benefits from PR-surface review (cumulative architecture changes, binary file additions, > ~100 LOC of new tool code). Full loop including branch + PR + squash-merge.
 - **Scope check:** does the WP touch `engines/scooby/**`? If yes, step 1 fires against the scummvm fork. If no (docs-repo-only WP), step 1 is a no-op.
 
 ### 1. Sync (conditional)
@@ -239,9 +240,11 @@ For substantive WPs, spawn an Agent (subagent_type `code-reviewer`) for an indep
 
 This is one activity, not two ("review" + "apply suggestions"). Real review is iterative.
 
-### 5. Branch
+### 5. Branch (conditional — substantive code WPs only)
 
-`git switch -c wp-NNN-<slug>`. From here, everything lands on the branch, not on `main`. The §Phase 3 "one WP per branch" rule activates here; skip only for the trivial fixes that triage already routed past.
+`git switch -c wp-NNN-<slug>`. From here, everything lands on the branch, not on `main`. The §Phase 3 "one WP per branch" rule activates here.
+
+**Skip for substantive docs-only WPs** — they commit direct to `main` per the triage path; the §Phase 3 Discipline allowlist + the pre-flight scope-lock + the two-commit topology provide the discipline the branch would otherwise add. Skip for trivial fixes that triage already routed past.
 
 ### 6. Pre-flight
 
@@ -251,15 +254,15 @@ Copy [docs/reference/pre-flight.md](pre-flight.md) → `docs/reference/pre-fligh
 
 ### 7. Session prompt
 
-Copy [docs/sessions/session-TEMPLATE.md](../sessions/session-TEMPLATE.md) → `docs/sessions/session-WP-NNN-YYYY-MM-DD.md`. Operationalize the pre-flight per §Phase 3 — Session prompt: Repo + disc state → Pre-execution checks; Scope lock → Execution rules; Risk review top mitigations → "you MUST..." rules. Commit pre-flight + session prompt together (one commit on the branch).
+Copy [docs/sessions/session-TEMPLATE.md](../sessions/session-TEMPLATE.md) → `docs/sessions/session-WP-NNN-YYYY-MM-DD.md`. Operationalize the pre-flight per §Phase 3 — Session prompt: Repo + disc state → Pre-execution checks; Scope lock → Execution rules; Risk review top mitigations → "you MUST..." rules. Commit pre-flight + session prompt together — one commit on the branch for substantive-code WPs, one commit on `main` (then push) for substantive-docs-only WPs.
 
 ### 8. Execute
 
 Pass the session prompt as the first message to a fresh Claude Code session (or run inline in the current one). Commits happen *during* execution per the §Two-commit topology — they are not a separate later step. The session enforces the scope-lock allowlist by running `git diff --cached --name-only` against the allowlist before each commit.
 
-### 9. Close inside the session (still on the branch)
+### 9. Close inside the session (still on the working branch — branch for code WPs, `main` for docs-only WPs)
 
-Before opening the PR, the executing session updates three places — this is §Phase 4 — Close work, executed inside the session that did the implementation:
+Before opening the PR (substantive code WPs) or pushing the close commit (substantive docs-only WPs), the executing session updates three places — this is §Phase 4 — Close work, executed inside the session that did the implementation:
 
 - **WP-NNN body**: Status → ✅ Done, actual effort recorded, "Findings landed in" links added
 - **WORK_INDEX**: row → ✅ Done; downstream `Depends on:` cells annotated ✅; §Current state updated if the project's next-step calculus shifted
@@ -267,17 +270,19 @@ Before opening the PR, the executing session updates three places — this is §
 
 Splitting close into a separate session adds round-trips without separating any review surface; the implementation session has the most context for the close.
 
-### 10. PR (substantive WPs only)
+### 10. PR (substantive code WPs only)
 
 `gh pr create` from the branch into `main`. Self-review the PR diff in GitHub's UI — it surfaces things the working tree doesn't (large diffs read differently when laid out as a single page; binary file additions are flagged explicitly; the cumulative shape of the change is visible at once instead of file-by-file).
 
-Skip for trivial fixes that triage routed past — direct-to-main is fine for the cases the §Phase 3 Discipline carve-out lists.
+**Skip for substantive docs-only WPs** — the close commit went direct to `main` in step 9; `git push origin main` after that close commit is what step 11 collapses into. Skip for trivial fixes that triage routed past — direct-to-main is fine for the cases the §Phase 3 Discipline carve-out lists.
 
-### 11. Squash-merge + branch cleanup
+### 11. Squash-merge + branch cleanup (substantive code WPs only)
 
 `gh pr merge --squash --delete-branch` does merge + push to `main` + delete remote and local branch in one command. Separate "approve", "squash-merge", "push to main", "delete branch" steps describe the same git operation; collapsing them keeps the workflow honest about what's happening.
 
 For solo operation, approval is a self-approval — the discipline is in re-reading the PR diff (step 10), not in the social ritual of clicking Approve.
+
+**For substantive docs-only WPs:** `git push origin main` is the equivalent collapsed step — push every direct-to-main commit produced in steps 7–9 (pre-flight + session prompt + Commit A + Commit B). Failing to push leaves the close trapped locally; GitHub Pages builds from `origin/main`, so an unpushed close looks "done" locally but isn't visible. (This is the same failure mode the trivial-fix path warns about in step 0.)
 
 ### 12. Next-WP handoff (usually nothing)
 
