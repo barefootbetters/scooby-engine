@@ -131,6 +131,19 @@ Covered fully in [pre-flight.md](pre-flight.md). Two reminders that show up at t
 
 ## Phase 3 — Execution
 
+### Session prompt
+
+Execution opens against a READY pre-flight, but the gate verdict is an audit artifact, not a set of instructions. The session prompt is the imperative-form repackaging — what the next Claude session reads as its first message.
+
+- **Location:** `docs/sessions/session-WP-NNN-YYYY-MM-DD.md` (sibling to `docs/reference/`)
+- **Naming mirrors pre-flight artifacts** — same date format, paired files sort adjacent. Suffix `-b` for same-day re-runs.
+- **Committed**, not gitignored. Same audit-trail discipline as pre-flight artifacts; future readers can reconstruct what was prompted, not just what was decided. At scooby's scale the noise cost is negligible and the reproducibility value is real.
+- **Template:** [session-TEMPLATE.md](../sessions/session-TEMPLATE.md) — seven sections: Header / Intent / Authority chain (read order) / Pre-execution checks / Execution rules / Session task / Close ritual. Cap ~200 lines.
+- **Source-of-truth boundary:** the prompt operationalizes the WP+EC+pre-flight; it does NOT extend them. If the executing session needs scope beyond what the prompt encodes, it stops and asks. Silent scope expansion is an anti-pattern (§Anti-patterns below).
+- **First worked example:** [session-WP-007-2026-06-02.md](../sessions/session-WP-007-2026-06-02.md) instantiated against [pre-flight-WP-007-2026-06-02-b](pre-flight-WP-007-2026-06-02-b.md). Pattern: pre-flight §Repo + disc state → prompt §Pre-execution checks; pre-flight §Scope lock → prompt §Execution rules (imperative); pre-flight §Risk review top mitigations → prompt §Execution rules ("you MUST...").
+
+The pre-flight artifact stays the audit record of why execution was authorized. The session prompt is the operational tool that drives execution. Both are committed; both are dated; both name the other in their respective Header sections.
+
 ### Discipline
 
 - **One WP per branch (or per focused session)**, unless the work is small enough to commit straight to `main` (status bumps, link fixes, format-doc text corrections that don't lock new facts). The pre-flight gate's "Allowed paths" list is the scope contract for the duration of the session.
@@ -276,6 +289,7 @@ Small project, small history — but the patterns are already on the ledger:
 ## Cross-references
 
 - [pre-flight.md](pre-flight.md) — the readiness gate this doc sits around
+- [docs/sessions/session-TEMPLATE.md](../sessions/session-TEMPLATE.md) — fill-in template for the §Session prompt subsection above
 - [WORK_INDEX](../work-packets/WORK_INDEX.md) — status vocabulary + phase ordering + the index this doc's status flips update
 - [01-VISION](../01-VISION.md) — vision-level authority; finding propagation target
 - [02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION.md) — upstream contract; engine-code WPs cite this
