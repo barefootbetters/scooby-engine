@@ -155,29 +155,37 @@ blocker. See `docs/formats/tgifile-art.md` for the full byte-level spec.
 
 **Confirmed structure (Showdown, 2026-06):**
 - Offset 0x0000: `uint32LE` = 69 — group count (confirmed, not a hypothesis)
-- Offsets 0x0004–0x011B: 69 × 4-byte group descriptor table (values do not
+- Offsets 0x0004–0x0117: 69 × 4-byte group descriptor table (values do not
   map to file offsets — meaning TBD; may be packed indices or checksums)
-- Offset 0x011C: `uint32LE` = 453 — asset entry count
-- Offsets 0x0120–0x0F47: 453 × 8-byte entries, each `(start: uint32LE, end: uint32LE)`
+- Offset 0x0118: `uint32LE` = 453 — asset entry count
+- Offsets 0x011C–0x0F43: 453 × 8-byte entries, each `(start: uint32LE, end: uint32LE)`
+- Offsets 0x0F44–0x10017D: engine resource-name catalog (~1,400 records,
+  68-byte stride; the OBJ section is 1:1 with the asset entry table — so
+  `entry[i]` is the payload for `OBJ` id `i`)
 - First asset payload at file offset 1,048,958 (0x10017E); entry sizes range
   2–9 MB (consistent with full-screen background frames)
 
 **Remaining unknowns:**
 - Payload compression: opening bytes `F0 0C 25 5C 12 AE F0 08` match no
   standard codec header; F0 pattern suggests custom opcode-based encoding.
-- Pixel format: palette-indexed vs. truecolor unknown until first successful decode.
+- Pixel format unknown until first successful decode. WP-003 ruled out the
+  pre-payload region as the palette location; the palette is either in
+  per-asset leading bytes or in the 20-byte per-record metadata field on
+  name-table records.
 
 **Remaining investigation:**
 1. Decode the F0-opcode payload: attempt RLE with opcode dispatch, then raw
    indexed bitmap, then truecolor — each tested against entry 0 (~6 MB; the
-   smallest of the first four documented entries, plausibly a full-screen
-   background).
+   smallest of the first four documented entries — and per WP-003 it's
+   `OBJ_DAPHNE_A`, a character sprite, not a background).
 2. Correlate decoded output visually against a known Showdown screenshot.
 
 Execution tracked in
-[WP-001](work-packets/WP-001-ghidra-session.md) (Ghidra decode trace) and
+[WP-001](work-packets/WP-001-ghidra-session.md) (Ghidra decode trace),
 [WP-002](work-packets/WP-002-tgifile-art-decoder.md) (Python decoder + first
-image extraction), with companion checklists
+image extraction), and
+[WP-003](work-packets/WP-003-pre-payload-region.md) (pre-payload region
+characterization, ✅ landed 2026-06-02), with companion checklists
 [EC-001](execution-checklists/EC-001-ghidra-session.md) and
 [EC-002](execution-checklists/EC-002-probe-art-harness.md).
 
