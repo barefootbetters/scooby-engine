@@ -71,9 +71,14 @@ and fill in the row's Timestamp, Match Status, and Notes columns.
 
 Single-source YouTube longplay for all captures below:
 
-- **URL:** *(fill in when capture session begins)*
-- **Channel / uploader:** *(fill in)*
-- **Recorded:** *(fill in)*
+- **URL:** <https://www.youtube.com/watch?v=aR2PP0EMDSw>
+- **Channel / uploader:** dosdaysareover (`@dosdaysareover7781`)
+- **Recorded:** 2018-08-13 (YouTube upload date)
+- **Verified at session open (2026-06-03):** in-game title card reads
+  "Showdown in Ghost Town"; ≥720p stream available. Uploader's title
+  labels the game as "(CD-Rom, 2001)" but [01-VISION L43](../../../01-VISION.md#engine-lineage-2026-06-finding)
+  records the release year as 2000 — discrepancy noted, not resolved
+  in this WP; gameplay identity confirmed via title card.
 
 Per-row `Source Video` column defaults to this global URL when blank.
 If a second longplay is needed (e.g. for a chase sequence the first one
