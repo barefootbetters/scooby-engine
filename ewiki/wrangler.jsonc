@@ -1,0 +1,19 @@
+// The engineering wiki on Cloudflare: an assets-only Worker serving Hugo's
+// public/. Cloudflare Access gates scooby-engine-ewiki.barefootbetters.com.
+{
+  "name": "scooby-engine-ewiki",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  },
+  // why: both must stay false. workers_dev would add a *.workers.dev address
+  // and preview_urls a per-version one, each serving the same pages with no
+  // Access gate. The custom domain is the only way in (bb-studio-dashboard
+  // decision 2026-10-15-02; Legendary Arena's D-24690 is where this was learned).
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "scooby-engine-ewiki.barefootbetters.com", "custom_domain": true }
+  ]
+}

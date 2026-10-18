@@ -40,6 +40,9 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - vendor/
+  # The private engineering wiki's build files (and the proprietary ewiki
+  # theme vendored under ewiki/themes/) must never render on this public site.
+  - ewiki/
   - tools/
   - "*.iso"
   - "*.ART"
