@@ -1,0 +1,115 @@
+name: ewiki
+
+# Builds the engineering wiki (ewiki/hugo.toml, a Hugo render of this repo's
+# Markdown on the shared ewiki theme) on every PR and push that touches it. A
+# broken link between notes fails the build. On main, a passing build deploys
+# the Worker in ewiki/wrangler.jsonc to scooby-engine-ewiki.barefootbetters.com.
+# Run it by hand (workflow_dispatch) to redeploy.
+
+on:
+  pull_request:
+    paths:
+      - '*.md'
+      - 'docs/**'
+      - 'tools/*/README.md'
+      - 'ewiki/**'
+      - '.github/workflows/ewiki.yml'
+  push:
+    branches: [main]
+    paths:
+      - '*.md'
+      - 'docs/**'
+      - 'tools/*/README.md'
+      - 'ewiki/**'
+      - '.github/workflows/ewiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ewiki-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Read pinned Hugo version
+        id: hugo
+        run: echo "version=$(cat ewiki/.hugo-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: ${{ steps.hugo.outputs.version }}
+          extended: true
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      # why: the wiki vendors the shared theme (barefootbetters/ewiki-theme,
+      # Legendary Arena D-24728). The digest is pinned here, outside the vendored
+      # tree, and checked with plain shell before the vendored checker runs, so
+      # an edited theme copy or an edited checker can't certify itself. When
+      # upgrading the theme, re-sync the tag and paste its release-notes digest.
+      - name: Check the vendored theme against its pinned digest
+        env:
+          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # ewiki-theme v1.1.1
+        run: |
+          set -e
+          manifest_digest=$(tr -d '\r' < ewiki/themes/ewiki/.theme-manifest.txt | sha256sum | cut -d' ' -f1)
+          if [ "$manifest_digest" != "$PINNED_DIGEST" ]; then
+            echo "::error::ewiki/themes/ewiki doesn't match the pinned theme digest ($manifest_digest, not $PINNED_DIGEST). Re-sync the release with tools/Sync-EwikiTheme.ps1, or update PINNED_DIGEST when upgrading on purpose."
+            exit 1
+          fi
+          checker_hash=$(tr -d '\r' < ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 | sha256sum | cut -d' ' -f1)
+          if ! grep -qx "$checker_hash  tools/Test-EwikiTheme.ps1" ewiki/themes/ewiki/.theme-manifest.txt; then
+            echo "::error::ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 doesn't match its manifest line, so it was edited. Re-sync the theme."
+            exit 1
+          fi
+          echo "Theme manifest digest and checker hash match ($manifest_digest)."
+
+      # why: fails on any edited, missing or extra vendored file, and on an
+      # ewiki/layouts file (through the mounts) that shadows a core theme file.
+      - name: Check the vendored theme copy and core shadows
+        shell: pwsh
+        env:
+          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # ewiki-theme v1.1.1
+        run: pwsh -File ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 -Site . -Config ewiki/hugo.toml -ExpectedManifestSha256 $env:PINNED_DIGEST
+
+      # why: the theme's five gates (build with --panicOnWarning, page count,
+      # determinism, Pagefind 1.5.2, JS-free). The page count is computed from
+      # the allow-list so it never goes stale: one page per allow-listed
+      # Markdown file, one list page per top-level folder holding one, and the
+      # home page. The regex mirrors the mount `files` list in ewiki/hugo.toml;
+      # change both in the same PR, or this gate fails red, which is the point.
+      - name: Build and gate the site
+        shell: pwsh
+        run: |
+          $allowList = '^(README\.md|docs/.*\.md|tools/(exes|samples)/README\.md)$'
+          $pages = @(git ls-files | Where-Object { $_ -match $allowList })
+          $sections = @($pages | Where-Object { $_.Contains('/') } | ForEach-Object { $_.Split('/')[0] } | Sort-Object -Unique)
+          $expected = $pages.Count + $sections.Count + 1
+          Write-Host "Expected pages: $($pages.Count) Markdown files + $($sections.Count) section lists + 1 home = $expected."
+          pwsh -File ewiki/themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -Config ewiki/hugo.toml -ExpectedPageCount $expected
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Deploys only from main, and only once the Cloudflare secrets exist.
+      # Jeff adds them after the Access app is in place, so the site is never
+      # up without its gate.
+      - name: Deploy to Cloudflare
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        working-directory: ewiki
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::NOT DEPLOYED. The CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repo secrets are not set, so scooby-engine-ewiki.barefootbetters.com was not updated."
+            exit 0
+          fi
+          npx --yes wrangler@4.149.0 deploy

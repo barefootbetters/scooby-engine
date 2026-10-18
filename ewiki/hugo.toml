@@ -1,0 +1,98 @@
+# The engineering wiki: a read-only Hugo render of this repo's Markdown,
+# served at scooby-engine-ewiki.barefootbetters.com behind Cloudflare Access.
+# The Markdown in this repo stays the only place notes are written; this site
+# never holds a copy. Build from the repo root:
+#   hugo --config ewiki/hugo.toml --minify --panicOnWarning
+#
+# It is a superset of the public GitHub Pages site (Jekyll, _config.yml): the
+# same root and docs/ pages, plus the tools/ READMEs Jekyll excludes, with the
+# shared wiki's search, contents, breadcrumbs and edit links.
+
+baseURL = "https://scooby-engine-ewiki.barefootbetters.com/"
+title = "Scooby-Doo ScummVM Engine Wiki"
+locale = "en-us"
+titleCaseStyle = "none"
+
+# why: Hugo runs from the repo root (cwd) with --config ewiki/hugo.toml, so the
+# whole repo is the content source and the wiki's own files are mounted in.
+publishDir = "ewiki/public"
+resourceDir = "ewiki/resources"
+
+# why: the look comes from the shared wiki theme, barefootbetters/ewiki-theme,
+# vendored read-only into ewiki/themes/ewiki (Legendary Arena D-24728). This
+# wiki keeps only its config and its home page. Re-sync a tag to change the
+# theme; never edit the vendored copy (the ewiki workflow checks it against the
+# digest pinned there).
+theme = "ewiki"
+themesDir = "ewiki/themes"
+
+enableGitInfo = false
+disableHugoGeneratorInject = true
+disableKinds = ["RSS", "sitemap", "taxonomy", "term", "robotsTXT"]
+pluralizeListTitles = false
+
+# why: an allow-list, not a deny-list. Only tracked Markdown renders; the
+# gitignored tools/exes/ and tools/samples/ hold copyrighted game data, so only
+# their README.md files are named. The root index.md is the home page (see
+# layouts/index.html), so it is mounted on its own path rather than as a page.
+# In Hugo's file filter `**.md` matches one level only, so each folder needs
+# `/<folder>/**/*.md` too.
+[[module.mounts]]
+  source = "."
+  target = "content"
+  files = [
+    "/README.md",
+    "/docs/**.md",
+    "/docs/**/*.md",
+    "/tools/exes/README.md",
+    "/tools/samples/README.md",
+  ]
+
+[[module.mounts]]
+  source = "index.md"
+  target = "content/_home-source.md"
+
+# why: the home source is read by layouts/index.html only; it must not also
+# render as its own /_home-source/ page or appear in the sidebar.
+[[cascade]]
+  [cascade.build]
+    render = "never"
+    list = "never"
+  [cascade.target]
+    path = "/_home-source"
+
+[[module.mounts]]
+  source = "ewiki/layouts"
+  target = "layouts"
+
+[[module.mounts]]
+  source = "ewiki/static"
+  target = "static"
+
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = false
+  [markup.goldmark.parser]
+    autoHeadingID = true
+    autoHeadingIDType = "github"
+  [markup.highlight]
+    codeFences = false
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 4
+
+[outputs]
+  home = ["HTML"]
+  section = ["HTML"]
+  page = ["HTML"]
+
+# The shared theme's params (ewiki-theme README, "Params").
+[params.ewiki]
+  repo = "barefootbetters/scooby-engine"
+  contentRoot = ""
+  localRoot = 'C:\dev\scooby-engine'
+  homeSource = "index.md"
+  searchPlaceholder = "Search the Scooby wiki"
+  searchLabel = "Search the Scooby-Doo engine wiki"
+  sectionReadme = true
+  folderLinks = "section"

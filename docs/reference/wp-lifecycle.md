@@ -96,7 +96,7 @@ EC structure follows [EC-001](../execution-checklists/EC-001-ghidra-session.md) 
 
 - **Paired WP** + **Purpose** header
 - **Pre-flight** checkbox block at the top (cite the pre-flight gate doc)
-- **Step N — <name> (time-box: HH:MM)** sections, each with checkbox bullets + Outcome
+- **Step N — `<name>` (time-box: HH:MM)** sections, each with checkbox bullets + Outcome
 - **Definition of done** — all step outcomes recorded, paired WP exit criteria satisfied, status updated
 - **Out-of-scope captures** — sessions sprawl; record temptations as one-line follow-ups for future WPs and move on
 

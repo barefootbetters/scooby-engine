@@ -1,0 +1,8 @@
+{{ define "main" }}
+  <section class="section-landing">
+    {{- /* The repo's index.md (the GitHub Pages home) is the home page here too. */}}
+    {{- with site.GetPage "/_home-source.md" }}
+    <div class="body">{{ .Content }}</div>
+    {{- end }}
+  </section>
+{{ end }}
