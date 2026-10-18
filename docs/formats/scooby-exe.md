@@ -58,7 +58,7 @@ small (476 KB) but still contains far more than we need.
 ## Investigation plan
 
 1. **Load + auto-analyze in Ghidra.** Create project `scooby.gpr` in
-   `C:\www\scooby\ghidra\`. Let Ghidra's analyzers run a full pass. Save
+   `C:\dev\scooby\ghidra\`. Let Ghidra's analyzers run a full pass. Save
    before doing anything else.
 2. **Imports table review.** Scan the PE import table for: file I/O
    (`CreateFileA`, `ReadFile`), DirectDraw/Direct3D 7, DirectSound,
@@ -785,4 +785,4 @@ No name observed required actual sanitization (no spaces, no punctuation, no non
 
 - Vision doc: [Project Vision](../01-VISION.md)
 - Companion specs: [tgifile-art](tgifile-art.md), [audio-archives](audio-archives.md)
-- Ghidra project: `C:\www\scooby\ghidra\scooby.gpr` (to be created)
+- Ghidra project: `C:\dev\scooby\ghidra\scooby.gpr` (to be created)
