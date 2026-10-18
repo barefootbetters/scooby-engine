@@ -36,7 +36,7 @@ docs/findings/*
 #  Original game data — safety net
 # =============================================================
 # Backstop against accidentally copying disc contents into the repo.
-# Live discs / ISOs live at C:\pcloud\SCOOBY\ — outside this repo.
+# Live discs / ISOs live at C:\pcloud\scooby-engine\ — outside this repo.
 *.iso
 Scooby.exe
 Scooby.eng

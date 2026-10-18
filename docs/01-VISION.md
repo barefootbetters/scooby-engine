@@ -54,7 +54,7 @@ Also on disk: `ScoobyDoo.iso` (221 MB). Identified via the companion
 adventure, so it almost certainly uses a different engine — treat as
 out of scope unless Phase 1 inspection shows otherwise.
 
-The `C:\pcloud\SCOOBY\` directory also contains `archive.org-*.url`
+The `C:\pcloud\scooby-engine\` directory also contains `archive.org-*.url`
 shortcuts for each disc, recording the provenance of the rips.
 
 **Provenance check (2026-06):** archive.org and MobyGames confirm the five
@@ -480,9 +480,9 @@ bundled with the engine — players supply their own.
 ## File Layout
 
 ```
-C:\dev\scooby-engine\   ← this project (engine research + docs)
-C:\dev\scummvm\         ← fork of scummvm/scummvm (engine implementation)
-C:\pcloud\SCOOBY\       ← ISO images of original game discs (read-only)
+C:\dev\scooby-engine\     ← this project (engine research + docs)
+C:\dev\scummvm\           ← fork of scummvm/scummvm (engine implementation)
+C:\pcloud\scooby-engine\  ← ISO images of original game discs (read-only)
 ```
 
 ---
