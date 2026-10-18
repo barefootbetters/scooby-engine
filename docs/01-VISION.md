@@ -480,7 +480,7 @@ bundled with the engine — players supply their own.
 ## File Layout
 
 ```
-C:\dev\scooby-engine\          ← this project (engine research + docs)
+C:\dev\scooby-engine\   ← this project (engine research + docs)
 C:\dev\scummvm\         ← fork of scummvm/scummvm (engine implementation)
 C:\pcloud\SCOOBY\       ← ISO images of original game discs (read-only)
 ```
