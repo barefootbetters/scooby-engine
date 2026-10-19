@@ -18,7 +18,7 @@ titleCaseStyle = "none"
 publishDir = "ewiki/public"
 resourceDir = "ewiki/resources"
 
-# why: the look comes from the shared wiki theme, barefootbetters/ewiki-theme,
+# why: the look comes from the shared wiki theme, barefootbetters/bb-studio-ewiki-theme,
 # vendored read-only into ewiki/themes/ewiki (Legendary Arena D-24728). This
 # wiki keeps only its config and its home page. Re-sync a tag to change the
 # theme; never edit the vendored copy (the ewiki workflow checks it against the
@@ -86,7 +86,7 @@ pluralizeListTitles = false
   section = ["HTML"]
   page = ["HTML"]
 
-# The shared theme's params (ewiki-theme README, "Params").
+# The shared theme's params (bb-studio-ewiki-theme README, "Params").
 [params.ewiki]
   repo = "barefootbetters/scooby-engine"
   contentRoot = ""

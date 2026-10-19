@@ -51,14 +51,14 @@ jobs:
         with:
           node-version: '22'
 
-      # why: the wiki vendors the shared theme (barefootbetters/ewiki-theme,
+      # why: the wiki vendors the shared theme (barefootbetters/bb-studio-ewiki-theme,
       # Legendary Arena D-24728). The digest is pinned here, outside the vendored
       # tree, and checked with plain shell before the vendored checker runs, so
       # an edited theme copy or an edited checker can't certify itself. When
       # upgrading the theme, re-sync the tag and paste its release-notes digest.
       - name: Check the vendored theme against its pinned digest
         env:
-          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # ewiki-theme v1.1.1
+          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # bb-studio-ewiki-theme v1.1.1
         run: |
           set -e
           manifest_digest=$(tr -d '\r' < ewiki/themes/ewiki/.theme-manifest.txt | sha256sum | cut -d' ' -f1)
@@ -78,7 +78,7 @@ jobs:
       - name: Check the vendored theme copy and core shadows
         shell: pwsh
         env:
-          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # ewiki-theme v1.1.1
+          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # bb-studio-ewiki-theme v1.1.1
         run: pwsh -File ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 -Site . -Config ewiki/hugo.toml -ExpectedManifestSha256 $env:PINNED_DIGEST
 
       # why: the theme's five gates (build with --panicOnWarning, page count,
