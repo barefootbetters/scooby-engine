@@ -33,7 +33,7 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 - [TGIFILE.ART Format Spec](docs/formats/tgifile-art) — graphics archive reverse engineering
 - [Audio Archives Spec](docs/formats/audio-archives) — Music / SFX / Voice .dat format
 - [Scooby.exe Analysis Plan](docs/formats/scooby-exe) — Ghidra roadmap
-- [Installing ScummVM on the Raspberry Pi](docs/reference/scummvm-raspberry-pi) — packages, or building the fork on the Pi
+- [Installing ScummVM on the Raspberry Pi](docs/reference/scummvm-raspberry-pi) — the developer build of our fork, plus packaged installs
 
 ---
 
