@@ -73,6 +73,12 @@ Pi 4 or on a desktop but fails on the Pi 5, treat it as a Pi bug. Run the
 [smoke test](#raspberry-pi-smoke-test) on the reference platform before
 calling Pi support done.
 
+Herbs vs. Ailments' [Pi test box](https://ewiki.herbsvsailments.com/research/pi-test-box/)
+is the same kind of box: a Pi 5 on a TV, running its web client in Chromium.
+Its [hardware list](https://ewiki.herbsvsailments.com/research/pi-test-box/#the-hardware)
+(the 8 GB board, the official 27 W supply, an active cooler) works for this
+build too. Its optional ScummVM step points back here.
+
 ---
 
 ## Developer build: our fork from source
@@ -336,8 +342,10 @@ isn't part of this engine's scope.
 Herbs vs. Ailments is the multi-pad case on the same kind of Pi: it's
 four-player co-op and reads every pad through Chromium. Its guide covers
 [pairing up to four](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#on-the-pi)
-(step 7) and why several Bluetooth pads on the Pi's own radio can drop. None of
-that applies to ScummVM.
+(step 7) and why several Bluetooth pads on the Pi's own radio can drop. Its
+smart TV note's [Controllers on a Pi](https://ewiki.herbsvsailments.com/research/smart-tv-platforms/#controllers-on-a-pi)
+covers which pads work and the browser's Gamepad rules. None of that applies
+to ScummVM.
 
 ---
 
@@ -405,7 +413,10 @@ on its own page:
 - ScummVM docs: [Keymaps](https://docs.scummvm.org/en/latest/settings/keymaps.html)
   and [Control](https://docs.scummvm.org/en/latest/settings/control.html) settings.
 - Herbs vs. Ailments ewiki: [Connecting Xbox controllers to the Raspberry Pi](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/),
-  for Xbox pairing, firmware, xpadneo and troubleshooting.
+  for Xbox pairing, firmware, xpadneo and troubleshooting. Also its
+  [Pi test box](https://ewiki.herbsvsailments.com/research/pi-test-box/) (the
+  same kind of Pi 5 on a TV) and its smart TV note's
+  [Controllers on a Pi](https://ewiki.herbsvsailments.com/research/smart-tv-platforms/#controllers-on-a-pi).
 - [ScummVM wiki: Raspberry Pi](https://wiki.scummvm.org/index.php?title=Raspberry_Pi):
   the port's info page (port maintainer: vanfanel).
 - [ScummVM wiki: Compiling ScummVM/RPI](https://wiki.scummvm.org/index.php?title=Compiling_ScummVM/RPI):
