@@ -24,7 +24,7 @@ How to get ScummVM onto a Raspberry Pi. There are two different jobs here:
 
 | You want to... | Use | Notes |
 |---|---|---|
-| Develop or test the Scooby engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** Pi 4 or 5, 64-bit Raspberry Pi OS |
+| Develop or test the Scooby engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** On the [reference platform](#reference-platform-raspberry-pi-5) |
 | Play games upstream ScummVM supports | [Flatpak](#flatpak-recommended) | Newest release (2026.4.0). 64-bit OS only |
 | Install quickly and an older version is fine | [`apt`](#apt-simplest) | 2.7.0 on Bookworm, 2.9.0 on Trixie |
 | Run a recent release on a 32-bit OS | [Snap](#snap-32-bit-os) | 2026.2.0, `arm64` and `armhf` |
@@ -45,15 +45,34 @@ uname -m                 # aarch64 = 64-bit, armv7l = 32-bit
 . /etc/os-release && echo "$VERSION_CODENAME"   # bookworm, trixie, ...
 ```
 
-The developer build and Flatpak both expect `aarch64`. If the Pi prints
+Flatpak only ships an `aarch64` build. ScummVM itself also compiles on a 32-bit
+OS, but this project tests the Scooby engine on 64-bit Raspberry Pi OS only (see
+the [reference platform](#reference-platform-raspberry-pi-5)). If the Pi prints
 `armv7l`, reinstall it with 64-bit Raspberry Pi OS, or use the Snap for a
 user install.
+
+### Reference platform: Raspberry Pi 5
+
+When this project says something "works on the Pi," it means this setup:
+
+| Part | Reference |
+|---|---|
+| Board | Raspberry Pi 5 |
+| OS | 64-bit Raspberry Pi OS (`aarch64`), current release |
+| ScummVM | The [developer build](#developer-build-our-fork-from-source) of `barefootbetters/scummvm` |
+| Display | HDMI to a TV |
+| Input | One USB or Bluetooth game controller, plus a keyboard and mouse for setup |
+
+A Pi 4 should also work, but nothing is promised for it. If a build passes on a
+Pi 4 or on a desktop but fails on the Pi 5, treat it as a Pi bug. Run the
+[smoke test](#raspberry-pi-smoke-test) on the reference platform before
+calling Pi support done.
 
 ---
 
 ## Developer build: our fork from source
 
-Build natively on the Pi. A Pi 4 or 5 is fast enough, and a native build uses
+Build natively on the Pi. A Pi 5 is fast enough, and a native build uses
 the OS's own compiler and libraries, so you skip the sysroot setup that
 cross-compiling needs.
 
@@ -93,8 +112,9 @@ mkdir -p "$HOME/scummvm-dist"
     --prefix="$HOME/scummvm-dist"
 ```
 
-New engines are off by default, so `--enable-engine=scooby` is required (see
-the [integration contract](../02-SCUMMVM-INTEGRATION.md)). Until
+The [integration contract](../02-SCUMMVM-INTEGRATION.md) has the Scooby
+engine's `configure.engine` declare it disabled by default until its first
+stable release. That means you have to pass `--enable-engine=scooby`. Until
 `engines/scooby/` is in the fork (Phase 2), leave that flag off.
 
 For debugging on the Pi, drop `--disable-debug --enable-release` to keep debug
@@ -279,8 +299,17 @@ Use `evtest` to see the raw button and axis events.
 - **Choosing a pad:** with more than one connected, `--joystick=NUM` picks
   which one ScummVM uses, for example `scummvm --joystick=1`.
 
+### Multiple controllers and Scooby
+
 Point-and-click games use one cursor. A pad drives the virtual mouse, and the
 other pads stay idle.
+
+The Scooby engine follows that. The original games are single-player
+point-and-click adventures, and the engine aims for faithful playback, not
+"improving" the games (see the
+[vision's non-goals](../01-VISION.md#non-goals)). So connecting several pads
+gives you one active pad, not several players. Multi-player controller input
+isn't part of this engine's scope.
 
 ---
 
@@ -304,6 +333,31 @@ sound is wrong on a current OS, check the output device (HDMI or headphones) in
 the desktop's volume menu before changing anything in ScummVM. FluidSynth and
 MT-32 emulation are the most CPU-heavy audio options, so switch to AdLib or a
 different MIDI device if audio stutters.
+
+---
+
+## Raspberry Pi smoke test
+
+Run this on the [reference platform](#reference-platform-raspberry-pi-5)
+after a fresh developer build. Each check passes or fails. Pi support is done
+only when every check passes.
+
+| # | Check | Pass when |
+|---|---|---|
+| 1 | `uname -m` | Prints `aarch64` |
+| 2 | `~/scummvm-dist/bin/scummvm --list-engines \| grep -i scooby` | Prints the `scooby` engine line |
+| 3 | `~/scummvm-dist/bin/scummvm --path=<Showdown data folder> --detect` | Lists *Showdown in Ghost Town* with its Scooby game id |
+| 4 | Add the game in the launcher and start it | It reaches the title screen, full screen on the TV |
+| 5 | Play past the intro | Video and audio play over HDMI, in sync, without stutter |
+| 6 | Use only the game controller | It moves the cursor, clicks, and opens the ScummVM main menu |
+| 7 | Save from the main menu, quit, relaunch, load | The game resumes where it was saved |
+
+Checks 2 to 7 can't pass until the engine is in the fork (Phase 2) and can
+load and play *Showdown* (Phases 3 and 4). Until then, record which checks ran
+and which were skipped. When a canonical test disc image is chosen, put its
+expected `--detect` output in check 3.
+
+---
 
 ## Cross-compiling (legacy)
 
