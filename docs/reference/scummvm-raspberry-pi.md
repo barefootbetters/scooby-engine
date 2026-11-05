@@ -25,8 +25,8 @@ How to get ScummVM onto a Raspberry Pi. There are two different jobs here:
 | You want to... | Use | Notes |
 |---|---|---|
 | Develop or test the Scooby engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** On the [reference platform](#reference-platform-raspberry-pi-5) |
-| Play games upstream ScummVM supports | [Flatpak](#flatpak-recommended) | Newest release (2026.4.0). 64-bit OS only |
-| Install quickly and an older version is fine | [`apt`](#apt-simplest) | 2.7.0 on Bookworm, 2.9.0 on Trixie |
+| Play games upstream ScummVM supports | [Flatpak](#flatpak-recommended) | The current upstream release (2026.4.0), the closest any package gets. 64-bit OS only |
+| Install quickly and an older version is fine | [`apt`](#apt-simplest) | 2.9.0 on Trixie, 2.7.0 on Bookworm. Both trail 2026.4.0 |
 | Run a recent release on a 32-bit OS | [Snap](#snap-32-bit-os) | 2026.2.0, `arm64` and `armhf` |
 | Build for a Pi too slow to compile on | [Cross-compile (legacy)](scummvm-raspberry-pi-cross-compile.md) | 32-bit only, Buster-era toolchain |
 
@@ -51,6 +51,11 @@ the [reference platform](#reference-platform-raspberry-pi-5)). If the Pi prints
 `armv7l`, reinstall it with 64-bit Raspberry Pi OS, or use the Snap for a
 user install.
 
+A fresh install today is **Trixie** (Debian 13). Raspberry Pi Imager's current
+"Raspberry Pi OS (64-bit)" image is Trixie (2026-10-06), and Bookworm is the
+"Raspberry Pi OS (Legacy)" image. Everything on this page works on both. Use
+Trixie for the reference platform.
+
 ### Reference platform: Raspberry Pi 5
 
 When this project says something "works on the Pi," it means this setup:
@@ -58,7 +63,7 @@ When this project says something "works on the Pi," it means this setup:
 | Part | Reference |
 |---|---|
 | Board | Raspberry Pi 5 |
-| OS | 64-bit Raspberry Pi OS (`aarch64`), current release |
+| OS | 64-bit Raspberry Pi OS (`aarch64`), current release (Trixie) |
 | ScummVM | The [developer build](#developer-build-our-fork-from-source) of `barefootbetters/scummvm` |
 | Display | HDMI to a TV |
 | Input | One USB or Bluetooth game controller, plus a keyboard and mouse for setup |
@@ -125,7 +130,8 @@ that host is the cross-compile target. It assumes the 32-bit
 `arm-linux-gnueabihf` toolchain and a copied Pi sysroot in `$RPI_ROOT`. A plain
 `./configure` detects the Pi's own compiler and SDL2.
 
-**Low memory:** the final link can run out of RAM on smaller Pis. If you use
+**Low memory (optional):** a Pi 5 rarely needs this. On a Pi with less RAM, the
+final link can run out of memory. If you use
 GNU ld, run this before `./configure` to make the linker use less memory:
 
 ```bash
@@ -251,9 +257,10 @@ scummvm
 
 ## Game controllers
 
-ScummVM uses SDL2's game controller support, so a pad Linux recognises usually
-works with no setup. Get Linux to see the controller first, then tune it in
-ScummVM.
+ScummVM uses SDL2's game controller support. A pad that Linux exposes and SDL2
+knows the layout of (Xbox, PlayStation and Switch Pro pads all are) usually
+works with no button mapping on the stock kernel. Get Linux to see the
+controller first, then tune it in ScummVM.
 
 > **Xbox controllers:** Herbs vs. Ailments' guide,
 > [Connecting Xbox controllers to the Raspberry Pi](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/),
@@ -405,6 +412,8 @@ on its own page:
   the library list in step 1 and the legacy cross-compile route.
 - [ScummVM downloads](https://www.scummvm.org/downloads/): the current release
   and the older Pi AppImages.
+- [Raspberry Pi Imager's OS list](https://downloads.raspberrypi.com/os_list_imagingutility_v4.json):
+  the 2026-10-06 images, with Trixie as the current release and Bookworm as Legacy.
 - [ScummVM on Flathub](https://flathub.org/apps/org.scummvm.ScummVM) and
   [ScummVM on the Snap Store](https://snapcraft.io/scummvm).
 - [ScummVM `configure`](https://github.com/scummvm/scummvm/blob/master/configure):
