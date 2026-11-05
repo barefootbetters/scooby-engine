@@ -255,6 +255,17 @@ ScummVM uses SDL2's game controller support, so a pad Linux recognises usually
 works with no setup. Get Linux to see the controller first, then tune it in
 ScummVM.
 
+> **Xbox controllers:** Herbs vs. Ailments' guide,
+> [Connecting Xbox controllers to the Raspberry Pi](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/),
+> covers the Xbox-specific parts this page skips:
+> [which pad connects which way](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#which-controller-which-way),
+> [updating firmware first](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#before-the-pi-update-each-controllers-firmware),
+> the pair button, the optional xpadneo driver, and
+> [troubleshooting](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#if-it-doesnt-work).
+> Its pairing and `jstest` steps are the same as the ones below. Skip its
+> Chromium check (step 5), because ScummVM reads pads through SDL2, not the
+> browser.
+
 ### Connect the controller
 
 **USB:** plug it in. It needs no pairing.
@@ -267,6 +278,7 @@ bluetoothctl
 # inside bluetoothctl:
 power on
 agent on
+default-agent
 scan on            # wait for the controller's MAC address to appear
 pair XX:XX:XX:XX:XX:XX
 trust XX:XX:XX:XX:XX:XX
@@ -287,7 +299,10 @@ jstest /dev/input/js0      # move sticks and press buttons; values should change
 
 Each connected pad shows up as its own `js` device (`js0`, `js1`, ...). If one
 is missing, Linux hasn't recognised it, so fix that before you touch ScummVM.
-Use `evtest` to see the raw button and axis events.
+Use `evtest` to see the raw button and axis events. For a pad that connects
+but sends no input, or one that keeps dropping, the HvA guide's
+[If it doesn't work](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#if-it-doesnt-work)
+table has the fixes (the `uhid` module, re-pairing, xpadneo).
 
 ### Set it up in ScummVM
 
@@ -310,6 +325,12 @@ point-and-click adventures, and the engine aims for faithful playback, not
 [vision's non-goals](../01-VISION.md#non-goals)). So connecting several pads
 gives you one active pad, not several players. Multi-player controller input
 isn't part of this engine's scope.
+
+Herbs vs. Ailments is the multi-pad case on the same kind of Pi: it's
+four-player co-op and reads every pad through Chromium. Its guide covers
+[pairing up to four](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#on-the-pi)
+(step 7) and why several Bluetooth pads on the Pi's own radio can drop. None of
+that applies to ScummVM.
 
 ---
 
@@ -349,7 +370,7 @@ only when every check passes.
 | 3 | `~/scummvm-dist/bin/scummvm --path=<Showdown data folder> --detect` | Lists *Showdown in Ghost Town* with its Scooby game id |
 | 4 | Add the game in the launcher and start it | It reaches the title screen, full screen on the TV |
 | 5 | Play past the intro | Video and audio play over HDMI, in sync, without stutter |
-| 6 | Use only the game controller | It moves the cursor, clicks, and opens the ScummVM main menu |
+| 6 | Use only the game controller ([pairing an Xbox pad](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/#on-the-pi)) | It moves the cursor, clicks, and opens the ScummVM main menu |
 | 7 | Save from the main menu, quit, relaunch, load | The game resumes where it was saved |
 
 Checks 2 to 7 can't pass until the engine is in the fork (Phase 2) and can
@@ -376,6 +397,8 @@ on its own page:
   `--list-engines`, `--detect`, `--path` and `--joystick`.
 - ScummVM docs: [Keymaps](https://docs.scummvm.org/en/latest/settings/keymaps.html)
   and [Control](https://docs.scummvm.org/en/latest/settings/control.html) settings.
+- Herbs vs. Ailments ewiki: [Connecting Xbox controllers to the Raspberry Pi](https://ewiki.herbsvsailments.com/guides/xbox-controllers-on-a-pi/),
+  for Xbox pairing, firmware, xpadneo and troubleshooting.
 - [ScummVM wiki: Raspberry Pi](https://wiki.scummvm.org/index.php?title=Raspberry_Pi):
   the port's info page (port maintainer: vanfanel).
 - [ScummVM wiki: Compiling ScummVM/RPI](https://wiki.scummvm.org/index.php?title=Compiling_ScummVM/RPI):
