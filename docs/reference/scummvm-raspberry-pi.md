@@ -5,110 +5,57 @@ title: "Installing ScummVM on the Raspberry Pi"
 
 # Installing ScummVM on the Raspberry Pi
 
-How to get ScummVM running on a Raspberry Pi: install a ready-made package for
-playing, or build from source to run our fork with the Scooby engine in it.
+How to get ScummVM onto a Raspberry Pi. There are two different jobs here:
 
-> **Checked 2026-11-05.** The current stable ScummVM is **2026.4.0**. Versions
-> below come from Flathub, the Snap Store and Debian on that date. The
-> scummvm.org pages listed under [Sources](#sources) are the reference. The
-> ScummVM wiki's Raspberry Pi pages date from the Raspbian Buster era (2020),
-> so this page updates their commands for Raspberry Pi OS Bookworm and Trixie.
+- **Developer build:** compile our fork,
+  [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm), so you
+  can run and test the Scooby engine on the Pi.
+- **User install:** install stock ScummVM from a package, to play games that
+  upstream ScummVM already supports.
+
+> **Checked 2026-11-05.** The current stable ScummVM is **2026.4.0**. Package
+> versions below come from Flathub, the Snap Store and Debian on that date, and
+> will drift. The scummvm.org pages listed under [Sources](#sources) are the
+> reference.
 
 ---
 
-## Pick a route
+## Choose an installation method
 
-| Route | Version you get | Needs | Use it when |
-|---|---|---|---|
-| [Flatpak (Flathub)](#option-a-flatpak-newest-release) | **2026.4.0** (current) | 64-bit OS (`aarch64`) | You want the newest release with no build |
-| [Snap](#option-b-snap) | 2026.2.0 | 64-bit (`arm64`) or 32-bit (`armhf`) OS | You're on a 32-bit OS and want a recent build |
-| [Raspberry Pi OS repository (`apt`)](#option-c-the-os-package-apt) | 2.7.0 on Bookworm, 2.9.0 on Trixie | Any Raspberry Pi OS | Simplest install, an older version is fine |
-| [Build on the Pi](#option-d-build-from-source-on-the-pi) | Whatever you check out | Any Raspberry Pi OS, time | You need our fork or the Scooby engine |
-| [Cross-compile on a PC](#option-e-cross-compile-on-a-pc-legacy) | Whatever you check out | Linux PC, a copy of the Pi's libraries | Legacy 32-bit route from the ScummVM wiki |
+| You want to... | Use | Notes |
+|---|---|---|
+| Develop or test the Scooby engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** Pi 4 or 5, 64-bit Raspberry Pi OS |
+| Play games upstream ScummVM supports | [Flatpak](#flatpak-recommended) | Newest release (2026.4.0). 64-bit OS only |
+| Install quickly and an older version is fine | [`apt`](#apt-simplest) | 2.7.0 on Bookworm, 2.9.0 on Trixie |
+| Run a recent release on a 32-bit OS | [Snap](#snap-32-bit-os) | 2026.2.0, `arm64` and `armhf` |
+| Build for a Pi too slow to compile on | [Cross-compile (legacy)](scummvm-raspberry-pi-cross-compile.md) | 32-bit only, Buster-era toolchain |
+
+Packages install upstream ScummVM, and none of them will ever include the
+Scooby engine before it's merged upstream. To run our engine, you need the
+developer build.
 
 scummvm.org's own Pi binaries stopped at 2.7.0 (AppImages for Pi 3, 4 and
-400, 2023). They're under "Older versions (unsupported)" on the downloads page,
-so use one of the routes above instead.
+400, 2023). They're listed under "Older versions (unsupported)" on the
+downloads page.
 
-### First, check which OS you're on
+### Check your OS first
 
 ```bash
 uname -m                 # aarch64 = 64-bit, armv7l = 32-bit
 . /etc/os-release && echo "$VERSION_CODENAME"   # bookworm, trixie, ...
 ```
 
-The Flatpak needs `aarch64`. On a 32-bit OS, use the Snap, `apt`, or a source
-build.
+The developer build and Flatpak both expect `aarch64`. If the Pi prints
+`armv7l`, reinstall it with 64-bit Raspberry Pi OS, or use the Snap for a
+user install.
 
 ---
 
-## Option A: Flatpak (newest release)
+## Developer build: our fork from source
 
-Flathub's ScummVM build is the current release and has an `aarch64` build. It
-has no 32-bit ARM build.
-
-```bash
-sudo apt update
-sudo apt install -y flatpak
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-sudo reboot
-```
-
-After the reboot:
-
-```bash
-flatpak install -y flathub org.scummvm.ScummVM
-flatpak run org.scummvm.ScummVM
-```
-
-Command-line arguments go after the `run` command, for example
-`flatpak run org.scummvm.ScummVM --list-games`.
-
-Flatpak apps run in a sandbox. ScummVM's docs say to copy games into
-`~/Documents` so the app can see them. The current Flathub manifest grants home
-directory access, so any folder under `/home/<you>` should work. Keep games
-there, not on other mounts, unless you add permissions with
-`flatpak override`.
-
-## Option B: Snap
-
-The Snap Store has 2026.2.0 for both `arm64` and `armhf`, so it's the newest
-build for a 32-bit OS. It comes with a few freeware games and demos.
-
-```bash
-sudo apt update
-sudo apt install -y snapd
-sudo reboot
-```
-
-After the reboot:
-
-```bash
-sudo snap install scummvm
-scummvm
-```
-
-## Option C: The OS package (`apt`)
-
-This is the simplest route, but you get Debian's version: 2.7.0 on Bookworm,
-2.9.0 on Trixie. Newer engines and fixes won't be there.
-
-```bash
-sudo apt update
-sudo apt install -y scummvm
-scummvm
-```
-
-On the desktop it's also under **Menu > Games > ScummVM**.
-
----
-
-## Option D: Build from source on the Pi
-
-Use this for our fork, [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm).
-A Pi 4 or 5 is fast enough to build natively. Native builds use the OS's own
-compiler and libraries, so you don't need the cross-compile setup in
-[Option E](#option-e-cross-compile-on-a-pc-legacy).
+Build natively on the Pi. A Pi 4 or 5 is fast enough, and a native build uses
+the OS's own compiler and libraries, so you skip the sysroot setup that
+cross-compiling needs.
 
 ### 1. Install the build tools and libraries
 
@@ -138,18 +85,20 @@ git clone https://github.com/barefootbetters/scummvm.git
 cd scummvm
 ```
 
-For upstream ScummVM, clone `https://github.com/scummvm/scummvm.git` instead.
-
 ### 3. Configure
 
 ```bash
 mkdir -p "$HOME/scummvm-dist"
-./configure --disable-debug --enable-release --prefix="$HOME/scummvm-dist"
+./configure --enable-engine=scooby --disable-debug --enable-release \
+    --prefix="$HOME/scummvm-dist"
 ```
 
-Once `engines/scooby/` is in the fork (Phase 2), add `--enable-engine=scooby`.
-New engines are off by default, per the
-[integration contract](../02-SCUMMVM-INTEGRATION.md).
+New engines are off by default, so `--enable-engine=scooby` is required (see
+the [integration contract](../02-SCUMMVM-INTEGRATION.md)). Until
+`engines/scooby/` is in the fork (Phase 2), leave that flag off.
+
+For debugging on the Pi, drop `--disable-debug --enable-release` to keep debug
+symbols.
 
 Don't pass `--host=raspberrypi` on a native build. In ScummVM's `configure`,
 that host is the cross-compile target. It assumes the 32-bit
@@ -173,13 +122,37 @@ make install
 
 If the build gets killed partway (out of memory), rerun with `make -j2`.
 `make install` copies the binary and its data files (themes, translations,
-engine data) into `~/scummvm-dist`. Run it with:
+engine data) into `~/scummvm-dist`.
+
+### 5. Verify the Scooby engine is in the build
+
+Launching ScummVM doesn't prove the engine was compiled in. Check it:
+
+```bash
+~/scummvm-dist/bin/scummvm --version
+~/scummvm-dist/bin/scummvm --list-engines | grep -i scooby
+```
+
+The second command should print the `scooby` engine line. If it prints nothing,
+the engine wasn't built. Rerun `./configure` with `--enable-engine=scooby` and
+check that `configure`'s engine summary lists it.
+
+Then point detection at a game's data folder:
+
+```bash
+~/scummvm-dist/bin/scummvm --path=/path/to/showdown --detect
+```
+
+It should list the game with its Scooby game id. If it doesn't, either the path
+is wrong or the engine's detection tables don't cover that disc yet.
+
+Finally, start it from the build:
 
 ```bash
 ~/scummvm-dist/bin/scummvm
 ```
 
-### 5. Optional: text-to-speech
+### 6. Optional: text-to-speech
 
 ScummVM's text-to-speech uses speech-dispatcher. Install it with a voice
 engine, for example eSpeak NG:
@@ -190,70 +163,124 @@ sudo apt install -y --no-install-recommends speech-dispatcher speech-dispatcher-
 
 ---
 
-## Option E: Cross-compile on a PC (legacy)
+## User install: packaged ScummVM
 
-This is the ScummVM wiki's route. It builds a **32-bit (armhf)** binary on a
-Linux PC, against libraries copied off the Pi's SD card. The wiki wrote it for
-Raspbian Buster (2020), and the official toolchain it uses has an old GCC.
-Build on the Pi ([Option D](#option-d-build-from-source-on-the-pi)) unless the
-Pi is too slow to build on, such as a Pi Zero or Pi 2.
+All three of these install upstream ScummVM, which doesn't include the Scooby
+engine.
 
-1. **Toolchain.** Clone the official tools and put the cross-compiler on `PATH`:
+### Flatpak (recommended)
 
-   ```bash
-   git clone https://github.com/raspberrypi/tools.git
-   export PATH=$PATH:$HOME/tools/arm-bcm2708/arm-linux-gnueabihf/bin
-   ```
+Flathub's build is the current release and has an `aarch64` build. It has no
+32-bit ARM build.
 
-   For a newer GCC, the wiki suggests
-   [Stefan Profanter's raspi-toolchain](https://github.com/Pro/raspi-toolchain).
-   It has to be installed in `/opt/cross-pi-gcc`.
+```bash
+sudo apt update
+sudo apt install -y flatpak
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+sudo reboot
+```
 
-2. **Libraries on the Pi.** On the Pi, install the same `-dev` packages as
-   [Option D step 1](#1-install-the-build-tools-and-libraries). Only libraries
-   installed there end up in the copy.
+After the reboot:
 
-3. **Sysroot on the PC.** Install `make` and `pkg-config`, then copy `/usr`,
-   `/lib` and `/opt` from the Pi's SD card:
+```bash
+flatpak install -y flathub org.scummvm.ScummVM
+flatpak run org.scummvm.ScummVM
+```
 
-   ```bash
-   sudo apt install -y make pkg-config
-   mkdir -p /opt/rpi_root
-   export RPI_ROOT=/opt/rpi_root
-   cd <sd-card-mount-point>
-   cp -R usr lib opt $RPI_ROOT
-   ```
+Command-line arguments go after the `run` command, for example
+`flatpak run org.scummvm.ScummVM --list-games`.
 
-4. **Fix absolute symlinks.** The copy breaks every symlink that points to an
-   absolute path. Repair them with the `sysroot-relativelinks.py` script, which
-   needs Python 3:
+Flatpak apps run in a sandbox. ScummVM's docs say to copy games into
+`~/Documents` so the app can see them. The current Flathub manifest grants home
+directory access, so any folder under `/home/<you>` should work. Keep games
+there, not on other mounts, unless you add permissions with
+`flatpak override`.
 
-   ```bash
-   wget https://raw.githubusercontent.com/riscv/riscv-poky/master/scripts/sysroot-relativelinks.py
-   python3 ./sysroot-relativelinks.py $RPI_ROOT
-   export PATH=$RPI_ROOT:$PATH      # configure looks here for libcurl's files
-   ```
+### `apt` (simplest)
 
-5. **Configure and build** from the ScummVM source folder:
+This installs Debian's version, which lags upstream: 2.7.0 on Bookworm, 2.9.0
+on Trixie.
 
-   ```bash
-   mkdir -p ./scummvmDist
-   PKG_CONFIG_SYSROOT_DIR=$RPI_ROOT \
-   PKG_CONFIG_LIBDIR=$RPI_ROOT/usr/lib/arm-linux-gnueabihf/pkgconfig \
-   ./configure --host=raspberrypi \
-     --with-sdl-prefix=$RPI_ROOT/usr --with-png-prefix=$RPI_ROOT/usr \
-     --disable-debug --enable-release --prefix=$(pwd)/scummvmDist
-   make clean
-   make -j$(nproc)
-   make install
-   ```
+```bash
+sudo apt update
+sudo apt install -y scummvm
+scummvm
+```
 
-   With the old official toolchain, `configure` may not detect FluidSynth.
-   FluidSynth and MT-32 emulation are CPU-heavy on a Pi anyway, so it's fine to
-   leave them out.
+On the desktop it's also under **Menu > Games > ScummVM**.
 
-6. **Copy to the Pi.** Copy the contents of `scummvmDist` to the SD card, for
-   example into `~/scummvm`, along with your games.
+### Snap (32-bit OS)
+
+The Snap Store has 2026.2.0 for both `arm64` and `armhf`, which makes it the
+newest build for a 32-bit OS. It comes with a few freeware games and demos.
+
+```bash
+sudo apt update
+sudo apt install -y snapd
+sudo reboot
+```
+
+After the reboot:
+
+```bash
+sudo snap install scummvm
+scummvm
+```
+
+---
+
+## Game controllers
+
+ScummVM uses SDL2's game controller support, so a pad Linux recognises usually
+works with no setup. Get Linux to see the controller first, then tune it in
+ScummVM.
+
+### Connect the controller
+
+**USB:** plug it in. It needs no pairing.
+
+**Bluetooth:** use the Bluetooth icon in the desktop's top bar, or pair from a
+terminal. Put the controller in pairing mode, then run:
+
+```bash
+bluetoothctl
+# inside bluetoothctl:
+power on
+agent on
+scan on            # wait for the controller's MAC address to appear
+pair XX:XX:XX:XX:XX:XX
+trust XX:XX:XX:XX:XX:XX
+connect XX:XX:XX:XX:XX:XX
+scan off
+quit
+```
+
+`trust` lets the controller reconnect on its own after a reboot.
+
+### Check that Linux sees it
+
+```bash
+ls /dev/input/by-id/ | grep -i joystick
+sudo apt install -y joystick evtest
+jstest /dev/input/js0      # move sticks and press buttons; values should change
+```
+
+Each connected pad shows up as its own `js` device (`js0`, `js1`, ...). If one
+is missing, Linux hasn't recognised it, so fix that before you touch ScummVM.
+Use `evtest` to see the raw button and axis events.
+
+### Set it up in ScummVM
+
+- **Global Options > Control:** pointer speed (how fast the stick moves the
+  cursor) and the analog stick dead zone.
+- **Global Options > Keymaps:** map pad buttons to actions such as left click,
+  right click, skip, the game menu and the global main menu. **Game Options >
+  Keymaps** does the same for one game.
+- **Choosing a pad:** with more than one connected, `--joystick=NUM` picks
+  which one ScummVM uses, for example `scummvm --joystick=1`.
+
+Point-and-click games use one cursor. A pad drives the virtual mouse, and the
+other pads stay idle.
 
 ---
 
@@ -266,17 +293,24 @@ Pi is too slow to build on, such as a Pi Zero or Pi 2.
 3. To add a whole folder of games at once, use **Mass Add** (hold Shift and
    click **Add Game...**).
 
-Settings are in `~/.config/scummvm/scummvm.ini` for the `apt` and source
+Settings are in `~/.config/scummvm/scummvm.ini` for the developer and `apt`
 builds. The Flatpak keeps its own copy inside `~/.var/app/org.scummvm.ScummVM/`.
 
-### Audio
+## Audio
 
-The wiki's note about bad sound when PulseAudio is installed is from Raspbian
-Buster. Bookworm and later use PipeWire by default. If sound is wrong on a
-current OS, check the output device in the desktop's volume menu before
-changing anything in ScummVM. FluidSynth and MT-32 emulation are the most
-CPU-heavy audio options, so switch to AdLib or a different MIDI device if
-audio stutters.
+The ScummVM wiki warns that installing PulseAudio can cause bad sound, but that
+was written for Raspbian Buster. Bookworm and later use PipeWire by default. If
+sound is wrong on a current OS, check the output device (HDMI or headphones) in
+the desktop's volume menu before changing anything in ScummVM. FluidSynth and
+MT-32 emulation are the most CPU-heavy audio options, so switch to AdLib or a
+different MIDI device if audio stutters.
+
+## Cross-compiling (legacy)
+
+The ScummVM wiki's PC cross-compile route builds a 32-bit binary against a copy
+of the Pi's libraries. It's only worth doing for a Pi too slow to build on. It's
+on its own page:
+[Cross-Compiling ScummVM for the Raspberry Pi (Legacy)](scummvm-raspberry-pi-cross-compile.md).
 
 ---
 
@@ -284,10 +318,14 @@ audio stutters.
 
 - [ScummVM docs: Installing ScummVM (Linux)](https://docs.scummvm.org/en/latest/use_scummvm/install_computer.html):
   the Snap, Flatpak and `apt` routes. The ScummVM wiki's Pi page points here.
+- [ScummVM docs: Command line interface](https://docs.scummvm.org/en/latest/advanced_topics/command_line.html):
+  `--list-engines`, `--detect`, `--path` and `--joystick`.
+- ScummVM docs: [Keymaps](https://docs.scummvm.org/en/latest/settings/keymaps.html)
+  and [Control](https://docs.scummvm.org/en/latest/settings/control.html) settings.
 - [ScummVM wiki: Raspberry Pi](https://wiki.scummvm.org/index.php?title=Raspberry_Pi):
   the port's info page (port maintainer: vanfanel).
 - [ScummVM wiki: Compiling ScummVM/RPI](https://wiki.scummvm.org/index.php?title=Compiling_ScummVM/RPI):
-  the cross-compile walkthrough behind Option E and the library list in Option D.
+  the library list in step 1 and the legacy cross-compile route.
 - [ScummVM downloads](https://www.scummvm.org/downloads/): the current release
   and the older Pi AppImages.
 - [ScummVM on Flathub](https://flathub.org/apps/org.scummvm.ScummVM) and
