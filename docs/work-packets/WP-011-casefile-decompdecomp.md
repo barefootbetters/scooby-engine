@@ -24,7 +24,7 @@ It does not replace the format-first strategy in the [Vision](../01-VISION.md#ga
 
 ## Background
 
-**Contact.** Mony Armenchev found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. The work lives in his private GitHub repository; this project was given read access on 2026-11-11. Its URL stays out of this public repo (see [§Legal and repository hygiene](#legal-and-repository-hygiene)).
+**Contact.** Mony Armenchev found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. The work lives in his private GitHub repository; this project's account was added as a collaborator (push access) on 2026-11-11. Its URL stays out of this public repo (see [§Legal and repository hygiene](#legal-and-repository-hygiene)).
 
 **Where the executable analysis stood before this WP.** The [`Scooby.exe` analysis plan](../formats/scooby-exe.md) has one track: focused Ghidra work under [WP-001](WP-001-ghidra-session.md), aimed at the Gen 1 (Showdown) binary and still pending past its Rich Header step. [WP-007](WP-007-strings-and-imports.md) gives a strings and import-table baseline for all four cached binaries, Case File #1 included, with SHA-256 locks.
 
