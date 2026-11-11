@@ -80,7 +80,8 @@ Other tags expected but not yet observed (predict from filename patterns): `MMFW
 1. **Hex inspection of the `0x10`-onwards sub-header** in both samples — identify the entry-count and offset-table fields. The format is almost certainly an evolution of Gen 1's `TGIFILE.ART` structure; expect similar field shapes.
 2. **Cross-sample comparison.** Diff the first ~512 bytes of `Mummy.MMF` and `MuseumCD.MMP` — fields that vary identify per-file data (entry count, offset table); fields that match identify shared schema constants.
 3. **Probe-script extraction.** Once the sub-header is mapped, port `tools/probe_art.py` to handle `MMFW` containers — likely a thin wrapper that skips the 16-byte tag header before delegating to the existing extraction logic.
-4. **Payload decode cross-check.** When a `TGIFILE.ART` payload decodes successfully (WP-002), try the same decoder on an `MMFW` entry. If it works, the engine-inheritance hypothesis extends to the compression layer.
+4. **Executable-side trace (Gen 3).** The Case File #1 `MMFW` loader and picture decoder are the top research targets of the [WP-011 decompdecomp collaboration](../work-packets/WP-011-casefile-decompdecomp.md#research-targets). A function that reads the sub-header would answer the first two unknowns above directly. Findings arrive tagged with WP-011's evidence levels; only Observed or better lands here.
+5. **Payload decode cross-check.** When a `TGIFILE.ART` payload decodes successfully (WP-002), try the same decoder on an `MMFW` entry. If it works, the engine-inheritance hypothesis extends to the compression layer.
 
 ## Success conditions
 

@@ -258,6 +258,15 @@ The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation do
 4. Once one entry decodes cleanly, cross-check against *Phantom of the
    Knight* `TGIFILE.ART` to confirm the format generalizes.
 
+**Executable analysis and the F0 opcodes.** The decode answer is in a Gen 1
+binary ([WP-001](../work-packets/WP-001-ghidra-session.md), Track A in
+[scooby-exe](scooby-exe.md#two-analysis-tracks)). The
+[WP-011 decompdecomp collaboration](../work-packets/WP-011-casefile-decompdecomp.md)
+works on Case File #1, which ships `MMFW`, not `TGIFILE.ART`. It can inform
+the F0 question only if its `MMFW` picture decoder turns out to share the
+algorithm (the hypothesis in [mmfw-container](mmfw-container.md#hypotheses-unverified)),
+or if Showdown's binary is later added to decompdecomp for cross-binary matching.
+
 ## Success condition
 
 Render at least one *Showdown* background or sprite to PNG/BMP outside the

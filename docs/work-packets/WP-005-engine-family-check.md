@@ -65,5 +65,6 @@ Out of scope:
 
 - Parallel-safe with WP-001 through WP-004.
 - This is a small WP but the answer it produces is load-bearing — it determines whether the ScummVM engine ships covering 3 titles or 5. Worth doing early so subsequent work is correctly scoped.
+- Function-level evidence: [WP-011](WP-011-casefile-decompdecomp.md) (decompdecomp collaboration) plans identical-function counts for Jinx ↔ Case File #1, then Case File #1 ↔ Case File #2. Those counts are inputs to this WP's verdict, not a verdict themselves.
 - If the answer is "INDETERMINATE," recommend re-running after WP-001 closes (Ghidra may reveal whether the same loader code is present in `Scooby.exe` across versions, even if archive bytes differ at the surface).
 - The hypothesis from the vision is that the post-TerraGlyph studio inherited the engine via IP transfer through the TLC → Riverdeep acquisition. If true, the file structures will match. If false, the Case Files were rebuilt on a different engine and the structures will diverge clearly.

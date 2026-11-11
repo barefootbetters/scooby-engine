@@ -162,4 +162,5 @@ Out of scope:
 - If Ghidra auto-analysis takes longer than ~45 minutes, queue up WP-003 and the PE Rich Header check in parallel while it runs.
 - If the decode function turns out to be inlined or split across many helpers, time-box the trace at 4 hours and fall back to WP-002 with `probe_art.py` — record what was learned so far and what remains unknown.
 - If the binary turns out to be packed (UPX or similar), unpack first; record the packer in `scooby-exe.md`.
+- This WP is Track A of the [`Scooby.exe` analysis plan](../formats/scooby-exe.md#two-analysis-tracks). Track B, the decompdecomp collaboration on Case File #1, is [WP-011](WP-011-casefile-decompdecomp.md). If WP-011 finds inherited `MMFW`, archive or decoder code in Case File #1, the Gen 1 counterpart here becomes a concrete target. WP-011 doesn't change this WP's scope.
 - The PE Rich Header check is cheap enough that it should run before Ghidra (so Ghidra can be told the right calling convention from the start).

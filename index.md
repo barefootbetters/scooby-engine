@@ -23,6 +23,9 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 | `object.ini` | ✅ Plain INI — 1,405 lines of game object definitions |
 | `Scooby.eng` | ✅ Plain-text string table |
 | `Scooby.exe` | ⏳ Ghidra analysis queued |
+| Case File #1 executable (decompdecomp) | ⏸ Collaboration proposed: cooperative decompilation track, awaiting access ([WP-011](docs/work-packets/WP-011-casefile-decompdecomp)) |
+
+Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. The Case File engine family stays TBD.
 
 ---
 
@@ -32,7 +35,8 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 - [ScummVM Integration Contract](docs/02-SCUMMVM-INTEGRATION) — API surface, acceptance gates, PR checklist
 - [TGIFILE.ART Format Spec](docs/formats/tgifile-art) — graphics archive reverse engineering
 - [Audio Archives Spec](docs/formats/audio-archives) — Music / SFX / Voice .dat format
-- [Scooby.exe Analysis Plan](docs/formats/scooby-exe) — Ghidra roadmap
+- [Scooby.exe Analysis Plan](docs/formats/scooby-exe) — Ghidra roadmap plus the decompdecomp track
+- [Case File #1 decompdecomp Collaboration (WP-011)](docs/work-packets/WP-011-casefile-decompdecomp) — cooperative decompilation trial, evidence model, repository boundaries
 - [Installing ScummVM on the Raspberry Pi](docs/reference/scummvm-raspberry-pi) — the developer build of our fork, plus packaged installs
 
 ---

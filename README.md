@@ -32,7 +32,8 @@ docs/               Research documentation and format specs
   formats/          Reverse-engineered file format specs
     tgifile-art.md    Graphics archive (144 MB, two-level index confirmed)
     audio-archives.md Music / SFX / Voice .dat archives
-    scooby-exe.md     Main executable (Ghidra analysis plan)
+    scooby-exe.md     Main executable (Ghidra + decompdecomp analysis plan)
+  work-packets/     Units of work (WP-011: Case File #1 decompdecomp collaboration)
 tools/              Python scripts for format probing and asset extraction
 ```
 
@@ -52,6 +53,7 @@ under `engines/scooby/` — created in Phase 2.
 | `object.ini` | ✅ Plain Windows INI (1,405 lines). No decoding needed. |
 | `Scooby.eng` | ✅ Plain-text string table. No decoding needed. |
 | `Scooby.exe` | 🔬 Ghidra analysis pending. |
+| Case File #1 executable | ⏸ decompdecomp collaboration proposed, complementary to Ghidra. Awaiting access; collaborator-reported figures are preliminary. See [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md). |
 
 ---
 
