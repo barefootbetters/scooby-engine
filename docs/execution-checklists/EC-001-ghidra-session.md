@@ -18,7 +18,7 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 - [ ] Ghidra installed; version recorded here: __________
 - [ ] PE inspector available (`CFF Explorer`, `PE-bear`, or Python `pefile`)
 - [ ] `Scooby.exe` extracted from mounted Showdown ISO to a known local path; path recorded here: __________
-- [ ] Ghidra projects directory exists at `C:\www\scooby\ghidra\`
+- [ ] Ghidra projects directory exists at `C:\dev\scooby-engine\ghidra\`
 - [ ] [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) open in a second window for note-taking
 
 ## Step 1 — Rich Header / toolchain check (time-box: 15 min)
@@ -33,7 +33,7 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 
 ## Step 2 — Ghidra project setup (time-box: 30 min, mostly waiting)
 
-- [ ] Create new Ghidra project at `C:\www\scooby\ghidra\scooby.gpr`
+- [ ] Create new Ghidra project at `C:\dev\scooby-engine\ghidra\scooby.gpr`
 - [ ] Import `Scooby.exe`; accept defaults for PE format
 - [ ] Set the language/processor explicitly if Step 1 found a non-MSVC toolchain
 - [ ] Run auto-analysis with default analyzers enabled (no manual additions in this pass)

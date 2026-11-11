@@ -346,17 +346,21 @@ independently. Record and rationale:
   the `.dat` archive format used in Gen 1–3. Miles audio in ScummVM is handled
   via the `audio/miles/` subsystem; this is a known integration surface, not
   a blocker, but it means Gen 4 audio takes a different code path from Gen 1–3.
-- **Cross-title divergence (fully resolved 2026-06-03).** Phase 1 cross-title
-  analysis confirms one engine lineage spanning **four** format generations
-  (Gen 1 Showdown/Phantom, Gen 2 Jinx, Gen 3 Case File #1, Gen 4 Case File #2).
-  IBS inherited TerraGlyph's compiled object files into Case File #1, confirming
-  code-level continuity through Gen 3. Case File #2 (Gen 4) is a significant
-  architectural break — `.bul`/`.inx` archives, Miles Sound System, Bink SDK
-  upgraded, MMFW gone — but remains in the same engine family. Phantom's archive
-  format is confirmed Gen 1 (`TGIFILE.ART` on disc, identical `binkw32.dll` hash
-  to Showdown). Case File #3 is confirmed out of scope (Macromedia Director).
-  The engine needs four generation-specific adapters but remains one engine.
-  No residual uncertainty: all five titles are fully characterized.
+- **Cross-title divergence (mostly resolved 2026-06-03; Case File #2 verdict
+  open).** Phase 1 cross-title analysis shows one engine lineage spanning
+  **four** format generations (Gen 1 Showdown/Phantom, Gen 2 Jinx, Gen 3 Case
+  File #1, Gen 4 Case File #2). IBS inherited TerraGlyph's compiled object files
+  into Case File #1, confirming code-level continuity through Gen 3. Case File #2
+  (Gen 4) is a significant architectural break — `.bul`/`.inx` archives, Miles
+  Sound System, Bink SDK upgraded, MMFW gone. Its placement in the same engine
+  family rests on disc-layout and lineage evidence; its toolchain is still TBD
+  and [WP-005](work-packets/WP-005-engine-family-check.md) still owes the Case
+  File #2 verdict. Phantom's archive format is confirmed Gen 1 (`TGIFILE.ART` on
+  disc, identical `binkw32.dll` hash to Showdown). Case File #3 is confirmed out
+  of scope (Macromedia Director). Working assumption: four generation-specific
+  adapters on one engine. Residual uncertainty: the Case File #2 verdict, and
+  function-level confirmation of the Gen 2 → Gen 3 inheritance
+  ([WP-011](work-packets/WP-011-casefile-decompdecomp.md)).
 - **Schedule realism.** This is a first-time ScummVM engine on an undocumented
   format. The reference engine, [BOLT](https://wiki.scummvm.org/index.php/BOLT),
   took years to get upstream. Phase ordering below is firm; durations are

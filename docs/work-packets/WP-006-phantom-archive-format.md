@@ -5,7 +5,7 @@ title: "WP-006: Phantom Archive Format"
 
 # WP-006: Phantom archive format verification (Gen 1 vs Gen 2)
 
-**Status:** 📦 Queued
+**Status:** 📝 Drafted
 **Phase:** 1 — Format Research (follow-on to the Engine Lineage finding in WP-005)
 **Depends on:** —
 **Companion EC:** — (single hex dump; no checklist needed)

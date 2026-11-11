@@ -34,7 +34,7 @@ It does not replace the format-first strategy in the [Vision](../01-VISION.md#ga
 - Its strings carry the same `MMVisualCursor.cpp` source unit and the same `MMFW` resource labels as Jinx, plus ImageBuilder Software (IBS)–era `PG*`/`SM*`/`IB*` class families ([Case File #1 strings](../formats/scooby-exe.md#case-file-1-gen-3)).
 - It uses `MMFW` archives, not `TGIFILE.ART` or the Gen 1 `.dat` audio archives ([cross-title verification](../formats/tgifile-art.md#cross-title-verification-2026-06)).
 
-That evidence is at the toolchain and string level. The overview pages still show **Engine family TBD** for both Case Files, because [WP-005](WP-005-engine-family-check.md) is open and Phase 1 exit criterion #4 has not been closed. This WP changes no classification. Function-level evidence, for example how many Case File #1 functions match Jinx functions, is one input WP-005 can use later.
+That evidence is at the toolchain and string level. The overview pages place Case File #1 in the same lineage on that basis, and show the Case File #2 verdict as pending, because [WP-005](WP-005-engine-family-check.md) is open and Phase 1 exit criterion #4 has not been closed. This WP changes no classification. Function-level evidence, for example how many Case File #1 functions match Jinx functions, is one input WP-005 can use later.
 
 **Supersession check (2026-11-11).** No existing WP covers cooperative or automated decompilation. WP-001 is single-operator Ghidra work on the Gen 1 binary, and WP-005 is disc and header comparison. `git log --all --grep=decomp` returns nothing. Every repo hit for "decomp" is the word "decompile" inside WP-001 / EC-001.
 
@@ -247,7 +247,7 @@ The output of each step is a count of identical, near and unique functions per b
 
 Engine lineage:
 
-1. Are the Case File games built on the TerraGlyph engine used by the Mystery Adventures titles? Toolchain and string evidence for Case File #1 points to inherited Jinx-era code ([Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding)). That is not yet confirmed at the function level, and the overview still says TBD.
+1. Are the Case File games built on the TerraGlyph engine used by the Mystery Adventures titles? Toolchain and string evidence for Case File #1 points to inherited Jinx-era code ([Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding)). That is not yet confirmed at the function level, and the Case File #2 verdict is still open in WP-005.
 2. Is each Case File a later revision, a fork, or a separate engine? The Vision records Case File #2 as a large architectural break.
 3. Which functions are identical or structurally related across the two Case File executables, and between Jinx and Case File #1?
 4. Do the Case File games reuse archive formats from the earlier games? Disc evidence says Case File #1 uses `MMFW` like Jinx, and Case File #2 uses `.bul` / `.inx`. Neither uses `TGIFILE.ART`.

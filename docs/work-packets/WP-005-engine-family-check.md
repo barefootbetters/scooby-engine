@@ -5,7 +5,7 @@ title: "WP-005: Engine-Family Check"
 
 # WP-005: Engine-family check across Case File ISOs
 
-**Status:** 📝 Drafted
+**Status:** 🚧 In Progress
 **Phase:** 1 — Format Research
 **Depends on:** —
 **Companion EC:** [EC-003](../execution-checklists/EC-003-engine-family-check.md)

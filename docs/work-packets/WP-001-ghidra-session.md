@@ -5,7 +5,7 @@ title: "WP-001: Ghidra Session"
 
 # WP-001: Ghidra session — `Scooby.exe` imports + `TGIFILE.ART` decode trace
 
-**Status:** 📝 Drafted
+**Status:** 🚧 In Progress
 **Phase:** 1 — Format Research
 **Depends on:** WP-003 (palette hunt — run first; may eliminate palette-hunt scope from this session), WP-007 (strings dump — recommended; primes Steps 3–4)
 **Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session.md)
@@ -116,7 +116,7 @@ table is in front of you.
 
 In scope:
 - PE Rich Header inspection (toolchain identification, 5 min)
-- Ghidra project setup at `C:\www\scooby\ghidra\scooby.gpr`
+- Ghidra project setup at `C:\dev\scooby-engine\ghidra\scooby.gpr`
 - Auto-analysis pass
 - Imports table review (DirectDraw / DirectSound / DirectInput / Bink / Win32 file I/O)
 - Locating and labeling the `TGIFILE.ART` file open call and the function chain it dispatches into
@@ -149,13 +149,13 @@ Out of scope:
 2. `docs/formats/scooby-exe.md` Findings → "Imports / runtime surface" populated with the DirectX surfaces in use, Bink integration, and file I/O API set.
 3. `docs/formats/scooby-exe.md` Findings → "Resource loading map" populated with at least the `TGIFILE.ART` open + dispatch path labeled in Ghidra.
 4. The `TGIFILE.ART` decode function is identified (Ghidra function name + entry address recorded) and its pseudo-C decompilation is captured as a code block in `docs/formats/tgifile-art.md` Findings → "Per-entry payload" → new subsection "Decode algorithm (from `Scooby.exe`)".
-5. Ghidra project saved at `C:\www\scooby\ghidra\scooby.gpr` with the labels above intact.
+5. Ghidra project saved at `C:\dev\scooby-engine\ghidra\scooby.gpr` with the labels above intact.
 
 ## Deliverables
 
 - Updated [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) — Findings sections.
 - Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — decode algorithm sub-section.
-- Ghidra project file at `C:\www\scooby\ghidra\scooby.gpr`.
+- Ghidra project file at `C:\dev\scooby-engine\ghidra\scooby.gpr`.
 
 ## Notes
 
