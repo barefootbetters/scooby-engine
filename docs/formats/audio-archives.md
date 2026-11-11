@@ -91,6 +91,14 @@ Likely candidates for a year-2000 Windows edutainment title:
 4. Map identified codec to ScummVM's `audio/` subsystem — identify any
    decoder work needed.
 
+**Executable analysis.** The index-table location is a question for the
+Gen 1 binary's audio loader ([WP-001](../work-packets/WP-001-ghidra-session.md)
+and [WP-004](../work-packets/WP-004-audio-archive-decode.md)). The
+[WP-011 decompdecomp collaboration](../work-packets/WP-011-casefile-decompdecomp.md)
+on Case File #1 can help only indirectly, because that title stores audio
+in `MMFW` `.MMA` archives, not `.dat`. If its audio loader turns out to be
+inherited code, it gives a structural lead for the Gen 1 index.
+
 ## Success condition
 
 Each of `Music.dat`, `Sfx.dat`, `Voice.dat` has its codec named in writing.

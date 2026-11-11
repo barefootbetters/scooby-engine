@@ -245,6 +245,13 @@ Main executable. Ghidra analysis needed to map room transitions, puzzle
 state, and resource loading — but see **Game Logic Strategy** for how to
 keep that scope from spiraling.
 
+Executable analysis has two complementary tracks
+([scooby-exe §Two analysis tracks](formats/scooby-exe.md#two-analysis-tracks)):
+focused Ghidra work ([WP-001](work-packets/WP-001-ghidra-session.md)), and
+decompdecomp-assisted cooperative decompilation, starting with an outside
+collaborator's work on Case File #1
+([WP-011](work-packets/WP-011-casefile-decompdecomp.md)).
+
 ---
 
 ## Runtime Dependencies (Original Game)
@@ -310,6 +317,18 @@ resolved elsewhere. So path A handles binding + navigation; path B
 The 1,405-line comment above is correct in spirit but should be read as
 "most of the asset / navigation layer is data" — not "most of the game
 logic is data."
+
+**Decision (Proposed, 2026-11-11) — decompdecomp as a complementary
+path-B tool.** Evaluate decompdecomp as a complementary executable-analysis
+workflow for the Case File games, while keeping focused Ghidra analysis and
+the format-first strategy above. It may speed up function reconstruction,
+cooperative processing, byte matching and cross-game comparison. Ghidra work
+is still needed for subsystem identification, semantics, validation, and
+translation into maintainable ScummVM code. It stays Proposed until a capped
+local trial establishes usefulness, cost, reproducibility and repository
+boundaries. Decompiled code is research evidence only; the engine is written
+independently. Record and rationale:
+[WP-011 §Status and decision log](work-packets/WP-011-casefile-decompdecomp.md#status-and-decision-log).
 
 ---
 
@@ -463,6 +482,7 @@ Stretch:
 Local working set, established during Phase 1:
 - Hex viewer / binary diff tool for archive inspection.
 - Ghidra project (`scooby.gpr`) with labeled symbols for `Scooby.exe`.
+- decompdecomp (proposed, [WP-011](work-packets/WP-011-casefile-decompdecomp.md)) for cooperative, byte-matching decompilation; project files stay outside this repo or under the gitignored `tools/decomp/`.
 - Python extractor scripts under `tools/` for repeatable asset dumps from `TGIFILE.ART` and the audio archives.
 - ScummVM debug-channel taxonomy defined in the engine (resource, render, input, script).
 

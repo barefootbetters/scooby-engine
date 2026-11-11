@@ -9,7 +9,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 > Each WP is one unit of work with a goal, dependencies, and exit criteria.
 > ECs are step-by-step checklists for the WPs most likely to sprawl.
 >
-> **Last updated:** 2026-06
+> **Last updated:** 2026-11 (WP-011 added)
 >
 > **Status vocabulary (closed set):**
 > ✅ Done · 🚧 In Progress · 📝 Drafted (WP file authored, not yet started) · 📦 Queued (deps met, WP file not yet authored) · ⏸ Blocked (dep unmet) · 🔮 Placeholder (forward-looking, intentionally not authored)
@@ -61,6 +61,7 @@ each other; recommended execution order is left-to-right in the table.
 | [WP-004](WP-004-audio-archive-decode.md) | Audio archive index + codec identification | 📝 Drafted | — | — | Phase 1 exit criterion #3. **WP-008 baseline ✅** — `Scooby.eng` is NOT in-game dialogue (10 boot/init system-error messages only). Dialogue text store is a new unknown — most likely `Voice.dat`, embedded in `Scooby.exe`, or a not-yet-identified file. `pickupsfx=<none>` is the only audio key in 215 `object.ini` OBJ sections, weakening "voice clips referenced by name from `object.ini`" — audio cues are likely triggered by the `scrappyid` script system (WP-001 lead). See [WP-004 §Notes](WP-004-audio-archive-decode.md#notes). |
 | [WP-005](WP-005-engine-family-check.md) | Engine-family check across Case File ISOs | 🚧 In Progress | — | [EC-003](../execution-checklists/EC-003-engine-family-check.md) | Case File #1 done — one engine lineage across three generations confirmed; code-level TerraGlyph→IBS inheritance confirmed. Case File #2 verification still owed. |
 | [WP-006](WP-006-phantom-archive-format.md) | Phantom archive format verification (Gen 1 vs Gen 2) | 📝 Drafted | — | — | One-minute `Format-Hex` check; locks in Phantom's generation classification |
+| [WP-011](WP-011-casefile-decompdecomp.md) | Case File #1 executable analysis with decompdecomp (collaboration trial) | ⏸ Blocked | Cooperative-room access from the collaborator (external) | — (inline checklist) | Added 2026-11-11. Track B of the [`Scooby.exe` analysis plan](../formats/scooby-exe.md#two-analysis-tracks), complementary to WP-001's Ghidra track. An outside collaborator has started a decompdecomp decompilation of Case File #1 (Gen 3); his progress figures are **Reported**, not reproduced. The WP defines an evidence model, repository-hygiene rules, a capped trial, and a Proposed decision to evaluate decompdecomp. Does not change the engine-family classification (WP-005) or the Gen 1 blocker order. |
 
 **Phase 1 exit gate:** see [Project Vision](../01-VISION.md) → "Phase 1 — Format Research" exit criteria. Summary: one `TGIFILE.ART` entry rendered to PNG/BMP, structure documented in `docs/formats/`, audio codec named, engine-family question answered.
 
@@ -141,6 +142,7 @@ This section carries only 1–2 representative thumbnails as a teaser linking to
 - Pre-flight gate: [docs/reference/pre-flight](../reference/pre-flight.md)
 - Format specs: [docs/formats/tgifile-art](../formats/tgifile-art.md), [audio-archives](../formats/audio-archives.md), [scooby-exe](../formats/scooby-exe.md), [mmfw-container](../formats/mmfw-container.md)
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports.md), [WP-008](WP-008-object-ini-catalog.md), [WP-009](WP-009-reference-screenshots.md), [WP-010](WP-010-scummvm-scaffold.md)
+- Executable analysis: [WP-001](WP-001-ghidra-session.md) (Ghidra), [WP-011](WP-011-casefile-decompdecomp.md) (decompdecomp collaboration)
 
 ---
 

@@ -78,6 +78,21 @@ ghidra/
 *.lock
 
 # =============================================================
+#  decompdecomp / cooperative decompilation (WP-011)
+# =============================================================
+# decompdecomp projects hold matched C, generated assembly and state built
+# from the proprietary executable; they belong in the collaborator's private
+# repo, never this public one. Keep a local project outside this checkout or
+# under tools/decomp/ (blocked in full; no README is whitelisted).
+tools/decomp/
+decompdecomp/
+decompdecomp.json
+
+# Agent-provider API keys and other local credentials
+.env
+.env.*
+
+# =============================================================
 #  OS / editor
 # =============================================================
 .DS_Store

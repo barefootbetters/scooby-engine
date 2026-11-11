@@ -5,7 +5,7 @@ title: "Format Spec: Scooby.exe"
 
 # Format Spec: `Scooby.exe`
 
-**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending  
+**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending; decompdecomp collaboration on Case File #1 proposed ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md), awaiting access)  
 **Source discs:** five candidate titles (see Cross-title comparison below)  
 **Per-title binary names:** `Scooby.exe` (Showdown/Phantom/Jinx), `Case File #1.exe` (Case File #1)  
 **Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 work item; Engine Lineage section for generation classification.
@@ -81,6 +81,20 @@ small (476 KB) but still contains far more than we need.
 6. **Puzzle / state machine disassembly (deferred).** Only after Phase 3
    renders rooms — disassemble exactly the functions whose behavior
    `object.ini` doesn't cover.
+
+## Two analysis tracks
+
+The investigation plan above is **Track A**. **Track B** was added 2026-11-11. The two are complementary: B generates leads and code-equivalence evidence at volume, and A turns leads into understood, named, validated subsystems. Neither replaces the format-first strategy in the [Vision](../01-VISION.md#game-logic-strategy).
+
+### Track A — focused Ghidra analysis ([WP-001](../work-packets/WP-001-ghidra-session.md))
+
+Targeted manual work: entry points, imports, strings and cross-references, resource-loading functions, file signatures, format decoders, script dispatch, game-state structures, and naming and validating the major subsystems. Primary binary: Showdown (Gen 1). This stays the path to the Gen 1 blockers (`TGIFILE.ART` decode, the `object.ini` consumer, the `scrappyid` resolver).
+
+### Track B — decompdecomp-assisted analysis ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md))
+
+Cooperative, AI-assisted decompilation with [decompdecomp](https://github.com/n-delic/decompdecomp): function extraction, candidate C reconstruction, byte matching against the original compiler output, parallel agent processing, a cooperative room that hands out unhandled functions to collaborators, and reuse and matching across related executables. Its output is a stream of leads for Track A. Initial binary: Case File #1 (Gen 3), where an outside collaborator has already started. The engine family stays TBD on the overview pages; see WP-011 §Background for the evidence so far.
+
+**A byte-identical match is evidence, not understanding.** It shows that candidate C is equivalent to the original bytes. It does not establish correct high-level semantics, suitable names, a readable architecture, or anything usable in ScummVM. Track B findings use the [WP-011 evidence model](../work-packets/WP-011-casefile-decompdecomp.md#evidence-model) (Reported → Observed → Matched → Corroborated → Integrated → Accepted). Matched C and generated assembly stay out of this public repo. The ScummVM engine is written independently from documented behavior.
 
 ## Success condition for Phase 1
 
@@ -671,7 +685,7 @@ These three are the canonical COM-client initialization triad. Combined with the
 
 ### Resource loading map
 
-*TBD — which function opens which file; what the dispatch/lookup looks like.*
+*TBD — which function opens which file; what the dispatch/lookup looks like.* For Case File #1 (Gen 3), the `MMFW` loader is the top research target of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#research-targets); its function map lands as its own subsection here once a finding reaches Observed.
 
 ### `object.ini` interpreter behavior
 
@@ -786,3 +800,4 @@ No name observed required actual sanitization (no spaces, no punctuation, no non
 - Vision doc: [Project Vision](../01-VISION.md)
 - Companion specs: [tgifile-art](tgifile-art.md), [audio-archives](audio-archives.md)
 - Ghidra project: `C:\dev\scooby-engine\ghidra\scooby.gpr` (to be created)
+- Executable-analysis work packets: [WP-001](../work-packets/WP-001-ghidra-session.md) (Track A, Ghidra), [WP-011](../work-packets/WP-011-casefile-decompdecomp.md) (Track B, decompdecomp collaboration)
