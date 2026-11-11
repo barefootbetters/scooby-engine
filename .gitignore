@@ -88,6 +88,11 @@ tools/decomp/
 decompdecomp/
 decompdecomp.json
 
+# Private ewiki pages: a checkout (CI) or a junction (local) of the private
+# barefootbetters/scooby-engine-private repo. Rendered only on the Access-gated
+# ewiki; never committed here.
+_private/
+
 # Agent-provider API keys and other local credentials
 .env
 .env.*
