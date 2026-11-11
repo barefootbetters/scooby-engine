@@ -7,6 +7,8 @@ title: "Setting Up decompdecomp on Windows"
 
 These steps get a Windows 11 PC ready to join the Case File #1 cooperative decompilation room, which is part of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md). There are four installs, then a baseline measurement, then the join.
 
+**What the trial is for.** Matched C rebuilds the original 2002 Windows program. It isn't a port, and it isn't engine code. The project's deliverable is still an independent ScummVM engine, written from documented behavior. The decompilation is research evidence for that engine ([WP-011 §ScummVM integration boundaries](../work-packets/WP-011-casefile-decompdecomp.md#scummvm-integration-boundaries)). The trial asks a narrower question: does decompdecomp produce that evidence faster or more cheaply than Ghidra work alone? decompdecomp's guide marks its Windows PC support as beta, so expect some friction.
+
 ## Where each instruction comes from
 
 The page mixes three kinds of instruction. Each one is tagged with its source:
