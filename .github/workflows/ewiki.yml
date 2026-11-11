@@ -38,6 +38,32 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # why: private pages live in barefootbetters/scooby-engine-private and
+      # render only on this Access-gated wiki (ewiki/hugo.toml, the _private
+      # mount). The read-only deploy key is a repo secret; without it (forks,
+      # or before Jeff adds it) the wiki builds public pages only. This log is
+      # public, so nothing below prints private page names or text.
+      - name: Check for the private-pages key
+        id: private
+        env:
+          KEY: ${{ secrets.PRIVATE_PAGES_DEPLOY_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PRIVATE_PAGES_DEPLOY_KEY is not set, so the wiki builds without its private pages."
+          fi
+
+      - name: Check out the private pages
+        if: steps.private.outputs.enabled == 'true'
+        uses: actions/checkout@v5
+        with:
+          repository: barefootbetters/scooby-engine-private
+          ssh-key: ${{ secrets.PRIVATE_PAGES_DEPLOY_KEY }}
+          path: _private
+          persist-credentials: false
+
       - name: Read pinned Hugo version
         id: hugo
         run: echo "version=$(cat ewiki/.hugo-version)" >> "$GITHUB_OUTPUT"
@@ -94,7 +120,10 @@ jobs:
           $pages = @(git ls-files | Where-Object { $_ -match $allowList })
           $sections = @($pages | Where-Object { $_.Contains('/') } | ForEach-Object { $_.Split('/')[0] } | Sort-Object -Unique)
           $expected = $pages.Count + $sections.Count + 1
-          Write-Host "Expected pages: $($pages.Count) Markdown files + $($sections.Count) section lists + 1 home = $expected."
+          # why: the private mount adds its Markdown files plus one section list.
+          $private = @(if (Test-Path _private/private) { Get-ChildItem _private/private -Recurse -File -Filter *.md })
+          if ($private.Count) { $expected += $private.Count + 1 }
+          Write-Host "Expected pages: $($pages.Count) Markdown files + $($sections.Count) section lists + 1 home + $($private.Count) private (+1 list if any) = $expected."
           pwsh -File ewiki/themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -Config ewiki/hugo.toml -ExpectedPageCount $expected
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

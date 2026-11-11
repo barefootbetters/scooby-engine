@@ -48,6 +48,19 @@ pluralizeListTitles = false
     "/tools/samples/README.md",
   ]
 
+# why: private pages. This repo is public, and so is its GitHub Pages site, so
+# notes that must stay off both live in the private
+# barefootbetters/scooby-engine-private repo. CI checks it out into the
+# gitignored _private/ with a read-only deploy key (PRIVATE_PAGES_DEPLOY_KEY);
+# locally _private is a junction to C:\dev\scooby-engine-private. Without it
+# (forks, or no key) the mount source is absent and the wiki builds public pages
+# only. Jekyll never sees these pages. Each private page sets
+# canonical-source-repo so its edit links point at the private repo.
+[[module.mounts]]
+  source = "_private/private"
+  target = "content/private"
+  files = ["**.md", "**/*.md"]
+
 [[module.mounts]]
   source = "index.md"
   target = "content/_home-source.md"
