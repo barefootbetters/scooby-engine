@@ -5,12 +5,12 @@ title: "WP-011: Case File #1 decompdecomp Collaboration"
 
 # WP-011: Case File #1 executable analysis with decompdecomp (collaboration trial)
 
-**Status:** ⏸ Blocked: WP file authored, but cooperative-project access has not been received yet (see [§Status and decision log](#status-and-decision-log))
+**Status:** 🚧 In Progress: repository access and a cooperative room received 2026-11-11; local decompdecomp environment and the capped trial are next (see [§Status and decision log](#status-and-decision-log))
 **Phase:** 1 — Format Research (executable-analysis track; runs alongside [WP-001](WP-001-ghidra-session.md), does not replace it)
-**Depends on:** Collaboration link and repository access from the host (external); a local Case File #1 binary matching the [WP-007 identity lock](../formats/scooby-exe.md#binary-identity-wp-007-baseline)
+**Depends on:** Repository access and a room link from the host (external; both received 2026-11-11); a local Case File #1 binary matching the [WP-007 identity lock](../formats/scooby-exe.md#binary-identity-wp-007-baseline)
 **Unblocks (recommended, not strict):** [WP-005](WP-005-engine-family-check.md) (function-level engine-family evidence), [MMFW container](../formats/mmfw-container.md) loader questions, later Case File #2 comparison
 **Companion EC:** — (the trial checklist is inline in [§Immediate next actions](#immediate-next-actions); author an EC only if the trial is accepted and continues past it)
-**Pre-flight required:** Yes. Execution writes facts into `docs/formats/scooby-exe.md` and may feed a generation classification. Pre-flight runs when access arrives, not now.
+**Pre-flight required:** Yes. Execution writes facts into `docs/formats/scooby-exe.md` and may feed a generation classification. Access arrived 2026-11-11; pre-flight runs before the trial writes anything into `scooby-exe.md`.
 **Targets generation(s):** Gen 3 (Case File #1) primary. Gen 4 (Case File #2) only after the Gen 3 baseline is stable. Gen 1 / Gen 2 only through cross-binary matching, opportunistically.
 **Estimated effort:** Trial: half a day of setup plus one capped agent run. Anything past the trial is re-estimated at the decision point.
 
@@ -24,7 +24,7 @@ It does not replace the format-first strategy in the [Vision](../01-VISION.md#ga
 
 ## Background
 
-**Contact.** Mony Armenchev found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. He plans to keep the work in a GitHub repository that will probably be private at first.
+**Contact.** Mony Armenchev found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. The work lives in his private GitHub repository; this project was given read access on 2026-11-11. Its URL stays out of this public repo (see [§Legal and repository hygiene](#legal-and-repository-hygiene)).
 
 **Where the executable analysis stood before this WP.** The [`Scooby.exe` analysis plan](../formats/scooby-exe.md) has one track: focused Ghidra work under [WP-001](WP-001-ghidra-session.md), aimed at the Gen 1 (Showdown) binary and still pending past its Rich Header step. [WP-007](WP-007-strings-and-imports.md) gives a strings and import-table baseline for all four cached binaries, Case File #1 included, with SHA-256 locks.
 
@@ -52,6 +52,21 @@ Every figure in this section is **Reported** (see [§Evidence model](#evidence-m
 
 The report doesn't separate "processed" into matched, near-miss and failed functions. That breakdown is the first thing to measure (see [§Immediate next actions](#immediate-next-actions)).
 
+### First look at the repository (2026-11-11)
+
+Read from a fresh clone of the collaborator's repository (its first commit), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
+
+| Item | Value | Evidence |
+|---|---|---|
+| Executable identity | The project config pins the game by SHA-1 `dfd47fbdfb87e349dec62524fc79e26d2d88703e`, which equals the SHA-1 of this project's local Case File #1 executable. The size matches too: 786,432 bytes. The local copy's SHA-256 is the WP-007 lock, `9813A3DD…7CF8`. | **Observed**: hashed locally, compared with the config |
+| Project type | A decompdecomp PC project created "from scratch", with the game's `libexpat.dll` (at `0x10000000`) as a second program | Read from the project files |
+| Compiler | Visual C++ **6.0** by default (`/O2 /GX`). One source file is pinned to 7.1, and many files carry per-file `/O1` or `/Oy-` flags. No file is set to VC 5.0. | Read from the project files |
+| Function inventory | 3,376 functions, 455,576 bytes of code: 3,063 in the executable, 313 in `libexpat.dll` | **Reported**, from the tool's own summary in the project files. Consistent with the "about 3,300" above. |
+| Source written so far | 150 `.cpp` files covering the whole address range, with about 1,175 C function bodies, plus recovered class declarations and 77 named functions | Counted locally; **match status unknown** |
+| Overlap with this repo's research | 11 of the 71 class names in the source are already in [scooby-exe.md](../formats/scooby-exe.md) from the WP-007 strings, among them `MMPictureLoader` and `MMSoundLoader`. Several other resource-file and loader classes are new to this project. | Counted locally |
+
+How many of those C bodies compile to the original bytes is not known yet. The tool's summary in the project files was written when the project was created and counts 0 functions from C, so a local build is the only way to measure the match rate (see [§Immediate next actions](#immediate-next-actions)). Class and function names from the repository stay out of this page until the host's terms on public quoting are known ([open question 18](#open-questions)). The two exceptions are names already public here from the WP-007 strings.
+
 ## Toolchain
 
 | Tool | Role here | Notes |
@@ -63,7 +78,7 @@ The report doesn't separate "processed" into matched, near-miss and failed funct
 | AI coding agents | Write and revise candidate C | The guide lists CLI agents (Claude Code, Codex CLI and others) and any OpenAI-compatible API (DeepSeek, OpenRouter, local models) |
 | Manual analysis | Where automation stalls, and for every semantic conclusion | Human work, recorded here |
 
-**Compiler coverage matters for this binary.** WP-007 places Case File #1's toolchain in the **Visual C++ 5.0** era (plus one VC 6.0 object). The decompdecomp guide documents Windows compilers from **Visual C++ 6.0** upward. Byte-identical matching depends on the original compiler and flags. Before trusting any match rate, find out which compiler the host project is configured with, and whether VC 5.0 output can be reproduced (see [§Risks](#risks-and-mitigations) and [§Open questions](#open-questions)).
+**Compiler coverage matters for this binary.** WP-007 places Case File #1's toolchain in the **Visual C++ 5.0** era (plus one VC 6.0 object). The decompdecomp guide documents Windows compilers from **Visual C++ 6.0** upward. Byte-identical matching depends on the original compiler and flags. Before trusting any match rate, find out which compiler the host project is configured with, and whether VC 5.0 output can be reproduced (see [§Risks](#risks-and-mitigations) and [§Open questions](#open-questions)). **Answered in part (2026-11-11):** the host project defaults to VC 6.0, with one file on 7.1 ([§First look at the repository](#first-look-at-the-repository-2026-11-11)). Whether VC 6.0 reproduces the VC 5.0-built objects byte for byte is still the thing to measure.
 
 ## GitHub versus the decompdecomp cooperative room
 
@@ -98,7 +113,7 @@ This repo has no formal evidence scale. Format specs use "Confirmed", "predicted
 
 Rules:
 
-- Every figure in [§Collaborator-reported starting point](#collaborator-reported-starting-point), every agent result, and every cross-game expectation in this WP is **Reported** today.
+- Every figure in [§Collaborator-reported starting point](#collaborator-reported-starting-point), every agent result, and every cross-game expectation in this WP is **Reported** today. The exceptions are the rows the [§First look](#first-look-at-the-repository-2026-11-11) table marks otherwise.
 - A finding moves up a level only with a citation: the SHA-256 of the binary, the address, the tool and version, and who reproduced it.
 - **Matched is not understood.** A byte-identical function proves the C is equivalent to the original. It does not prove the function name, the struct layout, the high-level meaning, or that the code is readable or suitable for ScummVM. Semantic claims need Observed-level human analysis, and ideally Corroborated.
 
@@ -130,13 +145,14 @@ To be verified against the current decompdecomp release when access arrives. The
 - decompdecomp from its release installer (it bundles Python and the app), or from source with `uv` and Python 3.12.
 - Ghidra, which the guide requires for the PC platform's function cut-out. Record the version.
 - The compiler the host project is configured with. Proprietary compilers install only after the user accepts their license in decompdecomp's Setup.
+- To build the host project outside the app: Python, `ninja`, and the configured MSVC toolchain (`tools/configure.py <version> --msvc <folder>`), plus [objdiff](https://github.com/encounter/objdiff) for per-function progress. The game's `libexpat.dll` goes beside the executable in the project's gitignored `orig/` folder.
 - An agent provider with a hard spend limit set **on the provider side**. The guide describes usage-limit waits and auto-pause after repeated failures, but no budget cap.
 - A legally obtained Case File #1 disc or ISO. The working copy of the executable lives under the gitignored `tools/exes/casefile1/`, as in [tools/exes/README](../../tools/exes/README.md). The disc filename is `Case File #1.exe`; the local cache renames it `Scooby.exe`.
 - Isolation: a dedicated Windows user profile or VM, or at minimum a decompdecomp project directory outside this checkout, or under the gitignored `tools/decomp/`.
 
 ## Cooperative connection workflow
 
-1. Receive the invite link privately. Never paste it into this repo, an issue, a commit message or a public page.
+1. Get the current invite link from Mony privately, each time. The room runs over a temporary tunnel, so the link changes whenever he restarts decompdecomp; an old link is dead, not a fallback. Never paste a link into this repo, an issue, a commit message or a public page.
 2. Confirm with the host which compiler, flags and decompdecomp version the room uses, and which copy of the game they hold. Compare SHA-256 values before joining.
 3. In decompdecomp: **New project → Join a team's room**, paste the link, choose a display name, and select the local executable.
 4. Set the provider spend cap and the number of helpers before starting any agents. Start small: one or two helpers, not the guide's maximum of 24.
@@ -255,22 +271,31 @@ For the host, about the room:
 
 14. How are function claims made and expired, and how are conflicts resolved?
 15. How does a member's match get merged, and what does the host share back?
-16. Does the room check that every member's executable is identical, or is that on each member?
-17. Which compiler and version is the room configured with, and which decompdecomp version?
+16. Does the room check that every member's executable is identical, or is that on each member? *Partly answered:* the project pins the game by SHA-1, and this project's copy matches it. Whether the room enforces it on join is still open.
+17. Which compiler and version is the room configured with, and which decompdecomp version? *Partly answered:* the project defaults to VC 6.0 (one file on 7.1). The decompdecomp app version the room runs is still open; the project files record only a tools revision.
 18. What are the terms of the private repository: license, who may read it, what may be quoted publicly, and how the collaborator wants to be credited?
 
 ## Immediate next actions
 
+Milestones:
+
+- [x] Collaboration repository received (private; access accepted 2026-11-11).
+- [x] Case File #1 cooperative decompdecomp session available (2026-11-11). The link is temporary; get the current one from Mony.
+- [ ] Inspect the repository and set up a local decompdecomp environment. The repository is inspected ([§First look](#first-look-at-the-repository-2026-11-11)); the environment is not set up yet.
+- [ ] Join the cooperative session and run a limited initial agent trial.
+- [ ] Compare decompilation findings against existing `scooby-engine` research.
+
 Trial checklist. Tick these off in this file as they happen.
 
-- [ ] Receive the collaboration link from Mony, by private channel only.
-- [ ] Review the private repository's terms and contents; record the terms (not the URL) in the decision log.
+- [x] Receive repository access and a room link from Mony, by private channel only.
+- [ ] Review the private repository's terms and contents; record the terms (not the URL) in the decision log. Contents reviewed 2026-11-11; terms not yet received ([open question 18](#open-questions)).
 - [ ] Read the current decompdecomp cooperative setup instructions and check them against [§Cooperative connection workflow](#cooperative-connection-workflow); correct this page where they differ.
 - [ ] Install the prerequisites in an isolated environment (separate profile or VM, project directory outside this checkout or under `tools/decomp/`).
 - [ ] Use only a legally obtained local copy of the game.
-- [ ] Record the exact executable filename (`Case File #1.exe` on disc), size, version-resource information, and SHA-256 (plus SHA-1 and MD5 if the room uses them). Confirm SHA-256 against the WP-007 lock and against the host's copy.
+- [ ] Record the exact executable filename (`Case File #1.exe` on disc), size, version-resource information, and SHA-256 (plus SHA-1 and MD5 if the room uses them). Confirm SHA-256 against the WP-007 lock and against the host's copy. Size and SHA-1 match the host project's pinned copy (2026-11-11); version-resource information is still to record.
 - [ ] Confirm that `git status` shows no executable, asset, project folder or credential before every commit.
 - [ ] Match tool versions with the host: decompdecomp version, compiler and flags, Ghidra version.
+- [ ] Build the host project locally and measure how many of its C functions already match, before any agent runs. This turns the Reported progress into a local measurement.
 - [ ] Connect to the cooperative room.
 - [ ] Run a limited trial, not open-ended agent use: set the provider spend cap, the helper count and a function cap first (suggested: 2 helpers, 100 functions or a fixed dollar cap Jeff sets, whichever comes first).
 - [ ] Measure and record: functions attempted, byte-identical matches, near misses, failures, agent cost, wall time, and the compiler used for the matches.
@@ -313,11 +338,13 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 |---|---|
 | 2026-11-11 | WP authored. Mony Armenchev reported early decompdecomp progress on Case File #1 (all figures **Reported**). Cooperative access not yet received → ⏸ Blocked. |
 | 2026-11-11 | **Decision (Proposed):** see below. |
+| 2026-11-11 | Repository access received: the collaborator's private repo, invite accepted and cloned outside this checkout. A Case File #1 cooperative room is open; its link is temporary and is not recorded. ⏸ Blocked → 🚧 In Progress. |
+| 2026-11-11 | First look at the repository: executable identity confirmed by SHA-1 and size (**Observed**); the project defaults to VC 6.0; the match rate is not measured yet. See [§First look](#first-look-at-the-repository-2026-11-11). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
 - **Rationale:** decompdecomp may speed up function reconstruction, cooperative processing, byte matching and cross-game comparison. Manual Ghidra analysis is still needed for subsystem identification, semantic interpretation, validation, and translation into maintainable ScummVM code.
-- **Status:** Proposed until the cooperative environment is accessed and a local trial establishes its usefulness, cost, reproducibility, and legal and repository boundaries.
+- **Status:** Proposed. Access to the cooperative environment arrived 2026-11-11; the decision stays Proposed until a local trial establishes its usefulness, cost, reproducibility, and legal and repository boundaries.
 - **Revisit:** at exit criterion 7.
 
 ## Notes

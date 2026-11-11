@@ -53,7 +53,7 @@ under `engines/scooby/` — created in Phase 2.
 | `object.ini` | ✅ Plain Windows INI (1,405 lines). No decoding needed. |
 | `Scooby.eng` | ✅ Plain-text string table. No decoding needed. |
 | `Scooby.exe` | 🔬 Ghidra analysis pending. |
-| Case File #1 executable | ⏸ decompdecomp collaboration proposed, complementary to Ghidra. Awaiting access; collaborator-reported figures are preliminary. See [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md). |
+| Case File #1 executable | 🚧 decompdecomp collaboration under way, complementary to Ghidra. Access received 2026-11-11; collaborator-reported figures stay preliminary until a local build measures them. See [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md). |
 
 ---
 
