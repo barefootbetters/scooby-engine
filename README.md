@@ -18,8 +18,8 @@ Reverse-engineering and engine implementation project to run
 | *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph | 🔬 Primary RE target |
 | *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph | ⏳ Pending Phase 1 |
 | *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph | ⏳ Pending Phase 1 |
-| *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | Unknown | ❓ Engine family TBD |
-| *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | Unknown | ❓ Engine family TBD |
+| *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | ImageBuilder Software | ✅ Same engine lineage (Gen 3, inherited TerraGlyph code) |
+| *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | Unknown | ❓ Gen 4 format break; engine-family verdict pending (WP-005) |
 
 ---
 
@@ -80,5 +80,8 @@ Players supply their own discs or legally obtained ISOs.
 
 ## Contributing
 
-This is a personal research project; not yet accepting contributions.
-Once an engine scaffold exists in Phase 2, that will change.
+This is a personal research project. It isn't taking general code
+contributions yet; that changes once an engine scaffold exists in Phase 2.
+Reverse-engineering collaboration is by arrangement: the Case File #1
+executable work in [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md)
+is one example.

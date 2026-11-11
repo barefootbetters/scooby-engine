@@ -42,7 +42,7 @@ Per-disc subdirectory + canonical filename means:
 
 ```powershell
 # Once: create the subdirectories
-$dest = "C:\www\scooby\tools\exes"
+$dest = "C:\dev\scooby-engine\tools\exes"
 New-Item -ItemType Directory -Force `
     -Path "$dest\showdown","$dest\phantom","$dest\jinx","$dest\casefile1","$dest\casefile2" `
     | Out-Null

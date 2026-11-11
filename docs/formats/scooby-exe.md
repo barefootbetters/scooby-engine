@@ -118,7 +118,7 @@ Reference table for every binary the [WP-007](../work-packets/WP-007-strings-and
 | Jinx | Gen 2 | `tools/exes/jinx/Scooby.exe` | 847,872 | `136A276872803AC99B0D050B21CC3A83F8E1608F2394C33865CFFF781FB20271` |
 | Case File #1 | Gen 3 | `tools/exes/casefile1/Scooby.exe` | 786,432 | `9813A3DDBE58BC9D7CC898030F4A2F93658FD4A69156BA8531C6E4F273E97CF8` |
 
-Case File #2 is not yet cached — disc not yet mounted — so it is not covered by this baseline. Per the [engine-lineage finding](../01-VISION.md#engine-lineage-2026-06-finding) it is predicted Gen 3 (IBS continuation of the MMFW codebase). The skip is intentional, not a gap to fill at this WP's scope.
+Case File #2 is not yet cached — disc not yet mounted — so it is not covered by this baseline. Per the [engine-lineage finding](../01-VISION.md#engine-lineage-2026-06-finding) it was predicted Gen 3 (IBS continuation of the MMFW codebase) when this baseline was taken; full disc inspection on 2026-06-03 later placed it in Gen 4 (`.bul`/`.inx` archives, MMFW gone). The skip is intentional, not a gap to fill at this WP's scope.
 
 Extraction tooling: [`tools/extract_strings.py`](../../tools/extract_strings.py) and [`tools/extract_imports.py`](../../tools/extract_imports.py). Raw outputs (`strings-ansi.txt`, `strings-wide.txt`, `imports.txt`) live under `tools/exes/<title>/`, gitignored per [tools/exes/README](../../tools/exes/README.md). Determinism confirmed: re-running each script against the same binary produces byte-identical output.
 

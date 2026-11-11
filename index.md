@@ -25,7 +25,7 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 | `Scooby.exe` | ⏳ Ghidra analysis queued |
 | Case File #1 executable (decompdecomp) | ⏸ Collaboration proposed: cooperative decompilation track, awaiting access ([WP-011](docs/work-packets/WP-011-casefile-decompdecomp)) |
 
-Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. The Case File engine family stays TBD.
+Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. Case File #1's place in the lineage rests on toolchain evidence; the Case File #2 verdict is still open.
 
 ---
 
@@ -48,8 +48,8 @@ Executable analysis now has two complementary tracks: focused Ghidra work on Sho
 | *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph — primary RE target |
 | *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph |
 | *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph |
-| *Scooby-Doo! Case File #1* | 2002 | Engine family TBD |
-| *Scooby-Doo! Case File #2* | 2003 | Engine family TBD |
+| *Scooby-Doo! Case File #1* | 2002 | Same lineage — Gen 3 (ImageBuilder Software, inherited TerraGlyph code) |
+| *Scooby-Doo! Case File #2* | 2003 | Gen 4 format break — engine-family verdict pending (WP-005) |
 
 ---
 
