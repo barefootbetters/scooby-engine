@@ -5,7 +5,7 @@ title: "Format Spec: Scooby.exe"
 
 # Format Spec: `Scooby.exe`
 
-**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending; decompdecomp collaboration on Case File #1 proposed ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md), awaiting access)  
+**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending; decompdecomp collaboration on Case File #1 under way ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md): access received 2026-11-11, local trial pending)  
 **Source discs:** five candidate titles (see Cross-title comparison below)  
 **Per-title binary names:** `Scooby.exe` (Showdown/Phantom/Jinx), `Case File #1.exe` (Case File #1)  
 **Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 work item; Engine Lineage section for generation classification.
