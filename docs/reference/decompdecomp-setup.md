@@ -18,16 +18,18 @@ The decompdecomp details come from its [README](https://github.com/n-delic/decom
 ## 1. Install decompdecomp
 
 1. Open the [latest release](https://github.com/n-delic/decompdecomp/releases/latest) and download `decompdecomp-<version>-windows-x64-setup.exe`. The GUIDE also mentions an MSI. Use whichever Windows installer the release actually lists.
-2. Run it. Setup also installs WebView2 and .NET Framework 4.8 if they're missing. If Windows SmartScreen stops an unsigned installer, choose **More info → Run anyway**.
+2. Run it. Setup also installs WebView2 and .NET Framework 4.8 if they're missing. If Windows SmartScreen stops an unsigned installer, choose **More info → Run anyway**. Then start decompdecomp from the Start menu.
 3. Record the version you installed. The app offers one-click updates, and WP-011 records the tool version with every finding.
 
 ## 2. Install the Visual C++ 6.0 compiler
 
-The collaborator's project builds with **Visual C++ 6.0** by default, and one file with 7.1. decompdecomp supplies Visual C++ 6.0 through 2017 for PC games, but it installs proprietary compilers only after you accept their licenses in its **Setup** screen.
+The collaborator's project builds with **Visual C++ 6.0** by default, and one file with 7.1. For Windows PC games, decompdecomp's guide lists Visual C++ 6.0, 7.0, 7.1, 2005, 2008, 2010 and 2017. It also accepts any other version "from your own copy" for 32-bit games. It installs proprietary compilers only after you accept their licenses in its **Setup** screen. (**Compilers & tools** is a different screen, used for extras such as decomp-permuter.)
+
+You don't need to install Visual Studio, old or new. decompdecomp's guide doesn't mention it; what matters is the period compiler that Setup supplies, because every attempt is rebuilt with it and compared byte for byte.
 
 1. Open **Setup** in decompdecomp.
 2. Accept the license for the Microsoft compilers and let it download Visual C++ 6.0. If 7.1 is offered on its own, take it too.
-3. Write down the folder where the toolchain lands. The docs don't say where that is, and step 5 needs it.
+3. Write down the folder where the toolchain lands. The docs don't say where that is, so don't guess it: step 5 needs the real path.
 
 ## 3. Install Ghidra
 
@@ -74,6 +76,7 @@ ninja rebuild
 
 ## Keep it out of the repo
 
+- decompdecomp keeps its own projects in `Decomp` under your user folder (`~/Decomp` in its docs), which is already outside this checkout. Leave them there.
 - Never commit a room link, an API key, the game files, a decompdecomp project, or matched C to this repository. `.gitignore` blocks `tools/decomp/`, `decompdecomp/`, `.env` files and the game data, but those rules are a backstop, not the process.
 - The collaborator's repository is private. Its URL and contents stay off this public site until he agrees otherwise ([WP-011 §Legal and repository hygiene](../work-packets/WP-011-casefile-decompdecomp.md#legal-and-repository-hygiene)).
 - Run `git status` before every commit in both repositories.
