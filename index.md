@@ -37,6 +37,7 @@ Executable analysis now has two complementary tracks: focused Ghidra work on Sho
 - [Audio Archives Spec](docs/formats/audio-archives) — Music / SFX / Voice .dat format
 - [Scooby.exe Analysis Plan](docs/formats/scooby-exe) — Ghidra roadmap plus the decompdecomp track
 - [Case File #1 decompdecomp Collaboration (WP-011)](docs/work-packets/WP-011-casefile-decompdecomp) — cooperative decompilation trial, evidence model, repository boundaries
+- [Setting Up decompdecomp on Windows](docs/reference/decompdecomp-setup) — install, compiler, Ghidra, spend cap, local build check, joining the Case File #1 room
 - [Installing ScummVM on the Raspberry Pi](docs/reference/scummvm-raspberry-pi) — the developer build of our fork, plus packaged installs
 
 ---

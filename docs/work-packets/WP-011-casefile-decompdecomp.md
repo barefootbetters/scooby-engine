@@ -139,7 +139,7 @@ Out of scope:
 
 ## Local setup prerequisites
 
-To be verified against the current decompdecomp release when access arrives. The guide was read 2026-11-11, and its README and guide disagree on the Windows installer type (MSI or setup `.exe`), so check the release page.
+Step-by-step instructions are in [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md). This list is the summary. The guide was read 2026-11-11 against release `v1.0.10-alpha.1`. Its README and guide disagree on the Windows installer type (MSI or setup `.exe`), so check the release page.
 
 - Windows 10/11 x86-64. The guide says Windows PC games don't need WSL 2.
 - decompdecomp from its release installer (it bundles Python and the app), or from source with `uv` and Python 3.12.
@@ -281,7 +281,7 @@ Milestones:
 
 - [x] Collaboration repository received (private; access accepted 2026-11-11).
 - [x] Case File #1 cooperative decompdecomp session available (2026-11-11). The link is temporary; get the current one from Mony.
-- [ ] Inspect the repository and set up a local decompdecomp environment. The repository is inspected ([§First look](#first-look-at-the-repository-2026-11-11)); the environment is not set up yet.
+- [ ] Inspect the repository and set up a local decompdecomp environment. The repository is inspected ([§First look](#first-look-at-the-repository-2026-11-11)); the environment is not set up yet. Follow [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md).
 - [ ] Join the cooperative session and run a limited initial agent trial.
 - [ ] Compare decompilation findings against existing `scooby-engine` research.
 
