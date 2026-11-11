@@ -24,7 +24,7 @@ It does not replace the format-first strategy in the [Vision](../01-VISION.md#ga
 
 ## Background
 
-**Contact.** Mony Armenchev found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. The work lives in his private GitHub repository; this project's account was added as a collaborator (push access) on 2026-11-11. Its URL stays out of this public repo (see [§Legal and repository hygiene](#legal-and-repository-hygiene)).
+**Contact.** Mony Armenchev (GitHub [@monyarm](https://github.com/monyarm)) found this repository and got in touch. He has begun decompiling the Case File games with Ghidra, decompdecomp, `m2c`, decomp-permuter and AI coding agents, with manual executable analysis where automated progress stalls. The work lives in his private GitHub repository, [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp). This project's account was added as a collaborator (push access) on 2026-11-11. The link returns 404 for anyone without access. To set up a machine for the work, follow [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md).
 
 **Where the executable analysis stood before this WP.** The [`Scooby.exe` analysis plan](../formats/scooby-exe.md) has one track: focused Ghidra work under [WP-001](WP-001-ghidra-session.md), aimed at the Gen 1 (Showdown) binary and still pending past its Rich Header step. [WP-007](WP-007-strings-and-imports.md) gives a strings and import-table baseline for all four cached binaries, Case File #1 included, with SHA-256 locks.
 
@@ -54,7 +54,7 @@ The report doesn't separate "processed" into matched, near-miss and failed funct
 
 ### First look at the repository (2026-11-11)
 
-Read from a fresh clone of the collaborator's repository (its first commit), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
+Read from a fresh clone of [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
 
 | Item | Value | Evidence |
 |---|---|---|
@@ -220,8 +220,8 @@ The output of each step is a count of identical, near and unique functions per b
 ## Legal and repository hygiene
 
 - Never commit game executables, CD images, extracted proprietary assets, copyrighted media, secrets, tokens, or room links and credentials. `.gitignore` already blocks the game data. This WP adds `tools/decomp/`, decompdecomp project files and `.env` files.
-- This repository and its GitHub Pages site are **public**. Private repository URLs and cooperative connection details stay out of every page unless the collaborator agrees otherwise.
-- Use the collaborator's name only where attribution is needed. Never put his contact details, email included, in any page.
+- This repository and its GitHub Pages site are **public**. Cooperative connection details (room links, invite tokens, credentials) stay out of every page.
+- Mony is credited by name and GitHub handle, and his repository is linked, by Jeff's decision of 2026-11-11 (see [§Status and decision log](#status-and-decision-log)). His email and other contact details stay out of every page, as do the repository's contents.
 - Review generated C before relying on it. AI-written code that matches bytes can still carry misleading names and comments.
 - Keep research artifacts separate from production ScummVM code. Nothing questionable or license-incompatible goes into `engines/scooby/`.
 - Record provenance for every major technical conclusion.
@@ -235,7 +235,7 @@ The output of each step is a count of identical, near and unique functions per b
 | **Compiler mismatch.** The binary is VC 5.0-era; decompdecomp documents VC 6.0+. Near-misses may be counted as matches, or matching may stall. | Ask the host which compiler the room uses. Record the compiler per match. Measure the true byte-identical rate during the trial. |
 | **Over-trusting Reported figures** (function counts, coverage, agent results) | Use the evidence scale. Nothing goes into a Findings section below Observed. |
 | **Unbounded agent spend.** No budget cap is described in the guide; helpers resume after limit resets. | Set a provider-side spend cap and a function-count cap before starting. Use few helpers. Stop at the cap. |
-| **Leaking private details into public pages** (room links, the private repo URL, contact details) | Hygiene rules above. Review the diff before each commit. Room links never go into files at all. |
+| **Leaking private details into public pages** (room links, credentials, contact details, contents of the private repo) | Hygiene rules above. Review the diff before each commit. Room links never go into files at all. |
 | **Proprietary material committed by accident** | `.gitignore` entries for decomp work paths. Keep the decompdecomp project outside this checkout or under `tools/decomp/`. |
 | **Byte-matching C mistaken for engine code** | [ScummVM integration boundaries](#scummvm-integration-boundaries). Engine work cites behavior notes, not reconstructed source. |
 | **Scope creep away from Phase 1 blockers.** Case File #1 is a Stretch title; Showdown is the primary target. | Keep the WP time-boxed to the trial. The Gen 1 blockers (WP-002, WP-004) keep priority. Gen 3 findings feed Gen 1 only where they actually transfer. |
@@ -288,7 +288,7 @@ Milestones:
 Trial checklist. Tick these off in this file as they happen.
 
 - [x] Receive repository access and a room link from Mony, by private channel only.
-- [ ] Review the private repository's terms and contents; record the terms (not the URL) in the decision log. Contents reviewed 2026-11-11; terms not yet received ([open question 18](#open-questions)).
+- [ ] Review the private repository's terms and contents; record the terms in the decision log. Contents reviewed 2026-11-11; terms not yet received ([open question 18](#open-questions)).
 - [ ] Read the current decompdecomp cooperative setup instructions and check them against [§Cooperative connection workflow](#cooperative-connection-workflow); correct this page where they differ.
 - [ ] Install the prerequisites in an isolated environment (separate profile or VM, project directory outside this checkout or under `tools/decomp/`).
 - [ ] Use only a legally obtained local copy of the game.
@@ -339,6 +339,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-11 | WP authored. Mony Armenchev reported early decompdecomp progress on Case File #1 (all figures **Reported**). Cooperative access not yet received → ⏸ Blocked. |
 | 2026-11-11 | **Decision (Proposed):** see below. |
 | 2026-11-11 | Repository access received: the collaborator's private repo, invite accepted and cloned outside this checkout. A Case File #1 cooperative room is open; its link is temporary and is not recorded. ⏸ Blocked → 🚧 In Progress. |
+| 2026-11-11 | **Decision (Jeff):** credit Mony Armenchev on these pages by name and GitHub handle, and link his repository (it returns 404 without access). His email stays out, because this repository and its Pages site are public. Room links and credentials stay out too. |
 | 2026-11-11 | First look at the repository: executable identity confirmed by SHA-1 and size (**Observed**); the project defaults to VC 6.0; the match rate is not measured yet. See [§First look](#first-look-at-the-repository-2026-11-11). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
