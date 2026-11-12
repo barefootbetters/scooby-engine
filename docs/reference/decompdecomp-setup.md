@@ -7,7 +7,7 @@ title: "Setting Up decompdecomp on Windows"
 
 > **Work packet:** [WP-011: Case File #1 decompdecomp Collaboration](../work-packets/WP-011-casefile-decompdecomp.md) holds the trial's rules, status, checklist and decision log. This page is how to carry them out.
 
-These steps get a Windows 11 PC ready to join the Case File #1 cooperative decompilation room, which is part of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md). There are four installs, then a baseline measurement, then the join.
+These steps get a Windows 11 PC ready to join the Case File #1 cooperative decompilation room, which is part of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md). There are five installs, then a baseline measurement, then the join.
 
 **What the trial is for.** Matched C rebuilds the original 2002 Windows program. It isn't a port, and it isn't engine code. The project's deliverable is still an independent ScummVM engine, written from documented behavior. The decompilation is research evidence for that engine ([WP-011 §ScummVM integration boundaries](../work-packets/WP-011-casefile-decompdecomp.md#scummvm-integration-boundaries)). The trial asks a narrower question: does decompdecomp produce that evidence faster or more cheaply than Ghidra work alone? decompdecomp's guide marks its Windows PC support as beta, so expect some friction.
 
@@ -49,11 +49,62 @@ You don't need to install Visual Studio, old or new. decompdecomp's docs don't m
 
 1. Open **Compilers & tools** from the sidebar.
 2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards, and **Microsoft Visual C++ (your own copy)**.
-3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 5 uses that folder.
+3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 6 uses that folder.
 
 ![The Compilers & tools screen. The Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC) card is at the right of the second row, and Ghidra is at the top left.](images/decompdecomp-compilers-and-tools.png)
 
-## 3. Install Ghidra
+## 3. Install Java
+
+Ghidra runs on Java, and step 4 uses it twice: for decompdecomp's own Ghidra and for a standalone copy. Ghidra needs a 64-bit Java development kit (JDK), version 21 or newer; its install guide names the minimum for each release (JDK 21 for 11.x and 12.x). A Java runtime alone isn't enough, because decompdecomp looks for `javac.exe` beside `java.exe` ([why](#ghidra-inside-decompdecomp-install-a-windows-jdk-first)). Install the JDK before Ghidra, so decompdecomp finds it instead of reaching for its own Java, which on Windows needs WSL 2.
+
+### On Windows
+
+1. Install a 64-bit Windows JDK, version 21 or newer. Any JDK that meets Ghidra's minimum works; a long-term support (LTS) release, 21 or 25, changes least over the trial.
+   - **Oracle JDK:** on [Oracle's Java downloads](https://www.oracle.com/java/technologies/downloads/), pick the version's tab, then **Windows → x64 Installer**.
+   - **Eclipse Temurin:** the `.msi` from [adoptium.net](https://adoptium.net/), with **Add to PATH** left on.
+2. In a new PowerShell window, check that decompdecomp will accept it. This repeats its own test, and must print `True` and a version of 21 or more:
+
+   ```powershell
+   $java = (Get-Command java).Source; $real = (Get-Item $java).ResolvedTarget ?? $java
+   Test-Path (Join-Path (Split-Path $real) 'javac.exe'); java -version
+   ```
+
+   `False` means the `java` found first is a runtime without `javac`, or an older Java ahead of the new one on the PATH. `(Get-Command java).Source` shows which.
+3. If decompdecomp is open, quit it completely and start it again, so it sees the new PATH.
+4. Record the JDK's vendor and version for the [trial record](#trial-record-for-wp-011).
+
+### On a Raspberry Pi or other 64-bit ARM Linux
+
+Not part of the Windows setup, but the same rule holds for Ghidra on Linux: a JDK 21 or newer. On a Raspberry Pi 5 with 64-bit Raspberry Pi OS, Oracle's ARM64 archive installs under `/opt/java`. Run each line on its own:
+
+```bash
+uname -m
+cd /tmp
+wget https://download.oracle.com/java/27/latest/jdk-27_linux-aarch64_bin.tar.gz
+sudo mkdir -p /opt/java
+sudo tar -xzf jdk-27_linux-aarch64_bin.tar.gz -C /opt/java --no-same-owner
+ls -d /opt/java/jdk-27*
+```
+
+- `uname -m` must print `aarch64`. If it doesn't, the Pi runs a 32-bit OS, and Oracle has no 32-bit ARM build: stop here.
+- The `latest` link always serves the newest JDK 27 patch (also on [Oracle's downloads page](https://www.oracle.com/java/technologies/downloads/#jdk27-linux), under Linux → ARM64 Compressed Archive). JDK 27 is a feature release, not LTS; for Ghidra, JDK 25's archive works the same way with `25` in place of `27`.
+- `--no-same-owner` makes root the owner; the archive's own owner (`mach5-run`) doesn't exist on the Pi.
+- `ls` prints the folder to use below. On 2026-11-11 it was `jdk-27.0.1.0.3`; change the name in each command if yours differs.
+
+Then register it and set `JAVA_HOME`:
+
+```bash
+sudo update-alternatives --install /usr/bin/java java /opt/java/jdk-27.0.1.0.3/bin/java 2700
+sudo update-alternatives --install /usr/bin/javac javac /opt/java/jdk-27.0.1.0.3/bin/javac 2700
+printf 'export JAVA_HOME=/opt/java/jdk-27.0.1.0.3\nexport PATH=$JAVA_HOME/bin:$PATH\n' | sudo tee /etc/profile.d/java.sh
+source /etc/profile.d/java.sh
+java -version
+javac -version
+```
+
+Both versions should say 27, and `echo $JAVA_HOME` the folder under `/opt/java`. Oracle's [JDK 27 installation guide for Linux](https://docs.oracle.com/en/java/javase/27/install/installation-jdk-linux-platforms.html) covers the archive install. The studio's Pi test box keeps the full runbook, with troubleshooting, in the Herbs vs. Ailments engineering wiki ([Installing Java on the Raspberry Pi](https://ewiki.herbsvsailments.com/research/pi-test-box/#installing-java-on-the-raspberry-pi), private).
+
+## 4. Install Ghidra
 
 *decompdecomp:* the GUIDE names Ghidra as the analysis tool for Windows PC projects started from scratch. For x86 work it is optional: it writes the C drafts that agents start from ("Ghidra (optional) for x86"). The GUIDE describes no Ghidra step for joining a room.
 
@@ -65,28 +116,20 @@ You don't need to install Visual Studio, old or new. decompdecomp's docs don't m
 
 So give it a Windows JDK first:
 
-1. Install a 64-bit Windows JDK, version 21 or newer: Oracle's JDK (x64 Installer), or Eclipse Temurin from [adoptium.net](https://adoptium.net/) with **Add to PATH** left on.
-2. In a new PowerShell window, check that decompdecomp will accept it. This repeats its own test, and must print `True` and a version of 21 or more:
+1. Install it and run the check in [step 3](#on-windows), then restart decompdecomp.
+2. Choose **Install** on the Ghidra card. It should download Ghidra only, with no Java development kit.
 
-   ```powershell
-   $java = (Get-Command java).Source; $real = (Get-Item $java).ResolvedTarget ?? $java
-   Test-Path (Join-Path (Split-Path $real) 'javac.exe'); java -version
-   ```
-
-3. Quit decompdecomp completely and start it again, so it sees the new PATH.
-4. Choose **Install** on the Ghidra card again. It should download Ghidra only, with no Java development kit.
-
-The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 5's baseline build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
+The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 6's baseline build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
 
 ### Ghidra for this project's own analysis
 
 decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-001-ghidra-session.md) and your own reading of the executable, install a Windows copy:
 
-1. Use the JDK from above. Ghidra's install guide names the minimum for each release (JDK 21 for 11.x and 12.x).
+1. Use the JDK from [step 3](#3-install-java). Ghidra's install guide names the minimum for each release (JDK 21 for 11.x and 12.x).
 2. Download Ghidra from [ghidra-sre.org](https://ghidra-sre.org/) or its [GitHub releases](https://github.com/NationalSecurityAgency/ghidra/releases). Unzip it to a folder with no spaces in the path, such as `C:\tools\ghidra_<version>`, and start it with `ghidraRun.bat`.
 3. Record the Ghidra and JDK versions. The docs don't say whether decompdecomp can use this copy instead of its own, so don't count on it.
 
-## 4. Set up an agent provider and a spend limit
+## 5. Set up an agent provider and a spend limit
 
 *decompdecomp:* the tool has **no budget cap** of its own. When a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
 
@@ -98,7 +141,7 @@ decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-0
 2. In the provider's console, set the strongest spending limit it offers before creating the key. Providers differ: some have a hard cap, others only prepaid credit or budget alerts. Prepaid credit equal to the trial's dollar cap works as a hard stop.
 3. In decompdecomp, open **Agents & models → API key** and paste the key. Don't put it in any file in any repository.
 
-## 5. Record the pre-agent baseline
+## 6. Record the pre-agent baseline
 
 *WP-011.* Before any agent touches the project, measure where it stands. This baseline is the "before" that the trial is compared against. Without it, the trial can't show what decompdecomp's agents actually added, and the collaborator's progress stays a reported figure.
 
@@ -120,14 +163,14 @@ Record, with the commit hash of the clone:
 - Whether `ninja rebuild` reports the program byte-identical
 - Build warnings or failures, and which files caused them
 
-## 6. Join the cooperative room and run the trial
+## 7. Join the cooperative room and run the trial
 
 *decompdecomp* for the mechanics, *WP-011* for the limits.
 
 1. Ask Mony for the **current** invite link, privately. The room runs over a temporary tunnel, so the link changes every time he restarts decompdecomp, and an old one won't work.
 2. In decompdecomp, choose **New project → Join a team's room**. Paste the link, type your display name, and pick your copy of the game (`orig/casefile1.exe`).
 3. *WP-011:* before pressing **Start agents**, set a small helper count: 2 for the trial. *decompdecomp:* one start can launch up to 24; the docs don't say where the count is set.
-4. *WP-011:* stop when the trial cap is reached (100 functions or your dollar cap, whichever comes first), then rerun step 5's measurements.
+4. *WP-011:* stop when the trial cap is reached (100 functions or your dollar cap, whichever comes first), then rerun step 6's measurements.
 
 ## Keep each project's material in its place
 
@@ -151,12 +194,12 @@ Record these in the WP-011 decision log and trial metrics.
 - decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
 
-**Pre-agent baseline (step 5):**
+**Pre-agent baseline (step 6):**
 - The clone's commit hash
 - Functions with C, matched, and not matched
 - Rebuild result
 
-**Post-trial (step 6):**
+**Post-trial (step 7):**
 - The same counts as the baseline, rerun
 - Functions attempted, matched, near misses and failures
 - Helper count, agent cost and wall time
