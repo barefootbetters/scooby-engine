@@ -106,6 +106,8 @@ decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-0
 
 *decompdecomp:* the tool has **no budget cap** of its own. When a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
 
+Don't take the trial's cost from decompdecomp's own **spent** figure. The collaborator reports (2026-11-12) that it prices subscription usage, such as a Claude plan, as if it were API usage. Take the cost from the provider's billing page.
+
 *WP-011:* the spend limit therefore has to come from the provider.
 
 1. Pick a provider.
@@ -175,4 +177,4 @@ Record these in the WP-011 decision log and trial metrics.
 **Post-trial (step 7):**
 - The same counts as the baseline, rerun
 - Functions attempted, matched, near misses and failures
-- Helper count, agent cost and wall time
+- Helper count, wall time, and agent cost from the provider's billing (not the app's "spent" figure)
