@@ -59,20 +59,30 @@ You don't need to install Visual Studio, old or new. decompdecomp's docs don't m
 
 *Case File #1 project:* the collaborator's function list came from Ghidra, so joining his project doesn't need Ghidra to find functions. This project needs Ghidra anyway for [WP-001](../work-packets/WP-001-ghidra-session.md).
 
-### Ghidra inside decompdecomp needs WSL 2
+### Ghidra inside decompdecomp: install a Windows JDK first
 
-`v1.0.10-alpha.1` offers Ghidra on its **Compilers & tools** screen (540 MB, needs Java 21+; see step 2's screenshot). On Windows, that install runs its Java runtime (Eclipse Temurin 21) as a Linux program under WSL 2. Without a working WSL Linux distribution it stops with "WSL has no working Linux distribution yet" (observed 2026-11-11). The README says Windows PC games don't need WSL 2; that covers the compilers, not this Ghidra.
+`v1.0.10-alpha.1` offers Ghidra on its **Compilers & tools** screen (540 MB; see step 2's screenshot). Ghidra needs a Java development kit (JDK), version 21 or newer. decompdecomp uses the computer's own JDK when the `java` on the PATH belongs to one: version 21 or newer, with `javac.exe` beside `java.exe` (a Java runtime alone doesn't count). Otherwise it installs its pinned Eclipse Temurin 21, which on Windows is a Linux build that runs under WSL 2. Without a WSL Linux distribution, that install stops with "WSL has no working Linux distribution yet" (observed 2026-11-11). The README and GUIDE don't mention any of this; it is read from decompdecomp's source (`toolchains.py`, `forks/ghidra.py`).
 
-Pick one, and record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from:
+So give it a Windows JDK first:
 
-- **Give decompdecomp its Ghidra.** In an administrator PowerShell, run `wsl --install`, restart Windows if asked, and open Ubuntu once to finish. Then choose **Install** on the Ghidra card again.
-- **Run without it.** Agents then work without Ghidra drafts. Steps 4 to 6 don't otherwise depend on it, and step 5's baseline build doesn't use Ghidra at all.
+1. Install a 64-bit Windows JDK, version 21 or newer: Oracle's JDK (x64 Installer), or Eclipse Temurin from [adoptium.net](https://adoptium.net/) with **Add to PATH** left on.
+2. In a new PowerShell window, check that decompdecomp will accept it. This repeats its own test, and must print `True` and a version of 21 or more:
+
+   ```powershell
+   $java = (Get-Command java).Source; $real = (Get-Item $java).ResolvedTarget ?? $java
+   Test-Path (Join-Path (Split-Path $real) 'javac.exe'); java -version
+   ```
+
+3. Quit decompdecomp completely and start it again, so it sees the new PATH.
+4. Choose **Install** on the Ghidra card again. It should download Ghidra only, with no Java development kit.
+
+The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 5's baseline build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
 
 ### Ghidra for this project's own analysis
 
-decompdecomp's copy runs inside WSL for the app. For [WP-001](../work-packets/WP-001-ghidra-session.md) and your own reading of the executable, install a Windows copy:
+decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-001-ghidra-session.md) and your own reading of the executable, install a Windows copy:
 
-1. Install the 64-bit JDK that Ghidra's install guide names for the release you download (JDK 21 for Ghidra 11.x).
+1. Use the JDK from above. Ghidra's install guide names the minimum for each release (JDK 21 for 11.x and 12.x).
 2. Download Ghidra from [ghidra-sre.org](https://ghidra-sre.org/) or its [GitHub releases](https://github.com/NationalSecurityAgency/ghidra/releases). Unzip it to a folder with no spaces in the path, such as `C:\tools\ghidra_<version>`, and start it with `ghidraRun.bat`.
 3. Record the Ghidra and JDK versions. The docs don't say whether decompdecomp can use this copy instead of its own, so don't count on it.
 
@@ -138,7 +148,7 @@ Record these in the WP-011 decision log and trial metrics.
 **Setup (once):**
 - decompdecomp version
 - Compiler versions and the toolchain path
-- decompdecomp's Ghidra: installed under WSL 2, or not used. Plus the versions of any standalone Ghidra and JDK
+- decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
 
 **Pre-agent baseline (step 5):**
