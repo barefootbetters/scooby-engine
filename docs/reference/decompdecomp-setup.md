@@ -73,38 +73,9 @@ Ghidra runs on Java, and step 4 uses it twice: for decompdecomp's own Ghidra and
 3. If decompdecomp is open, quit it completely and start it again, so it sees the new PATH.
 4. Record the JDK's vendor and version for the [trial record](#trial-record-for-wp-011).
 
-### On a Raspberry Pi or other 64-bit ARM Linux
+### Not on a Raspberry Pi
 
-This is for Ghidra only. decompdecomp itself doesn't run on a Pi: its README lists Linux on x86-64 only, `v1.0.10-alpha.1` ships no ARM64 Linux package, and its Visual C++ compilers are 32-bit x86 Windows programs, which it runs on Linux through `wibo` or `wine` (read 2026-11-11). Join the room from the Windows PC, or from an x86-64 Linux machine.
-
-Not part of the Windows setup, but the same rule holds for Ghidra on Linux: a JDK 21 or newer. On a Raspberry Pi 5 with 64-bit Raspberry Pi OS, Oracle's ARM64 archive installs under `/opt/java`. Run each line on its own:
-
-```bash
-uname -m
-cd /tmp
-wget https://download.oracle.com/java/27/latest/jdk-27_linux-aarch64_bin.tar.gz
-sudo mkdir -p /opt/java
-sudo tar -xzf jdk-27_linux-aarch64_bin.tar.gz -C /opt/java --no-same-owner
-ls -d /opt/java/jdk-27*
-```
-
-- `uname -m` must print `aarch64`. If it doesn't, the Pi runs a 32-bit OS, and Oracle has no 32-bit ARM build: stop here.
-- The `latest` link always serves the newest JDK 27 patch (also on [Oracle's downloads page](https://www.oracle.com/java/technologies/downloads/#jdk27-linux), under Linux → ARM64 Compressed Archive). JDK 27 is a feature release, not LTS; for Ghidra, JDK 25's archive works the same way with `25` in place of `27`.
-- `--no-same-owner` makes root the owner; the archive's own owner (`mach5-run`) doesn't exist on the Pi.
-- `ls` prints the folder to use below. On 2026-11-11 it was `jdk-27.0.1.0.3`; change the name in each command if yours differs.
-
-Then register it and set `JAVA_HOME`:
-
-```bash
-sudo update-alternatives --install /usr/bin/java java /opt/java/jdk-27.0.1.0.3/bin/java 2700
-sudo update-alternatives --install /usr/bin/javac javac /opt/java/jdk-27.0.1.0.3/bin/javac 2700
-printf 'export JAVA_HOME=/opt/java/jdk-27.0.1.0.3\nexport PATH=$JAVA_HOME/bin:$PATH\n' | sudo tee /etc/profile.d/java.sh
-source /etc/profile.d/java.sh
-java -version
-javac -version
-```
-
-Both versions should say 27, and `echo $JAVA_HOME` the folder under `/opt/java`. Oracle's [JDK 27 installation guide for Linux](https://docs.oracle.com/en/java/javase/27/install/installation-jdk-linux-platforms.html) covers the archive install. The studio's Pi test box keeps the full runbook, with troubleshooting, in the Herbs vs. Ailments engineering wiki ([Installing Java on the Raspberry Pi](https://ewiki.herbsvsailments.com/research/pi-test-box/#installing-java-on-the-raspberry-pi), private).
+decompdecomp doesn't run on a Pi, and this setup doesn't put Ghidra there either. decompdecomp's README lists Linux on x86-64 only, `v1.0.10-alpha.1` ships no ARM64 Linux package, and its Visual C++ compilers are 32-bit x86 Windows programs, which it runs on Linux through `wibo` or `wine` (read 2026-11-11). Join the room from the Windows PC, or from an x86-64 Linux machine. The studio's Pi 5 test box has OpenJDK 21 and does no decompilation work (Jeff's call, 2026-11-11).
 
 ## 4. Install Ghidra
 
