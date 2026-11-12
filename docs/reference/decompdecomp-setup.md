@@ -75,6 +75,8 @@ Ghidra runs on Java, and step 4 uses it twice: for decompdecomp's own Ghidra and
 
 ### On a Raspberry Pi or other 64-bit ARM Linux
 
+This is for Ghidra only. decompdecomp itself doesn't run on a Pi: its README lists Linux on x86-64 only, `v1.0.10-alpha.1` ships no ARM64 Linux package, and its Visual C++ compilers are 32-bit x86 Windows programs, which it runs on Linux through `wibo` or `wine` (read 2026-11-11). Join the room from the Windows PC, or from an x86-64 Linux machine.
+
 Not part of the Windows setup, but the same rule holds for Ghidra on Linux: a JDK 21 or newer. On a Raspberry Pi 5 with 64-bit Raspberry Pi OS, Oracle's ARM64 archive installs under `/opt/java`. Run each line on its own:
 
 ```bash
