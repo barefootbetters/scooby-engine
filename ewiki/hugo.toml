@@ -48,6 +48,15 @@ pluralizeListTitles = false
     "/tools/samples/README.md",
   ]
 
+# why: images under docs/ (screenshots in docs/reference/images/, for one) are
+# mounted as assets, which is where the theme's image hook looks a page's
+# relative image up. Only images a page shows get published. Image types only;
+# CI has tracked files only, so nothing gitignored (docs/findings/) can ship.
+[[module.mounts]]
+  source = "docs"
+  target = "assets/docs"
+  files = ["**/*.{png,jpg,jpeg,gif,svg,webp,avif}"]
+
 # why: private pages. This repo is public, and so is its GitHub Pages site, so
 # notes that must stay off both live in the private
 # barefootbetters/scooby-engine-private repo. CI checks it out into the
