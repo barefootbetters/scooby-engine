@@ -54,6 +54,24 @@ Every figure in this section is **Reported** (see [§Evidence model](#evidence-m
 
 The report doesn't separate "processed" into matched, near-miss and failed functions. That breakdown is the first thing to measure (see [§Immediate next actions](#immediate-next-actions)).
 
+### Update from the collaborator (2026-11-12)
+
+Also **Reported**: a screenshot of his decompdecomp project, sent 2026-11-12, one day after the figures above.
+
+| Item | Reported value |
+|---|---|
+| Matched code | 21.7 % of the code, up from about 7 % the day before |
+| Functions matched | 1,981 of 3,371 (59 %) |
+| Agents running | 7, across several agent tools and models |
+| Pace at that moment | 7 matches in the past hour. The app estimated about 25 more hours at that pace. |
+
+The app's "spent" figure is left out. The collaborator reports that it prices his subscription usage as if it were API usage, so it isn't a real cost.
+
+What this means for the WP:
+
+- **The baseline is moving fast.** M0 and M0-R have to name a commit, and the trial result has to subtract any matches he lands while it runs.
+- **The trial will start on the hard functions.** 59 % of the functions match but only 21.7 % of the code does, so the matched ones are mostly small. A trial run starts on what's left: the larger functions. Expect its match rate to be lower than his early rate. The two rates aren't comparable.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
