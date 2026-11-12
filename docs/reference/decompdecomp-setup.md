@@ -39,21 +39,27 @@ decompdecomp is young and self-updates, and its docs leave some screens undescri
 
 ## 2. Install the Visual C++ 6.0 compiler
 
-*decompdecomp:* the GUIDE's platform table lists, for Windows PC, "Visual C++ 6.0 · 7.0 · 7.1 · 2005 · 2008 · 2010 · 2017", plus any other version "from your own copy" for 32-bit games. Proprietary compilers install only after you accept their licenses in its **Setup** screen. **Compilers & tools** is a different screen, used for extras such as decomp-permuter.
+*decompdecomp:* the GUIDE's platform table lists, for Windows PC, "Visual C++ 6.0 · 7.0 · 7.1 · 2005 · 2008 · 2010 · 2017", plus any other version "from your own copy" for 32-bit games. The GUIDE says proprietary compilers install after you accept their licenses in a **Setup** screen, but `v1.0.10-alpha.1` has no Setup entry in its sidebar. The compilers install from **Compilers & tools** instead (observed 2026-11-11).
 
 *Case File #1 project:* the game is matched with **Visual C++ 6.0** by default, with one file on 7.1. Those two are the ones you need.
 
-You don't need to install Visual Studio, old or new. decompdecomp's docs don't mention it. What matters is the period compiler that Setup supplies, because every attempt is rebuilt with that compiler and compared byte for byte.
+You don't need to install Visual Studio, old or new. decompdecomp's docs don't mention it. What matters is the period compiler that decompdecomp supplies, because every attempt is rebuilt with that compiler and compared byte for byte.
 
-1. Open **Setup** in decompdecomp.
-2. Accept the license for the Microsoft compilers and let it download Visual C++ 6.0. If 7.1 is offered on its own, take it too.
-3. Write down the folder where the toolchain lands. The docs don't say where that is, so don't guess it: step 5 needs the real path.
+![decompdecomp's start screen. Compilers & tools is in the sidebar, bottom left.](images/decompdecomp-start-screen.png)
+
+1. Open **Compilers & tools** from the sidebar.
+2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards, and **Microsoft Visual C++ (your own copy)**.
+3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 5 uses that folder.
+
+![The Compilers & tools screen. The Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC) card is at the right of the second row, and Ghidra is at the top left.](images/decompdecomp-compilers-and-tools.png)
 
 ## 3. Install Ghidra
 
 *decompdecomp:* the GUIDE names Ghidra as the analysis tool for Windows PC projects started from scratch. It describes no Ghidra configuration step for joining a room.
 
 *Case File #1 project:* the collaborator's function list came from Ghidra. This project also needs Ghidra for [WP-001](../work-packets/WP-001-ghidra-session.md).
+
+*decompdecomp:* `v1.0.10-alpha.1` also offers Ghidra on its **Compilers & tools** screen, with an **Install** button (540 MB, needs Java 21+; see step 2's screenshot). You can install it there instead. The steps below give a standalone copy you manage yourself.
 
 1. Install the 64-bit JDK that Ghidra's install guide names for the release you download (JDK 21 for Ghidra 11.x).
 2. Download Ghidra from [ghidra-sre.org](https://ghidra-sre.org/) or its [GitHub releases](https://github.com/NationalSecurityAgency/ghidra/releases). Unzip it to a folder with no spaces in the path, such as `C:\tools\ghidra_<version>`, and start it with `ghidraRun.bat`.
@@ -78,10 +84,12 @@ You don't need to install Visual Studio, old or new. decompdecomp's docs don't m
 *Case File #1 project:* the build needs Python 3.12 and `ninja` on the PATH. Make sure `python` is a real Python install, not one bundled inside another app; `py -3.12` avoids the problem. In the clone:
 
 ```powershell
-py -3.12 tools/configure.py casefile1 --msvc "<Visual C++ 6.0 folder from step 2>"
+py -3.12 tools/configure.py casefile1 --msvc "$env:LOCALAPPDATA\decompnet\toolchains\msvc"
 ninja
 ninja rebuild
 ```
+
+`--msvc` takes the folder that holds `6.0\Bin\CL.EXE`, which is step 2's install folder. The one file built with 7.1 finds its compiler in the same folder.
 
 `ninja rebuild` reassembles the whole program from C where the C matches and from your copy's bytes elsewhere, and reports whether the result is byte-identical. `objdiff.json` gives per-function progress in [objdiff](https://github.com/encounter/objdiff).
 

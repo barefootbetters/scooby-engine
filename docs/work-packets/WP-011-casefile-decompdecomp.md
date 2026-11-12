@@ -146,7 +146,7 @@ Step-by-step instructions are in [Setting Up decompdecomp on Windows](../referen
 - Windows 10/11 x86-64. The guide says Windows PC games don't need WSL 2.
 - decompdecomp from its release installer (it bundles Python and the app), or from source with `uv` and Python 3.12.
 - Ghidra, which the guide requires for the PC platform's function cut-out. Record the version.
-- The compiler the host project is configured with. Proprietary compilers install only after the user accepts their license in decompdecomp's Setup.
+- The compiler the host project is configured with: Visual C++ 6.0, plus 7.1 for one file. In `v1.0.10-alpha.1` they install from decompdecomp's **Compilers & tools** screen into `%LOCALAPPDATA%\decompnet\toolchains\msvc` (observed 2026-11-11), not from the Setup screen the GUIDE describes.
 - To build the host project outside the app: Python, `ninja`, and the configured MSVC toolchain (`tools/configure.py <version> --msvc <folder>`), plus [objdiff](https://github.com/encounter/objdiff) for per-function progress. The game's `libexpat.dll` goes beside the executable in the project's gitignored `orig/` folder.
 - An agent provider with a hard spend limit set **on the provider side**. The guide describes usage-limit waits and auto-pause after repeated failures, but no budget cap.
 - A legally obtained Case File #1 disc or ISO. The working copy of the executable lives under the gitignored `tools/exes/casefile1/`, as in [tools/exes/README](../../tools/exes/README.md). The disc filename is `Case File #1.exe`; the local cache renames it `Scooby.exe`.
@@ -283,7 +283,7 @@ Milestones:
 
 - [x] Collaboration repository received (private; access accepted 2026-11-11).
 - [x] Case File #1 cooperative decompdecomp session available (2026-11-11). The link is temporary; get the current one from Mony.
-- [ ] Inspect the repository and set up a local decompdecomp environment. The repository is inspected ([§First look](#first-look-at-the-repository-2026-11-11)); the environment is not set up yet. Follow [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md).
+- [ ] Inspect the repository and set up a local decompdecomp environment. The repository is inspected ([§First look](#first-look-at-the-repository-2026-11-11)); decompdecomp `v1.0.10-alpha.1` and its Visual C++ 6.0, 7.0 and 7.1 compilers are installed (2026-11-11); Ghidra, the agent provider and the baseline build are next. Follow [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md).
 - [ ] Join the cooperative session and run a limited initial agent trial.
 - [ ] Compare decompilation findings against existing `scooby-engine` research.
 
@@ -343,6 +343,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-11 | Repository access received: the collaborator's private repo, invite accepted and cloned outside this checkout. A Case File #1 cooperative room is open; its link is temporary and is not recorded. ⏸ Blocked → 🚧 In Progress. |
 | 2026-11-11 | **Decision (Jeff):** credit Mony Armenchev on these pages by name and GitHub handle, and link his repository (it returns 404 without access). His email stays out, because this repository and its Pages site are public. Room links and credentials stay out too. |
 | 2026-11-11 | First look at the repository: executable identity confirmed by SHA-1 and size (**Observed**); the project defaults to VC 6.0; the match rate is not measured yet. See [§First look](#first-look-at-the-repository-2026-11-11). |
+| 2026-11-11 | Local environment, part 1: decompdecomp `v1.0.10-alpha.1` installed; Visual C++ 6.0, 7.0 and 7.1 installed from its **Compilers & tools** screen into `%LOCALAPPDATA%\decompnet\toolchains\msvc` (**Observed**). The GUIDE's Setup screen isn't in this version; the [setup page](../reference/decompdecomp-setup.md#2-install-the-visual-c-60-compiler) is corrected. |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
