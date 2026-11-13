@@ -19,6 +19,9 @@
 tools/samples/*
 !tools/samples/README.md
 !tools/samples/.gitkeep
+# The single named exception (Jeff's call, 2026-11-13): WP-002's first decode,
+# committed as exit-criterion evidence. Any other image stays local-only.
+!tools/samples/tgifile-art-entry0.png
 
 # Local copies of Scooby.exe and other game binaries pulled from mounted ISOs
 # for analysis (rich_header.py, Ghidra, etc.). Copyrighted game binaries

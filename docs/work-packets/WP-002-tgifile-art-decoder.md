@@ -99,7 +99,7 @@ Out of scope:
 1. `tools/probe_art.py` runs and successfully extracts and decodes at least entry 0 of *Showdown*'s `TGIFILE.ART`.
 2. Output PNG/BMP is visually recognizable as a Scooby-Doo asset (background, sprite frame, or UI element). Recognizability is the test, not pixel-exact match against a specific source.
 3. `docs/formats/tgifile-art.md` Findings → "Per-entry payload" section populated with: compression algorithm name (or description), pixel format (palette vs. truecolor + bit depth), palette location and format, decode pseudocode or working Python.
-4. Output PNG/BMP saved to `tools/samples/` for visual reference. *(Amended 2026-11-13: originally "committed to `tools/samples/tgifile-art-entry0.png`". Decoded images are copyrighted derivatives and `tools/samples/` is gitignored per [its README](../../tools/samples/README.md), so the PNG is regenerable and local-only, never committed.)*
+4. Output PNG/BMP committed to `tools/samples/tgifile-art-entry0.png` for visual reference. *(Committed 2026-11-13 as the single named exception to the [`tools/samples/` policy](../../tools/samples/README.md#the-one-exception), on Jeff's decision. Every other decoded image stays local-only.)*
 
 ## Outcome (2026-11-13)
 
@@ -117,7 +117,7 @@ The format in brief:
 | 1. `probe_art.py` extracts and decodes entry 0 | ✅ | `py -3 tools/probe_art.py --obj 0 --cel 0`; `--verify` decodes all 9,111 cels in the file, each stream ending 0–2 bytes before the next structure, and parses all 17,407 mask chunks exactly |
 | 2. Output recognizable | ✅ | Checked by eye: Daphne, Fred, Scooby, two Ghost Town backgrounds. No WP-009 screenshots exist yet, so the check was against canonical character colors, not a captured frame |
 | 3. `tgifile-art.md` Per-entry payload populated | ✅ | Algorithm (byte-RLE, `0xF0` run marker), pixel format (RGB565 big-endian, truecolor), palette (none), pseudocode and decoder, all in [tgifile-art §Cel format](../formats/tgifile-art.md#cel-format) |
-| 4. PNG saved for reference | ✅ (amended) | `tools/samples/wp002/entry_000_OBJ_DAPHNE_A_cel000.png`, local-only (see criterion note) |
+| 4. PNG committed for reference | ✅ | `tools/samples/tgifile-art-entry0.png`: `OBJ_DAPHNE_A` cel 0, 67 × 167 RGBA, SHA-256 `760310C0C809F88EFB9C2EE1DFB9EDF6784741CCF8A413BDAAB4CC00671370E4` |
 
 EC-002 strategy note: B1 (raw 8-bit) and B2 (raw 16-bit at fixed resolutions) were not run as written. Reading the opening bytes as 16-bit words showed the `F0 nn` + word pattern and a constant 76-pixel row period, so the run-length form was tested first and worked. Byte order and channel layout were then fixed by Fred's known colors.
 
@@ -128,7 +128,7 @@ EC-002 strategy note: B1 (raw 8-bit) and B2 (raw 16-bit at fixed resolutions) we
 ## Deliverables
 
 - [`tools/probe_art.py`](../../tools/probe_art.py) — archive walker, cel decoder, `--verify` whole-file check
-- `tools/samples/wp002/entry_000_OBJ_DAPHNE_A_cel000.png` — first successful decode (local-only, gitignored; regenerate with the command above)
+- `tools/samples/tgifile-art-entry0.png` — first successful decode (committed; `py -3 tools/probe_art.py --obj 0 --cel 0` regenerates it as `entry_000_OBJ_DAPHNE_A_cel000.png`)
 - Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Archive layout, Object resources, Scene blocks, Cel format
 
 ## Notes

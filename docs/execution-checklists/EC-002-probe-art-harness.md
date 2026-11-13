@@ -92,10 +92,10 @@ If B1–B5 all fail:
 
 ## Phase C — Capture findings (time-box: 30 min after success)
 
-- [x] PNG output saved at `tools/samples/wp002/entry_000_OBJ_DAPHNE_A_cel000.png` (gitignored, local-only)
+- [x] PNG output saved at `tools/samples/tgifile-art-entry0.png` (committed as the one named exception to the `tools/samples/` policy)
 - [x] `tools/probe_art.py` cleaned up. Only the successful path is kept; the failed strategies were never committed, and WP-002 §Outcome records what was tried.
 - [x] `tgifile-art.md` Findings populated: [§Cel format](../formats/tgifile-art.md#cel-format) (algorithm, pixel format, no palette, pseudocode), plus §Archive layout, §Object resources, §Scene blocks
-- [x] WP-002 exit criteria #1–#4 verified (#4 amended to local-only)
+- [x] WP-002 exit criteria #1–#4 verified
 - [x] WP-002 status updated to ✅ Done in [`WORK_INDEX.md`](../work-packets/WORK_INDEX.md)
 
 ## Phase D — Cross-title spot check (stretch, time-box: 30 min)
@@ -107,6 +107,6 @@ If B1–B5 all fail:
 
 ## Definition of done
 
-- [x] At least one PNG of a Scooby-Doo asset exists under `tools/samples/` (local-only)
+- [x] At least one PNG of a Scooby-Doo asset exists at `tools/samples/tgifile-art-entry0.png`
 - [x] `tgifile-art.md` documents the decode algorithm
 - [x] Phase 1 exit criterion #1 satisfied on recognizability; frame comparison against reference screenshots waits on WP-009
