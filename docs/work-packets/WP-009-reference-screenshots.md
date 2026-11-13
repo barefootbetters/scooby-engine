@@ -5,7 +5,7 @@ title: "WP-009: Reference Screenshot Library"
 
 # WP-009: Reference screenshot library (*Showdown in Ghost Town*)
 
-**Status:** ✅ Done (2026-11-13). Exit criterion #7 (live Pages render) is checked after merge.
+**Status:** ✅ Done (2026-11-13). All seven exit criteria met; #7 was verified live after merge.
 **Phase:** 0 — Pre-Work (before WP-002)
 **Depends on:** WP-008 ✅ (room IDs available — see §Notes)
 **Unblocks (recommended, not strict):** [EC-002](../execution-checklists/EC-002-probe-art-harness.md) pre-flight (decoder visual comparison target), [WP-001](WP-001-ghidra-session.md) §Scripted-room render branch trace, Phase 3 `*_Room.cpp` reimplementation (scripted-room ground truth)
@@ -233,7 +233,7 @@ All 37 rows are therefore treated as Required tier and captured as PNG.
 | 4. Gallery page rendered | ✅ | `index.md` filled with the 6-column provenance schema; ewiki gates pass |
 | 5. Decoder-anchor validation | ✅ | Every room capture is a full background, and every one matches its decoded scene. `OBJ_DAPHNE_A` matches decoded cel 0 in pose and color. |
 | 6. WORK_INDEX teaser | ✅ | Two thumbnails (Town Center, Boot Hill 2) |
-| 7. Pages render verified | Pending merge | Checked live after the PR merges |
+| 7. Pages render verified | ✅ | Verified 2026-11-13 after #27 merged. GitHub Pages serves all 36 images (`200 image/png`); the ewiki serves all 36 at 320 px. Pages first drew the thumbnails about 59 px wide (minima squeezed the column), fixed by `assets/main.scss` in the "fix gallery render" commit. |
 
 **Side effect for WP-002.** This closes WP-002's open "frame comparison
 against in-game output": 35 decoded backgrounds and Daphne's sprite match
