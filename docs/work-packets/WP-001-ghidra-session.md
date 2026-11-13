@@ -5,11 +5,49 @@ title: "WP-001: Ghidra Session"
 
 # WP-001: Ghidra session — `Scooby.exe` imports + `TGIFILE.ART` decode trace
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Done (2026-11-13). Two small residuals are listed under [Result](#result-2026-11-13).
 **Phase:** 1 — Format Research
 **Depends on:** WP-003 (palette hunt — run first; may eliminate palette-hunt scope from this session), WP-007 (strings dump — recommended; primes Steps 3–4)
 **Companion EC:** [EC-001](../execution-checklists/EC-001-ghidra-session.md)
-**Estimated effort:** 1 day (Ghidra auto-analysis included)
+**Estimated effort:** 1 day (Ghidra auto-analysis included). Actual: one session, headless, with auto-analysis taking 107 s.
+**Pre-flight:** [pre-flight-WP-001-2026-11-13](../reference/pre-flight-WP-001-2026-11-13.md)
+
+---
+
+## Result (2026-11-13)
+
+Ghidra 12.1.4 ran headless on Java 27 against `Scooby.exe` (SHA-256
+`1328454334…F7478`). The binary is not packed. The project is at
+`C:\dev\scooby-engine\ghidra\scooby.gpr` (gitignored) with 68 functions
+labeled by debug channel. The label list is committed at
+[`tools/ghidra-scripts/wp001-labels.txt`](../../tools/ghidra-scripts/wp001-labels.txt)
+and re-applied by `ApplyLabels.java`. Because WP-002 had already decoded
+the images, the session went after the narrowed Step 5 targets:
+
+| Target (narrowed 2026-11-13) | Result |
+|---|---|
+| 1. How the 69 room and 453 object descriptors are used | **Resolved.** `start_sector << 14 \| sector_count`; the engine seeks with them. The object table is 453 `u32`, not 8-byte records. That correction moves the name table to `0x834` with 1,788 records. |
+| 2. Animation-sequence records (table 0) | **Resolved.** Step = `(0, 0x8000_0000 \| owner << 20 \| frame, polygon)`. The player, its five modes, and the per-step click polygon are traced. ANIM id = `0x3 \| owner & 0xFF \| sequence index`, and the 1,266 ANIMs equal the 1,266 sequences. |
+| 3. Room-block words `0x10`, `0x80`, `0xAC` and the tables after the background | **Mostly resolved.** `0x80` holds 10 layer slots (slot 0 = background), `0xAC` the cel table, `0xB0`/`0xB8` two loader-supported tables empty in Showdown, `0xC0` the placements. The placement record is mapped (x, y at `+0x84`). **Open:** word `0x10`, and placement `+0x88`. |
+| 4. Roles of the two mask chunks | **Resolved.** A = opaque RGB565 pixels, B = translucent ARGB4444 pixels; everything else transparent. Also found: solid-colour and raw (little-endian) cels. |
+| 5. Room names for scenes 18 and 19 | **Resolved.** `ROOM_Artie`, `ROOM_Title_Screen` (name-table records 18, 19). |
+| 6. WP-008 leads | **Resolved.** `object.ini` is read live per object (`GetPrivateProfileStringA`); the `ID=` switch is at `0x408F90`. `scrappyid` values are `Voice.dat` clip names, spoken in Scrappy hint mode. Inventory art is sequences of `OBJ_TOOLBAR` / `OBJ_CURSOR`. There is no scripted-room render branch. |
+
+Also found: the engine's own RLE decoder (`0x4398A0`) matches WP-002
+exactly, and the `.dat` audio index layout (a lead for WP-004).
+
+Findings live in [tgifile-art.md](../formats/tgifile-art.md) (header,
+descriptors, sequences, room blocks, cel flags, masks, name table, decode
+path), [scooby-exe.md §Resource loading map](../formats/scooby-exe.md#resource-loading-map)
+and [§`object.ini` consumer](../formats/scooby-exe.md#objectini-consumer-wp-001),
+and [audio-archives.md](../formats/audio-archives.md#index-table-wp-001-lead).
+`tools/probe_art.py --verify` now checks every data-side claim across the
+whole file, and `probe_art.py` renders with the masks.
+
+**Not done:**
+- Room-block word `0x10` and placement field `+0x88`: no reader found.
+- Object table 2's consumer was not traced.
+- Phantom was not loaded (out of scope; WP-005 / EC-002 Phase D).
 
 ---
 
@@ -145,11 +183,11 @@ Out of scope:
 
 ## Exit criteria
 
-1. `docs/formats/scooby-exe.md` Findings → "Toolchain" populated with confirmed compiler + linker.
-2. `docs/formats/scooby-exe.md` Findings → "Imports / runtime surface" populated with the DirectX surfaces in use, Bink integration, and file I/O API set.
-3. `docs/formats/scooby-exe.md` Findings → "Resource loading map" populated with at least the `TGIFILE.ART` open + dispatch path labeled in Ghidra.
-4. The `TGIFILE.ART` decode function is identified (Ghidra function name + entry address recorded) and its pseudo-C decompilation is captured as a code block in `docs/formats/tgifile-art.md` Findings → "Per-entry payload" → new subsection "Decode algorithm (from `Scooby.exe`)".
-5. Ghidra project saved at `C:\dev\scooby-engine\ghidra\scooby.gpr` with the labels above intact.
+1. `docs/formats/scooby-exe.md` Findings → "Toolchain" populated with confirmed compiler + linker. ✅ (Rich Header step, 2026-06)
+2. `docs/formats/scooby-exe.md` Findings → "Imports / runtime surface" populated with the DirectX surfaces in use, Bink integration, and file I/O API set. ✅ (WP-007 import table; cross-checked, no change)
+3. `docs/formats/scooby-exe.md` Findings → "Resource loading map" populated with at least the `TGIFILE.ART` open + dispatch path labeled in Ghidra. ✅ 2026-11-13
+4. The `TGIFILE.ART` decode function is identified (Ghidra function name + entry address recorded) and its pseudo-C decompilation is captured as a code block in `docs/formats/tgifile-art.md` Findings → "Per-entry payload" → new subsection "Decode algorithm (from `Scooby.exe`)". ✅ 2026-11-13: `graphics_Renderer_GetCelPixels` at `0x4398A0`. The page has no "Per-entry payload" heading any more, so the subsection is [Cel format → Decode path in `Scooby.exe`](../formats/tgifile-art.md#decode-path-in-scoobyexe-wp-001). It is restated pseudo-C, not raw decompiler output.
+5. Ghidra project saved at `C:\dev\scooby-engine\ghidra\scooby.gpr` with the labels above intact. ✅ 2026-11-13 (68 labels; list committed under `tools/ghidra-scripts/`)
 
 ## Deliverables
 
