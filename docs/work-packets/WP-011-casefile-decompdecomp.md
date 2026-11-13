@@ -259,7 +259,7 @@ Plan:
 1. Build a stable Case File #1 baseline first: a known set of Matched and Observed functions with names.
 2. Add the **Jinx (Gen 2)** binary next, not Case File #2. WP-007 shows the strongest inheritance evidence is Jinx → Case File #1, so the identical-function count there is the cleanest function-level test of that inheritance.
 3. Add **Case File #2 (Gen 4)** after that. Its match rate against Case File #1 helps decide whether it is a revision of the same engine or a substantially different implementation. The Vision already records it as an architectural break.
-4. Gen 1 (Showdown) cross-matching is opportunistic. If Gen 1 shares little code with Gen 3, decompdecomp on Case File #1 will not answer the `TGIFILE.ART` F0-opcode question directly. That still needs WP-001 or a Showdown decompdecomp project.
+4. Gen 1 (Showdown) cross-matching is opportunistic. If Gen 1 shares little code with Gen 3, decompdecomp on Case File #1 will not answer the `TGIFILE.ART` F0-opcode question directly. That still needs WP-001 or a Showdown decompdecomp project. **A Showdown project is the higher-value follow-on for the engine** (Jeff, 2026-11-13): it aims the tool at the Gen 1 `TGIFILE.ART` decoder, which is the actual Phase 1 blocker. Showdown is VC5-built (Linker 5.10), like Case File #1. The host reports matching Case File #1 with VC 6.0, which suggests VC5-era code can match, but that is **Reported**, not measured. See [open question 20](#open-questions).
 
 The output of each step is a count of identical, near and unique functions per binary pair, recorded with evidence levels. These counts are evidence for WP-005, not a classification by themselves.
 
@@ -330,7 +330,8 @@ For the host, about the room:
 
 For Jeff:
 
-19. Past the capped trial, does this project commit agent capacity to finishing Case File #1 with the host, as he proposes? The trial's cost per match on the remaining, larger functions is the input to that decision.
+19. Past the capped trial, does this project commit agent capacity to finishing Case File #1 with the host, as he proposes? The trial's cost per match on the remaining, larger functions is the input to that decision. *Deferred (Jeff, 2026-11-13):* decide after the trial. Until then the host finishes Case File #1 at his own pace, and this project uses what it turns up.
+20. Would the host take on Showdown (Gen 1) as the next decompdecomp project, ahead of Case File #2? To ask him. Showdown is this project's primary target, and its `TGIFILE.ART` decoder is the Phase 1 blocker that Case File #1 can't answer.
 
 ## Immediate next actions
 
@@ -402,6 +403,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-11 | decompdecomp's own Ghidra install stopped: with no JDK on the PATH it installs its pinned Temurin 21, which on Windows is a Linux build that needs WSL 2, and this machine has no WSL distribution (**Observed**). Its source (`toolchains.py`, `forks/ghidra.py`) shows that a Windows JDK 21+ on the PATH, with `javac` beside `java`, is used instead, so no WSL is needed. Its docs say none of this. The GUIDE marks Ghidra optional for x86 (it writes agents' drafts). Route being tried: a Windows JDK. [Setup page step 3](../reference/decompdecomp-setup.md#ghidra-inside-decompdecomp-install-a-windows-jdk-first) is updated. |
 | 2026-11-12 | Collaborator update: 21.7 % of the code matched, 1,981 functions (**Reported**). See [§Update from the collaborator](#update-from-the-collaborator-2026-11-12). |
 | 2026-11-13 | Collaborator reply (**Reported**): 28.2 %, 2,078 functions; no pinned baseline commit; we treat his repository as read-only; he proposes finishing Case File #1 fully ([open question 19](#open-questions)); credit by username and GitHub handle. From decompdecomp's source: the room credits each match to `<member>.<agent>`, so the trial is measured from the room's credits, not by diffing commits. The local build is no longer a step before joining. The Windows JDK install is waiting on IT approval. See [§Reply from the collaborator](#reply-from-the-collaborator-2026-11-13). |
+| 2026-11-13 | **Decision (Jeff):** the ScummVM engine stays the deliverable, and decompdecomp stays a research input to it, not a replacement. Matched C rebuilds the original Win32 program and never goes into `engines/scooby/` ([§ScummVM integration boundaries](#scummvm-integration-boundaries)). Case File #1 is a Stretch title (Gen 3), so its decompilation can't answer the Gen 1 blockers. This WP stays a capped trial. Committing agent spend to finishing Case File #1 waits for the trial's cost per match ([open question 19](#open-questions)); the host finishing it at his own pace costs this project nothing. Ask the host about a Showdown project next ([open question 20](#open-questions), [§Cross-game reuse strategy](#cross-game-reuse-strategy)). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
