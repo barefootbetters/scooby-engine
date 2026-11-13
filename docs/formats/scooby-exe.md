@@ -5,7 +5,7 @@ title: "Format Spec: Scooby.exe"
 
 # Format Spec: `Scooby.exe`
 
-**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1); Ghidra session pending; decompdecomp collaboration on Case File #1 under way ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md): access received 2026-11-11, local trial pending)  
+**Status:** Toolchain identified across all four available titles (Showdown, Phantom, Jinx, Case File #1). Showdown resource loading, animation, rendering, `object.ini` and sound-id paths traced in Ghidra ([WP-001](../work-packets/WP-001-ghidra-session.md), 2026-11-13; see [Resource loading map](#resource-loading-map)). Decompdecomp collaboration on Case File #1 under way ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md): access received 2026-11-11, local trial pending)  
 **Source discs:** five candidate titles (see Cross-title comparison below)  
 **Per-title binary names:** `Scooby.exe` (Showdown/Phantom/Jinx), `Case File #1.exe` (Case File #1)  
 **Vision doc reference:** [Project Vision](../01-VISION.md) — Phase 1 work item; Engine Lineage section for generation classification.
@@ -49,8 +49,8 @@ small (476 KB) but still contains far more than we need.
 
 | Hypothesis | Evidence | Confidence |
 |---|---|---|
-| Resource loading is centralized — a small number of functions open each archive | Standard architecture; small exe size supports it | High |
-| Most gameplay rules are driven by `object.ini`, with the exe acting as interpreter | `object.ini` is 1,405 lines naming every object, room, and cursor | Medium |
+| Resource loading is centralized — a small number of functions open each archive | Standard architecture; small exe size supports it. **Confirmed by WP-001:** one `GameResource` object owns every art file, and one `GameSound` object owns the three sound files | Confirmed |
+| Most gameplay rules are driven by `object.ini`, with the exe acting as interpreter | `object.ini` is 1,405 lines naming every object, room, and cursor. WP-001: object *kinds* and their keys come from `object.ini` (looked up live per object), but rooms are C++ objects and several override placements in code | Medium (asset binding confirmed; logic partly in code) |
 | Puzzle state machines are exe-resident (not in `object.ini`) | `object.ini` shows static room/object data, not logic branches | Medium |
 | The exe is single-threaded | Edutainment titles of the era rarely use worker threads | High |
 | Compiler is MSVC (not Borland/Watcom) | Standard for Windows-first Learning Company titles of 2000 | Medium |
@@ -685,7 +685,111 @@ These three are the canonical COM-client initialization triad. Combined with the
 
 ### Resource loading map
 
-*TBD — which function opens which file; what the dispatch/lookup looks like.* For Case File #1 (Gen 3), the `MMFW` loader is the top research target of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#research-targets); its function map lands as its own subsection here once a finding reaches Observed.
+#### Showdown (Gen 1) — WP-001 Ghidra trace (2026-11-13)
+
+Binary: `Scooby.exe`, SHA-256 `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478`.
+Ghidra 12.1.4, default auto-analysis (107 s), project at
+`C:\dev\scooby-engine\ghidra\scooby.gpr` (local, gitignored). The binary is
+not packed: it is ordinary VC5 code, and its `__FILE__` strings name the
+source files, which anchor the subsystems.
+
+Labels use the engine's debug channels (`resource`, `graphics`, `audio`,
+`script`, `input`, fixed by WP-010 in `engines/scooby/detection.h`). The
+address list is committed as
+[`tools/ghidra-scripts/wp001-labels.txt`](../../tools/ghidra-scripts/wp001-labels.txt);
+[`ApplyLabels.java`](../../tools/ghidra-scripts/ApplyLabels.java) re-applies
+it to a fresh project (68 labels). Addresses are function entry points.
+Four functions (`0x402130`, `0x402410`, `0x4091FF`, `0x43FB90`) are reached
+only through vtables or pointer tables, so auto-analysis did not create
+them. The label script does.
+
+**Startup and file opening.** `resource_GameResource_ctor` (`0x4327D0`,
+`GameResource.cpp`, logs `Creating Game Resource`) opens `TGIFILE.ART`, then
+numbered volumes from the `%sTGIFILE%i.ART` pattern, then the
+`%sTGIFILE.ART` path form if nothing opened yet. Each file that opens
+becomes one art file (`resource_GameResource_AddArtFile`, `0x4336F0`, logs
+`Loading art file '%s'`), up to 5. With none it fails `Failed to locate an
+ART file`. It also creates a 16 MB `ResourceHeap`. Lookups search the art
+files newest first, so a later volume overrides an earlier one by name.
+Showdown ships one file.
+
+**Art file** (`GameArtFile.cpp`; its read errors log `Failed to read from file
+TGIFILE.ART`):
+
+| Address | Label | What it does |
+|---|---|---|
+| `0x43A8B0` | `resource_ArtFile_ctor` | Reads sectors 0–63 (`0x20000` bytes), parses room count + descriptors, object count + descriptors, name count + 68-byte name records; sorts names for binary search |
+| `0x43AED0` / `0x43ACE0` | `resource_ArtFile_ReadSectors(Alloc)` | Descriptor `d` → seek `(d >> 14) × 2048`, read `(d & 0x3FFF) × 2048` bytes in 512 KB chunks |
+| `0x43B080` | `resource_ArtFile_LoadRoomBlock` | Name → id → room descriptor → read block; relocate layer, cel, `0xB0`, `0xB8` tables; RGB555 pass on 15-bit displays |
+| `0x43B3D0` | `resource_ArtFile_LoadObjectResource` | Name → id → object descriptor → read into the resource heap; relocate tables, sequence polygons, frame cels, cel masks |
+| `0x43B880` | `resource_ArtFile_LookupId` | Name → id |
+
+**Resource manager** (`GameResource.cpp`):
+
+| Address | Label | What it does |
+|---|---|---|
+| `0x432CC0` | `resource_GameResource_GetRoom` | Cached room block by `ROOM_*` name; `Failed to located room name %s` |
+| `0x432E30` | `resource_GameResource_FreeRoom` | Frees the block and releases objects |
+| `0x432F60` | `resource_GameResource_GetObject` | Reference-counted cache of object resources by `OBJ_*` name; evicts (`Resizing cache to load '%s'`) when the heap is full; `Failed to locate object name %s` |
+| `0x433220` | `resource_GameResource_ReleaseObject` | Drops a reference; `Negative object reference count` |
+| `0x433690` | `resource_GameResource_GetId` | Any name → id (used for ANIM names); `Failed to locate ID '%s'` |
+
+These are the format facts that came out of the trace, each written up in
+[tgifile-art.md](tgifile-art.md):
+- The header is `u32` room descriptors, then `u32` object descriptors, then
+  1,788 name records from `0x834`.
+- A descriptor is `start_sector << 14 | sector_count`.
+- Room block `i` is `ROOM` id `i`. The name table names all 69 rooms, so
+  scene 18 is `ROOM_Artie` and scene 19 is `ROOM_Title_Screen`.
+- A sequence step's frame ref is masked with `0x3FFFF`, and its polygon is
+  the step's click region.
+- An ANIM id is `0x3 | owner & 0xFF | sequence index`.
+- Cel byte `0x10` marks a solid cel and byte `0x11` an RLE cel. Raw cels
+  are little-endian.
+- Mask A marks opaque RGB565 pixels and mask B translucent ARGB4444 pixels.
+
+**Animation and drawing** (`graphics`, `input`):
+
+| Address | Label | What it does |
+|---|---|---|
+| `0x430D60` | `graphics_Sprite_ctor` | Sprite node: holds an object resource (via `GetObject`), parent, depth; children kept sorted by depth |
+| `0x430790` | `graphics_AnimSprite_ctor` | `(obj name, ANIM name, parent, depth, mode, ticks per step, start step)` |
+| `0x430A00` | `graphics_AnimSprite_SetAnim` | ANIM name → id (`GetId`) → `sequences[id & 0x3FFFF]` of the held object |
+| `0x430AA0` / `0x430890` | `graphics_AnimSprite_Start` / `_Tick` | Modes 1–5 (loop fwd/back, once fwd/back, jump to end); countdown of ticks per step |
+| `0x4309C0` | `graphics_AnimSprite_SelectFrame` | Current step's frame ref → frame record |
+| `0x430D10`, `0x431350`, `0x4312A0` | `input_AnimSprite_HitTest`, `input_PolygonHitTest`, `input_PointInPolygon` | Step polygon: bounding box, then even-odd test |
+| `0x438660` | `graphics_Renderer_RenderFrame` | Opaque pass front to back, then alpha regions back to front |
+| `0x439C00` | `graphics_Renderer_DrawFrameRecord` | Intersect still-visible region with mask A (draw, subtract) and mask B (queue); `GameRenderer::AlphaRegion buffer` overflow error |
+| `0x4398A0` | `graphics_Renderer_GetCelPixels` | The RLE decoder, with a 256-slot bitmap cache; `Out of space for the Bitmap Cache` |
+| `0x439170` / `0x4394D0` | `graphics_BlendAlpha4444_565` / `_555` | ARGB4444 over RGB565 / RGB555 |
+| `0x433AF0` | `graphics_ConvertCelTo555` | RGB565 → RGB555 over mask A, or of the solid colour |
+
+The art is 16-bit. The engine checks the display's green mask (`0x3E0` =
+RGB555) and, on a 555 display, converts each cel once at load, not per
+frame.
+
+**Rooms and `object.ini`** (`script`): see
+[`object.ini` consumer](#objectini-consumer-wp-001) below.
+
+**Sound** (`audio`, `GameSound.cpp` / `GameSoundFile.cpp`):
+
+| Address | Label | What it does |
+|---|---|---|
+| `0x4344A0` | `audio_GameSound_ctor` | Opens `sfx.dat`, `voice.dat`, `music.dat`; `Failed to open <file>` |
+| `0x43C5A0` | `audio_SoundFile_ctor` | Reads `u32 1` (else `Invalid sound data file`), `u32 count`, `u32 table offset`; loads `count` × 68-byte `(u32 offset, char[64] name)` records and sorts them by name |
+| `0x434DC0` | `audio_GameSound_LookupId` | Name → sound id, searching `sfx.dat`, `voice.dat`, `music.dat` in that order; `Failed to locate id %s` |
+| `0x434E30` / `0x43CF20` | `audio_GameSound_PreloadSection` | Preloads every `sfx.dat` sound whose name starts with a prefix |
+
+Sounds are named `<Section>.<Clip>` (for example `Global.Scrappy.Help.Wiggle`).
+A numeric sound id is the file's base (`0x1000_0000` sfx, `0x2000_0000`
+voice, `0x3000_0000` music) plus the clip's index in that file's
+name-sorted table. On every room load `script_Game_LoadRoom` preloads the
+`sfx.dat` clips of the `Global` section and of the room's own section. The
+index layout is a lead for
+[WP-004](../work-packets/WP-004-audio-archive-decode.md), recorded in
+[audio-archives.md](audio-archives.md#index-table-wp-001-lead).
+
+For Case File #1 (Gen 3), the `MMFW` loader is the top research target of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#research-targets); its function map lands as its own subsection here once a finding reaches Observed.
 
 ### `object.ini` interpreter behavior
 
@@ -740,8 +844,12 @@ The exit criterion specifies a four-number metric: total / matched / unmatched /
 | Unmatched bucket | Count | What it tells us |
 |---|---|---|
 | `ROOM_*` referenced by `destinationroom=` but absent from WP-003's 42-ROOM table | 21 | Includes `ROOM_Main_Menu` plus 20 `ROOM_P{NN}_<descriptive>` rooms. Either these rooms have no pre-rendered backgrounds (scripted/engine-rendered scenes — `ROOM_P30_Horseshoe_Corral`, `ROOM_P32_Pie_Noon` are minigames per the source-tree paths `\Scooby\GBH\Horseshoe_Corral_Room.cpp` and `\Scooby\GBH\Pie_Noon_Room.cpp` in the [Showdown strings findings](#showdown-gen-1)), or their backgrounds live in a separate archive. **Resolved 2026-11-13 (WP-002/WP-009): neither.** All 21 have ordinary scene-block backgrounds in `TGIFILE.ART`; they are only missing from the name table, which covers room ids 27–68. See [tgifile-art §Scene index = ROOM id](tgifile-art.md#scene-index--room-id-wp-009-2026-11-13). |
-| `OBJ_*` section headers (hotspot / exit / overlay) with no `TGIFILE.ART` art payload | 25 | Names ending in `_HOTSPOT*`, `_TO_P*`, `_OVERLAY` — invisible click targets that don't need pre-rendered art. Corroborates the [Showdown strings finding](#showdown-gen-1) of `Failed to locate id %s` / `Failed to locate object name %s` as the engine's string-keyed lookup error path — not every `[OBJ_*]` ID is expected to resolve to an art entry. |
-| `ANIM_CURSOR<NAME>` and `ANIM_TOOLBAR<NAME>` for inventory items | 19 | All 11 `OBJ_INV_*` items reference a `ANIM_CURSOR<NAME>` + a `ANIM_TOOLBAR<NAME>`. **System** toolbar animations (`ANIM_TOOLBARCOMPUTER_IDLE`, `ANIM_TOOLBARSCRAPPY_IDLE`, `ANIM_TOOLBARMAGGLASS_IDLE`, etc.) **do** match the WP-003 table; the inventory-item variants do not. Either inventory animations live in a separate asset store, or `TGIFILE.ART` only carries the system toolbar animations and the inventory ones are generated/composited at runtime. New unknown for WP-001. |
+| `OBJ_*` section headers (hotspot / exit / overlay) with no `TGIFILE.ART` art payload | 25 | Names ending in `_HOTSPOT*`, `_TO_P*`, `_OVERLAY` — invisible click targets that don't need pre-rendered art. Corroborates the [Showdown strings finding](#showdown-gen-1) of `Failed to locate id %s` / `Failed to locate object name %s` as the engine's string-keyed lookup error path — not every `[OBJ_*]` ID is expected to resolve to an art entry. *(WP-001: still 25 against the full 1,788-record table. No room places any of them, so the placement path never reads these sections.)* |
+| `ANIM_CURSOR<NAME>` and `ANIM_TOOLBAR<NAME>` for inventory items | 19 | All 11 `OBJ_INV_*` items reference a `ANIM_CURSOR<NAME>` + a `ANIM_TOOLBAR<NAME>`. **System** toolbar animations (`ANIM_TOOLBARCOMPUTER_IDLE`, `ANIM_TOOLBARSCRAPPY_IDLE`, `ANIM_TOOLBARMAGGLASS_IDLE`, etc.) **do** match the WP-003 table; the inventory-item variants do not. Either inventory animations live in a separate asset store, or `TGIFILE.ART` only carries the system toolbar animations and the inventory ones are generated/composited at runtime. New unknown for WP-001. **Resolved 2026-11-13 (WP-001): neither.** All 34 `ANIM_TOOLBAR*`/`ANIM_CURSOR*` references are in the full name table, as sequences of `OBJ_TOOLBAR` and `OBJ_CURSOR`. WP-003 had parsed only 811 of the 1,788 records. |
+
+**Re-run against the full name table (WP-001, 2026-11-13):** 261 of 286
+references resolve (91.26 %). The 25 that do not are the OBJ section headers
+in the second row.
 
 So the answer to WP-008's load-bearing question — **"is the engine name-driven (string references resolved through the WP-003 name table) or index-driven (numeric references that hit `TGIFILE.ART` entries directly)?"** — is **name-driven**, full stop. The 77 % match rate refines but does not refute this: `TGIFILE.ART` is one of multiple name-keyed asset stores. WP-002's `probe_art.py` can label decoded `TGIFILE.ART` entries directly via the WP-003 name table (per the [WP-008 §Notes deterministic naming rule](../work-packets/WP-008-object-ini-catalog.md#notes)); the 65 unmatched references just won't have a corresponding decoded entry to label.
 
@@ -773,6 +881,78 @@ So the answer to WP-008's load-bearing question — **"is the engine name-driven
 
 So the data-driven hypothesis stated under [Hypotheses (unverified)](#hypotheses-unverified) — *"Most gameplay rules are driven by `object.ini`, with the exe acting as interpreter"* — is **partially confirmed and importantly refined**: the *asset-binding and navigation graph* is data-driven, but the *puzzle/state logic* is not. WP-001 (Ghidra session) needs to find the function that consumes `object.ini` (likely the loader that triggers on the `Failed to load room.` error string per the [Showdown strings findings](#showdown-gen-1)) and the function that resolves cursor-key + click-target combinations to script invocations (probably keyed by the `scrappyid=Global.Scrappy.*` field, which suggests a script-table identifier resolved from a different file).
 
+##### `object.ini` consumer (WP-001)
+
+Traced in Ghidra on 2026-11-13. Function labels are listed in
+[Resource loading map](#resource-loading-map).
+
+**`object.ini` is never parsed into a table.** Every read is a live
+`GetPrivateProfileStringA` call. `script_GetObjectIniString` (`0x40AB80`)
+asks for a key in the section named after the object (`[OBJ_*]`), with a
+default and a 1,000-byte buffer. It goes through the Win32 wrapper at
+`0x43FB90`, the binary's only `GetPrivateProfileStringA` call site. The path
+comes from `script_GetObjectIniPath` (`0x40AE40`, `%sobject.ini`, cached).
+Keys are read when a placed object is built, by that object's constructor.
+A ScummVM port can read the file with `Common::INIFile` and look keys up the
+same way.
+
+**Room load** (`script_Game_LoadRoom`, `0x435DC0`, `Game.cpp`):
+
+1. Find the `Room` object for the `ROOM_*` name in the list the game builds
+   at startup. Each room is a C++ object, and some have their own class
+   (`Pie_Noon_Room.cpp`, `Horseshoe_Corral_Room.cpp`, `Options_Room.cpp`).
+   If none matches: `Failed to load room.`
+2. Load the room block (`resource_Room_LoadArt` → `GetRoom`) and create one
+   sprite per used layer slot, at depth `-110000 + 10000 × slot`.
+3. Offer each placement record to the room object's own handler first, a
+   virtual call that matches OBJ names. The front-of-general-store room, for
+   example, claims `OBJ_INV_CLOCK` and `OBJ_P10_FRONT_OF_GS_CLOCK_NOFACE`. If
+   the room declines, `script_ScoobyGame_AddPlacement` (`0x4091FF`) builds
+   the object:
+   - `script_CreateObjectFromIniId` (`0x408F90`) reads `ID=` from the
+     object's section, defaulting to `simpleobject`. It builds an
+     `inventoryobject` (`0x4026B0`), `requiresobject` (`0x402D90`),
+     `exitobject` (`0x401850`) or `clickableobject` (`0x408DC0`), each at the
+     placement's `(x, y)`. This is the `ID=` switch WP-008 predicted.
+   - `simpleobject` and unknown values fall through. Gang members
+     (`OBJ_<character>`) become character actors (`0x4048E0`), whose depth
+     follows y. `OBJ_GHOST` gets its own handling. Anything else becomes a
+     plain animated sprite playing the placement's ANIM.
+4. Preload the `Global` and room-section sounds (see
+   [Resource loading map](#resource-loading-map), Sound), then log progress
+   (`Been loading objects for 4 seconds`) during long loads.
+
+**Correction to WP-008's "scripted-room render branch".** There is no branch
+between "decode from `TGIFILE.ART`" and "render from code". Every room loads
+its block from `TGIFILE.ART` (WP-009 had already shown that every room has a
+background). Per-room code adds behaviour through the placement hook and
+its own logic.
+
+**`scrappyid` resolver.** `scrappyid=` values are **voice-clip names in
+`Voice.dat`**, resolved by name through the sound manager. The exit-object
+constructor stores the value. On a click (`script_ExitObject_OnClick`,
+`0x402130`), if the cursor is `ANIM_CURSORSCRAPPY_ANIM` (Scrappy's hint
+mode), it calls `audio_GameSound_LookupId(scrappyid)` and has the toolbar
+Scrappy speak the clip. Otherwise it performs the exit: it logs to the
+`Exits` channel and walks to `destinationroom=`. On rollover
+(`input_ExitObject_GetRolloverCursor`, `0x402410`) the cursor becomes
+`ANIM_CURSORSCRAPPY_ANIM` in hint mode when the object has a `scrappyid`,
+and `rolloveranim=` otherwise. Inventory objects read `scrappyid` too.
+Check against the data: 32 of the 35 distinct `scrappyid` values are clip
+names in `Voice.dat`. The other three, `Global.Scrappy.Boot_Hill_1_to_Light_Tunnel`,
+`…Boot_Hill_2_to_Boot_Hill_3` and `…Tunnel_Light_to_Boot_Hill_1`, have no
+clip. `Voice.dat` has neighbours such as `…Boot_Hill_2_to_Light_Tunnel`, so
+these are authoring mismatches. The lookup returns 0 for them and logs
+`Failed to locate id %s`.
+
+**Inventory animations.** `toolbaranim=` and `usecursor=` name sequences of
+two ordinary objects: `OBJ_TOOLBAR` (id 295) and `OBJ_CURSOR` (id 20). All
+34 such names are in the `TGIFILE.ART` name table. `script_Inventory_AddItem`
+(`0x406DD0`, `Inventory.cpp`, `Out of Inventory space`) creates the toolbar
+slot as an `OBJ_TOOLBAR` sprite playing the item's `toolbaranim`. The
+cursor (`0x4089E0`) is an `OBJ_CURSOR` sprite, `ANIM_CURSORARROW` by
+default. There is no separate inventory art store.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
@@ -793,11 +973,33 @@ No name observed required actual sanitization (no spaces, no punctuation, no non
 
 *TBD — deferred until Phase 4.*
 
+### Follow-ups (out of WP-001 scope)
+
+Things the WP-001 trace passed over, each a lead for a later work packet:
+
+- **Audio index** ([WP-004](../work-packets/WP-004-audio-archive-decode.md)):
+  the index layout is resolved (see
+  [audio-archives](audio-archives.md#index-table-wp-001-lead)). The codec is
+  not. Start from `audio_SoundFile_ctor` (`0x43C5A0`) and the stream
+  creation behind `Failed to create stream!!!`.
+- **Character actors** (Phase 4): `script_Character_ctor` (`0x4048E0`)
+  looks up `Global.Scrappy.*` sounds, and `0x405190` formats
+  `Global.Idle.%s_P%d%s` / `Global.Idle.%s_S%d%s` and `Global.Scared.*` sound
+  names. The idle and scared behaviour lives there.
+- **Per-room classes** (Phase 4): `Pie_Noon_Room.cpp`,
+  `Horseshoe_Corral_Room.cpp`, `Options_Room.cpp` and the rooms that claim
+  placements by OBJ name.
+- **Room-block word `0x10`**, the placement field `+0x88` and object table 2
+  have no traced reader (see
+  [tgifile-art §Remaining unknowns](tgifile-art.md#remaining-unknowns)).
+- **Bink**: imports confirmed (WP-007); integration not traced.
+- **Save games** (`%s%s%s.sav`): not traced.
+
 ---
 
 ## References
 
 - Vision doc: [Project Vision](../01-VISION.md)
 - Companion specs: [tgifile-art](tgifile-art.md), [audio-archives](audio-archives.md)
-- Ghidra project: `C:\dev\scooby-engine\ghidra\scooby.gpr` (to be created)
+- Ghidra project: `C:\dev\scooby-engine\ghidra\scooby.gpr` (local, gitignored; created 2026-11-13 by WP-001, labels re-applicable from [`tools/ghidra-scripts/`](../../tools/ghidra-scripts/wp001-labels.txt))
 - Executable-analysis work packets: [WP-001](../work-packets/WP-001-ghidra-session.md) (Track A, Ghidra), [WP-011](../work-packets/WP-011-casefile-decompdecomp.md) (Track B, decompdecomp collaboration)
