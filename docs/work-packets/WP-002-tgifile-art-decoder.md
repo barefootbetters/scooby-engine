@@ -5,11 +5,12 @@ title: "WP-002: TGIFILE.ART Decoder"
 
 # WP-002: `TGIFILE.ART` payload decoder + first image extraction
 
-**Status:** 📝 Drafted
+**Status:** ✅ Done (2026-11-13)
 **Phase:** 1 — Format Research
 **Depends on:** WP-001 (preferred — gives decode algorithm directly; can be started without if Ghidra path is blocked)
 **Companion EC:** [EC-002](../execution-checklists/EC-002-probe-art-harness.md)
-**Estimated effort:** Half-day if WP-001 succeeds; 1–2 days if blind-decoding
+**Estimated effort:** Half-day if WP-001 succeeds; 1–2 days if blind-decoding  
+**Actual:** One session, blind-decoding from the data file (WP-001 Ghidra blocked on a JDK install). Pre-flight: [pre-flight-WP-002-2026-11-13](../reference/pre-flight-WP-002-2026-11-13.md)
 
 ---
 
@@ -98,13 +99,37 @@ Out of scope:
 1. `tools/probe_art.py` runs and successfully extracts and decodes at least entry 0 of *Showdown*'s `TGIFILE.ART`.
 2. Output PNG/BMP is visually recognizable as a Scooby-Doo asset (background, sprite frame, or UI element). Recognizability is the test, not pixel-exact match against a specific source.
 3. `docs/formats/tgifile-art.md` Findings → "Per-entry payload" section populated with: compression algorithm name (or description), pixel format (palette vs. truecolor + bit depth), palette location and format, decode pseudocode or working Python.
-4. Output PNG/BMP committed to `tools/samples/tgifile-art-entry0.png` for visual reference.
+4. Output PNG/BMP saved to `tools/samples/` for visual reference. *(Amended 2026-11-13: originally "committed to `tools/samples/tgifile-art-entry0.png`". Decoded images are copyrighted derivatives and `tools/samples/` is gitignored per [its README](../../tools/samples/README.md), so the PNG is regenerable and local-only, never committed.)*
+
+## Outcome (2026-11-13)
+
+**Decoded.** Every image in `TGIFILE.ART` decodes: 453 object resources (9,042 sprite cels) and 69 scene backgrounds. Entry 0 (`OBJ_DAPHNE_A`, cel 0, 67 × 167) is Daphne in her canonical colors: purple dress, green scarf, orange hair, pink tights. OBJ 1 is Fred and OBJ 2 is Scooby; scene 0 is a 640 × 480 Ghost Town street at dusk. Full spec: [tgifile-art.md](../formats/tgifile-art.md#archive-layout).
+
+The format in brief:
+
+- **Not a codec puzzle; the index was the puzzle.** The 453 "asset entry" records are not `(start, end)` offsets, and `0x10017E` is not the first payload. It lies mid-cel inside OBJ 1 (Fred). The real layout: 453 object resources packed from `0x20000` on 2,048-byte sector boundaries (resource `i` = `OBJ` id `i`), then 69 scene blocks ending exactly at end of file.
+- **Pixels:** RLE over 16-bit pixels. `F0 count hi lo` is a run; any other byte starts a literal 2-byte pixel. Pixels are **RGB565 stored big-endian**. No palette exists, which closes the palette hunt from WP-003. Sprite transparency is `0x0000`.
+- **Cel header:** `u32 size, u16 w, u16 h, u32 mask_a, u32 mask_b, u32 flags, u32 0`. Two span-list mask chunks follow the pixels.
+- **Also decoded:** frame records (cel + draw offset, 9,229 checked), click polygons (467 checked), scene placement records (OBJ + ANIM name + 3 coordinates).
+
+| Exit criterion | Status | Evidence |
+|---|---|---|
+| 1. `probe_art.py` extracts and decodes entry 0 | ✅ | `py -3 tools/probe_art.py --obj 0 --cel 0`; `--verify` decodes all 9,111 cels in the file, each stream ending 0–2 bytes before the next structure, and parses all 17,407 mask chunks exactly |
+| 2. Output recognizable | ✅ | Checked by eye: Daphne, Fred, Scooby, two Ghost Town backgrounds. No WP-009 screenshots exist yet, so the check was against canonical character colors, not a captured frame |
+| 3. `tgifile-art.md` Per-entry payload populated | ✅ | Algorithm (byte-RLE, `0xF0` run marker), pixel format (RGB565 big-endian, truecolor), palette (none), pseudocode and decoder, all in [tgifile-art §Cel format](../formats/tgifile-art.md#cel-format) |
+| 4. PNG saved for reference | ✅ (amended) | `tools/samples/wp002/entry_000_OBJ_DAPHNE_A_cel000.png`, local-only (see criterion note) |
+
+EC-002 strategy note: B1 (raw 8-bit) and B2 (raw 16-bit at fixed resolutions) were not run as written. Reading the opening bytes as 16-bit words showed the `F0 nn` + word pattern and a constant 76-pixel row period, so the run-length form was tested first and worked. Byte order and channel layout were then fixed by Fred's known colors.
+
+**What WP-001 is still for:** the image decode no longer needs Ghidra. Open items that do need the executable: the encoding of the 69 scene descriptors and the 453 object descriptors, the scene-to-`ROOM_*` mapping, and the animation-sequence records (table 0 of each object resource). See [tgifile-art §Remaining unknowns](../formats/tgifile-art.md#remaining-unknowns).
+
+**Not done here:** Phantom cross-check (EC-002 Phase D), which needs the Phantom disc mounted. `--verify` is the one-command check.
 
 ## Deliverables
 
-- [`tools/probe_art.py`](../../tools/probe_art.py) — extraction + decode harness
-- [`tools/samples/tgifile-art-entry0.png`](../../tools/samples/) — first successful decode
-- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Findings section
+- [`tools/probe_art.py`](../../tools/probe_art.py) — archive walker, cel decoder, `--verify` whole-file check
+- `tools/samples/wp002/entry_000_OBJ_DAPHNE_A_cel000.png` — first successful decode (local-only, gitignored; regenerate with the command above)
+- Updated [`docs/formats/tgifile-art.md`](../formats/tgifile-art.md) — Archive layout, Object resources, Scene blocks, Cel format
 
 ## Notes
 
