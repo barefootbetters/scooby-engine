@@ -206,22 +206,23 @@ on [WP-009](work-packets/WP-009-reference-screenshots.md).
 #### Audio archives
 
 `Music.dat`, `Sfx.dat`, `Voice.dat`. Header structure confirmed (2026-06);
-index table layout and codec still unresolved.
+index table layout resolved from the `Scooby.exe` trace (WP-001, 2026-11-13).
+Codec still unresolved.
 
 **Confirmed structure (all three files share the same 12-byte header):**
 - Bytes 0x00–0x0B: `version` (= 1, uint32LE), `entry_count` (uint32LE),
-  `field3` (uint32LE; sector-aligned quantity, semantics unconfirmed — see
-  [`docs/formats/audio-archives.md`](formats/audio-archives.md) for the
-  Voice.dat anomaly that rules out a naïve "data size" interpretation)
+  `index_offset` (uint32LE; offset of the index table, per WP-001 — see
+  [`docs/formats/audio-archives.md`](formats/audio-archives.md#index-table-wp-001-lead))
 - Music.dat: 28 entries / 91.7 MB — Sfx.dat: 316 entries / 30.7 MB —
   Voice.dat: 821 entries / 103.8 MB
-- Bytes 0x0C–0x4F: all zeros — index table has not been located (may be at
-  end-of-file, or the header encodes an index offset not yet read correctly)
+- Index table at `index_offset`: `entry_count` 68-byte records
+  (`u32` clip offset, `char[64]` clip name `<Section>.<Clip>`), ending exactly
+  at end of file in all three files. Clips are sector-aligned from `0x800` and
+  looked up by name.
 
 **Remaining unknowns:**
-- Index table location and per-entry stride.
-- Codec: no standard magic bytes (RIFF/WAV, OggS, FLAC) at offset 0.
-- Meaning of `field3`.
+- Codec: no standard magic bytes (RIFF/WAV, OggS, FLAC) at offset 0; the
+  per-clip header has not been examined.
 
 Execution tracked in
 [WP-004](work-packets/WP-004-audio-archive-decode.md).
