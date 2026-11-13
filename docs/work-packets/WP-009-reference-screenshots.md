@@ -5,7 +5,7 @@ title: "WP-009: Reference Screenshot Library"
 
 # WP-009: Reference screenshot library (*Showdown in Ghost Town*)
 
-**Status:** 📦 Queued
+**Status:** ✅ Done (2026-11-13). Exit criterion #7 (live Pages render) is checked after merge.
 **Phase:** 0 — Pre-Work (before WP-002)
 **Depends on:** WP-008 ✅ (room IDs available — see §Notes)
 **Unblocks (recommended, not strict):** [EC-002](../execution-checklists/EC-002-probe-art-harness.md) pre-flight (decoder visual comparison target), [WP-001](WP-001-ghidra-session.md) §Scripted-room render branch trace, Phase 3 `*_Room.cpp` reimplementation (scripted-room ground truth)
@@ -13,7 +13,10 @@ title: "WP-009: Reference Screenshot Library"
 **Pre-flight required:** No — [pre-flight.md §When pre-flight is required](../reference/pre-flight.md#when-pre-flight-is-required) explicitly exempts "screenshot/reference-image captures." This WP commits PNG/WebP image assets + a Jekyll gallery page; it does not touch `docs/formats/**`, `engines/scooby/**`, or commit tool scripts under `tools/**`, and it locks no engine-generation classification.
 **Targets generation(s):** Gen 1 (*Showdown in Ghost Town* only) — per [01-VISION §Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding). Captures from other titles (Phantom Gen 1, Jinx Gen 2, Case File Gen 3) are explicitly out of scope; each gets its own WP if/when needed.
 **Targets disc(s):** Showdown
-**Estimated effort:** 1–2 hours
+**Estimated effort:** 1–2 hours  
+**Actual:** One session, 2026-11-13. A first session on 2026-06-03 chose the source video and stopped before capturing.  
+**Findings landed in:** [gallery](../assets/screenshots/showdown-screens/index.md); [tgifile-art §Scene index = ROOM id](../formats/tgifile-art.md#scene-index--room-id-wp-009-2026-11-13)  
+**Headline answer:** 35 of 37 catalog rooms captured, plus the `OBJ_DAPHNE_A` anchor. Every one matches its decoded `TGIFILE.ART` background. The other two never appear in the longplay. All 37 rooms turn out to be decoder-backed, so the Required/Stretch split no longer applies.
 
 ---
 
@@ -204,6 +207,48 @@ Out of scope:
    - Gallery page is visible at
      `https://github.barefootbetters.com/scooby-engine/docs/assets/screenshots/showdown-screens/`
      and all embedded images load (no broken images in the live render).
+
+## Outcome (2026-11-13)
+
+**Method.** Frames came from the source longplay's 1080p stream (yt-dlp
+format 248), downloaded to a local scratch folder and deleted after
+capture; nothing but the chosen PNGs entered the repo. Rather than scrub
+by eye, each 0.5 s sample of the video was scored against all 69
+backgrounds decoded by `tools/probe_art.py`. For each room, the pick is the
+best-matching frame that holds steady for ±1 s. Each pick was then checked
+by eye beside its decoded background. The gallery's "How frames were
+chosen" section has the details.
+
+**The tier split is obsolete.** WP-008 had listed 21 of the 37 rooms as
+code-rendered, with no `TGIFILE.ART` background. WP-002 and this WP found
+that every catalog room has a scene block, and that scene index = ROOM id
+([tgifile-art §Scene index = ROOM id](../formats/tgifile-art.md#scene-index--room-id-wp-009-2026-11-13)).
+All 37 rows are therefore treated as Required tier and captured as PNG.
+
+| Exit criterion | Status | Evidence |
+|---|---|---|
+| 1. Required-tier coverage | ✅ | 35 rooms captured as `Canonical` PNGs. `ROOM_Main_Menu` and `ROOM_P27_Chase_B4` are `Gap: Not reached in longplay`: the video skips the main menu, and the player never takes chase branch B4 (best whole-video match 0.55, against 0.95+ for every chase room entered). `OBJ_DAPHNE_A` anchor captured. |
+| 2. Stretch-tier coverage logged | ✅ (moot) | No room is Stretch tier; see above |
+| 3. Naming compliance | ✅ | Every file is a catalog ID verbatim, or `OBJ_DAPHNE_A`. No `UNMATCHED_` files were needed: each capture is tied to its room by the decoded-background match. |
+| 4. Gallery page rendered | ✅ | `index.md` filled with the 6-column provenance schema; ewiki gates pass |
+| 5. Decoder-anchor validation | ✅ | Every room capture is a full background, and every one matches its decoded scene. `OBJ_DAPHNE_A` matches decoded cel 0 in pose and color. |
+| 6. WORK_INDEX teaser | ✅ | Two thumbnails (Town Center, Boot Hill 2) |
+| 7. Pages render verified | Pending merge | Checked live after the PR merges |
+
+**Side effect for WP-002.** This closes WP-002's open "frame comparison
+against in-game output": 35 decoded backgrounds and Daphne's sprite match
+captured frames, colors included.
+
+**Embed form changed.** §Deliverables prescribes `<a href><img width="320"></a>`
+cells. That predates the Access-gated ewiki, which renders Markdown with
+raw HTML off (`ewiki/hugo.toml`, `unsafe = false`), so those cells would be
+blank there. The gallery uses `[![id](file.png "width=320px")](file.png)`
+instead: the ewiki theme sizes it from the title, and GitHub Pages
+(`minima`) fits it to the column. Both link to the full-size file.
+
+**Process note.** §Execution below says "no branch, no PR". This WP went
+through a PR anyway, like WP-002, because it also carries a format-doc
+finding (the scene-to-room mapping) beyond the gallery.
 
 ## Deliverables
 
