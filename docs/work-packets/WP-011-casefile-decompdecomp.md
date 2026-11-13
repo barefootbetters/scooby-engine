@@ -16,7 +16,7 @@ title: "WP-011: Case File #1 decompdecomp Collaboration"
 
 ---
 
-> **Setup guide:** [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md) is the step-by-step for this WP: the installs, the spend limit, the pre-agent baseline commands, joining the room, and the trial record to fill in.
+> **Setup guide:** [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md) is the step-by-step for this WP: the installs, the spend limit, the build that checks the host's figures, joining the room, and the trial record to fill in.
 
 ## Purpose
 
@@ -72,6 +72,39 @@ What this means for the WP:
 - **The baseline is moving fast.** M0 and M0-R have to name a commit, and the trial result has to subtract any matches he lands while it runs.
 - **The trial will start on the hard functions.** 59 % of the functions match but only 21.7 % of the code does, so the matched ones are mostly small. A trial run starts on what's left: the larger functions. Expect its match rate to be lower than his early rate. The two rates aren't comparable.
 
+### Reply from the collaborator (2026-11-13)
+
+Mony answered our questions by email. Everything in this subsection is **Reported**, except the point about how the room credits matches, which comes from decompdecomp's source.
+
+| Item | Reported value |
+|---|---|
+| Matched code | 28.2 % |
+| Functions matched | 2,078 |
+| Pace | 1 to 10 matches an hour with one or two Claude instances. He says it doesn't extrapolate well: some functions fall quickly, others slowly. |
+| After 50 % | The agents start working out types and names, which he expects to give them new clues |
+| Set-aside functions | Functions C can't represent, which decompdecomp sets aside by itself. So far mostly MSVC assembly functions statically linked into the executable. These account for the difference between the 3,376 functions in the tool summary and the 3,371 the app counts. |
+
+Matches by model, from the app's per-model panel (a low-resolution screenshot, so a best reading). The dollar figures are the app's API-equivalent pricing, not what subscriptions actually cost:
+
+| Model (via) | Matches | App-priced cost per match |
+|---|---|---|
+| DeepSeek V4.1 Flash (opencode) | 1,014 | $0.02 |
+| Claude (Claude Code) | 710 | $0.32 |
+| Codex, Antigravity, Cursor (free tiers) | 45, 13, 2 | priced in tokens |
+| Claude Fable, Gemini 4 Argon, Kimi K3.1 Pro, a local 9B model | 0 each | no match yet |
+
+His notes from his own use: DeepSeek V4.1 Flash is cheap and fast, and several instances at once suit the simpler functions. Claude Opus is very good at this, especially as several instances. Claude Fable used up usage too fast for him to measure it. Free tiers are worth using until they run out. A local model on a GTX 1070 did little.
+
+His answers, and what they change here:
+
+- **No pinned baseline commit.** He says running decompdecomp on our own copy would be redundant: join the room. He pushes the room's progress, ours included, to his repository every day or so, one branch per game. We treat that repository as **read-only**. This replaces the 2026-11-12 point about pinning a commit. **How the trial is measured instead:** the room credits each match to the agent that made it, named `<member>.<agent>` (for example `jeff.claude-1`). This is from decompdecomp's source (`collab.py` `agent_for` and `engine/rooms.py` `apply_remote_match_named`, at commit `9e19b4d`). So the trial's result is the matches credited to our member name. A local build of one of his pushed commits is still what turns his figures into Observed ones, but it's no longer a step before joining.
+- **Scope: finish the game.** He proposes finishing Case File #1 fully. After the functions, the agents move on to variable and struct names. Then add the next game, see what it can reuse, and keep going. This WP is still a capped trial; whether to go further is [open question 19](#open-questions).
+- **Credit:** by username and GitHub handle, with the repository URL once it's public. He'd make it public after the decompilation is finished. Partly answers [open question 18](#open-questions).
+- **Publishing docs, not code.** He's considering using the decompiled code only for research: AI reads it and writes docs, and the docs are what's published. That's the same line this WP draws in [§ScummVM integration boundaries](#scummvm-integration-boundaries).
+- **Room:** the same link as before. He'll say when it changes. When he wrote, none of his agents were working, because all had run out of usage.
+
+**For the trial:** DeepSeek Flash did most of the cheap early matching. What's left is the larger functions, where his notes put Claude Opus ahead, so expect the cost per match to rise.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -114,9 +147,9 @@ These are two different systems that complement each other. Cooperative decompil
 | Access | Repository permissions | An invite link (private room) or an address (public room); the host can approve or remove members |
 | Transport | GitHub | Chosen by the host: a Cloudflare quick tunnel, or the host's own address (LAN, Tailscale, a server) |
 
-Per the guide, a member joins with **New project → Join a team's room**, pastes the link, picks a name and points at a local copy of the game. The host hands out functions so no two people work the same one, verifies matches, and shares names, structs and notes back to the team. The guide doesn't describe how a claim expires, how conflicting claims resolve, or exactly how a member's match is merged on the host. Those are [open questions](#open-questions) for the host.
+Per the guide, a member joins with **New project → Join a team's room**, pastes the link, picks a name and points at a local copy of the game. The host hands out functions so no two people work the same one, verifies matches, and shares names, structs and notes back to the team. The guide doesn't describe how a claim expires, how conflicting claims resolve, or exactly how a member's match is merged on the host. Those are [open questions](#open-questions) for the host. **Partly answered from the source (2026-11-13, decompdecomp `9e19b4d`):** members' agents claim functions through the room, the host checks each match against its own copy, and the host records each match against the member's agent that made it (`<member>.<agent>`).
 
-For PC projects the guide says decompdecomp keeps its work in the project's own git repository. That repository is the collaborator's private repo, not this one. This repo receives only the evidence described in [§Evidence and validation requirements](#evidence-and-validation-requirements).
+For PC projects the guide says decompdecomp keeps its work in the project's own git repository. That repository is the collaborator's private repo, not this one. We have push access to it but treat it as read-only, at his request (2026-11-13). He pushes the room's progress there. This repo receives only the evidence described in [§Evidence and validation requirements](#evidence-and-validation-requirements).
 
 ## Evidence model
 
@@ -241,7 +274,7 @@ The output of each step is a count of identical, near and unique functions per b
 
 - Never commit game executables, CD images, extracted proprietary assets, copyrighted media, secrets, tokens, or room links and credentials. `.gitignore` already blocks the game data. This WP adds `tools/decomp/`, decompdecomp project files and `.env` files.
 - This repository and its GitHub Pages site are **public**. Cooperative connection details (room links, invite tokens, credentials) stay out of every page.
-- Mony is credited by name and GitHub handle, and his repository is linked, by Jeff's decision of 2026-11-11 (see [§Status and decision log](#status-and-decision-log)). His email and other contact details stay out of every page, as do the repository's contents.
+- Mony is credited by name and GitHub handle, and his repository is linked, by Jeff's decision of 2026-11-11 (see [§Status and decision log](#status-and-decision-log)). His email and other contact details stay out of every page, as do the repository's contents. His own stated preference (2026-11-13) is credit by username and GitHub handle, with the repository URL once he makes it public. Whether "username" means the name used on these pages is being confirmed with him.
 - Review generated C before relying on it. AI-written code that matches bytes can still carry misleading names and comments.
 - Keep research artifacts separate from production ScummVM code. Nothing questionable or license-incompatible goes into `engines/scooby/`.
 - Record provenance for every major technical conclusion.
@@ -289,11 +322,15 @@ Using the results:
 
 For the host, about the room:
 
-14. How are function claims made and expired, and how are conflicts resolved?
-15. How does a member's match get merged, and what does the host share back?
+14. How are function claims made and expired, and how are conflicts resolved? *Partly answered (source, 2026-11-13):* claims go through the room, so no two agents work the same function. Expiry and conflicts are still open.
+15. How does a member's match get merged, and what does the host share back? *Partly answered (source, 2026-11-13):* the host checks the match against its copy, credits it to `<member>.<agent>`, and shares it with the room. The host then pushes the work to the repository every day or so.
 16. Does the room check that every member's executable is identical, or is that on each member? *Partly answered:* the project pins the game by SHA-1, and this project's copy matches it. Whether the room enforces it on join is still open.
 17. Which compiler and version is the room configured with, and which decompdecomp version? *Partly answered:* the project defaults to VC 6.0 (one file on 7.1). The decompdecomp app version the room runs is still open; the project files record only a tools revision.
-18. What are the terms of the private repository: license, who may read it, what may be quoted publicly, and how the collaborator wants to be credited?
+18. What are the terms of the private repository: license, who may read it, what may be quoted publicly, and how the collaborator wants to be credited? *Partly answered (2026-11-13):* credit by username and GitHub handle, with the repository URL once it's public. The repository stays private until the decompilation is finished, and he may publish AI-written docs instead of the code. License and what may be quoted are still open.
+
+For Jeff:
+
+19. Past the capped trial, does this project commit agent capacity to finishing Case File #1 with the host, as he proposes? The trial's cost per match on the remaining, larger functions is the input to that decision.
 
 ## Immediate next actions
 
@@ -315,10 +352,10 @@ Trial checklist. Tick these off in this file as they happen.
 - [ ] Record the exact executable filename (`Case File #1.exe` on disc), size, version-resource information, and SHA-256 (plus SHA-1 and MD5 if the room uses them). Confirm SHA-256 against the WP-007 lock and against the host's copy. Size and SHA-1 match the host project's pinned copy (2026-11-11); version-resource information is still to record.
 - [ ] Confirm that `git status` shows no executable, asset, project folder or credential before every commit.
 - [ ] Match tool versions with the host: decompdecomp version, compiler and flags, Ghidra version.
-- [ ] Build the host project locally and measure how many of its C functions already match, before any agent runs. This turns the Reported progress into a local measurement.
+- [ ] Build one of the host's pushed commits locally and measure how many of its C functions match. This turns the Reported progress into a local measurement. Since 2026-11-13 it isn't a step before joining: the room credits our matches by member name ([§Reply from the collaborator](#reply-from-the-collaborator-2026-11-13)).
 - [ ] Connect to the cooperative room.
 - [ ] Run a limited trial, not open-ended agent use: set the provider spend cap, the helper count and a function cap first (suggested: 2 helpers, 100 functions or a fixed dollar cap Jeff sets, whichever comes first).
-- [ ] Measure and record: functions attempted, byte-identical matches, near misses, failures, agent cost, wall time, and the compiler used for the matches.
+- [ ] Measure and record: functions attempted, byte-identical matches (the room's count credited to our member name), near misses, failures, agent cost from the provider's billing, wall time, and the compiler used for the matches.
 - [ ] Compare reconstructed functions against existing format research, starting with [mmfw-container](../formats/mmfw-container.md).
 - [ ] Steer toward the priority subsystems: file I/O, archive loading, graphics, audio, scripting, object initialization.
 - [ ] Document meaningful discoveries in the wiki, following [§Output specification](#output-specification).
@@ -363,6 +400,8 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-11 | First look at the repository: executable identity confirmed by SHA-1 and size (**Observed**); the project defaults to VC 6.0; the match rate is not measured yet. See [§First look](#first-look-at-the-repository-2026-11-11). |
 | 2026-11-11 | Local environment, part 1: decompdecomp `v1.0.10-alpha.1` installed; Visual C++ 6.0, 7.0 and 7.1 installed from its **Compilers & tools** screen into `%LOCALAPPDATA%\decompnet\toolchains\msvc` (**Observed**). The GUIDE's Setup screen isn't in this version; the [setup page](../reference/decompdecomp-setup.md#2-install-the-visual-c-60-compiler) is corrected. |
 | 2026-11-11 | decompdecomp's own Ghidra install stopped: with no JDK on the PATH it installs its pinned Temurin 21, which on Windows is a Linux build that needs WSL 2, and this machine has no WSL distribution (**Observed**). Its source (`toolchains.py`, `forks/ghidra.py`) shows that a Windows JDK 21+ on the PATH, with `javac` beside `java`, is used instead, so no WSL is needed. Its docs say none of this. The GUIDE marks Ghidra optional for x86 (it writes agents' drafts). Route being tried: a Windows JDK. [Setup page step 3](../reference/decompdecomp-setup.md#ghidra-inside-decompdecomp-install-a-windows-jdk-first) is updated. |
+| 2026-11-12 | Collaborator update: 21.7 % of the code matched, 1,981 functions (**Reported**). See [§Update from the collaborator](#update-from-the-collaborator-2026-11-12). |
+| 2026-11-13 | Collaborator reply (**Reported**): 28.2 %, 2,078 functions; no pinned baseline commit; we treat his repository as read-only; he proposes finishing Case File #1 fully ([open question 19](#open-questions)); credit by username and GitHub handle. From decompdecomp's source: the room credits each match to `<member>.<agent>`, so the trial is measured from the room's credits, not by diffing commits. The local build is no longer a step before joining. The Windows JDK install is waiting on IT approval. See [§Reply from the collaborator](#reply-from-the-collaborator-2026-11-13). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 

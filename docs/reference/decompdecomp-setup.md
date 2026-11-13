@@ -7,7 +7,7 @@ title: "Setting Up decompdecomp on Windows"
 
 > **Work packet:** [WP-011: Case File #1 decompdecomp Collaboration](../work-packets/WP-011-casefile-decompdecomp.md) holds the trial's rules, status, checklist and decision log. This page is how to carry them out.
 
-These steps get a Windows 11 PC ready to join the Case File #1 cooperative decompilation room, which is part of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md). There are five installs, then a baseline measurement, then the join.
+These steps get a Windows 11 PC ready to join the Case File #1 cooperative decompilation room, which is part of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md). There are five installs, then a build that checks the collaborator's figures, then the join.
 
 **What the trial is for.** Matched C rebuilds the original 2002 Windows program. It isn't a port, and it isn't engine code. The project's deliverable is still an independent ScummVM engine, written from documented behavior. The decompilation is research evidence for that engine ([WP-011 §ScummVM integration boundaries](../work-packets/WP-011-casefile-decompdecomp.md#scummvm-integration-boundaries)). The trial asks a narrower question: does decompdecomp produce that evidence faster or more cheaply than Ghidra work alone? decompdecomp's guide marks its Windows PC support as beta, so expect some friction.
 
@@ -19,7 +19,7 @@ The page mixes three kinds of instruction. Each one is tagged with its source:
 |---|---|---|
 | **decompdecomp** | The tool's [README](https://github.com/n-delic/decompdecomp) and [GUIDE](https://github.com/n-delic/decompdecomp/blob/main/docs/GUIDE.md), read 2026-11-11 against release `v1.0.10-alpha.1` | How the tool installs, which compilers it supplies, how rooms and agents work |
 | **Case File #1 project** | The collaborator's project files: its README, `tools/configure.py` and config | Which compiler this game is matched with, the build commands, where the game files go |
-| **WP-011** | This project's [trial rules](../work-packets/WP-011-casefile-decompdecomp.md) | Spend caps, helper count, the baseline, what gets recorded, hygiene |
+| **WP-011** | This project's [trial rules](../work-packets/WP-011-casefile-decompdecomp.md) | Spend caps, helper count, how the trial is measured, what gets recorded, hygiene |
 
 decompdecomp is young and self-updates, and its docs leave some screens undescribed. Where they don't cover a step, this page says so, so you know to look and write down what you find.
 
@@ -92,7 +92,7 @@ So give it a Windows JDK first:
 1. Install it and run the check in [step 3](#on-windows), then restart decompdecomp.
 2. Choose **Install** on the Ghidra card. It should download Ghidra only, with no Java development kit.
 
-The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 6's baseline build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
+The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 6's build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
 
 ### Ghidra for this project's own analysis
 
@@ -116,9 +116,11 @@ Don't take the trial's cost from decompdecomp's own **spent** figure. The collab
 2. In the provider's console, set the strongest spending limit it offers before creating the key. Providers differ: some have a hard cap, others only prepaid credit or budget alerts. Prepaid credit equal to the trial's dollar cap works as a hard stop.
 3. In decompdecomp, open **Agents & models → API key** and paste the key. Don't put it in any file in any repository.
 
-## 6. Record the pre-agent baseline
+**Which model.** From the collaborator's own use on this game (**Reported**, 2026-11-13): DeepSeek V4.1 Flash through opencode made most of the cheap early matches, and Claude Opus is very good at this, especially as several instances. Claude Fable used up usage too fast for him to measure it. The functions left are the larger ones, so expect a higher cost per match than his early figures. Details are in [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#reply-from-the-collaborator-2026-11-13).
 
-*WP-011.* Before any agent touches the project, measure where it stands. This baseline is the "before" that the trial is compared against. Without it, the trial can't show what decompdecomp's agents actually added, and the collaborator's progress stays a reported figure.
+## 6. Check a build of Mony's repository
+
+*WP-011.* Build one of Mony's pushed commits and measure it. This is what turns his reported progress into a local measurement. It isn't a step before joining the room: the room itself credits each match to the agent that made it (step 7), so the trial doesn't need a "before" build to show what our agents added. Treat the clone as read-only. Pull his pushes; don't push.
 
 *Case File #1 project:* the build needs Python 3.12 and `ninja` on the PATH. Make sure `python` is a real Python install, not one bundled inside another app; `py -3.12` avoids the problem. In the clone:
 
@@ -143,9 +145,9 @@ Record, with the commit hash of the clone:
 *decompdecomp* for the mechanics, *WP-011* for the limits.
 
 1. Ask Mony for the **current** invite link, privately. The room runs over a temporary tunnel, so the link changes every time he restarts decompdecomp, and an old one won't work.
-2. In decompdecomp, choose **New project → Join a team's room**. Paste the link, type your display name, and pick your copy of the game (`orig/casefile1.exe`).
+2. In decompdecomp, choose **New project → Join a team's room**. Paste the link, type your display name, and pick your copy of the game (`orig/casefile1.exe`). *decompdecomp:* the host credits every match your agents make to `<display name>.<agent>`, for example `jeff.claude-1`, and you keep the same name when you reconnect. Pick one name and keep it: that's how the trial's matches are counted.
 3. *WP-011:* before pressing **Start agents**, set a small helper count: 2 for the trial. *decompdecomp:* one start can launch up to 24; the docs don't say where the count is set.
-4. *WP-011:* stop when the trial cap is reached (100 functions or your dollar cap, whichever comes first), then rerun step 6's measurements.
+4. *WP-011:* stop when the trial cap is reached (100 functions or your dollar cap, whichever comes first). Then record the matches your agents made, from the "who matched what" list on the project's overview. On the host they show as `<display name>.<agent>`, so Mony's copy can confirm the count.
 
 ## Keep each project's material in its place
 
@@ -154,7 +156,7 @@ There are three separate places. Nothing moves between them except what the [Tri
 | Place | What lives there | Rules |
 |---|---|---|
 | **This repository** (public) | Docs, evidence, the trial record | Never commit a room link, an API key, the game files, a decompdecomp project, or matched C. `.gitignore` blocks `tools/decomp/`, `decompdecomp/`, `.env` files and the game data, but those rules are a backstop, not the process. |
-| **Mony's repository**, [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (private) | Matched C, project config, the game files in gitignored `orig/` | Its contents stay off this public site ([WP-011 §Legal and repository hygiene](../work-packets/WP-011-casefile-decompdecomp.md#legal-and-repository-hygiene)). Commit there only by his workflow. |
+| **Mony's repository**, [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (private) | Matched C, project config, the game files in gitignored `orig/` | Its contents stay off this public site ([WP-011 §Legal and repository hygiene](../work-packets/WP-011-casefile-decompdecomp.md#legal-and-repository-hygiene)). Read-only for us: Mony pushes the room's progress, ours included, every day or so. |
 | **decompdecomp's own folder** (`Decomp` under your user folder, `~/Decomp` in its docs) | The app's projects, logs and room state | Already outside both repositories. Leave it there. |
 
 Run `git status` before every commit, in both repositories.
@@ -169,12 +171,12 @@ Record these in the WP-011 decision log and trial metrics.
 - decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
 
-**Pre-agent baseline (step 6):**
-- The clone's commit hash
+**Build check (step 6):**
+- The commit hash you built
 - Functions with C, matched, and not matched
 - Rebuild result
 
 **Post-trial (step 7):**
-- The same counts as the baseline, rerun
+- Your display name in the room, and the matches credited to it
 - Functions attempted, matched, near misses and failures
 - Helper count, wall time, and agent cost from the provider's billing (not the app's "spent" figure)
