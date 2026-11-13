@@ -323,6 +323,42 @@ pixels, which suggests a wrapping scroll.
 `--verify` checks the layer-0 record, the cel table and every placement's
 OBJ/ANIM pair on all 69 blocks.
 
+#### Rendering a room (2026-11-13)
+
+`py -3 tools/probe_art.py --room ROOM_P12_Saloon` (or a room index)
+composites a room the way the engine sets it up on entry. The output goes
+to `tools/samples/`, which is gitignored.
+
+1. Draw each used layer slot's frame record at `(0, 0)`, slot 0 first.
+2. For each placement, look up the OBJ and ANIM names in the name table.
+   Take sequence `anim_id & 0x3FFFF` of that object, at step 0: the default
+   placement path starts mode 1 at step 0. Draw the step's frame record:
+   each entry's cel goes at `(x + dx, y + dy)`, with the placement's `(x, y)`
+   from `+0x84` and the frame's offset `(dx, dy)`. Cels composite through
+   their masks, so A pixels are opaque and B pixels are alpha-blended
+   ARGB4444.
+3. Placements whose step frame has `n = 0` draw nothing: exits and most
+   hotspots are invisible click regions.
+
+**Draw order.** The layer depths (`-110000 + 10000 × slot`) and the
+character depth (`y − 200`, gang members and `OBJ_GHOST`, from `0x4091FF`)
+are traced. Where the other placements sit relative to the characters
+depends on which parent layer sprite each one is attached to, and that
+setup was not traced. The tool uses this order: background, then the other
+placements in record order, then characters by y, then `*_OVERLAY` objects.
+It is checked against three WP-009 frames:
+
+- **Town Center:** the cactus-and-fence overlay covers the gang's feet as
+  in the game.
+- **Saloon:** the gang positions and overlaps match the frame, with Scooby
+  in front of Velma.
+- **Railroad Station:** the gang trio matches the frame.
+
+The differences are game state, not format. The video catches props
+already moved or picked up, and NPCs mid-animation, while the tool shows
+every placement at step 0. All 69 rooms render without errors (497
+visible placements).
+
 #### Scene index = ROOM id (WP-009, 2026-11-13)
 
 Scene block `i` is the room whose name-table id is `0x10000000 + i`.
@@ -670,10 +706,10 @@ The decode itself has no open questions.
    and the Phase 3 `Common::Archive` reader can be written from this page.
    Seek with the descriptors, as the engine does. The object-resource walk is
    a cross-check, not the access path.
-2. Render one room with its placed objects, using the masks for
-   transparency and alpha. Placements, sequences and frame anchors are now
-   specified end to end, and the result can be checked against the
-   reference gallery.
+2. ~~Render one room with its placed objects~~ Done 2026-11-13: see
+   [Rendering a room](#rendering-a-room-2026-11-13). What's left for the
+   engine is the parent-layer setup behind the draw order of non-character
+   placements.
 3. Run `--verify` against Phantom's `TGIFILE.ART` (EC-002 Phase D). It is
    the first chance to see the `0xB0`/`0xB8` room tables populated.
 
@@ -686,6 +722,9 @@ blocks decode to full Ghost Town backgrounds. **Matched against in-game
 frames (WP-009, 2026-11-13):** 35 decoded room backgrounds and Daphne's
 cel 0 line up with captured longplay frames in layout and color. See the
 [reference gallery](../assets/screenshots/showdown-screens/index.md).
+**Whole rooms (2026-11-13):** Town Center, Saloon and Railroad Station
+composited with their placed objects match the gallery frames in layout and
+overlap (see [Rendering a room](#rendering-a-room-2026-11-13)).
 
 ---
 

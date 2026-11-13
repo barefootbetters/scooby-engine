@@ -35,6 +35,7 @@ Usage (PowerShell):
     py -3 tools/probe_art.py --obj 0                # every cel of OBJ id 0
     py -3 tools/probe_art.py --obj 1 --cel 0
     py -3 tools/probe_art.py --scene 0
+    py -3 tools/probe_art.py --room ROOM_P12_Saloon   # background + placed objects
     py -3 tools/probe_art.py --verify               # decode every cel in the file
 
 Requires Pillow for PNG output (``--list`` and ``--verify`` do not).
@@ -269,6 +270,94 @@ def rgba(cel: Cel, base: int) -> list[tuple[int, int, int, int]]:
     return out
 
 
+def sequence_frame(o: ObjectResource, seq: int, step: int) -> int:
+    """Absolute offset of the frame record a sequence step shows (0x4309C0)."""
+    count, table0 = o.tables[0]
+    if seq >= count:
+        raise ValueError(f"OBJ {o.index} has no sequence {seq}")
+    r = o.offset + u32(ART, o.offset + table0 + 4 * seq)
+    ref = u32(ART, r + 8 + 12 * step + 4)
+    return o.offset + u32(ART, o.offset + o.tables[1][1] + 4 * (ref & 0x3FFFF))
+
+
+def frame_cels(frame: int, base: int) -> list[tuple[int, int, Cel]]:
+    """A frame record's (dx, dy, cel) entries; offsets are relative to ``base``."""
+    n = struct.unpack_from("<H", ART, frame + 4)[0]
+    out = []
+    for k in range(n):
+        dx, dy, cel = struct.unpack_from("<hhI", ART, frame + 8 + 8 * k)
+        out.append((dx, dy, read_cel(base + cel)))
+    return out
+
+
+def is_character(obj: str) -> bool:
+    """Gang members, the ghost and other actors placed with a depth of y - 200.
+
+    ``0x4091FF`` gives character actors and ``OBJ_GHOST`` the depth
+    ``y - 200``; the gang objects are named ``OBJ_<NAME>_<letter>``.
+    """
+    return obj == "OBJ_GHOST" or any(
+        obj.startswith(f"OBJ_{n}_") and len(obj) == len(n) + 6
+        for n in ("DAPHNE", "FRED", "SCOOBY", "SHAGGY", "VELMA", "NARRATOR"))
+
+
+def render_room(s: SceneBlock, objs: list[ObjectResource]) -> tuple[object, list[str]]:
+    """Composite a room's background and every placement at its first step.
+
+    Draw order (back to front): layer slots 0..9; placed objects in
+    placement order; characters sorted by y; ``*_OVERLAY`` objects last.
+    The layer depths and the character depth come from ``Scooby.exe``; the
+    order of the other placements against the characters is inferred from
+    the WP-009 screenshots, not traced.
+    """
+    from PIL import Image
+
+    ids = {name: rid for rid, name in name_table()}
+    im = Image.new("RGBA", (s.width, s.height), (0, 0, 0, 255))
+    log: list[str] = []
+
+    def draw(frame: int, base: int, x: int, y: int) -> None:
+        for dx, dy, c in frame_cels(frame, base):
+            tile = Image.new("RGBA", (c.width, c.height))
+            tile.putdata(rgba(c, base))
+            _paste_clipped(im, tile, x + dx, y + dy)
+
+    for slot in range(10):
+        off = u32(ART, s.offset + 0x80 + 4 * slot)
+        if off:
+            draw(s.offset + off, s.offset, 0, 0)
+
+    placed = []
+    for k in range(s.placements):
+        p = s.offset + 0xD8 + PLACEMENT * k
+        obj = ART[p : p + 64].split(b"\0", 1)[0].decode("ascii")
+        anim = ART[p + 64 : p + 128].split(b"\0", 1)[0].decode("ascii")
+        x, y = struct.unpack_from("<hh", ART, p + 0x84)
+        placed.append((k, obj, anim, x, y))
+    def order(t):
+        k, obj, _, _, y = t
+        if obj.endswith("_OVERLAY"):
+            return (2, k)
+        if is_character(obj):
+            return (1, y - 200)
+        return (0, k)
+    for k, obj, anim, x, y in sorted(placed, key=order):
+        o = objs[ids[obj] & 0xFFFFFF]
+        frame = sequence_frame(o, ids[anim] & 0x3FFFF, 0)
+        n = struct.unpack_from("<H", ART, frame + 4)[0]
+        log.append(f"{k:2d} {obj:32s} {anim:36s} ({x:4d},{y:4d}) cels {n}")
+        draw(frame, o.offset, x, y)
+    return im, log
+
+
+def _paste_clipped(im, tile, x: int, y: int) -> None:
+    """alpha_composite with a negative destination offset."""
+    cx, cy = max(0, -x), max(0, -y)
+    if cx >= tile.width or cy >= tile.height:
+        return
+    im.alpha_composite(tile.crop((cx, cy, tile.width, tile.height)), (x + cx, y + cy))
+
+
 def save_png(cel: Cel, base: int, path: Path) -> None:
     from PIL import Image
 
@@ -497,6 +586,7 @@ def main() -> int:
     ap.add_argument("--obj", type=int, help="decode cels of this OBJ id")
     ap.add_argument("--cel", type=int, help="with --obj: only this cel index")
     ap.add_argument("--scene", type=int, help="decode this scene block's background")
+    ap.add_argument("--room", help="composite a room with its placed objects (index or ROOM_ name)")
     ap.add_argument("--verify", action="store_true", help="decode every cel and check stream bounds")
     ap.add_argument("--no-hash", action="store_true", help="skip the SHA-256 identity check")
     a = ap.parse_args()
@@ -526,6 +616,16 @@ def main() -> int:
     if a.scene is not None:
         s = scns[a.scene]
         save_png(read_cel(s.cel_offset), s.offset, a.out / f"scene_{s.index:02d}_{s.scene_id:04X}.png")
+    if a.room is not None:
+        rooms = {name: rid & 0xFFFFFF for rid, name in name_table() if rid >> 24 == 0x10}
+        idx = int(a.room) if a.room.isdigit() else rooms[a.room]
+        name = next(n for n, i in rooms.items() if i == idx)
+        im, log = render_room(scns[idx], objs)
+        print("\n".join(log))
+        path = a.out / f"room_{idx:02d}_{name}.png"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        im.save(path)
+        print(f"wrote {path} ({im.width}x{im.height})")
     return 0
 
 
