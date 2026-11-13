@@ -196,8 +196,49 @@ cel starts at `0xD8 + 148 × count`. This rule holds on all 69 blocks, since
 every background decodes and ends where its mask chunk begins. Further tables
 follow the cel, and the header words at `0x80` and `0xAC` point near them;
 their schema is open. Scenes 19 and 51 are 1920 × 480. Scene 51's background
-repeats after 1280 pixels, which suggests a wrapping scroll. Which `ROOM_*` name goes with
-which scene ID is not yet known.
+repeats after 1280 pixels, which suggests a wrapping scroll.
+
+#### Scene index = ROOM id (WP-009, 2026-11-13)
+
+Scene block `i` is the room whose name-table id is `0x10000000 + i`. Two
+pieces of evidence support this:
+
+- **Name table vs placements.** The name table names 42 rooms, ids 27–68.
+  For all 42, scene `i` places that room's own objects. Examples:
+  `ROOM_P21_Boot_Hill1` (id 27) and scene 27 places `OBJ_P21_*`;
+  `ROOM_P18_Tunnel_Lit` (42) and `OBJ_P18_*`; `ROOM_Options` (47) and
+  `OBJ_OPTIONS_*`; `ROOM_Gummy` (50) and `OBJ_GUMMYSLEEP_*`;
+  `ROOM_Open_Safe` (62) and `OBJ_GANG_VAULT*`; `ROOM_SB1`–`SB5` (63–67) and
+  `OBJ_SB1_LID`–`OBJ_SB5_LID`.
+- **Video match.** Each of the 35 catalog rooms in the WP-009 longplay was
+  matched to a decoded background by image similarity (scores 0.75–1.00),
+  and every match is the scene this rule predicts. See the
+  [reference gallery](../assets/screenshots/showdown-screens/index.md).
+
+Ids 0–26 have no name-table record. Their names come from the
+`OBJ_P<nn>_*` objects each scene places, cross-checked against
+`object.ini`'s `destinationroom=` values and the `ROOM_*` strings in
+`Scooby.exe`:
+
+| Scenes | Rooms |
+|---|---|
+| 0–8 | `P01_Town_Center`, `P11_Street3`, `P12_Saloon`, `P17_Hotel_Hall`, `P32_Pie_Noon`, `P20_Hotel_Room`, `P30_Horseshoe_Corral`, `P03_Street1`, `P04_Street2` |
+| 9–11 | `Sign_In`, `Difficulty`, `Main_Menu` (placements `OBJ_SIGN_IN_*`, `OBJ_DIFFICULTY_*`, `OBJ_MAIN_MENU_*`) |
+| 12–16 | `P02_Sheriffs_Office`, `P08_Post_Office`, `P09_Railroad_Station`, `P10_Front_Of_General_Store`, `P13_Bank` |
+| 17 | `Suspect_Chooser` (`OBJ_SUSPECT_*`) |
+| 18–19 | unresolved: 18 places only `OBJ_CHAINS`; 19 is a 1920-wide scene placing `OBJ_TITLE_*` (likely `ROOM_Title_Screen`) |
+| 20–26 | `P05_Stage`, `P06_Stage_Trapdoor`, `P07_Jail`, `P14_Tunnel_Dark`, `P15_General_Store_Interior`, `P16_Bank_Vault`, `P19_Back_Alley` |
+
+(Room names in the table drop the `ROOM_` prefix.) The scene ID field at
+`0x0A` is `0x9000 + 0x10 × i`, so it encodes the same index.
+
+**Correction to WP-008.** WP-008 listed 21 `destinationroom=` rooms as
+having no `TGIFILE.ART` entry and probably rendering from code, among them
+Town Center, Saloon, Main Menu, Pie Noon and Horseshoe Corral. All 37
+catalog rooms have a scene block with a background. Those 21 were missing
+from the *name table*, which only covers ids 27–68, not from the archive.
+Pie Noon and Horseshoe Corral still have their own `*_Room.cpp` code, but
+their backgrounds are ordinary scene blocks.
 
 ### Cel format
 
@@ -390,8 +431,8 @@ The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation do
 - Encoding of the 69 scene descriptors (`0x0004`) and the 453 object
   descriptors (`0x011C`). Not offsets. Not needed to extract images, but the
   engine presumably reads them.
-- Which `ROOM_*` name goes with which scene block. There are 42 ROOM names
-  and 69 scene blocks; scene IDs run `0x9000`–`0x9440`.
+- Room names for scenes 18 and 19, which no current evidence pins down. The
+  other 67 are mapped in [§Scene index = ROOM id](#scene-index--room-id-wp-009-2026-11-13).
 - Sequence records (table 0 of each object resource): the meaning of the
   `0x8010_00xx` IDs and how a sequence orders frames. The object's ANIM
   names, as used in scene placements, presumably resolve here.
@@ -409,8 +450,9 @@ The decode itself has no open questions.
    and the Phase 3 `Common::Archive` reader can be written from this page.
    The object-resource walk, cel header and RLE loop are small enough to port
    directly from `tools/probe_art.py`.
-2. Map scene blocks to `ROOM_*` names, then render one room with its placed
-   objects. This exercises placement records and frame anchors end to end.
+2. Render one room with its placed objects. Scene blocks are now mapped to
+   `ROOM_*` names (WP-009), so this exercises placement records and frame
+   anchors end to end and can be checked against the reference gallery.
 3. Decode sequence records (table 0) to drive animation playback. The
    [WP-001](../work-packets/WP-001-ghidra-session.md) Ghidra trace now has a
    narrower target: the sequence interpreter and the descriptor tables, not
@@ -422,9 +464,10 @@ The decode itself has no open questions.
 Render at least one *Showdown* background or sprite to PNG/BMP outside the
 engine, visually matching in-game output. **Met (WP-002, 2026-11-13).**
 `OBJ_DAPHNE_A` cel 0 decodes to Daphne in her canonical colors, and scene
-blocks decode to full Ghost Town backgrounds. No WP-009 reference screenshots
-exist yet, so the visual check was against the characters' canonical look,
-not a captured frame.
+blocks decode to full Ghost Town backgrounds. **Matched against in-game
+frames (WP-009, 2026-11-13):** 35 decoded room backgrounds and Daphne's
+cel 0 line up with captured longplay frames in layout and color. See the
+[reference gallery](../assets/screenshots/showdown-screens/index.md).
 
 ---
 
