@@ -168,50 +168,40 @@ engine is unusually well-structured.
 
 ### Not yet decoded — reverse engineering required
 
-#### `TGIFILE.ART` — primary risk area
+#### `TGIFILE.ART` — decoded (WP-002, 2026-11-13)
 
-144 MB proprietary archive. Initial hex inspection has confirmed the
-two-level index structure; **payload decoding** remains the sole Phase 1
-blocker. See `docs/formats/tgifile-art.md` for the full byte-level spec.
+144 MB proprietary archive, formerly the primary risk area. [WP-002](work-packets/WP-002-tgifile-art-decoder.md)
+decoded it from the data file alone; every image in the file now decodes.
+See [`docs/formats/tgifile-art.md`](formats/tgifile-art.md) for the
+byte-level spec and [`tools/probe_art.py`](../tools/probe_art.py) for the
+reference decoder.
 
-**Confirmed structure (Showdown, 2026-06):**
-- Offset 0x0000: `uint32LE` = 69 — group count (confirmed, not a hypothesis)
-- Offsets 0x0004–0x0117: 69 × 4-byte group descriptor table (values do not
-  map to file offsets — meaning TBD; may be packed indices or checksums)
-- Offset 0x0118: `uint32LE` = 453 — asset entry count
-- Offsets 0x011C–0x0F43: 453 × 8-byte entries, each `(start: uint32LE, end: uint32LE)`
-- Offsets 0x0F44–0x10017D: engine resource-name catalog (~1,400 records,
-  68-byte stride; the OBJ section is 1:1 with the asset entry table — so
-  `entry[i]` is the payload for `OBJ` id `i`)
-- First asset payload at file offset 1,048,958 (0x10017E); entry sizes range
-  2–9 MB (consistent with full-screen background frames)
+**Structure (Showdown, verified across the whole file):**
+- Header: `uint32LE` 69 (scene count), 69 scene descriptors, `uint32LE` 453
+  (object count) at `0x0118`, 453 eight-byte object descriptors. The
+  descriptor values are not file offsets; their encoding is still open. The
+  2026-06 reading of the 453 records as `(start, end)` offsets, with a first
+  payload at `0x10017E`, was wrong.
+- Engine name table from `0x0F60` (WP-003): 68-byte records, type-tagged IDs.
+- From `0x20000`: 453 object resources, packed back to back on 2,048-byte
+  sector boundaries. Resource `i` is the art for `OBJ` id `i`.
+- Then 69 scene blocks to end of file: an object placement list plus a
+  640 × 480 (two are 1920 × 480) background.
+- Every image is a "cel": a 24-byte header (size, width, height, two mask
+  offsets), a run-length pixel stream (`F0 count hi lo` = run, anything else
+  = one literal pixel), and span-list masks. Pixels are **RGB565, stored
+  big-endian**; no palette. In sprites, `0x0000` is transparent.
 
-**Remaining unknowns:**
-- Payload compression: opening bytes `F0 0C 25 5C 12 AE F0 08` match no
-  standard codec header; F0 pattern suggests custom opcode-based encoding.
-- Pixel format unknown until first successful decode. WP-003 ruled out the
-  pre-payload region as the palette location; the palette is either in
-  per-asset leading bytes or in the 20-byte per-record metadata field on
-  name-table records.
-
-**Remaining investigation:**
-1. Decode the F0-opcode payload: attempt RLE with opcode dispatch, then raw
-   indexed bitmap, then truecolor — each tested against entry 0 (~6 MB; the
-   smallest of the first four documented entries — and per WP-003 it's
-   `OBJ_DAPHNE_A`, a character sprite, not a background).
-2. Correlate decoded output visually against a known Showdown screenshot.
-
-Execution tracked in
-[WP-001](work-packets/WP-001-ghidra-session.md) (Ghidra decode trace),
-[WP-002](work-packets/WP-002-tgifile-art-decoder.md) (Python decoder + first
-image extraction), and
-[WP-003](work-packets/WP-003-pre-payload-region.md) (pre-payload region
-characterization, ✅ landed 2026-06-02), with companion checklists
-[EC-001](execution-checklists/EC-001-ghidra-session.md) and
-[EC-002](execution-checklists/EC-002-probe-art-harness.md).
+**Remaining unknowns:** the descriptor encodings, the scene-to-`ROOM_*`
+mapping, and the animation-sequence records. None of them blocks image
+extraction.
 
 Success condition: render at least one *Showdown* background or sprite to
-PNG/BMP outside the engine, matched visually against the original.
+PNG/BMP outside the engine, matched visually against the original. **Met on
+recognizability:** `OBJ_DAPHNE_A` and the other resources decode to the
+characters in their canonical colors, and scene blocks decode to Ghost Town
+backgrounds. A frame-by-frame comparison against captured screenshots waits
+on [WP-009](work-packets/WP-009-reference-screenshots.md).
 
 #### Audio archives
 
@@ -380,7 +370,7 @@ playbooks for the WPs most likely to sprawl.
 ### Phase 1 — Format Research
 
 Work items:
-- `TGIFILE.ART` index structure is mapped; **remaining: decode payload and extract a known-good image from *Showdown*** (see `docs/formats/tgifile-art.md` for the probe plan).
+- `TGIFILE.ART` payload decoded and images extracted from *Showdown* (WP-002, 2026-11-13; see `docs/formats/tgifile-art.md`). Frame comparison against reference screenshots waits on WP-009.
 - Locate audio archive index table; identify codec(s).
 - Load `Scooby.exe` into Ghidra; trace file I/O and resource lookup.
 - **Engine-family check:** mount Case File #1 and #2 ISOs; compare disc layouts and file signatures against *Showdown* (same file names, same magic bytes, compatible archive structure?).
