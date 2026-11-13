@@ -5,7 +5,7 @@ title: "Format Spec: Audio Archives"
 
 # Format Spec: Audio Archives (`Music.dat` / `Sfx.dat` / `Voice.dat`)
 
-**Status:** Header structure decoded — codec and index layout unresolved  
+**Status:** Header and index layout decoded (index from the WP-001 `Scooby.exe` trace, 2026-11-13). Codec unresolved.  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample files:** `scooby\Music.dat` (91.7 MB), `scooby\Sfx.dat` (30.7 MB), `scooby\Voice.dat` (103.8 MB) on the Showdown disc
 
@@ -59,6 +59,40 @@ resolved — candidate positions:
 3. **At a fixed offset** specified by a field we haven't yet decoded (e.g.,
    field at 0x08 could be an offset rather than a size).
 
+### Index table (WP-001 lead)
+
+Found while tracing `Scooby.exe` for [WP-001](../work-packets/WP-001-ghidra-session.md)
+on 2026-11-13. This is a lead for WP-004, not a WP-004 deliverable. Option 3
+above is the answer: **the field at `0x08` is the index offset.**
+`audio_SoundFile_ctor` (`0x43C5A0`, `GameSoundFile.cpp`) reads the first
+2,048 bytes, requires `u32 1` (else `Invalid sound data file`), seeks to the
+offset at `0x08`, and reads `count` records of 68 bytes:
+
+```
+Offset  Size  Type      Field
+------  ----  --------  -----
+0       4     uint32LE  clip offset in the file (2,048-byte aligned, ascending)
+4       64    char[64]  NUL-terminated clip name, <Section>.<Clip>
+```
+
+It sorts the records by name and finds clips by binary search. The table
+ends exactly at end of file in all three Showdown files. (The "data size"
+column above is therefore the table offset. Two of its decimal conversions
+were also wrong: `0x01EAF800` is 32,176,128 and `0x067B8800` is 108,759,040.)
+
+| File | Entries | Table offset | First clip | Example names |
+|---|---|---|---|---|
+| `Music.dat` | 28 | `0x05BB9800` | `0x800` | `Artifact.Music`, `Chase.Music` |
+| `Sfx.dat` | 316 | `0x01EAF800` | `0x800` | `Artie.Chains_A` |
+| `Voice.dat` | 821 | `0x067B8800` | `0x800` | `Back_Alley.350A_1_FRED`, `Global.Scrappy.*` |
+
+Clips are referenced **by name**. The engine's sound id is the file's base
+(`0x1000_0000` sfx, `0x2000_0000` voice, `0x3000_0000` music) plus the clip's
+index in the name-sorted table. `object.ini`'s `scrappyid=` values are
+`Voice.dat` names (see [scooby-exe](scooby-exe.md#objectini-consumer-wp-001)).
+A clip's length is presumably the distance to the next offset. The clip
+header and codec were not examined.
+
 ### Codec
 
 No standard magic bytes at file offset 0 (`RIFF`, `OggS`, `ID3`, `fLaC`).
@@ -72,12 +106,13 @@ Likely candidates for a year-2000 Windows edutainment title:
 
 ## Remaining unknowns
 
-- Location of the index table (offset 12 or elsewhere).
-- Entry record size and field layout (offset, size, sample rate, channels, codec flag?).
+- ~~Location of the index table~~ (header `0x08`; WP-001 lead above).
+- ~~Entry record size and field layout~~ (68 bytes: offset + name). Sample
+  rate, channels and codec are presumably in each clip's own header (not examined).
 - Codec identity — needs at least one clip extracted and inspected.
-- Whether clips are referenced by numeric index or by string name (affects
-  how `Scooby.exe` resolves a logical sound to an archive entry).
-- Whether all three files share an identical index format.
+- ~~Whether clips are referenced by numeric index or by string name~~ (by
+  name; WP-001 lead above).
+- ~~Whether all three files share an identical index format~~ (they do).
 
 ## Next steps
 
