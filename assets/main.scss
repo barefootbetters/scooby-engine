@@ -1,0 +1,23 @@
+---
+# minima's documented override: Jekyll compiles this to assets/main.css in
+# place of the theme's own file, so it must import the theme first.
+---
+
+@import "minima";
+
+// Gallery thumbnails (docs/assets/screenshots/showdown-screens/). Images
+// there are written `![id](file.png "width=320px")`: the ewiki theme reads
+// that title as the display width; this rule gives GitHub Pages the same
+// size. Without it, minima squeezes the image column to ~60 px to fit the
+// table into the 800-px content width.
+.page-content img[title^="width="] {
+  width: 320px;
+  max-width: none;
+}
+
+// A table holding such thumbnails is wider than the content column, so it
+// scrolls sideways inside itself rather than widening the page.
+.page-content table:has(img[title^="width="]) {
+  display: block;
+  overflow-x: auto;
+}
