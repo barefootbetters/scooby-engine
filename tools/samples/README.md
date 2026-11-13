@@ -41,6 +41,14 @@ asset. Committing it to a public GitHub repo would:
 - ❌ The original `TGIFILE.ART`, `Music.dat`, `Scooby.exe`, etc. — these
   are also blocked by `.gitignore` as a safety net
 
+### The one exception
+
+`tgifile-art-entry0.png` is committed on Jeff's decision of 2026-11-13. It is
+[WP-002](../../docs/work-packets/WP-002-tgifile-art-decoder.md)'s first
+decode (`OBJ_DAPHNE_A`, cel 0, 67 × 167 RGBA, 7,139 bytes), kept as
+exit-criterion #4 evidence. `.gitignore` names this file and no other. Every
+other decoded image stays local-only under the rules above.
+
 ## If you accidentally commit an asset
 
 1. Do not `git push`.
