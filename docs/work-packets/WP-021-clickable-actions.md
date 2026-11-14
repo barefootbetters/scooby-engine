@@ -5,12 +5,31 @@ title: "WP-021: Clickable Actions"
 
 # WP-021: Clickable actions: state letters, sounds and the ghost (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (game logic: the default object behaviour)
-**Depends on:** WP-018 ✅ (hit test, rollover cursor), WP-019 ✅ (sound), WP-020 (characters, input lock)
+**Depends on:** WP-018 ✅ (hit test, rollover cursor), WP-019 ✅ (sound), WP-020 ✅ (characters, input lock)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** One day
 **Pre-flight:** [pre-flight-WP-021-2026-11-14](../reference/pre-flight-WP-021-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Every click matches | ✅ At `script` level 3 the engine loads each room afresh for each clickable and clicks it twice. For each click it logs the state played, its step count, the sound (or `-`), the next state and the ticks until the object rests. An independent Python reference implements `0x401440`/`0x401650` on `probe_art.py` and `probe_audio.py`. The logs are identical: Showdown 192 clicks, Phantom 174 (MD5 `d1192523…` and `f5899fef…`), 0 stuck. |
+| 2. Live click, state kept | ✅ A real mouse click on Town Center's `OBJ_P01_TC_HOTSPOT1` played `ANIM_P01_TC_HOTSPOT1A` with `SFX_P01_TC_HOTSPOT1A`, and the object rested on `…1B` 54 ticks later (18 steps × 3). The gang went to Street 3 and back. Town Center then drew with a different MD5, showing `…1B`, and a second click played `…1B` with its sound and rested on `…1C`. |
+| 3. Live ghost | ✅ `ghost_chance=1`, in Phantom's Souvenir Shop. A click on `OBJ_P03_SOUVENIR_STORE_HOTSPOT1` played `Ghost_Appears`, and each character's `Global.Scared` line where the clip exists (there is none for Scooby). The ghost played its 75 ticks, and `ROOM_Ghost_Spot` loaded (1280×480). |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`b18b5f6a53`](https://github.com/barefootbetters/scummvm/commit/b18b5f6a53) stages its eight files by name, inside `engines/scooby/`, on top of WP-020's `7e03ae779a`, and is pushed. |
+
+**Deviations:**
+
+- **Two clickable sounds are in `Music.dat`.** `SFX_P11_STREET3_HOTSPOT2A` and `SFX_P12_SALOON_HOTSPOT1B` are stored with the music. The original's lookup searches all three files, so they play. In the fork they play on the music channel, and would stop room music if any were playing. The reference first searched `Sfx.dat` only, and the comparison caught it.
+- **One sound at a time per file.** WP-019 gives each file one mixer handle. A clickable's sound stops any other effect. When the ghost scares the gang, each line replaces the one before, so only the last character's line is heard. Whether the original mixed them is not traced.
+- **The ghost's odds** come from ScummVM's random source, not the C runtime's `rand()`.
+- **A missing state.** Showdown's chandelier pump goes from `ANIM_P12_SALOON_CHANDPUMP` to `…CHANDPUMQ`, then to `…CHANDPUMA`. Neither name exists, so its second click plays the object's sequence 0, as `0x430A00` does with id 0. The Saloon's own code drives that object, which is out of scope here.
+- **The ghost room** loads but does nothing yet: it is per-room code.
 
 ---
 
@@ -124,17 +143,17 @@ animation and advance.
 
 ## Exit criteria
 
-1. [ ] For every clickable in every room of Showdown and Phantom, the
+1. [x] For every clickable in every room of Showdown and Phantom, the
    engine's simulated click matches an independent reference built on
    `probe_art.py` and `probe_audio.py`: the sequence, its step count, the
    sound (or none), the next state, and the tick the object comes to rest.
-2. [ ] Live: a click on a clickable plays its animation once and its sound,
+2. [x] Live: a click on a clickable plays its animation once and its sound,
    and the object rests on its next state. Leaving the room and coming
    back keeps that state. A second click plays the next state.
-3. [ ] Live: with the chance forced to 1 (a debug config key), a click in a
+3. [x] Live: with the chance forced to 1 (a debug config key), a click in a
    Phantom ghost room shows the ghost, plays `Ghost_Appears`, scares the
    gang and loads `ROOM_Ghost_Spot`.
-4. [ ] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
+4. [x] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
    inside `engines/scooby/`, staged by name.
 
 ## Deliverables
