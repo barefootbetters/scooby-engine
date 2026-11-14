@@ -88,14 +88,15 @@ comparing file structures (`TGIFILE.ART`, `Scooby.exe`, `object.ini`).
 Phase 1 cross-title analysis (Rich Header on each title's main binary +
 archive magic-byte inspection — see
 [`docs/formats/scooby-exe.md`](formats/scooby-exe.md) Findings) reveals
-**one engine lineage across three format generations**:
+**one engine lineage across three format generations** (Case File #2,
+once listed as a fourth, is a different engine; see below):
 
 | Gen | Titles | Toolchain | Archive | Config | Cutscenes |
 |---|---|---|---|---|---|
 | **1** | Showdown (2000), Phantom (2001) | VC5 + Linker 5.10 build 8047 | `TGIFILE.ART` (raw count + index) | INI text (`object.ini`, `Scooby.eng`) | Bink (`binkw32.dll` 286 KB) |
 | **2** | Jinx (2001) | VC5 + Linker 5.10 build 8168 | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
 | **3** | Case File #1 (2002) | VC5 + Linker 5.10 builds 8168 + 8797 + one VC6 file | `MMFW` continues | XML via `libexpat.dll` | raw `.avi` |
-| **4** | Case File #2 (2003) | TBD | `.bul`/`.inx` bulk archives | loose `.mps` + `.xml` scripts (on disc, not packed) | Bink returned (`binkw32.dll` 375 KB — newer SDK) + Miles Sound System (`mss32.dll`) |
+| — | Case File #2 (2003) | **Not this lineage** (WP-005, 2026-11-13): no MSVC 5.0 C++ 8034 objects, dynamic MSVCRT, VC6-era entries | `.bul`/`.inx` bulk archives (LZO) | loose `.mps` + `.xml` scripts | Bink (`binkw32.dll` 375 KB, newer SDK) + Miles (`mss32.dll`) |
 
 The Gen 1 → Gen 2 jump (mid-2001) coincides with a TerraGlyph build
 pipeline upgrade — new linker build, dropped legacy tools (MASM 6.14,
@@ -111,25 +112,53 @@ concretely by:
 - IBS introducing XML configuration via `libexpat.dll`
 - The Case File #1 disc carrying an `IBSlogo.avi` alongside `TLClogo.avi`
 
-**Gen 4 (Case File #2, 2003) is a significant architectural break from Gen 3.**
-Confirmed via full disc inspection (2026-06-03):
+**Case File #2 (2003) runs a different engine (WP-005, 2026-11-13).**
+It was filed here as "Gen 4" after a disc inspection on 2026-06-03, which
+found a complete format break:
 
-- MMFW format gone entirely — replaced with `.bul`/`.inx` bulk archives
-- Scripts are loose `.mps` + `.xml` files on disc, not packed in any archive (first time in the lineage)
-- Bink **returned** after being absent in Gen 3 (`binkw32.dll` 375 KB — newer SDK than Gen 1's 286 KB)
-- Miles Sound System added (`mss32.dll`) — not present in any prior generation
-- Disc is two-tier: `HD\Case File #2\` (install path: EXE, DLLs, HD.bul, scripts) + `rsc\` (CD-streaming per-scene `.bul` archives)
+- `.bul`/`.inx` bulk archives in place of `MMFW`
+- loose `.mps` + `.xml` scripts
+- Bink back, now with Miles audio
+- a two-tier `HD\` + `rsc\` disc
 
-This is not a Gen 3 variant — it requires its own adapter.
+WP-005 checked the executable and found **no code continuity** with the
+lineage. The evidence, all in
+[`docs/formats/scooby-exe.md`](formats/scooby-exe.md#case-file-2-wp-005):
+
+- **No shared code markers.** Its `Case File #2.exe` shares no RTTI class,
+  `MMFW` string, error template, source path or engine string with
+  Showdown, Jinx or Case File #1. The overlap is Win32/CRT names and
+  product names.
+- **No lineage compiler.** It has no MSVC 5.0 C++ build 8034 objects, the
+  one compiler entry present in Showdown, Jinx and Case File #1. It links
+  the CRT dynamically (`MSVCRT.dll`), which no lineage binary does.
+- **Its own framework.** It uses `R*` classes (`RScenePort`,
+  `RWorldPort`, `RResourcePort`, `RHotSpot`, `RCharacter`, `RXMLFile`),
+  LZO, IJG libjpeg and its own XML writer.
+- **The same engine ships with another game.** The disc carries a
+  *Powerpuff Girls* demo (`GroovyGoodies\PPG2Demo\`) whose resources are
+  the same `.bul`/`.inx` pair. Its engine DLLs (`trinket.dll`,
+  `ompp32x.dll` "OM++", `tcx.dll`, `rbink6x.dll`) contain 17 of the same
+  `R*` classes, the same bulk-file loader errors and the same LZO build.
+  Case File #2 links that framework statically.
+
+The same framework also runs the publisher's launcher on both Case File
+discs: Case File #1's `HD\LAUNCHER\` ships `TLCLLTrinketcore.dll` and
+`ompp32x.tlc`. So the 2003 title moved onto that launcher framework, which
+also ran a non-Scooby game, rather than extending the TerraGlyph engine. The verdict is
+INCOMPATIBLE, and Case File #2 leaves the project's scope (see Phase 5).
+Its copyright string is Riverdeep's; it names no developer, so this page
+names none.
 
 The TerraGlyph engine codebase continued through IBS via **direct code
 inheritance** (object files literally embedded), not just architectural
 reuse. This is the strongest possible engine-family signal.
 
-**Confirmed findings (2026-06-03):**
+**Confirmed findings (2026-06-03, revised 2026-11-13):**
 
-- **Case File #2 (2003): Gen 4** — confirmed via full disc inspection. Significant
-  architectural break from Gen 3; see table above. Not a Gen 3 extension.
+- **Case File #2 (2003): not this engine** — WP-005 (2026-11-13) found no
+  code continuity and found the same engine in a *Powerpuff Girls* demo on
+  the same disc (see above). The 2026-06-03 "Gen 4" label is withdrawn.
 - **Phantom (2001): Gen 1 confirmed** — `TGIFILE.ART` present on disc (≈109 MB vs
   Showdown's 144 MB), `binkw32.dll` hash identical to Showdown (same Bink SDK build),
   `Scooby.exe` build date 2001-08-22 (same as Showdown — shared release cycle).
@@ -138,12 +167,11 @@ reuse. This is the strongest possible engine-family signal.
   TLC/Broderbund publisher. Not part of this lineage.
 
 **Implementation implication:** the `scooby` ScummVM engine covers one
-engine lineage with format-version-aware adapters — **four** archive
-parsers, two config parsers, three video paths — not four separate
-engines. The detection table (`ADGameDescription`) carries a `gen`
-flag per entry; the engine branches at the format-version boundaries.
-Gen 4 (Case File #2) is the most architecturally distant from Gen 1 but
-still shares the same room/scene management and cursor/inventory core.
+engine lineage with format-version-aware adapters: **three** archive
+parsers (`TGIFILE.ART`, `MMFW` for Gen 2 and 3) and two config parsers
+(INI, XML). These are adapters, not separate engines. The detection table
+(`ADGameDescription`) carries a `gen` flag per entry, and the engine
+branches at the format-version boundaries. Case File #2 is outside it.
 
 ---
 
@@ -333,25 +361,19 @@ independently. Record and rationale:
   some assumptions in this plan break.
 - **Audio codec.** If `Music.dat` uses a licensed codec (patent-encumbered
   MP3 frames, etc.), playback may not fit ScummVM's existing backends cleanly.
-  **Miles Sound System is now confirmed for Case File #2 (Gen 4)** via
-  `mss32.dll` on disc — Gen 4 audio delegates entirely to Miles rather than
-  the `.dat` archive format used in Gen 1–3. Miles audio in ScummVM is handled
-  via the `audio/miles/` subsystem; this is a known integration surface, not
-  a blocker, but it means Gen 4 audio takes a different code path from Gen 1–3.
-- **Cross-title divergence (mostly resolved 2026-06-03; Case File #2 verdict
-  open).** Phase 1 cross-title analysis shows one engine lineage spanning
-  **four** format generations (Gen 1 Showdown/Phantom, Gen 2 Jinx, Gen 3 Case
-  File #1, Gen 4 Case File #2). IBS inherited TerraGlyph's compiled object files
-  into Case File #1, confirming code-level continuity through Gen 3. Case File #2
-  (Gen 4) is a significant architectural break — `.bul`/`.inx` archives, Miles
-  Sound System, Bink SDK upgraded, MMFW gone. Its placement in the same engine
-  family rests on disc-layout and lineage evidence; its toolchain is still TBD
-  and [WP-005](work-packets/WP-005-engine-family-check.md) still owes the Case
-  File #2 verdict. Phantom's archive format is confirmed Gen 1 (`TGIFILE.ART` on
-  disc, identical `binkw32.dll` hash to Showdown). Case File #3 is confirmed out
-  of scope (Macromedia Director). Working assumption: four generation-specific
-  adapters on one engine. Residual uncertainty: the Case File #2 verdict, and
-  function-level confirmation of the Gen 2 → Gen 3 inheritance
+  Gen 1 audio is plain PCM (WP-004), so this risk is retired for the
+  in-scope titles. Miles appears only in Case File #2, which WP-005 placed
+  on a different engine and out of scope.
+- **Cross-title divergence (resolved 2026-11-13).** One engine lineage spans
+  three format generations: Gen 1 Showdown/Phantom, Gen 2 Jinx, Gen 3 Case
+  File #1. IBS inherited TerraGlyph's compiled object files into Case File
+  #1, which confirms code-level continuity through Gen 3. Case File #2, once
+  listed as Gen 4, runs a different engine shared with a *Powerpuff Girls*
+  title (WP-005, see Engine Lineage) and is out of scope. Phantom's archive
+  format is confirmed Gen 1 (`TGIFILE.ART` on disc, identical `binkw32.dll`
+  hash to Showdown). Case File #3 is confirmed out of scope (Macromedia
+  Director). Working assumption: three generation-specific adapters on one
+  engine. Residual uncertainty: function-level confirmation of the Gen 2 → Gen 3 inheritance
   ([WP-011](work-packets/WP-011-casefile-decompdecomp.md)).
 - **Schedule realism.** This is a first-time ScummVM engine on an undocumented
   format. The reference engine, [BOLT](https://wiki.scummvm.org/index.php/BOLT),
@@ -381,7 +403,7 @@ Exit criteria (all required):
 1. At least one `TGIFILE.ART` entry extracted to PNG or BMP and matched visually against in-game output.
 2. `TGIFILE.ART` structure documented in `docs/formats/tgifile-art.md`: header layout (byte offsets, field sizes) and entry table (count, offsets, sizes).
 3. At least one audio container inspected; codec identified by name (even if not yet decoded). **Met (WP-004, 2026-11-13):** all three `.dat` files are uncompressed PCM.
-4. Engine-family question answered in writing: do Case File #1/#2 share format with *Showdown*, or do they need a separate engine?
+4. Engine-family question answered in writing: do Case File #1/#2 share format with *Showdown*, or do they need a separate engine? **Met (WP-005, 2026-11-13):** Case File #1 is the same lineage (Gen 3, inherited TerraGlyph object files) with different formats; Case File #2 is a different engine.
 
 Fail condition: inability to extract any visual asset from `TGIFILE.ART` blocks Phase 2 — revisit feasibility before continuing.
 
@@ -439,8 +461,7 @@ Scope rule (revised per Engine Lineage finding above):
 - **Extended (high confidence):** Showdown + Phantom (Gen 1 — identical toolchain, confirmed identical `binkw32.dll` hash).
 - **Extended (medium confidence):** + Jinx (Gen 2 — requires `MMFW` container parser as a sibling to the Gen 1 `TGIFILE.ART` parser).
 - **Stretch (medium confidence):** + Case File #1 (Gen 3 — requires MMFW parser, XML config via `libexpat.dll`, raw `.avi` cutscene path alongside the Bink path).
-- **Stretch (low confidence / largest adapter delta):** + Case File #2 (Gen 4 — `.bul`/`.inx` archive format, loose `.mps`+`.xml` scripts, Miles Sound System audio via `mss32.dll`, Bink SDK upgraded. Requires a distinct Gen 4 adapter; not a Gen 3 extension).
-- **Excluded:** Case File #3 (Macromedia Director / TLC-Broderbund) and Activity Challenge.
+- **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13), Case File #3 (Macromedia Director / TLC-Broderbund) and Activity Challenge.
 
 Each generation extends the engine with one new adapter per axis; the
 shared engine core handles room/scene management, cursor/inventory,
@@ -469,7 +490,7 @@ All required:
 
 Stretch:
 - The TerraGlyph trilogy (Showdown + Phantom + Jinx) runs without per-title engine forks.
-- Case File #1 and #2 run if Phase 1 showed engine compatibility.
+- Case File #1 runs (Gen 3, same lineage). Case File #2 is excluded: WP-005 found it on a different engine.
 
 ---
 

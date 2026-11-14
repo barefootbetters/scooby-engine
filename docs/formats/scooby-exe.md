@@ -118,7 +118,7 @@ Reference table for every binary the [WP-007](../work-packets/WP-007-strings-and
 | Jinx | Gen 2 | `tools/exes/jinx/Scooby.exe` | 847,872 | `136A276872803AC99B0D050B21CC3A83F8E1608F2394C33865CFFF781FB20271` |
 | Case File #1 | Gen 3 | `tools/exes/casefile1/Scooby.exe` | 786,432 | `9813A3DDBE58BC9D7CC898030F4A2F93658FD4A69156BA8531C6E4F273E97CF8` |
 
-Case File #2 is not yet cached — disc not yet mounted — so it is not covered by this baseline. Per the [engine-lineage finding](../01-VISION.md#engine-lineage-2026-06-finding) it was predicted Gen 3 (IBS continuation of the MMFW codebase) when this baseline was taken; full disc inspection on 2026-06-03 later placed it in Gen 4 (`.bul`/`.inx` archives, MMFW gone). The skip is intentional, not a gap to fill at this WP's scope.
+Case File #2 was not covered by this baseline (its disc was not cached at the time). WP-005 (2026-11-13) later cached and examined it: `tools/exes/casefile2/Scooby.exe`, 774,144 bytes, SHA-256 `AB2B71FEEFF0777B26928E95C99F9936F5C4D87FE321ED4913B8956C83772BC8`. It is **not this engine**; see [Case File #2 (WP-005)](#case-file-2-wp-005).
 
 Extraction tooling: [`tools/extract_strings.py`](../../tools/extract_strings.py) and [`tools/extract_imports.py`](../../tools/extract_imports.py). Raw outputs (`strings-ansi.txt`, `strings-wide.txt`, `imports.txt`) live under `tools/exes/<title>/`, gitignored per [tools/exes/README](../../tools/exes/README.md). Determinism confirmed: re-running each script against the same binary produces byte-identical output.
 
@@ -144,6 +144,7 @@ evolved along generation boundaries.
 | Phantom  | 1 | 8047 (×113) | 8034 (×16), 9049 (×10) | 8047 (×10), 8966 (×120) | 11 | Linker 5.10, build 8047 |
 | Jinx     | 2 | **8168** (×160) | 8034 (×17) | **8168** (×157) | 6 | Linker 5.10, build 8168 |
 | Case File #1 | 3 | **8168** (×36) + **8797** (×126) | 8034 (×17) | 8797 (×8) | 10 | Linker 5.10, build 8797 |
+| Case File #2 | — (not this lineage, WP-005) | 8047 (×11) + 8966 (×26), plus Linker 6.12 build 9466 (×4) | **none** (one MSVC 6.0 C++ 9178 object) | 8047 (×2), 8966 (×53); MASM 6.14 7291 (×13) | 13 | Linker 5.10, build 8966 |
 
 **Gen 1 (Showdown ↔ Phantom):** identical toolchain at every row.
 Only difference: Phantom carries 6 additional MASM 6.13 (build 8966)
@@ -454,6 +455,62 @@ This confirms the engine-lineage finding's claim of "TerraGlyph (MMFW) inherited
 - `DSOUND.DLL`, `DirectSoundCreate` — dynamic-load string + entry-point name (consistent with the dynamic DirectSound loading seen on the Jinx row of the [Cross-title runtime dependencies](#cross-title-runtime-dependencies) table)
 
 **Wide-string output:** 31 UTF-16LE strings — CRT locale fragments only, no asset names.
+
+#### Case File #2 (WP-005)
+
+SHA-256 of source binary: `AB2B71FEEFF0777B26928E95C99F9936F5C4D87FE321ED4913B8956C83772BC8`
+(`Case File #2.exe` on the disc, cached as `tools/exes/casefile2/Scooby.exe`).
+Strings (2,040 ANSI) and imports (330) were extracted with the WP-007 tools
+on 2026-11-13. Both stay local.
+
+**Verdict: a different engine, not part of the Gen 1–3 lineage.** The
+evidence:
+
+- **Rich Header.** Every Gen 1–3 binary carries MSVC 5.0 C++ build 8034
+  objects (Showdown ×16, Jinx ×17, Case File #1 ×17). Case File #2 has
+  none: its one C++ object is MSVC 6.0 (build 9178), and it adds Linker
+  6.12 entries. Its Linker 5.10 / MASM 6.13 builds 8047 and 8966 are the
+  same tool versions Showdown used, but the counts differ (11 vs 113,
+  53 vs 114). A shared tool build shows the same compiler release, not
+  shared code.
+- **No shared engine strings.** Case File #2 shares 104–129 strings with
+  each lineage binary. Minus what the lineage shares with itself, the
+  overlap is Win32 API names, CRT code fragments, and product names
+  (`Scooby-Doo`, `The Learning Company`). None of these appear in it:
+  `MMFW` labels, `MME_*` error names, `Bad checksum in … resource file`
+  templates, `__FILE__` source paths, `ROOM_`/`SCENE_` keys,
+  `%s_%s_%04X`, or a single RTTI class name.
+- **Different libraries and runtime.** It links the CRT dynamically
+  (`MSVCRT.dll`, 84 imports); every lineage binary links it statically. It
+  imports Miles (`mss32.dll`, 28) and Bink (`binkw32.dll`, 19), and it
+  embeds LZO 1.04, IJG libjpeg and its own XML writer
+  (`<?xml version="%s" standalone="%s"?>`) instead of Case File #1's
+  `libexpat.dll`.
+- **Its own class family.** `R*` names: `RScenePort`, `RWorldPort`,
+  `RResourcePort`, `RHotSpot`, `RCharacter`, `RAnimation`,
+  `RCompositeAction`, `RDialog`, `RBinkMovie`, `RSndWave`, `RXMLFile`,
+  and others (31 in all).
+- **The same engine in another game.** The Case File #2 disc carries a
+  *Powerpuff Girls* demo (`GroovyGoodies\PPG2Demo\`) whose resources are
+  the same `.bul`/`.inx` pair, run by `Powerpuff Girls.exe` plus engine
+  DLLs. `trinket.dll` shares 17 of the `R*` class names with Case File #2,
+  the bulk-file loader errors (`Bulkfile %s has not been defined in the
+  index file.`, `Unable to open index file %s.`), and 542 other strings
+  found in neither Showdown nor Case File #1. `ompp32x.dll` ("OM++",
+  `OMSoundManager` over Miles), `tcx.dll` (LZO, scripts) and
+  `rbink6x.dll` (`RBinkMovie`) account for the rest. Case File #2 is that
+  framework linked into one executable.
+
+The executables were read as data and not run. The demo's files were
+extracted to the session scratchpad only.
+
+The same framework also runs the publisher's launcher on both Case File
+discs (`HD\LAUNCHER\`: `TLCLauncher.exe`, `launch.xml`, `.mps` scripts). On
+Case File #1 the launcher ships `TLCLLTrinketcore.dll` and `ompp32x.tlc`.
+So the trinket/OM++ framework was already present in Case File #1's
+launcher, but not in Case File #1's game (`MMFW`). Case File #2's game is
+built on it. The launcher also accounts for the `launch.xml` and
+`TLCUser*.dat` strings both executables share.
 
 ##### Conclusions (Case File #1 — strings)
 
