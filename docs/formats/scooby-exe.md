@@ -1453,7 +1453,7 @@ tick).
 - **The magnifying glass** (7) goes to `ROOM_Suspect_Chooser`.
 - **Quit** (6) plays `Sign_In.Quit_Button`, then goes to `ROOM_Main_Menu`.
 - **The snack box** (`0x40D130`) and **Scrappy** (`0x40CD90`) have their own
-  classes. The snack box holds the snack count (`+0x30`, starting at 1;
+  classes ([WP-024](#scrappys-hints-and-scooby-snacks-wp-024)). The snack box holds the snack count (`+0x30`, starting at 1;
   digits `0x40D3B0`). Its cursor, `ANIM_CURSORSNACK`, feeds Scooby or
   Shaggy. Scrappy's cursor, `ANIM_CURSORSCRAPPY`, makes an exit's
   `scrappyid` speak.
@@ -1478,6 +1478,83 @@ tick).
 | `0x430C00` | A sprite's size: widest and tallest cel over its sequence |
 | `0x40CD30` / `0x40D020` | Scrappy / the snack box |
 | `0x407430` / `0x407780` | Read / write the save's `Inventory` section (`Slot%i`, `Anim%i`, `Cursor%i`, `History%i`, `Snacks`) |
+
+##### Scrappy's hints and Scooby Snacks (WP-024)
+
+Traced 2026-11-14 for [WP-024](../work-packets/WP-024-hints-and-snacks.md),
+in Showdown; Phantom's executable carries the same names. The fork plays both.
+
+**The speech lock** (game `+0x15C`, taken by `0x40A230`).
+- **Who holds it.** A scene holds it from its first line to its end
+  (`0x40C810`, `+0x84`). A character speaking outside a scene holds it too
+  (`0x404DB0`, `+0xB4`), and so does Scrappy while he speaks.
+- **What waits.** A scene waits while someone else holds it. The walk-off
+  (`0x40B490` → `0x40BE20`) also waits for it.
+
+**Scrappy's hint mode.**
+- **Starting it.** A click on Scrappy (`0x40CD90`) with the arrow makes
+  `ANIM_CURSORSCRAPPY` (game `+0x164`) the cursor. His rollover
+  (`0x40CF50`) is that cursor in hint mode, and the open hand for the arrow.
+- **Where a hint shows.** The cursor shows `ANIM_CURSORSCRAPPY_ANIM` over:
+  - an exit with a `scrappyid` (`0x402410`);
+  - a character that is a suspect already met (`0x4062E0`). The met list is
+    game `+0x174`, five names, filled by story rooms through `0x40A8B0`.
+    The character's hint is `Global.Scrappy.<NAME>`, looked up when it is
+    built (`+0xA0`).
+- **When it doesn't.** `0x4098B0` drops the hint while a scene plays, while
+  the room's entry scene is due, or while the speech lock is held. The game
+  cursor shows instead. When the hint does show, it plays
+  `Global.Scrappy.Help.Wiggle`.
+- **Clicking a hint** (`0x402130` for an exit, `0x404B70` for a character)
+  hands the clip to Scrappy (`0x407DE0` → `0x40CEA0`). Then the arrow comes
+  back.
+  - Scrappy speaks only in hint mode, unless forced, and only if he gets the
+    speech lock. He plays `ANIM_TOOLBARSCRAPPY_TALK` stopped, with its step
+    from the clip's lip sync, as a character's (`0x40CD90`).
+  - When the clip ends he stops on `…SCRAPPY_IDLE` and lets the lock go
+    (`Scrappy::OnLogic - done talking`).
+  - A `scrappyid` with no clip plays nothing, and the talk ends at once.
+- **Clicking anything else** in hint mode puts the arrow back
+  (`0x4098B0`). No WRONG line plays for Scrappy's cursor.
+
+**Scooby Snacks.**
+- **The count** is inventory `+0x30`. It starts at 1, and `0x407E00` caps
+  it at 99. Only story rooms add snacks (`0x41CB50`, `0x41E1A0`).
+- **The snack box** (`0x40D130`), clicked with the arrow:
+  - With snacks, it plays `ANIM_TOOLBARSNACK_BOX_ANIM` once and
+    `Global.Snack_Box`, and `ANIM_CURSORSNACK` becomes the cursor. The
+    digits move off (x −5000) until the box's sequence stops.
+  - With none, Scrappy is made to say `Global.940B_1_SCRAPPY` or
+    `Global.940_1_SCRAPPY` (`rand() & 1`).
+  - Clicked again with the snack, it takes the snack back. Its rollover
+    (`0x40D410`) is the snack cursor while holding one, and the open hand
+    for the arrow.
+- **Feeding** (the room's update `0x40B490`, before `0x4098B0`). A click with
+  the snack on Scooby or Shaggy puts the arrow back.
+  - If the character isn't talking (`0x406060`), he plays
+    `ANIM_<NAME><set>EAT_SNACK` once (`0x4061F0`, state `0xF`, then idle).
+    One snack goes (`0x407E20`), and `Global.Scooby.Eat_Snack` plays.
+  - **The snack-given line.** It is the room's own
+    `<room without ROOM_>_Snack_Given`, if a character in the room has its
+    line 1. Neither disc has one. Otherwise it is Fred's `Global.Snack_GivenA_`
+    or `…B_`, or Velma's `…C_` (`rand() % 3`, Velma's only without Fred).
+    It plays as a scene that leaves input on. The base room's threshold
+    (`+0x24`) is 0, so every snack earns one.
+  - Then an open toolbar drives off (`0x407C60`).
+- **A snack anywhere else** gets the WRONG line, as any item does.
+
+| Address | What it does |
+|---|---|
+| `0x40A230` | Take the speech lock (game `+0x15C`) |
+| `0x40CD30` / `0x40CD90` / `0x40CF50` | Scrappy: constructor / update (hint mode, lip sync, done talking) / rollover |
+| `0x407DE0` → `0x40CEA0` | Scrappy says a clip: hint mode or forced, with the speech lock |
+| `0x402410` / `0x402130` | Exit rollover and click in hint mode |
+| `0x4062E0` / `0x404B70` | Character rollover and click: a met suspect's hint |
+| `0x40A8B0` / `0x40A930` | Add a met suspect / is one met |
+| `0x40D020` / `0x40D130` / `0x40D410` | Snack box: constructor / click / rollover |
+| `0x407E00` / `0x407E20` | One snack more (99 at most) / fewer |
+| `0x4061F0` | A character plays `ANIM_<NAME><set><action>` once (state `0xF`) |
+| `0x40B490` | The room's update: feeding Scooby or Shaggy, the snack-given line |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
