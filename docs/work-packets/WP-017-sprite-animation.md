@@ -26,6 +26,7 @@ title: "WP-017: Sprite Animation at the Original Tick Rate"
 **Notes:**
 
 - **Some props loop that shouldn't.** Every placement starts in mode 1, because that's the default placement path. In the Saloon the root-beer sign and the piano bench cycle through what look like one-shot puzzle animations. In the game, the room's own code would hold or trigger those. That is the same per-room override WP-016 left out, and it belongs to Phase 4.
+  - *Corrected by [WP-018](WP-018-hotspots-and-exits.md) (2026-11-14).* Not every placement starts in mode 1: clickables start stopped and `OBJ_GHOST` starts hidden. The root-beer sign and piano bench are clickables, so the correct default already holds them; per-room code was not the cause.
 - **The tick trace.**
   - `0x430890` is slot `+8` of the sprite vtables (18 of them).
   - Its only driver is the tree walk `0x431130`, called once per tick from `0x435BC0`.

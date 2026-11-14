@@ -168,6 +168,11 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
   - The engine loop runs `elapsed_ms × 36 / 1000` game ticks from `OSystem::getMillis()`, as `0x435BC0` does, and redraws when a step changes.
   - Cels are decoded once per room and cached.
   - All 122 rooms match a reference model at tick 0 and tick 37.
+- **Hotspots and exits (WP-018, 2026-11-14).**
+  - Placements start as their kind's constructor starts them: clickables and `OBJ_GHOST` stopped, the ghost hidden.
+  - `Room::hitTest()` is the original hit walk, with both test types.
+  - The cursor is drawn in software as an `OBJ_CURSOR` sprite at the mouse, playing the hovered object's rollover or `ANIM_CURSORARROW`. There is no `CursorMan` cursor, so translucent cursor edges blend like any sprite.
+  - Clicking an exit loads `destinationroom=` directly.
 
 ---
 

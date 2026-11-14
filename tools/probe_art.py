@@ -406,7 +406,12 @@ def render_room(s: SceneBlock, objs: list[ObjectResource],
         o = objs[ids[obj] & 0xFFFFFF]
         frame = sequence_frame(o, ids[anim] & 0x3FFFF, 0)
         n = struct.unpack_from("<H", ART, frame + 4)[0]
-        parent.add(Sprite(depth, painter(frame, o.offset, x, y), f"{k:2d} {obj}"))
+        # 0x4091FF hides OBJ_GHOST on room entry (0x4313F0 sets +0x14), so it
+        # takes its place in the tree but draws nothing.
+        paint = (lambda: None) if obj == "OBJ_GHOST" else painter(frame, o.offset, x, y)
+        if obj == "OBJ_GHOST":
+            kind = "ghost (hidden)"
+        parent.add(Sprite(depth, paint, f"{k:2d} {obj}"))
         log.append(f"{k:2d} {obj:32s} {anim:36s} ({x:4d},{y:4d}) {kind:15s} "
                    f"parent {parent.label:8s} depth {depth:6d} cels {n}")
 
