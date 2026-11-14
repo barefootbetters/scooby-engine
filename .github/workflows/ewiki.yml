@@ -64,6 +64,23 @@ jobs:
           path: _private
           persist-credentials: false
 
+      # why: the decompdecomp room link (WP-011) is a live invite, so it is in
+      # neither repository. It's the DECOMP_ROOM_URL repo secret, written here
+      # over the DECOMP-ROOM-LINK placeholder in the private pages, on the
+      # runner only, so it reaches the Access-gated wiki and nothing else. No
+      # artifact is uploaded, and the step prints nothing.
+      - name: Fill in the room link on the private pages
+        if: steps.private.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          ROOM_URL: ${{ secrets.DECOMP_ROOM_URL }}
+        run: |
+          $value = if ($env:ROOM_URL -match '^https://\S+$') { "<$($env:ROOM_URL)>" } else { '*not set in this build*' }
+          Get-ChildItem _private/private -Recurse -File -Filter *.md | ForEach-Object {
+            $text = [IO.File]::ReadAllText($_.FullName)
+            if ($text.Contains('DECOMP-ROOM-LINK')) { [IO.File]::WriteAllText($_.FullName, $text.Replace('DECOMP-ROOM-LINK', $value)) }
+          }
+
       - name: Read pinned Hugo version
         id: hugo
         run: echo "version=$(cat ewiki/.hugo-version)" >> "$GITHUB_OUTPUT"
