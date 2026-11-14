@@ -5,12 +5,31 @@ title: "WP-018: Placement Kinds, Hotspots, Cursor and Exits"
 
 # WP-018: Placement kinds, hotspots, the cursor and exits (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3–4 (first interaction)
 **Depends on:** WP-017 ✅ (animation), WP-016 ✅ (room build), WP-001 ✅ (placement and input code labelled)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** One day
 **Pre-flight:** [pre-flight-WP-018-2026-11-14](../reference/pre-flight-WP-018-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Rooms with corrected kinds | ✅ For all 69 Showdown and 53 Phantom rooms, the engine's surface MD5s at tick 0 and tick 37 and its draw order match a new reference model. The model is independent Python on the probe's parsing, with clickables and the ghost stopped and the ghost hidden. Against WP-017's reference, the correction changes 0 Showdown rooms and the 5 Phantom ghost rooms at tick 0, and 22 + 23 rooms at tick 37. |
+| 2. Grid hit test | ✅ For every room in both titles, a hit test on a 4-pixel grid at tick 0 (19,200 points in a 640 × 480 room) gives identical labels in the engine and the reference. The labels are hashed in row order. The reference implements `0x431350`/`0x4312A0` (with C division) and `0x431400` separately. No point misses, because the background layer is type 1. |
+| 3. Live hover and click | ✅ The real mouse was moved to (557, 227) in Town Center. The engine logged `hover 5 OBJ_P01_TO_P11, cursor ANIM_CURSOREU45R`, and the capture shows the rollover hand. A click logged `exit 5 OBJ_P01_TO_P11 clicked: going to ROOM_P11_Street3`, and Street 3 was drawn, with its ghost hidden. The captures were sent to Jeff and are not in git. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`7659803ee5`](https://github.com/barefootbetters/scummvm/commit/7659803ee5) stages its six files by name, inside `engines/scooby/`, and is pushed. |
+
+**Deviations and notes:**
+
+- **Correction to WP-016 and WP-017.** Those WPs and `probe_art.py --room` treated every placement as visible and looping. tgifile-art now has a per-kind table, `--room` hides the ghost, and WP-017's Saloon note points here.
+- **Exit clicks skip the transition.** The original walks the characters and plays a movie (`0x404820`) before the room changes. That comes with the movie and character work.
+- **The cursor's start mode is inferred.** It is drawn in mode 1 at 3 ticks per step; `0x4089E0`'s own start call wasn't traced.
+- **The mask test `0x438210` wasn't decompiled.** Type 1 uses the coverage map built from the same span lists, and every type-1 grid point matches the reference, which uses the probe's span parser.
+- **The start-up screen MD5 changed** (Town Center `c4a9…` → `d2d1…`), because the startup draw now includes the cursor at (0, 0). The level-3 checks draw without a cursor.
 
 ---
 
@@ -92,15 +111,15 @@ decompiled headless:
 
 ## Exit criteria
 
-1. [ ] Every room in Showdown and Phantom, at tick 0 and tick 37, matches the
+1. [x] Every room in Showdown and Phantom, at tick 0 and tick 37, matches the
    reference model with the corrected kinds (ghost hidden, clickables
    stopped). Checked by MD5.
-2. [ ] For every room in both titles, a 4-pixel grid hit test at tick 0
+2. [x] For every room in both titles, a 4-pixel grid hit test at tick 0
    matches a reference that implements `0x4312A0`/`0x431350`/`0x431400`
    independently in Python. Checked by MD5 of the hit labels.
-3. [ ] Live: hovering an exit shows its rollover cursor (capture), and
+3. [x] Live: hovering an exit shows its rollover cursor (capture), and
    clicking it loads `destinationroom=` (log).
-4. [ ] Scooby-only build: 0 errors and 0 warnings. The fork diff stays inside
+4. [x] Scooby-only build: 0 errors and 0 warnings. The fork diff stays inside
    `engines/scooby/`, staged by name.
 
 ## Deliverables
