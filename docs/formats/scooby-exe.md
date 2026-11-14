@@ -918,6 +918,9 @@ same way.
      (`OBJ_<character>`) become character actors (`0x4048E0`), whose depth
      follows y. `OBJ_GHOST` gets its own handling. Anything else becomes a
      plain animated sprite playing the placement's ANIM.
+   - Each kind gets a parent layer and a depth, which together set the draw
+     order. The table is in
+     [tgifile-art §Rendering a room](tgifile-art.md#rendering-a-room-2026-11-13).
 4. Preload the `Global` and room-section sounds (see
    [Resource loading map](#resource-loading-map), Sound), then log progress
    (`Been loading objects for 4 seconds`) during long loads.
