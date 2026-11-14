@@ -8,10 +8,10 @@ title: "WP-011: Case File #1 decompdecomp Collaboration"
 **Status:** 🚧 In Progress: repository access and a cooperative room received 2026-11-11; local decompdecomp environment and the capped trial are next (see [§Status and decision log](#status-and-decision-log))
 **Phase:** 1 — Format Research (executable-analysis track; runs alongside [WP-001](WP-001-ghidra-session.md), does not replace it)
 **Depends on:** Repository access and a room link from the host (external; both received 2026-11-11); a local Case File #1 binary matching the [WP-007 identity lock](../formats/scooby-exe.md#binary-identity-wp-007-baseline)
-**Unblocks (recommended, not strict):** [WP-005](WP-005-engine-family-check.md) (function-level engine-family evidence), [MMFW container](../formats/mmfw-container.md) loader questions, later Case File #2 comparison
+**Unblocks (recommended, not strict):** [WP-005](WP-005-engine-family-check.md) (function-level engine-family evidence), [MMFW container](../formats/mmfw-container.md) loader questions
 **Companion EC:** — (the trial checklist is inline in [§Immediate next actions](#immediate-next-actions); author an EC only if the trial is accepted and continues past it)
 **Pre-flight required:** Yes. Execution writes facts into `docs/formats/scooby-exe.md` and may feed a generation classification. Access arrived 2026-11-11; pre-flight runs before the trial writes anything into `scooby-exe.md`.
-**Targets generation(s):** Gen 3 (Case File #1) primary. Gen 4 (Case File #2) only after the Gen 3 baseline is stable. Gen 1 / Gen 2 only through cross-binary matching, opportunistically.
+**Targets generation(s):** Gen 3 (Case File #1) primary. Gen 1 / Gen 2 only through cross-binary matching, opportunistically. Case File #2 is out of scope: WP-005 (2026-11-13) found it runs a different engine.
 **Estimated effort:** Trial: half a day of setup plus one capped agent run. Anything past the trial is re-estimated at the decision point.
 
 ---
@@ -36,7 +36,7 @@ It does not replace the format-first strategy in the [Vision](../01-VISION.md#ga
 - Its strings carry the same `MMVisualCursor.cpp` source unit and the same `MMFW` resource labels as Jinx, plus ImageBuilder Software (IBS)–era `PG*`/`SM*`/`IB*` class families ([Case File #1 strings](../formats/scooby-exe.md#case-file-1-gen-3)).
 - It uses `MMFW` archives, not `TGIFILE.ART` or the Gen 1 `.dat` audio archives ([cross-title verification](../formats/tgifile-art.md#cross-title-verification-2026-06)).
 
-That evidence is at the toolchain and string level. The overview pages place Case File #1 in the same lineage on that basis, and show the Case File #2 verdict as pending, because [WP-005](WP-005-engine-family-check.md) is open and Phase 1 exit criterion #4 has not been closed. This WP changes no classification. Function-level evidence, for example how many Case File #1 functions match Jinx functions, is one input WP-005 can use later.
+That evidence is at the toolchain and string level. The overview pages place Case File #1 in the same lineage on that basis, [WP-005](WP-005-engine-family-check.md) closed Phase 1 exit criterion #4 on 2026-11-13: Case File #2 runs a different engine and is excluded. This WP changes no classification. Function-level evidence, for example how many Case File #1 functions match Jinx functions, is one input WP-005 can use later.
 
 **Supersession check (2026-11-11).** No existing WP covers cooperative or automated decompilation. WP-001 is single-operator Ghidra work on the Gen 1 binary, and WP-005 is disc and header comparison. `git log --all --grep=decomp` returns nothing. Every repo hit for "decomp" is the word "decompile" inside WP-001 / EC-001.
 
@@ -185,7 +185,7 @@ In scope:
 Out of scope:
 
 - Any C++ in `engines/scooby/`. Implementation starts in Phase 2, through [WP-010](WP-010-scummvm-scaffold.md) and later WPs.
-- Case File #2 decompilation. It waits until the Case File #1 baseline is stable, then gets its own WP or an amendment here.
+- Case File #2. WP-005 (2026-11-13) found it runs a different engine, so it is out of the project's scope.
 - Gen 1 `TGIFILE.ART` decode work. That stays with [WP-001](WP-001-ghidra-session.md) and [WP-002](WP-002-tgifile-art-decoder.md). Case File #1 doesn't ship that format.
 - Changing any engine-family or generation classification. That belongs to [WP-005](WP-005-engine-family-check.md).
 - Committing reconstructed C, generated assembly, or any game data to this repository.
@@ -258,7 +258,7 @@ Plan:
 
 1. Build a stable Case File #1 baseline first: a known set of Matched and Observed functions with names.
 2. Add the **Jinx (Gen 2)** binary next, not Case File #2. WP-007 shows the strongest inheritance evidence is Jinx → Case File #1, so the identical-function count there is the cleanest function-level test of that inheritance.
-3. Add **Case File #2 (Gen 4)** after that. Its match rate against Case File #1 helps decide whether it is a revision of the same engine or a substantially different implementation. The Vision already records it as an architectural break.
+3. ~~Add Case File #2 after that.~~ Dropped 2026-11-13: WP-005 found Case File #2 runs a different engine (shared with a *Powerpuff Girls* title), so it is out of scope.
 4. Gen 1 (Showdown) cross-matching is opportunistic. If Gen 1 shares little code with Gen 3, decompdecomp on Case File #1 will not answer the `TGIFILE.ART` F0-opcode question directly. That still needs WP-001 or a Showdown decompdecomp project. **A Showdown project is the higher-value follow-on for the engine** (Jeff, 2026-11-13): it aims the tool at the Gen 1 `TGIFILE.ART` decoder, which is the actual Phase 1 blocker. Showdown is VC5-built (Linker 5.10), like Case File #1. The host reports matching Case File #1 with VC 6.0, which suggests VC5-era code can match, but that is **Reported**, not measured. See [open question 20](#open-questions).
 
 The output of each step is a count of identical, near and unique functions per binary pair, recorded with evidence levels. These counts are evidence for WP-005, not a classification by themselves.
@@ -300,8 +300,8 @@ The output of each step is a count of identical, near and unique functions per b
 
 Engine lineage:
 
-1. Are the Case File games built on the TerraGlyph engine used by the Mystery Adventures titles? Toolchain and string evidence for Case File #1 points to inherited Jinx-era code ([Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding)). That is not yet confirmed at the function level, and the Case File #2 verdict is still open in WP-005.
-2. Is each Case File a later revision, a fork, or a separate engine? The Vision records Case File #2 as a large architectural break.
+1. Are the Case File games built on the TerraGlyph engine used by the Mystery Adventures titles? Toolchain and string evidence for Case File #1 points to inherited Jinx-era code ([Engine Lineage](../01-VISION.md#engine-lineage-2026-06-finding)). That is not yet confirmed at the function level. Case File #2 is answered: WP-005 (2026-11-13) found a different engine.
+2. Is each Case File a later revision, a fork, or a separate engine? Answered for Case File #2 by WP-005: a separate engine. Open for Case File #1 at the function level.
 3. Which functions are identical or structurally related across the two Case File executables, and between Jinx and Case File #1?
 4. Do the Case File games reuse archive formats from the earlier games? Disc evidence says Case File #1 uses `MMFW` like Jinx, and Case File #2 uses `.bul` / `.inx`. Neither uses `TGIFILE.ART`.
 5. Are `TGIFILE.ART`, the audio `.dat` archives, `object.ini` or the `Scooby.eng` string-table conventions shared with any Case File? Not as files on the Case File #1 disc. Shared *code* conventions (resource-key templates, error templates) are open.
@@ -361,7 +361,7 @@ Trial checklist. Tick these off in this file as they happen.
 - [ ] Steer toward the priority subsystems: file I/O, archive loading, graphics, audio, scripting, object initialization.
 - [ ] Document meaningful discoveries in the wiki, following [§Output specification](#output-specification).
 - [ ] Start a durable function-name and subsystem map for Case File #1.
-- [ ] Compare Case File #1 against Case File #2 only after Case File #1 has a stable baseline; compare with Jinx first ([§Cross-game reuse strategy](#cross-game-reuse-strategy)).
+- [ ] Compare Case File #1 against Jinx once Case File #1 has a stable baseline ([§Cross-game reuse strategy](#cross-game-reuse-strategy)). (A Case File #2 comparison was dropped 2026-11-13: different engine, per WP-005.)
 - [ ] Decide which findings become ScummVM implementation tasks, as rows for the Phase 2–4 WPs in [WORK_INDEX](WORK_INDEX.md).
 - [ ] Take the decision below to Accepted or Rejected.
 
@@ -413,7 +413,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 
 ## Notes
 
-- **Hand-off to WP-005:** cross-binary identical-function counts (Jinx ↔ Case File #1, then Case File #1 ↔ Case File #2) are function-level evidence for the engine-family verdict. WP-005 owns the verdict.
+- **Hand-off to WP-005:** cross-binary identical-function counts (Jinx ↔ Case File #1) are function-level evidence for the lineage. WP-005 closed on 2026-11-13; these counts would strengthen its Case File #1 finding, not reopen it.
 - **Hand-off to WP-001:** if Case File #1's `MMFW` loader or picture decoder turns out to be inherited code, its Gen 1 counterpart in Showdown is a concrete Ghidra target. Record any such lead in WP-001 §Background.
 - **Generation discipline:** tag every finding Gen 3 unless it was reproduced on another binary.
 - **Copyright posture:** same as [tools/samples/README](../../tools/samples/README.md) and [tools/exes/README](../../tools/exes/README.md). Facts, hashes, offsets and descriptions are committed; binaries and binary-derived bulk output are not.
