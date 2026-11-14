@@ -184,7 +184,19 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 
 **Acceptance criterion:** Music, SFX, and voice all route through `Audio::Mixer`. Volume sliders in the ScummVM Options dialog control the engine's audio correctly. No direct DirectSound or platform audio calls.
 
-**Implementation notes:** *TBD. Codec identification is owned by `docs/formats/audio-archives.md`. If the codec turns out to be Miles Sound System or another licensed format, an upstream conversation about decoder strategy precedes the PR.*
+**Implementation notes:** WP-019 (2026-11-14). The Gen 1 audio is uncompressed PCM ([audio-archives](formats/audio-archives.md)), so the engine needs no new decoder and no licensed code.
+
+- **`Scooby::SoundArchive`** (`engines/scooby/sound_archive.{h,cpp}`) reads one `.dat` file.
+  - It checks the header, the name index and every clip header against the file.
+  - A clip opens with `Audio::makeRawStream()`, as 16-bit little-endian signed (or 8-bit unsigned) samples, mono or stereo. The stream is a sub-stream of its own `Common::File` that starts on the sector after the clip header.
+- **`Scooby::Sound`** looks names up in `Sfx.dat`, `Voice.dat`, then `Music.dat`, the original's order (`0x434DC0`).
+  - Each file plays on its own mixer type: `kSFXSoundType`, `kSpeechSoundType` and `kMusicSoundType`. So the ScummVM volume sliders apply per file.
+  - The clip's volume byte (a percentage) becomes the channel volume.
+  - Clips with the loop flag wrap in `makeLoopingAudioStream`. Pan is 0 on every clip, so the balance stays centred.
+- **Checks.** Every clip's PCM matches `probe_audio.py` by MD5: 1,165 Showdown clips and 1,067 Phantom clips.
+- **Testing aids.** The console's `sound_play` and a `start_sound` config key play a clip. Like `start_room`, the key is a test convenience to revisit before Phase 5.
+
+Which sounds play when (room music, ambience, voice lines) is game logic, starting with the exit transition (WP-020).
 
 ---
 

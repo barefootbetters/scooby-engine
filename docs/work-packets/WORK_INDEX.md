@@ -9,7 +9,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 > Each WP is one unit of work with a goal, dependencies, and exit criteria.
 > ECs are step-by-step checklists for the WPs most likely to sprawl.
 >
-> **Last updated:** 2026-11-14 (WP-018 ✅: hotspots, the cursor and exits; placement kinds corrected)
+> **Last updated:** 2026-11-14 (WP-019 ✅: the Gen 1 sound files play through ScummVM's mixer)
 >
 > **Status vocabulary (closed set):**
 > ✅ Done · 🚧 In Progress · 📝 Drafted (WP file authored, not yet started) · 📦 Queued (deps met, WP file not yet authored) · ⏸ Blocked (dep unmet) · 🔮 Placeholder (forward-looking, intentionally not authored)
@@ -18,12 +18,16 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 ## Current state
 
-**Current phase:** Phase 3. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM, and the detection table (WP-012 ✅ 2026-11-14) recognises the four in-scope discs with their generations. Phase 2's provisional scope is done. In Phase 3, the Gen 1 art file is read through `Common::Archive` (WP-014 ✅) its cels decode (WP-015 ✅), whole rooms draw with their placed sprites in the original's order and blend (WP-016 ✅), they animate at the original 36 ticks per second (WP-017 ✅), and the mouse works: hit testing, rollover cursors and exits between rooms (WP-018 ✅ 2026-11-14). Exit transitions (walks and movies), clickable actions, inventory, per-room code and audio are next.
+**Current phase:** Phase 3. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM, and the detection table (WP-012 ✅ 2026-11-14) recognises the four in-scope discs with their generations. Phase 2's provisional scope is done. In Phase 3, the Gen 1 art file is read through `Common::Archive` (WP-014 ✅) its cels decode (WP-015 ✅), whole rooms draw with their placed sprites in the original's order and blend (WP-016 ✅), they animate at the original 36 ticks per second (WP-017 ✅), the mouse works: hit testing, rollover cursors and exits between rooms (WP-018 ✅), and the sound files play through the mixer (WP-019 ✅ 2026-11-14). Exit transitions (walks, voice lines, movies), clickable actions, inventory and per-room code are next.
 **Primary blocker:** none for images. ~~WP-002 (TGIFILE.ART payload decode)~~ ✅ 2026-11-13: every `TGIFILE.ART` image decodes (RLE over big-endian RGB565). Phase 1 exit criterion #1 is met on recognizability, so Phase 2 is no longer blocked by art. Phase 1 exit criterion #3 (audio codec) is met by WP-004 ✅ 2026-11-13, and #4 (engine-family answer) by WP-005 ✅ 2026-11-13. All four Phase 1 exit criteria are met.
 **Next unblocked:** Phase 0 pre-work. WP-007 ✅ landed 2026-06-02; WP-003 ✅ landed 2026-06-02; **WP-008 ✅ landed 2026-06-03** (object.ini interpreter behavior characterized; engine is name-driven, MODE_A). Remaining order: WP-010 (WP-001 ✅, WP-002 ✅ and WP-009 ✅ 2026-11-13). The WP-003 baseline (pre-payload region characterized as the engine name table; no palette present; off-by-4 header-offset correction landed) is now available to WP-001 (palette-hunt scope drops from EC-001; the OBJ→asset-entry 1:1 mapping cuts asset-resolution scope) and to WP-002 (first-decode strategy: palette is NOT in the pre-payload region — it is either per-asset leading bytes or per-record metadata; investigate both). The WP-008 baseline (engine name-driven, 215 OBJ_* sections discriminated by `ID=`, deterministic naming rule confirmed) gives WP-002's `probe_art.py` a direct labeling path (`entry_<index>_<wp003_name>.png`) and gives WP-009 a canonical room-ID list to use for screenshot naming.
 
 ### Phase 1 findings landed (2026-06)
 
+- **WP-019 sound (2026-11-14).**
+  - The fork reads `Sfx.dat`, `Voice.dat` and `Music.dat` and plays any clip by name through `Audio::Mixer`, on the SFX, speech or music channel, at the clip's own volume and loop setting.
+  - Every clip of both Gen 1 titles reads to the same PCM as `probe_audio.py`.
+  - Which sounds play when comes with the exit transition and room code. [Evidence](WP-019-sound-archives.md#result-2026-11-14).
 - **WP-018 hotspots and exits (2026-11-14): the mouse works.**
   - The fork hit-tests as `Scooby.exe` does: front to back, step polygons for interactive objects, cels for characters and backgrounds.
   - It shows rollover cursors (exits: `rolloveranim=`; clickables: `ANIM_CURSOROPEN`), and clicking an exit loads its destination room.
@@ -118,7 +122,7 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 |---|
 | `TGIFILE.ART` parser as `Common::Archive` subclass (Gen 1): **[WP-014](WP-014-tgifile-art-archive.md) ✅ 2026-11-14** |
 | `MMFW` container parser as `Common::Archive` subclass (Gen 2 / Gen 3) |
-| Audio loader through `Audio::Mixer` |
+| Audio loader through `Audio::Mixer`: **[WP-019](WP-019-sound-archives.md) ✅ 2026-11-14** |
 | `Scooby.eng` parser (Gen 1 / Gen 2) |
 | `object.ini` parser into engine structs (Gen 1 / Gen 2) |
 | XML config parser (Gen 3) — likely wraps ScummVM's bundled libxml or a small in-engine parser |
@@ -130,6 +134,7 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 | [WP-016](WP-016-room-sprites.md) | A whole room on screen: placed sprites, draw order and translucent blending (Gen 1) | ✅ Done (2026-11-14) | WP-015 ✅, WP-001 ✅, WP-008 ✅ | — (inline) | `RoomRenderer` and `Cel::draw()` in fork commit `8717f5da6b`. For all 69 Showdown and 53 Phantom rooms, the draw order and room surface (MD5) match an exact 565 model built on the probe's tree and the original's blend tables. See [WP-016 §Result](WP-016-room-sprites.md#result-2026-11-14). Pre-flight: [pre-flight-WP-016-2026-11-14](../reference/pre-flight-WP-016-2026-11-14.md). |
 | [WP-017](WP-017-sprite-animation.md) | Sprite animation at the original tick rate (Gen 1) | ✅ Done (2026-11-14) | WP-016 ✅, WP-001 ✅ | — (inline) | `Room` and the 36-ticks-per-second loop in fork commit `7fd40d5da6`. Traced from `0x435BC0` (`elapsed × 36 / 1000`) and `0x431130`. Every room matches a reference at tick 0 and tick 37. See [WP-017 §Result](WP-017-sprite-animation.md#result-2026-11-14). Pre-flight: [pre-flight-WP-017-2026-11-14](../reference/pre-flight-WP-017-2026-11-14.md). |
 | [WP-018](WP-018-hotspots-and-exits.md) | Placement kinds, hotspots, the cursor and exits (Gen 1) | ✅ Done (2026-11-14) | WP-017 ✅, WP-016 ✅, WP-001 ✅ | — (inline) | Fork commit `7659803ee5`. Corrects WP-016/017: clickables and `OBJ_GHOST` start stopped, the ghost hidden. A grid hit test of all 122 rooms matches an independent reference. A live click on a Town Center exit reaches Street 3. See [WP-018 §Result](WP-018-hotspots-and-exits.md#result-2026-11-14). Pre-flight: [pre-flight-WP-018-2026-11-14](../reference/pre-flight-WP-018-2026-11-14.md). |
+| [WP-019](WP-019-sound-archives.md) | Sound archives through `Audio::Mixer` (Gen 1) | ✅ Done (2026-11-14) | WP-004 ✅, WP-006 ✅, WP-014 ✅ | — (inline) | `SoundArchive` and `Sound` in fork commit `ac1b4def76`. All 1,165 Showdown and 1,067 Phantom clips match `probe_audio.py` by PCM MD5. Playback is checked through the mixer's elapsed time. See [WP-019 §Result](WP-019-sound-archives.md#result-2026-11-14). Pre-flight: [pre-flight-WP-019-2026-11-14](../reference/pre-flight-WP-019-2026-11-14.md). |
 
 ---
 
@@ -184,7 +189,7 @@ This section carries only 1–2 representative thumbnails as a teaser linking to
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports.md), [WP-008](WP-008-object-ini-catalog.md), [WP-009](WP-009-reference-screenshots.md), [WP-010](WP-010-scummvm-scaffold.md)
 - Executable analysis: [WP-001](WP-001-ghidra-session.md) (Ghidra), [WP-011](WP-011-casefile-decompdecomp.md) (decompdecomp collaboration)
 - Phase 2 WPs: [WP-012](WP-012-detection-table.md) (detection table)
-- Phase 3 WPs: [WP-014](WP-014-tgifile-art-archive.md) (`TGIFILE.ART` archive), [WP-015](WP-015-cel-decoder.md) (cel decoder), [WP-016](WP-016-room-sprites.md) (room sprites), [WP-017](WP-017-sprite-animation.md) (animation), [WP-018](WP-018-hotspots-and-exits.md) (hotspots and exits)
+- Phase 3 WPs: [WP-014](WP-014-tgifile-art-archive.md) (`TGIFILE.ART` archive), [WP-015](WP-015-cel-decoder.md) (cel decoder), [WP-016](WP-016-room-sprites.md) (room sprites), [WP-017](WP-017-sprite-animation.md) (animation), [WP-018](WP-018-hotspots-and-exits.md) (hotspots and exits), [WP-019](WP-019-sound-archives.md) (sound)
 
 ---
 
