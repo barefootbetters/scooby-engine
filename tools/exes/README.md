@@ -68,7 +68,7 @@ as the Binary identity source.
 
 ### Jinx (Gen 2)
 
-- **ISO source:** `C:\pcloud\SCOOBY\Scooby Doo Jinx at the Sphinx.iso`
+- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo Jinx at the Sphinx.iso`
 - **Cached EXE:** `tools/exes/jinx/Scooby.exe` (847,872 bytes)
 - **Original disc name:** `Scooby.exe` (no rename needed)
 - **SHA-256:** `136A276872803AC99B0D050B21CC3A83F8E1608F2394C33865CFFF781FB20271`
@@ -197,7 +197,7 @@ WBLOGO.avi       2180096   9/18/2001 5:38 AM
 
 ### Showdown (Gen 1)
 
-- **ISO source:** `C:\pcloud\SCOOBY\Scooby Doo Showdown in Ghost Town.iso`
+- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo Showdown in Ghost Town.iso`
 - **Cached EXE:** `tools/exes/showdown/Scooby.exe` (487,473 bytes ≈ 476 KB)
 - **Original disc name:** `Scooby.exe` at `E:\scooby\Scooby.exe` (no rename needed)
 - **SHA-256:** `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478`
@@ -319,7 +319,7 @@ All five canonical engine data files referenced in [scooby-exe](../../docs/forma
 
 ### Phantom (Gen 1)
 
-- **ISO source:** `C:\pcloud\SCOOBY\Scooby Doo Phantom of the Knight.iso`
+- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo Phantom of the Knight.iso`
 - **Cached EXE:** `tools/exes/phantom/Scooby.exe` (483,377 bytes)
 - **Original disc name:** `Scooby.exe` at `E:\scooby\Scooby.exe` (no rename needed)
 - **SHA-256:** `619EA6871A2FD305CA30814C438F9552DB85FDADB65AD7BE5B82A1656AF807ED`
@@ -439,7 +439,7 @@ Mode                 LastWriteTime         Length Name
 
 ### Case File #1 (Gen 3)
 
-- **ISO source:** `C:\pcloud\SCOOBY\Case File 1.iso`
+- **ISO source:** `C:\pcloud\scooby-engine\Case File 1.iso`
 - **Mount letter at capture:** `F:\` (WP-007 capture 2026-06-02); remounted as `E:\` (payload cache 2026-06-03)
 - **Cached EXE:** `tools/exes/casefile1/Scooby.exe` (786,432 bytes ≈ 768 KB)
 - **Original disc name:** `Case File #1.exe` at `\MUSEUM\Case File #1.exe` — renamed to `Scooby.exe` per the safety-net policy (the `#` character is fine in a quoted PowerShell path but causes friction in markdown links and URL contexts).
@@ -557,7 +557,7 @@ This listing is the **structural payoff** for the [engine lineage finding](../..
 
 ### Case File #2 (Gen 4 — new engine generation)
 
-- **ISO source:** `C:\pcloud\SCOOBY\` (Case File #2 disc)
+- **ISO source:** `C:\pcloud\scooby-engine\Case File #2.iso`
 - **Mount letter at capture:** `E:\` (2026-06-03)
 - **Cached EXE:** `tools/exes/casefile2/Scooby.exe` (774,144 bytes) — original disc name `Case File #2.exe` at `E:\HD\Case File #2\Case File #2.exe`, renamed per policy
 - **SHA-256:** `AB2B71FEEFF0777B26928E95C99F9936F5C4D87FE321ED4913B8956C83772BC8`
@@ -671,7 +671,7 @@ d----                                              scripts
 **Macromedia Director** — a completely different engine and publisher from the IBS/Humble lineage. It shares the
 Scooby-Doo license but is architecturally unrelated to this project.
 
-- **ISO source:** `C:\pcloud\SCOOBY\Case File 3.iso` (or equivalent)
+- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo! #3.iso`
 - **Publisher:** The Learning Company (TLC) / Broderbund
 - **Engine:** Macromedia Director (confirmed via `Director` string in PE, TLC version resource)
 - **Version resource:** `4.1.07` / `Scooby-Doo! Case File #3 - Frights! Camera! Mystery!.exe`
