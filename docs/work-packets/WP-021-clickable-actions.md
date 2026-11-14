@@ -18,18 +18,19 @@ title: "WP-021: Clickable Actions"
 
 | Exit criterion | Result |
 |---|---|
-| 1. Every click matches | ✅ At `script` level 3 the engine loads each room afresh for each clickable and clicks it twice. For each click it logs the state played, its step count, the sound (or `-`), the next state and the ticks until the object rests. An independent Python reference implements `0x401440`/`0x401650` on `probe_art.py` and `probe_audio.py`. The logs are identical: Showdown 192 clicks, Phantom 174 (MD5 `d1192523…` and `f5899fef…`), 0 stuck. |
+| 1. Every click matches | ✅ At `script` level 3 the engine loads each room afresh for each clickable and clicks it twice. For each click it logs the state played, its step count, the sound (or `-`), the next state and the ticks until the object rests. An independent Python reference implements `0x401440`/`0x401650` on `probe_art.py` and `probe_audio.py`. The logs are identical: Showdown 192 lines (191 clicks; the chandelier pump can't be clicked a second time), Phantom 174 clicks (MD5 `6003f21c…` and `f5899fef…`), 0 stuck. |
 | 2. Live click, state kept | ✅ A real mouse click on Town Center's `OBJ_P01_TC_HOTSPOT1` played `ANIM_P01_TC_HOTSPOT1A` with `SFX_P01_TC_HOTSPOT1A`, and the object rested on `…1B` 54 ticks later (18 steps × 3). The gang went to Street 3 and back. Town Center then drew with a different MD5, showing `…1B`, and a second click played `…1B` with its sound and rested on `…1C`. |
 | 3. Live ghost | ✅ `ghost_chance=1`, in Phantom's Souvenir Shop. A click on `OBJ_P03_SOUVENIR_STORE_HOTSPOT1` played `Ghost_Appears`, and each character's `Global.Scared` line where the clip exists (there is none for Scooby). The ghost played its 75 ticks, and `ROOM_Ghost_Spot` loaded (1280×480). |
-| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`b18b5f6a53`](https://github.com/barefootbetters/scummvm/commit/b18b5f6a53) stages its eight files by name, inside `engines/scooby/`, on top of WP-020's `7e03ae779a`, and is pushed. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commits [`b18b5f6a53`](https://github.com/barefootbetters/scummvm/commit/b18b5f6a53) and [`4f135d3a9f`](https://github.com/barefootbetters/scummvm/commit/4f135d3a9f) stage their files by name, inside `engines/scooby/`, on top of WP-020's `7e03ae779a`, and are pushed. |
 
 **Deviations:**
 
 - **Two clickable sounds are in `Music.dat`.** `SFX_P11_STREET3_HOTSPOT2A` and `SFX_P12_SALOON_HOTSPOT1B` are stored with the music. The original's lookup searches all three files, so they play. In the fork they play on the music channel, and would stop room music if any were playing. The reference first searched `Sfx.dat` only, and the comparison caught it.
 - **One sound at a time per file.** WP-019 gives each file one mixer handle. A clickable's sound stops any other effect. When the ghost scares the gang, each line replaces the one before, so only the last character's line is heard. Whether the original mixed them is not traced.
 - **The ghost's odds** come from ScummVM's random source, not the C runtime's `rand()`.
-- **A missing state.** Showdown's chandelier pump goes from `ANIM_P12_SALOON_CHANDPUMP` to `…CHANDPUMQ`, then to `…CHANDPUMA`. Neither name exists, so its second click plays the object's sequence 0, as `0x430A00` does with id 0. The Saloon's own code drives that object, which is out of scope here.
+- **A missing state.** Showdown's chandelier pump goes from `ANIM_P12_SALOON_CHANDPUMP` to `…CHANDPUMQ`, then to `…CHANDPUMA`. Neither name exists. `SetAnim` (`0x430A00`) stores id 0 and starts nothing, `SelectFrame` (`0x4309C0`) selects no frame, and the hit test (`0x430D10`) fails. So after one click the pump is neither drawn nor clickable. The Saloon's own code drives that object, which is out of scope here.
 - **The ghost room** loads but does nothing yet: it is per-room code.
+- **Corrected the same day.** The first engine commit and the first reference both played the object's sequence 0 for an unknown name. They agreed because both followed the same wrong reading of `0x430A00`. The WP-001 session found the error in the decompile. Fork commit `4f135d3a9f` fixes the engine, and the reference now models the original.
 
 ---
 

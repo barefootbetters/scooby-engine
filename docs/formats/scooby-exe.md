@@ -1294,7 +1294,10 @@ advances the state, and tells the room. When the sequence ends, the object
 rests stopped on step 0 of its new state. The state advances by its last
 character + 1, unless that gives a digit 1–9; a name the art file doesn't
 have goes back to `A`. So `…HOTSPOT1A` → `…1B` → `…1C`, and a state with
-no next letter stays.
+no next letter stays. If the state is missing even then (Showdown's `…CHANDPUMA`),
+`SetAnim` (`0x430A00`) stores id 0 and starts nothing; `SelectFrame`
+(`0x4309C0`) selects no frame and the hit test (`0x430D10`) fails, so the
+object is neither drawn nor clickable.
 
 A click can call the **ghost** instead: if the clickable was built by the
 default path, `rand() % 30 == 0`, and the room placed `OBJ_GHOST`. The
