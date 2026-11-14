@@ -6,7 +6,7 @@ title: "ScummVM Integration Contract"
 # ScummVM Integration Contract
 
 **Status:** Scaffold — sections populated as Phase 2 implementation lands
-**ScummVM version pin:** TBD — set when `scummvm/scummvm` is forked. Record commit hash here so the contract is reproducible.
+**ScummVM version pin:** `c553503d9d433726b22b43b3a6a0a86fd00125e9` (`scummvm/scummvm` `master`, 2026-11-13, "SCUMM: Hotspot highlighting with object names"). This is the base of the fork's `scooby-engine` branch ([barefootbetters/scummvm](https://github.com/barefootbetters/scummvm/tree/scooby-engine/engines/scooby)), pinned by [WP-010](work-packets/WP-010-scummvm-scaffold.md). Signatures below are checked against this commit.
 **Engine location:** `engines/scooby/` (within the ScummVM fork)
 **Vision doc reference:** [`docs/01-VISION.md`](01-VISION.md) — "Engine Contract (ScummVM Requirements)" section is the high-altitude principles; this doc owns the concrete API surface.
 
@@ -55,7 +55,7 @@ a PR unless every one of these is true:
 
 **Acceptance criterion:** `ScoobyEngine::run()` drives a cooperative event-pumping loop (calling `_system->getEventManager()->pollEvent()` each frame), returns `Common::kNoError` on clean exit, and contains no platform-specific surfaces or windowing calls. `syncSoundSettings()` is called once on startup (constructor or top of `run()`, per the engine's preference) before any audio plays, so the user's ScummVM volume preferences take effect on the first frame.
 
-**Implementation notes:** *TBD — populate during WP-002-equivalent (engine scaffold).*
+**Implementation notes:** WP-010 scaffold (2026-11-13): `ScoobyEngine::run()` sets up 640 × 480 RGB565 with `initGraphics()`, returns `kUnsupportedColorMode` if the backend cannot provide it, calls `syncSoundSettings()`, then pumps events through a `Graphics::FrameLimiter` at 60 fps until `shouldQuit()`.
 
 ---
 
@@ -155,13 +155,23 @@ Match on file presence + size; MD5 only for version differentiation. Never match
 
 ## 9. Debug channels
 
-**Requirement:** Register debug channels via `DebugMan.addDebugChannel()` in the engine constructor. Use `debugC(level, channel, ...)` for diagnostic output. No `printf`, no `fprintf(stderr, ...)`, no `std::cout`.
+**Requirement:** Declare debug channels as a `DebugChannelDef` table returned from `MetaEngineDetection::getDebugChannels()`; the engine framework registers them. (At the pin, engines no longer call `DebugMan.addDebugChannel()` directly. That was this section's original wording.) Use `debugC(level, channel, ...)` for diagnostic output. No `printf`, no `fprintf(stderr, ...)`, no `std::cout`.
 
 **Upstream reference:** `common/debug.h`, `common/debug-channels.h`.
 
 **Acceptance criterion:** At minimum these channels exist: `resource` (file loading), `graphics` (rendering), `audio` (mixer routing), `script` (`object.ini` interpretation), `input` (event handling). `scummvm --debugflags=resource scooby:showdown` produces meaningful output.
 
-**Implementation notes:** *TBD. Channel taxonomy is owned by this doc — record final names + assigned bits here.*
+**Implementation notes:** WP-010 (2026-11-13). The channels are declared in `engines/scooby/detection.h` (enum) and `detection.cpp` (table). WP-001 used the same names as Ghidra label prefixes ([`wp001-labels.txt`](../tools/ghidra-scripts/wp001-labels.txt)).
+
+| Id | Enum | Name | Covers |
+|---|---|---|---|
+| 1 | `kDebugResource` | `resource` | Archive and file loading (`TGIFILE.ART`, `.dat`, `MMFW`) |
+| 2 | `kDebugGraphics` | `graphics` | Cel decoding and rendering |
+| 3 | `kDebugAudio` | `audio` | Mixer routing and sound archives |
+| 4 | `kDebugScript` | `script` | `object.ini` and room logic |
+| 5 | `kDebugInput` | `input` | Event handling, hit tests |
+
+At the pin, channel values are ids starting at 1, not bit masks.
 
 ---
 
@@ -179,7 +189,12 @@ Match on file presence + size; MD5 only for version differentiation. Never match
 
 **Acceptance criterion:** `./configure --enable-engine=scooby && make` produces a `scummvm` binary that includes the engine. `./configure --disable-engine=scooby && make` produces one that omits it cleanly. No platform-specific build hacks.
 
-**Implementation notes:** *TBD.*
+**Implementation notes:** WP-010 (2026-11-13), at the pin, with MSYS2 UCRT64 (g++ 16.2.0, SDL2 2.32.10, GNU Make 4.4.1). The toolchain is chosen for Phase 2–5. Both builds ran out of tree:
+
+- `configure --disable-all-engines --enable-engine=scooby && make -j32`: configure lists only `Scooby-Doo (TerraGlyph)` as builtin, and the four `engines/scooby/*.o` compile with no warnings. `scummvm.exe --list-engines` shows `scooby`, and `--list-debugflags=scooby` shows the five §9 channels.
+- `configure --disable-engine=scooby && make -j32` (the default engine set, 38 minutes): configure lists scooby under "Engines Skipped". `scummvm.exe --list-engines` lists 97 engines without it. Only `engines/scooby/detection.o` is compiled, because at the pin configure builds detection for every engine by default ("building detection features for all engines... yes"). That is the detection/engine split working: detection compiles and links without `scooby.o`, `console.o` or `metaengine.o`.
+
+`configure.engine` is `add_engine scooby "Scooby-Doo (TerraGlyph)" no "" "" "highres 16bit" ""`: off by default, and it needs the 640 × 480 and 16-bit features. `module.mk` puts `scooby.o`, `console.o` and `metaengine.o` in `MODULE_OBJS` and `detection.o` in `DETECT_OBJS`. There is no `POTFILES` because there are no translatable strings yet.
 
 ---
 
@@ -208,6 +223,13 @@ The PR submitted to `scummvm/scummvm` (Phase 5 deliverable) must satisfy:
 - [ ] Commit messages follow ScummVM's convention (`SCOOBY: <subsystem>: <description>`)
 - [ ] No copyrighted game data, no decoded asset blobs, no `binkw32.dll` in the PR
 - [ ] Engine builds on the three reference platforms (Win/macOS/Linux) in ScummVM's CI
+- [ ] Complies with upstream's [`AI-GUIDELINES.md`](https://github.com/scummvm/scummvm/blob/master/AI-GUIDELINES.md) (present at the pin; recorded 2026-11-13, WP-010). It requires:
+  - AI assistance disclosed in the PR description;
+  - no AI (co-)authorship of code;
+  - commit and PR messages written by a human;
+  - for a whole-engine submission, a human primary maintainer who joins the team and can maintain the engine without AI.
+
+  `.github/workflows/check-commit-authors.yml` closes any PR whose commits carry a `Co-Authored-By:` trailer naming Claude, Copilot, Cursor or Codex. The fork's scaffold commits carry one. How this project meets the policy is an open decision for Jeff, not settled here.
 
 ---
 
