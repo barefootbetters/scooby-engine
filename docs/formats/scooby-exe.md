@@ -1312,7 +1312,7 @@ goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 | `0x401000` / `0x401350` | Clickable constructor (reads `Clickables`) / destructor (writes it) |
 | `0x401440` | Clickable update (vtable `+0x0C`): the click, the ghost's chance, the rest |
 | `0x401650` | Advance the state; rebuild the sound name |
-| `0x4015F0` | Rollover (vtable `+0x18`): `ANIM_CURSOROPEN` while the string at game `+0x238` equals game `+0xA0` (likely: no item held; not traced) |
+| `0x4015F0` | Rollover (vtable `+0x18`): `ANIM_CURSOROPEN` while the game cursor (`+0x238`) is the arrow (`+0xA0`); none while an item is in use ([WP-023](#the-inventory-and-the-toolbar-wp-023)) |
 | `0x40A850` | Game vtable `+0x40`: pass a click to the room's vtable `+0x14` |
 | `0x404440` | Default room `+0x14`: nothing. Story rooms override it (Boot Hill's graves: `0x40F250`) |
 | `0x40A990` | The ghost appears |
@@ -1352,6 +1352,132 @@ fork plays them through `Video::BinkDecoder`.
 | `0x42E0B0` | Game vtable `+0x3C`: whether the movie may be skipped (`+0x290`) |
 | `0x442210` | Bink manager constructor ("Creating Bink Movie Manager") |
 | `0x4422F0` / `0x4424F0` | Bink manager: open a movie / close it |
+
+##### The inventory and the toolbar (WP-023)
+
+Traced 2026-11-14 for [WP-023](../work-packets/WP-023-inventory.md), in
+Showdown; the fork plays it on both discs.
+
+**The game cursor.** Game `+0x238` holds the cursor's ANIM name, and game
+`+0xA0` the arrow (`ANIM_CURSORARROW`, set by `0x4089E0`). An item in use
+replaces the arrow. Every rollover (vtable `+0x18`) is empty while it does,
+so the cursor shows the item. Exits act only for the arrow (`0x402130`).
+Clickables act only while the cursor shows their own rollover
+(`0x401440`).
+
+**The toolbar** (`0x406620`, on every room entry, then parked by
+`0x407D50`).
+- **The van.** `OBJ_TOOLBAR` playing `ANIM_TOOLBARMYSTERY_MACHINE_IDLE` is
+  a root sprite at depth 5000, so it is in front of the room. Its y is
+  479 − its height.
+- **What it tows.** The van's children, at depth 5000 and so in front of
+  it, stand left of it by the sum of the widths so far, plus 20 pixels
+  each. In order:
+  - four slot sprites (`…FINGERPRINT_IDLE` if the slot has an item, else
+    `…_DIM`), each with the item's `toolbaranim` as a child, at index 0–3;
+  - the magnifying glass (7);
+  - the snack box (8), with two digit sprites;
+  - Scrappy (5);
+  - quit (6).
+- **Sizes.** The widths are `0x430C00`'s: the widest and the tallest cel
+  over the sequence's steps, without cel offsets.
+- **Blockers.** Two `OBJ_INVENTORY_BLOCK` hotspots sit at the root, at
+  depths 5001 and 4999. The first is shown while the van drives, the second
+  while the toolbar is open.
+- **States** (`0x407AF0`):
+  - parked at x 0;
+  - open at 635 − the van's width;
+  - driving in, between the two;
+  - driving out, beyond either;
+  - hidden (`0x407CC0`, x −(width + 30)), which story rooms use.
+
+**Driving** (`0x407120`, the van's update after its click handler
+`0x408060`).
+- **Clicking the van** (`0x406A70` index 4) needs the arrow and the toolbar
+  parked or open. Parked, it sets x to 15; open, to the open x + 15. Either
+  way it plays `Global.Toolbar` and starts `…_ANIM`.
+- **Each tick** the van then moves 15 pixels right:
+  - Driving in, it stops at the open x.
+  - Driving out, it goes off the right edge until x reaches the towed
+    width + 640. It reappears at −(width + 1) and stops at 0.
+- **Stopping.** A stop by clamping starts `…_STOP`, which plays into
+  `…_IDLE`. A step landing exactly on the open x stops without it.
+
+**Pick-up** (`inventoryobject`, `0x4026B0`; its update is `0x402B00`).
+- **The click** needs the arrow. With `pickupmovie=-1`, the object waits
+  (`+0x88`) and asks a parked toolbar to open (`0x407C00`).
+  - When the toolbar is open, `0x406DD0` puts the item in the first free
+    slot: `Out of Inventory space` past four.
+  - The room's vtable `+0x14` then hears of it (game `+0x40`, 1), the
+    object hides, and `pickupsfx` plays.
+- **With a movie.** The click blocks input, asks for the movie, and reloads
+  the same room (game vtable `+0x08`). It adds the item, and the toolbar
+  opens after the room loads (game `+0x248`, `0x409510`).
+- **The history.** Every item ever taken stays in a 32-entry history. The
+  "has item" test (`0x407060`) reads the history, not the slots, and
+  `0x402AD0` hides such an object when it is placed.
+- **Rollover.** The open hand (`0x402D20`), except while waiting.
+
+**Use** (`0x406A70` index 0–3, the slot's click).
+- With the arrow, a slot that holds an item makes its `usecursor` the
+  game cursor. The item sprite hides, and the slot plays `…_DIM`.
+- Each tick (`0x407120`), an item whose cursor is no longer the game's
+  shows again, and its slot plays `…_IDLE`.
+- A `requiresobject` (`0x402D90`; click `0x402F20`) compares the cursor
+  with its `requiredanim`, which is case-sensitive:
+  - the same: the room hears (1);
+  - else, the arrow: the room hears (0);
+  - else: nothing.
+  In the first two cases the cursor goes back to the arrow. Its rollover is
+  the open hand.
+
+**The wrong item** (`0x4098B0`, game vtable `+0x20`, after the room's
+tick).
+- **When.** An item has been the cursor for a tick (counter `0x475EFC`), a
+  click comes, and nothing took the item.
+- **Who speaks.** The gang flag (game `+0x240`, set on entry by
+  `0x409510`) says whether Fred, Scooby, Shaggy or Velma is in the room.
+  - With one of them there, `rand() % 4` picks Fred (`Global.WRONG_`),
+    Shaggy (`…WRONGS_`), Velma (`…WRONGV_`) or Scooby (`…WRONGSC_`) until
+    the one picked is there.
+  - Without, the narrator says `…WRONGN_`.
+  - The line plays as a scene that doesn't block input (`0x40B400`, last
+    argument 0).
+  - In a room with the echo flag (`+0x29`), Shaggy, Velma and Scooby say
+    `…_Echo_` lines and Fred is never picked. Showdown never sets the flag.
+    Phantom sets it in one place (`0x41529D`), beside its Mermaid's Cavern
+    clip names: story code.
+- **Then** the cursor goes back to the arrow, and the item to its slot.
+
+**The other buttons.**
+- **The magnifying glass** (7) goes to `ROOM_Suspect_Chooser`.
+- **Quit** (6) plays `Sign_In.Quit_Button`, then goes to `ROOM_Main_Menu`.
+- **The snack box** (`0x40D130`) and **Scrappy** (`0x40CD90`) have their own
+  classes. The snack box holds the snack count (`+0x30`, starting at 1;
+  digits `0x40D3B0`). Its cursor, `ANIM_CURSORSNACK`, feeds Scooby or
+  Shaggy. Scrappy's cursor, `ANIM_CURSORSCRAPPY`, makes an exit's
+  `scrappyid` speak.
+
+| Address | What it does |
+|---|---|
+| `0x4063C0` / `0x406530` | Inventory constructor / reset: no items, one snack |
+| `0x406620` | Build the toolbar in the room |
+| `0x406A70` | Toolbar click by index: a slot, the van, quit, the magnifying glass |
+| `0x406C80` / `0x406DD0` | Take an item out of its slot / put one in the first free slot |
+| `0x407060` | Has the item ever been taken (the history) |
+| `0x407120` | Toolbar update: items back in their slots, the blockers, the drive |
+| `0x407AF0` | Toolbar state |
+| `0x407C00` / `0x407C60` / `0x407CC0` / `0x407D50` | Open if parked / close if open / hide / park |
+| `0x407E50` / `0x408010` | Toolbar sprite constructor (index, `OBJ_TOOLBAR`, hit type 2) / the van |
+| `0x407F30` / `0x407F80` | Toolbar sprite click / rollover (none over a slot) |
+| `0x408060` | The van's update: its click, `…_STOP` into `…_IDLE`, then `0x407120` |
+| `0x4026B0` / `0x402AD0` / `0x402B00` / `0x402D20` | Inventory object: constructor / hide if taken / update / rollover |
+| `0x402D90` / `0x402F20` / `0x403010` | Requires object: constructor / click / rollover |
+| `0x4098B0` | Game update (`+0x20`): the wrong-item line, the cursor sprite, the ghost's room |
+| `0x409510` | Game `+0x18`, on entry: the arrow, the gang flag, open after a pick-up movie |
+| `0x430C00` | A sprite's size: widest and tallest cel over its sequence |
+| `0x40CD30` / `0x40D020` | Scrappy / the snack box |
+| `0x407430` / `0x407780` | Read / write the save's `Inventory` section (`Slot%i`, `Anim%i`, `Cursor%i`, `History%i`, `Snacks`) |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
