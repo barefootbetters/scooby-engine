@@ -5,12 +5,34 @@ title: "WP-023: The inventory and the toolbar"
 
 # WP-023: The inventory, the toolbar and requires objects (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 4 (game logic: inventory)
 **Depends on:** WP-018 ✅ (kinds, hit test, cursor), WP-019 ✅ (sound), WP-020 ✅ (characters, scenes), WP-021 ✅ (clicks reach the room)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Day
 **Pre-flight:** [pre-flight-WP-023-2026-11-14](../reference/pre-flight-WP-023-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+The reference is `wp023_ref.py`, written from the trace. It reads `TGIFILE.ART` through `tools/probe_art.py`, plus `object.ini` and the sound indexes, and never runs the engine. At `script` level 3 the engine's check logs one line per toolbar phase, pick-up and requires object, and the reference prints the same lines.
+
+| Exit criterion | Result |
+|---|---|
+| 1. The toolbar | ✅ Both titles match line for line: each sprite's position, size and ANIM, parked and open. The van is 93 pixels wide on both and opens at x 542, after 36 ticks. Parking takes 48 ticks: off the right edge, back in from the left. On the tick the van stops, the blocker in front of it is still shown. The reference got this wrong at first; `0x407120` returns before hiding it, and the engine does the same. |
+| 2. Every pick-up | ✅ 7 on Showdown and 10 on Phantom match. Each item without a movie lands in slot 0 on tick 37, when the toolbar is open. In order: `Global.Toolbar`, the room hears of it, the object hides, and `pickupsfx` plays (none exist). The object stays hidden on return. Phantom's three movie items (10, 37, 38) add the item at once and ask for the movie and the same room. |
+| 3. Every requires object | ✅ 13 on Showdown and 19 on Phantom match. With the arrow, the room hears 0, except Showdown's dark-tunnel crate, which asks for the arrow and hears 1. 20 have an item that gives their cursor; with it, the room hears 1 and the item goes back. With another item, the room hears nothing, the gang member the trace picks says the `Global.WRONG…` line, and the item goes back. That is the narrator in Phantom's 6 rooms without the gang. 12 ask for a cursor no item gives: story items, the arrow, `ANIM_CURSOROPEN` and one blank. |
+| 4. Live, Showdown | ✅ In Town Center, a click on the fallen sign drove the toolbar in, and the sign landed in slot 0. Its slot's click made it the cursor. A click on the road with it drew Shaggy's `Global.WRONGS_1_SHAGGY`, and the sign went back. In the Bank Vault, with `start_items=OBJ_INV_STRONGBOXKEY`, the key used on the chest (hotspot 4) gave `room event OBJ_P16_BANK_VAULT_HOTSPOT4 1`. In an earlier attempt, the key clicked on the exit drew Velma's line instead, as the trace says it should. |
+| 5. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit check (71 and 82), click check (191 and 174) and room check (69 and 53 rooms, every line as in WP-020) are unchanged. Fork commit [`b67042410e`](https://github.com/barefootbetters/scummvm/commit/b67042410e) stages its 11 files by name, inside `engines/scooby/`, and is pushed. |
+
+**Deviations and gaps:**
+
+- **The toolbar is in every room.** The original's menu and set-piece rooms hide it through their own classes (`0x407CC0`), which aren't implemented yet.
+- **No story yet.** Pick-ups and uses reach the room as events that the base room ignores, as the original's base class does. Doors and puzzles wait for the story rooms' code.
+- **The snack box and Scrappy** draw, but their clicks do nothing yet.
+- **The inventory lasts the session.** The save's `Inventory` section is not written.
+- **Not tested live:** closing the toolbar by its van. The check covers the drive and its tick count. The live click lost focus to another window, so the run stopped there rather than fight for the mouse.
 
 ---
 
@@ -85,20 +107,20 @@ the object at game `+0xAC`):
 
 ## Exit criteria
 
-1. [ ] The toolbar matches an independent reference on both discs:
+1. [x] The toolbar matches an independent reference on both discs:
    - every sprite's position, size and ANIM, parked and open;
    - the ticks to open and to park.
-2. [ ] Every inventory object, picked up from a new game, matches the
+2. [x] Every inventory object, picked up from a new game, matches the
    reference: what happens, in order, the ticks until it lands, its slot,
    and whether it hides now and on return.
-3. [ ] Every requires object matches the reference when clicked with the
+3. [x] Every requires object matches the reference when clicked with the
    arrow, with the item it asks for (where an item gives it), and with
    another item.
-4. [ ] Live, in Showdown:
+4. [x] Live, in Showdown:
    - an item is picked up into the toolbar;
    - used on nothing, it draws a gang member's line and goes back;
    - used on its requires object, it tells the room.
-5. [ ] Scooby-only build: 0 errors and 0 warnings. The exit, click and room
+5. [x] Scooby-only build: 0 errors and 0 warnings. The exit, click and room
    checks are unchanged. The fork diff stays inside `engines/scooby/`,
    staged by name.
 
