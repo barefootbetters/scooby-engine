@@ -5,12 +5,29 @@ title: "WP-022: Movies"
 
 # WP-022: Movies through `Video::BinkDecoder` (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (resource loading: video)
 **Depends on:** WP-019 ✅ (sound), WP-020 ✅ (the exit transition, which names a movie)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-022-2026-11-14](../reference/pre-flight-WP-022-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Every movie decodes and matches `ffmpeg` | ✅ At `script` level 3 the engine decodes every `BK.*` to its last frame: 42 on Showdown, 56 on Phantom, none bad. `ffprobe` and `ffmpeg` decode the same files independently. Frame counts and sizes match on all 98, and lengths agree within 2 ms. Of 882 per-channel mean colours (three frames × three channels × 98 movies), 615 agree within half a level, 253 within 1, and 14 within 2. The 2-level ones are saturated colours, such as a pure-red frame at 255 against `ffmpeg`'s 253: the two decoders convert YUV to RGB slightly differently. |
+| 2. Live: an exit's movie | ✅ In Showdown's Railroad Station, `start_movie=32` played the first viewing. A click 2 s in didn't skip it, and all 107 frames played in 8,931 ms; its length is 8,916 ms. The movie's sound was playing on the SFX channel. Then `OBJ_P09_TO_P40`'s walk-off ended in movie 32 again. That viewing was skippable, a click stopped it after 32 frames, and `ROOM_P33_Chase_C1` loaded. |
+| 3. Missing or damaged movie | ✅ `start_movie=24` (Showdown has no `BK.024`) logs `Movie 24: cannot open BK.024` and the room runs on. A scratch folder held a `BK.032` truncated to 64 KB. At first this hung `Video::BinkDecoder` inside a call. The engine now checks the Bink header's size field, which matches the file on all 98 genuine movies, before opening the file. It logs `BK.032 is damaged (header says 4276344 bytes, file has 65536)` and the room runs on. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`b45a790126`](https://github.com/barefootbetters/scummvm/commit/b45a790126) stages its 6 files by name, inside `engines/scooby/`, and is pushed. The exit and click checks still pass. |
+
+**Deviations:**
+
+- **Skip keys.** The original skips on two DirectInput slots whose keys weren't traced, or a mouse button. The fork uses Escape, Space and the mouse buttons.
+- **Seen movies last for the session.** The original keeps them in the save's `MovieHistory` entries, so they persist across sessions.
+- **Title movies** (ids 0 and 25–28) and the title flow are not wired up.
 
 ---
 
@@ -72,16 +89,16 @@ The discs carry 42 movies (Showdown) and 56 (Phantom), all Bink
 
 ## Exit criteria
 
-1. [ ] Every `BK.*` on both discs decodes to its last frame in the
+1. [x] Every `BK.*` on both discs decodes to its last frame in the
    engine. Frame count, size and rate match `ffprobe`. The mean colour of
    the first, middle and last frames matches `ffmpeg`'s decode to within 2
    levels per channel.
-2. [ ] Live, an exit with `movie=` plays the movie with its sound after
+2. [x] Live, an exit with `movie=` plays the movie with its sound after
    the walk-off, then loads the room; the movie's length matches its frame
    count over its rate. A second viewing can be skipped, the first can't.
-3. [ ] A missing or damaged movie file logs a warning and the room loads
+3. [x] A missing or damaged movie file logs a warning and the room loads
    anyway.
-4. [ ] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
+4. [x] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
    inside `engines/scooby/`, staged by name.
 
 ## Deliverables
