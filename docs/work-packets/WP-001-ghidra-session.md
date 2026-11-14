@@ -40,7 +40,7 @@ Findings live in [tgifile-art.md](../formats/tgifile-art.md) (header,
 descriptors, sequences, room blocks, cel flags, masks, name table, decode
 path), [scooby-exe.md §Resource loading map](../formats/scooby-exe.md#resource-loading-map)
 and [§`object.ini` consumer](../formats/scooby-exe.md#objectini-consumer-wp-001),
-and [audio-archives.md](../formats/audio-archives.md#index-table-wp-001-lead).
+and [audio-archives.md](../formats/audio-archives.md#index-records).
 `tools/probe_art.py --verify` now checks every data-side claim across the
 whole file, and `probe_art.py` renders with the masks.
 

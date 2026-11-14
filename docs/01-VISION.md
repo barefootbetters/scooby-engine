@@ -205,14 +205,16 @@ on [WP-009](work-packets/WP-009-reference-screenshots.md).
 
 #### Audio archives
 
-`Music.dat`, `Sfx.dat`, `Voice.dat`. Header structure confirmed (2026-06);
-index table layout resolved from the `Scooby.exe` trace (WP-001, 2026-11-13).
-Codec still unresolved.
+`Music.dat`, `Sfx.dat`, `Voice.dat`. **Decoded (WP-004, 2026-11-13):**
+a name-indexed set of clips, each **uncompressed PCM** (mostly 22050 Hz
+16-bit, mono or stereo) after a 16-byte header and, for voice, a lip-sync
+track. ScummVM's raw PCM stream plays them; no new decoder is needed. See
+[`docs/formats/audio-archives.md`](formats/audio-archives.md).
 
 **Confirmed structure (all three files share the same 12-byte header):**
 - Bytes 0x00–0x0B: `version` (= 1, uint32LE), `entry_count` (uint32LE),
   `index_offset` (uint32LE; offset of the index table, per WP-001 — see
-  [`docs/formats/audio-archives.md`](formats/audio-archives.md#index-table-wp-001-lead))
+  [`docs/formats/audio-archives.md`](formats/audio-archives.md#index-records))
 - Music.dat: 28 entries / 91.7 MB — Sfx.dat: 316 entries / 30.7 MB —
   Voice.dat: 821 entries / 103.8 MB
 - Index table at `index_offset`: `entry_count` 68-byte records
@@ -220,15 +222,14 @@ Codec still unresolved.
   at end of file in all three files. Clips are sector-aligned from `0x800` and
   looked up by name.
 
-**Remaining unknowns:**
-- Codec: no standard magic bytes (RIFF/WAV, OggS, FLAC) at offset 0; the
-  per-clip header has not been examined.
+**Remaining unknowns:** the lip-sync bytes' high bits, and where (if
+anywhere) dialogue text lives.
 
 Execution tracked in
 [WP-004](work-packets/WP-004-audio-archive-decode.md).
 
-For Phase 1, codec identification is sufficient — full decode can defer to
-Phase 3 if ScummVM already supports the codec.
+For Phase 1, codec identification is sufficient. Full decode can defer to
+Phase 3; ScummVM already supports the codec (raw PCM).
 
 #### `Scooby.exe`
 
@@ -372,14 +373,14 @@ playbooks for the WPs most likely to sprawl.
 
 Work items:
 - `TGIFILE.ART` payload decoded and images extracted from *Showdown* (WP-002, 2026-11-13; see `docs/formats/tgifile-art.md`). Frame comparison against reference screenshots waits on WP-009.
-- Locate audio archive index table; identify codec(s).
+- Locate audio archive index table; identify codec(s). Done (WP-004, 2026-11-13): uncompressed PCM, see `docs/formats/audio-archives.md`.
 - Load `Scooby.exe` into Ghidra; trace file I/O and resource lookup.
 - **Engine-family check:** mount Case File #1 and #2 ISOs; compare disc layouts and file signatures against *Showdown* (same file names, same magic bytes, compatible archive structure?).
 
 Exit criteria (all required):
 1. At least one `TGIFILE.ART` entry extracted to PNG or BMP and matched visually against in-game output.
 2. `TGIFILE.ART` structure documented in `docs/formats/tgifile-art.md`: header layout (byte offsets, field sizes) and entry table (count, offsets, sizes).
-3. At least one audio container inspected; codec identified by name (even if not yet decoded).
+3. At least one audio container inspected; codec identified by name (even if not yet decoded). **Met (WP-004, 2026-11-13):** all three `.dat` files are uncompressed PCM.
 4. Engine-family question answered in writing: do Case File #1/#2 share format with *Showdown*, or do they need a separate engine?
 
 Fail condition: inability to extract any visual asset from `TGIFILE.ART` blocks Phase 2 — revisit feasibility before continuing.
