@@ -225,15 +225,17 @@ loop forward, 2 = loop backward, 3 = play forward once and hold the last
 step, 4 = play backward once and hold the first, and 5 = jump to the last
 step and stop. 0 = stopped. Step timing comes from the caller, not from
 the data: the animated-sprite constructor (`0x430790`) takes object name,
-ANIM name, parent, depth, mode, ticks per step and start step, and the
-default placement path passes mode 1 at 3 ticks per step.
+ANIM name, parent, depth, mode, ticks per step and start step. Every
+placement constructor passes 3 ticks per step and step 0. The mode depends
+on the kind (WP-018): 1 for most, but **0 (stopped) for `clickableobject`
+and `OBJ_GHOST`**. See [Rendering a room](#rendering-a-room-2026-11-13).
 
 **Tick unit and start step (WP-017, 2026-11-14).**
 
 - **The tick unit.** The game loop (`0x435BC0`) owes `elapsed_ms × 36 / 1000` ticks since
   its base time. It runs each owed tick, then draws once. A tick walks the
   sprite tree front to back, calling every sprite's tick (`0x431130`, skipped
-  for paused subtrees). So a tick is 1/36 s, and a default placement shows
+  for paused subtrees). So a tick is 1/36 s, and a looping placement shows
   12 steps per second: after `T` ticks it is at step `floor(T / 3) mod n`.
   Phantom's loop is byte-identical.
 - **The countdown.** Start (`0x430AA0`) sets it to the ticks per step. Each
@@ -386,6 +388,54 @@ reset (`0x435CD0`) clears. Placements then attach by kind
 | `ID=exitobject` | layer 0 | −1000 |
 | `ID=clickableobject` | layer `layer=` (missing or −1 → 0) | `priority=` (missing → −1) |
 | anything else (`simpleobject`, no section) | layer 1 | 0 |
+
+**How each kind starts (WP-018, 2026-11-14).** The constructors decide more
+than parent and depth:
+
+| Kind | Constructor | Start mode | Hidden | Hit test |
+|---|---|---|---|---|
+| exit, requires, inventory | `0x401850`, `0x402D90`, `0x4026B0` | 1 | no | step polygon (type 2) |
+| clickable | `0x401000` (via `0x408DC0`) | **0** | no | step polygon (type 2) |
+| character | `0x4048E0` | 1 | no | cels (type 1) |
+| `OBJ_GHOST` | `0x430790`, then `0x4313F0(1)` and `Start(0, 3, −1)` | **0** | **yes** | cels (type 1), but hidden sprites are skipped |
+| anything else | `0x430790` | 1 | no | step polygon (type 2) |
+
+- **Clickables.** The constructor can resume a sequence saved under a
+  `Clickables` settings key. A fresh game has none.
+- **Hidden sprites.** `+0x14` is neither drawn (`0x431000`) nor hit-tested
+  (`0x4311F0`), but it still ticks.
+- **What WP-016/017 got wrong.** Both treated every placement as visible and looping.
+  - At tick 0 that changes no Showdown room: its ghost's first frame is empty, and clickables start at step 0 either way.
+  - It does change the 5 Phantom rooms with a ghost: its first frame has art there.
+  - By tick 37 it changes 22 Showdown and 23 Phantom rooms.
+- **`--room`** now hides the ghost.
+
+**Hit testing (WP-018, 2026-11-14).** The hit walk (`0x4311F0`, sprite vtable
+`+0x14`) visits sprites in the draw order, front to back, skipping hidden
+ones. The first sprite whose test passes is under the cursor.
+
+- **Type 2, the step polygon** (`0x430D10` → `0x431350` → `0x4312A0`).
+  - It uses the current step's polygon (the step's third word), with
+    coordinates relative to the sprite: `(x, y) = (px − sx, py − sy)`.
+  - The box test is strict on both sides: `bx < x < bx + w` and
+    `by < y < by + h`.
+  - Then comes an even-odd crossing test. For each edge `(i, j = previous)`,
+    toggle when `(yi ≤ y < yj or yj ≤ y < yi)` and
+    `x < (xj − xi)(y − yi) / (yj − yi) + xi`, with C integer division.
+  - A step with no polygon is never hit.
+- **Type 1, the cels** (`0x431400`). Inside a cel's rectangle
+  `[cx, cx + w) × [cy, cy + h)`, the sprite is hit if the cel isn't solid
+  and its pixel is non-zero, or if mask B or mask A covers the point.
+  Background layers are type 1, so every point in a room hits something.
+
+**Rollover cursors (sprite vtable `+0x18`).**
+
+- Exits (`0x402410`) return `rolloveranim=` while the default cursor is up,
+  and `ANIM_CURSORSCRAPPY_ANIM` in Scrappy's hint mode.
+- Clickables (`0x4015F0`) return `ANIM_CURSOROPEN`.
+- The base class (`0x408450`) returns nothing.
+- The cursor itself is an `OBJ_CURSOR` sprite (`0x4089E0`), `ANIM_CURSORARROW`
+  by default.
 
 Showdown never fills layer slot 1. A sprite whose parent slot is empty
 attaches to the root (`0x430F40`). So `simpleobject` placements and

@@ -999,6 +999,10 @@ These are the format facts that came out of the trace, each written up in
 | `0x435BC0` | (game tick loop) | `ticks = elapsed_ms × 36 / 1000 − done`. Runs each owed tick (tree tick, room update) and then draws once: **36 ticks per second**. Phantom: `0x4368F0`, byte-identical. WP-017 |
 | `0x4309C0` | `graphics_AnimSprite_SelectFrame` | Current step's frame ref → frame record |
 | `0x430D10`, `0x431350`, `0x4312A0` | `input_AnimSprite_HitTest`, `input_PolygonHitTest`, `input_PointInPolygon` | Step polygon: bounding box, then even-odd test |
+| `0x4311F0` | (sprite hit walk, vtable `+0x14`) | Front to back in draw order; skips hidden (`+0x14`); calls `+0x1C` (type 1) or `+0x20` (type 2) by the sprite's `+4`. WP-018 |
+| `0x431400` | (cel hit test, type 1) | Inside a cel: non-solid non-zero pixel, or mask B / mask A covers the point. WP-018 |
+| `0x402410`, `0x4015F0`, `0x408450` | `input_ExitObject_GetRolloverCursor`, clickable and base rollover (vtable `+0x18`) | Exit: `rolloveranim=` (hint mode: `ANIM_CURSORSCRAPPY_ANIM`). Clickable: `ANIM_CURSOROPEN`. Base: none. WP-018 |
+| `0x4313F0` | (sprite set hidden) | Writes `+0x14`; `0x4091FF` hides `OBJ_GHOST` with it. WP-018 |
 | `0x438660` | `graphics_Renderer_RenderFrame` | Opaque pass front to back, then alpha regions back to front |
 | `0x439C00` | `graphics_Renderer_DrawFrameRecord` | Intersect still-visible region with mask A (draw, subtract) and mask B (queue); `GameRenderer::AlphaRegion buffer` overflow error |
 | `0x4398A0` | `graphics_Renderer_GetCelPixels` | The RLE decoder, with a 256-slot bitmap cache; `Out of space for the Bitmap Cache` |
