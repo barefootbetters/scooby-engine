@@ -122,13 +122,14 @@ compared with `tools/exes/jinx/Scooby.exe` (847,872 bytes). Full write-up:
 - **Studio.** The source tree and build date put it beside Jinx. No
   developer credit was checked for this title, so none is claimed here.
 
-### Detection (not done here)
+### Detection
 
-The fork's detection table
-(`C:\dev\scummvm` `engines/scooby/detection_tables.h`, added by [WP-012](WP-012-detection-table.md))
-could take a `kGen2` entry for this disc. Using WP-012's method (size and
-MD5 of the first 5,000 bytes; Jinx's `Mummy.mms` reproduces its listed
-`17d996eb…`):
+*Added after the WP closed (2026-11-14).* The fork's detection table
+(`engines/scooby/detection_tables.h`, from [WP-012](WP-012-detection-table.md))
+now has a `kGen2` entry for this disc, in fork commit
+[`644305dddc`](https://github.com/barefootbetters/scummvm/commit/644305dddc). It
+uses WP-012's method: size and MD5 of the first 5,000 bytes. Jinx's
+`Mummy.mms` reproduces its listed `17d996eb…`, which checks the method.
 
 | File | Size (bytes) | MD5 (first 5,000 bytes) |
 |---|---|---|
@@ -136,9 +137,26 @@ MD5 of the first 5,000 bytes; Jinx's `Mummy.mms` reproduces its listed
 | `BONUS.MMP` | 68,733,610 | `2a96b23cb24e866d65ea3cd4939c78b1` |
 | `BONUS.MMF` | 19,744,128 | `35d13d927badf3d5f6177a003b072ac6` |
 
-The entry would need a game id and a support flag. Like Jinx it would be
-`ADGF_UNSUPPORTED`. Until it lands, WP-012's check that Activity
-Challenge is not detected stays correct.
+- **Game id:** `activitychallenge`. SCUMM already uses `activity`.
+- **Flag:** `ADGF_UNSUPPORTED`, like Jinx. The launcher detects the disc
+  but refuses to start it.
+- **Files:** the three archives at the disc root. The executable sits in
+  `INSTALL\HDINSTALL\`, outside the detector's directory globs, so it is
+  not used.
+- **Test:** a scooby-only build of the fork (no warnings in
+  `engines/scooby/`) was run with `--detect` on each mounted disc root.
+  *Activity Challenge* is detected as `scooby:activitychallenge`, and so is
+  `tools/exes/activity/`, which holds only the archives. Showdown,
+  Phantom, Jinx and Case File #1 still detect as before. Case File #2 and
+  an unrelated directory match nothing. Starting it from the command line
+  stopped at a dialog before the engine logged anything. The dialog was
+  not read, but it matches WP-012's unsupported-game stop for Jinx.
+- **Commit history:** the entry is inside `644305dddc`, whose message
+  covers only the cel decoder. Another session committed the shared fork
+  checkout while this edit was still uncommitted.
+
+This supersedes WP-012's result that *Activity Challenge* is not
+detected.
 
 ---
 

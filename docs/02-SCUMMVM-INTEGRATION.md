@@ -79,6 +79,7 @@ a PR unless every one of these is true:
 |---|---|---|
 | Gen 1 | Showdown, Phantom | `Scooby.exe`, `TGIFILE.ART`, `object.ini` (all in `\scooby\`) |
 | Gen 2 | Jinx | `Scooby.exe`, `Mummy.mms` (in `\Jinx\`), `Mummy.MMP` (disc root) |
+| Gen 2 | Activity Challenge | `Bonus.mms`, `BONUS.MMP`, `BONUS.MMF` (all at the disc root; `Scooby.exe` is in `\INSTALL\HDINSTALL\`, so it is not used) |
 | Gen 3 | Case File #1 | `Case File #1.exe` (in `\MUSEUM\`), `Museum.MMS` (in `\MUSEUM\Scripts and Resources\`), `MuseumCD.MMP` (in `\Scripts and Resources\`) |
 
 Case File #2 runs a different engine and has no entry ([WP-005](work-packets/WP-005-engine-family-check.md)). Signature files are the ones WP-012 matches. Earlier drafts of this table listed `libexpat.dll` and loose `*.xml` files for Gen 3; the XML is inside the MMFW archives.
@@ -89,7 +90,7 @@ Match on file presence, size and MD5. The MD5 covers the first 5,000 bytes, the 
 
 **Upstream reference:** `engines/advancedDetector.h`; `engines/<engine>/detection_tables.h` patterns across existing engines. For multi-format engines see existing engines with a `flags` field carrying format-version info (e.g. AGI's `GType_*` field).
 
-**Acceptance criterion:** Each of the four in-scope ISOs is detected with the correct generation flag (Showdown=1, Phantom=1, Jinx=2, Case File #1=3). Case File #2 (a different engine, per WP-005) and Case File #3 (a Director title) are not detected. No false positives on a directory containing unrelated DOS/Windows-era game files. *(Revised 2026-11-14 by WP-012; the original asked for five ISOs with Case File #2 as Gen 3.)*
+**Acceptance criterion:** Each of the four in-scope ISOs is detected with the correct generation flag (Showdown=1, Phantom=1, Jinx=2, Case File #1=3). *Activity Challenge* is detected as Gen 2 ([WP-013](work-packets/WP-013-activity-challenge-engine-check.md)); it is not in a Phase 5 tier yet, so it stays `ADGF_UNSUPPORTED`. Case File #2 (a different engine, per WP-005) and Case File #3 (a Director title) are not detected. No false positives on a directory containing unrelated DOS/Windows-era game files. *(Revised 2026-11-14 by WP-012; the original asked for five ISOs with Case File #2 as Gen 3.)*
 
 **Implementation notes:** WP-012 (2026-11-14). `detection.h` declares:
 
@@ -104,7 +105,7 @@ struct ScoobyGameDescription {
 };
 ```
 
-The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` has four entries:
+The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` has five entries (the fifth added after WP-013):
 
 | Game id | Title | Generation | Flag |
 |---|---|---|---|
@@ -112,10 +113,11 @@ The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` h
 | `phantomknight` | *Phantom of the Knight* | 1 | `ADGF_UNSTABLE` |
 | `jinxsphinx` | *Jinx at the Sphinx* | 2 | `ADGF_UNSUPPORTED` |
 | `casefile1` | *Case File #1: The Glowing Bug Man* | 3 | `ADGF_UNSUPPORTED` |
+| `activitychallenge` | *Activity Challenge* | 2 | `ADGF_UNSUPPORTED` |
 
-- **Game ids.** `phantom` and `jinx` are already used by MADS (*Return of the Phantom*) and Glk/Adrift. Two engines with the same id make a bare id on the command line ambiguous, so the entries use `phantomknight` and `jinxsphinx`.
+- **Game ids.** `phantom` and `jinx` are already used by MADS (*Return of the Phantom*) and Glk/Adrift. Two engines with the same id make a bare id on the command line ambiguous, so the entries use `phantomknight` and `jinxsphinx`. `activity` is SCUMM's (*Putt-Putt & Fatty Bear's Activity Pack*), hence `activitychallenge`.
 - **Flags.** Gen 1 is `ADGF_UNSTABLE` while it is being built. Gen 2 and Gen 3 are detected but `ADGF_UNSUPPORTED`, so the launcher refuses to start them until their archive readers exist. Moving an entry to a playable flag is a Phase 3 or Phase 5 change, not a table restructure.
-- **Directories.** `_maxScanDepth = 3` and `_directoryGlobs` = `scooby`, `jinx`, `museum`, `scripts and resources`. Matching is by base name. The disc root works for all four titles. For Showdown and Phantom the `\scooby\` directory alone also works. Jinx and Case File #1 keep their signature files in two directories, so they need the root.
+- **Directories.** `_maxScanDepth = 3` and `_directoryGlobs` = `scooby`, `jinx`, `museum`, `scripts and resources`. Matching is by base name. The disc root works for all five titles. *Activity Challenge*'s three signature files are at the root, so it needs no glob. For Showdown and Phantom the `\scooby\` directory alone also works. Jinx and Case File #1 keep their signature files in two directories, so they need the root.
 - **Values.** Sizes and MD5s are in the fork's [`detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/detection_tables.h). The sizes match the [`tools/exes/` identity tables](../tools/exes/README.md#currently-cached).
 
 ---

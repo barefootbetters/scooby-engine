@@ -31,7 +31,7 @@ title: "WP-012: Detection Table with Generation Flag"
 - **Game ids** `phantomknight` and `jinxsphinx`, not `phantom` and `jinx`, which other engines use.
 - **"Add Game" dialog not clicked through.** `--detect` runs the same detector code. Starting a game was tested from the command line.
 
-**Found in passing:** `ScoobyDoo.iso` (*Scooby-Doo! Activity Challenge*, 2001) ships MMFW archives (`BONUS.MMF`, `.MMA`, `.MMP`, `Bonus.mms`, all starting `MMFW`) and `INSTALL\HDINSTALL\Scooby.exe` (794,624 bytes), alongside the IBS logo video. That is Jinx's layout. The [vision doc](../01-VISION.md) assumes it uses a different engine. It looks like the same lineage, which would make it a fifth candidate. Not classified here. [WP-013](WP-013-activity-challenge-engine-check.md) has since classified it: Gen 2, Jinx's engine. Its detection entry is not part of this WP.
+**Found in passing:** `ScoobyDoo.iso` (*Scooby-Doo! Activity Challenge*, 2001) ships MMFW archives (`BONUS.MMF`, `.MMA`, `.MMP`, `Bonus.mms`, all starting `MMFW`) and `INSTALL\HDINSTALL\Scooby.exe` (794,624 bytes), alongside the IBS logo video. That is Jinx's layout. The [vision doc](../01-VISION.md) assumes it uses a different engine. It looks like the same lineage, which would make it a fifth candidate. Not classified here. [WP-013](WP-013-activity-challenge-engine-check.md) has since classified it: Gen 2, Jinx's engine. Its detection entry is not part of this WP; it was added afterwards in fork commit [`644305dddc`](https://github.com/barefootbetters/scummvm/commit/644305dddc) (see [WP-013 §Detection](WP-013-activity-challenge-engine-check.md#detection)).
 
 ---
 
