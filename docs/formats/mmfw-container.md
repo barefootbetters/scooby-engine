@@ -6,7 +6,7 @@ title: "Format Spec: MMFW Container"
 # Format Spec: `MMFW` Container (Gen 2/3 archive format)
 
 **Status:** Container header structure identified — payload format unknown
-**Engine generation:** **Gen 2** (Jinx 2001) and **Gen 3** (Case File #1 2002, Case File #2 2003 predicted)
+**Engine generation:** **Gen 2** (Jinx 2001) and **Gen 3** (Case File #1 2002). Case File #2 (2003) runs a different engine with no `MMFW` ([WP-005](../work-packets/WP-005-engine-family-check.md)).
 **Sample files:**
 - `E:\Mummy.MMF` (57 MB) — Jinx, content type: "Films"
 - `E:\Jinx\Mummy_HD.MMF` (10.6 MB) — Jinx, content type: TBD
@@ -110,11 +110,11 @@ The earlier guess of `MMFW Package` or `MMFW Project` for `.MMP` files is not bo
 | Gen | Title | Archive files | Format spec |
 |---|---|---|---|
 | 1 | Showdown | `TGIFILE.ART`, `Music.dat`, `Sfx.dat`, `Voice.dat` | [`tgifile-art.md`](tgifile-art.md) (+ [`audio-archives.md`](audio-archives.md) for Gen 1 audio) |
-| 1 | Phantom | unverified, predicted same as Showdown | same as Showdown |
+| 1 | Phantom | `TGIFILE.ART`, `MUSIC.DAT`, `SFX.DAT`, `VOICE.DAT`, verified Gen 1 by [WP-006](../work-packets/WP-006-phantom-archive-format.md) | same as Showdown |
 | 2 | Jinx | `Mummy*.MMF`, `HD.MMA`, `HD.MMP`, `Mummy_HD.MMF`, `Mummy.mms` | this doc |
 | 2 | Activity Challenge (WP-013) | `BONUS.MMF`, `BONUS.MMA`, `BONUS.MMP`, `Bonus.mms` | this doc |
 | 3 | Case File #1 | `MuseumCD.MMP`, `MuseumCD.MMA` | this doc |
-| 3 (predicted) | Case File #2 | TBD | predicted this doc |
+| — (not this lineage, [WP-005](../work-packets/WP-005-engine-family-check.md)) | Case File #2 | `.bul` bulk archives with a `.inx` index; no `MMFW` | not this doc; see [scooby-exe §Case File #2](scooby-exe.md#case-file-2-wp-005) |
 
 ---
 
