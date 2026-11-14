@@ -495,7 +495,7 @@ Scope rule (revised per Engine Lineage finding above):
 - **Extended (high confidence):** Showdown + Phantom (Gen 1 — identical toolchain, confirmed identical `binkw32.dll` hash).
 - **Extended (medium confidence):** + Jinx (Gen 2 — requires `MMFW` container parser as a sibling to the Gen 1 `TGIFILE.ART` parser).
 - **Stretch (medium confidence):** + Case File #1 (Gen 3 — requires MMFW parser, XML config via `libexpat.dll`, raw `.avi` cutscene path alongside the Bink path).
-- **Unassigned:** Activity Challenge (Gen 2 by code, WP-013, 2026-11-14). Its archives would open with the Jinx-tier `MMFW` parser, but its real-time mini-games are game-layer work no adventure title needs. It joins a tier by decision, not by default.
+- **Unassigned:** Activity Challenge (Gen 2 by code, WP-013, 2026-11-14). Its archives would open with the Jinx-tier `MMFW` parser, but its real-time mini-games are game-layer work no adventure title needs. It joins a tier by decision, not by default. The fork already detects it as Gen 2, unsupported, so the launcher recognises the disc but will not start it.
 - **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13) and Case File #3 (Macromedia Director / TLC-Broderbund).
 
 Each generation extends the engine with one new adapter per axis; the
