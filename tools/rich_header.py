@@ -16,98 +16,145 @@ Usage:
 Pass multiple files to compare toolchains across titles in one run.
 Self-contained — no external dependencies (no pefile, no pip install).
 
-Product ID mappings are sourced from the community-maintained richprint
-database (https://github.com/dishather/richprint). Only high-confidence
-entries are encoded here; unrecognised IDs print as "unknown 0x..." so
-the script never lies confidently.
+Product IDs are the 16-bit `prodid` values of Microsoft's internal enum.
+The names in PRODUCT_IDS are that enum's own (`Utc12_CPP`, `Linker600`, ...),
+as tabulated in kirschju/richheader `prodids.py` (2017); the descriptions
+follow the community richprint database
+(https://github.com/dishather/richprint, `comp_id.txt`), whose empirical
+comp.id entries from known Visual Studio builds agree with the enum.
+Unrecognised IDs print as "unknown 0x..." so the script never lies
+confidently.
 
-Build-number annotations were removed in the v2 revision after a false
-positive: cvtres build 8447 ships with both VC6 SP5/SP6 AND with standalone
-Platform SDK releases, which caused non-VC6 binaries to be falsely
-reported as "MSVC 6.0 SP5/SP6 final". The verdict line now reports the
-linker product + build without trying to map build numbers to Service
-Packs — that interpretation is left to the human reader.
+v3 (2026-11-14): the v1/v2 table was wrong for most of the IDs these games
+use. It called 0x000A (Utc12_C, the VC++ 6.0 C compiler)
+"Linker 5.10", 0x000B (Utc12_CPP, VC++ 6.0 C++) "MASM 6.13", 0x000E
+(MASM 6.13) "Cvtomf 5.10", 0x000C (AliasObj60) "MASM 6.14", 0x0004
+(Linker600 import/export records) "cvtres" and 0x0013 (Linker512
+import/export records) "MSVC 5.0 C++". That produced a false "Visual C++
+5.0" reading for every Scooby-Doo title. The PE optional header of every
+one of them says linker 6.00.
+
+The verdict no longer looks for a linker in the Rich Header. VC6-era
+link.exe does not record itself there; the Linker* product IDs that do
+appear are import/export records inside the .lib files that were linked
+in. The linker version comes from the PE optional header
+(MajorLinkerVersion.MinorLinkerVersion), which link.exe writes itself.
+
+Build numbers are reported as-is, with no build-to-Service-Pack mapping:
+v1 mapped cvtres build 8447 to "VC6 SP5/SP6", and that build also ships
+in standalone Platform SDKs. Interpretation is left to the reader, with
+richprint as the reference.
 """
 
 import struct
 import sys
 
-# Product ID → human name. High-confidence entries only.
-# Anything not listed prints as "unknown 0x..." rather than risk a wrong label.
+# prodid -> "EnumName: description". Names are Microsoft's prodid enum;
+# descriptions follow richprint. Low range only (VC5 to VS2003 era).
 PRODUCT_IDS = {
-    # Generic markers
-    0x0000: "Unknown / imported from .obj",
-    0x0001: "Imported from .lib",
-
-    # Resource / OMF converters
-    0x0004: "cvtres",
-    0x000E: "Cvtomf 5.10 (OMF→COFF)",
-    0x0010: "Cvtomf 6.00",
-    0x0011: "Cvtres 5.00",
-    0x0018: "Cvtomf 6.10",
-    0x001F: "Cvtomf 7.00",
-    0x0020: "Cvtres 7.00",
-
-    # MASM (Microsoft Macro Assembler)
-    0x000B: "MASM 6.13",
-    0x000C: "MASM 6.14",
-    0x0022: "MASM 7.00",
-
-    # Linkers (link.exe variants — see LINKER_IDS below)
-    0x0002: "Linker (pre-5.10)",
-    0x000A: "Linker 5.10 (VC 5.0)",
-    0x000D: "Linker 5.11",
-    0x000F: "Linker 6.00 (VC 6.0)",
-    0x0017: "Linker 6.10",
-    0x0019: "Linker 6.12",
-    0x0021: "Linker 7.00 (VS .NET 2002)",
-
-    # MSVC C/C++ compilers (Utc backend, indexed by VS version)
-    0x0012: "MSVC 5.0 C (Utc11_C)",
-    0x0013: "MSVC 5.0 C++ (Utc11_CPP)",
-    0x0015: "MSVC 6.0 C (Utc12_C)",
-    0x0016: "MSVC 6.0 C++ (Utc12_CPP)",
-    0x001A: "MSVC 6.0 C (Utc12_C_Std)",
-    0x001B: "MSVC 6.0 C++ (Utc12_CPP_Std)",
-    0x001C: "MSVC 6.0 C (Utc12_C_Book)",
-    0x001D: "MSVC 6.0 C++ (Utc12_CPP_Book)",
-    0x0023: "MSVC 7.0 C",
-    0x0024: "MSVC 7.0 C++",
-
-    # Visual Basic 6
-    0x0014: "VB6 compiler (Utc12_Basic)",
-
-    # Implib
-    0x001E: "Implib 7.00",
+    0x0000: "Unknown: unmarked objects (old)",
+    0x0001: "Import0: import records with no comp.id (DLL imports from .lib)",
+    0x0002: "Linker510: VC++ 5.0 linker 5.10 (import/export records)",
+    0x0003: "Cvtomf510: VC++ 5.0 OMF-to-COFF converter",
+    0x0004: "Linker600: VC++ 6.0 linker 6.00 (import/export records)",
+    0x0005: "Cvtomf600: VC++ 6.0 OMF-to-COFF converter",
+    0x0006: "Cvtres500: cvtres 5.00 resource converter (VC5/VC6)",
+    0x0007: "Utc11_Basic: VC 5.0 Basic compiler",
+    0x0008: "Utc11_C: VC++ 5.0 C compiler",
+    0x0009: "Utc12_Basic: VC 6.0 Basic compiler",
+    0x000A: "Utc12_C: VC++ 6.0 C compiler",
+    0x000B: "Utc12_CPP: VC++ 6.0 C++ compiler",
+    0x000C: "AliasObj60: VC 6.0 alias object (OLDNAMES.LIB)",
+    0x000D: "VisualBasic60: Visual Basic 6.0",
+    0x000E: "Masm613: MASM 6.13",
+    0x000F: "Masm710: MASM 7.10",
+    0x0010: "Linker511: linker 5.11",
+    0x0011: "Cvtomf511: OMF converter 5.11",
+    0x0012: "Masm614: MASM 6.14",
+    0x0013: "Linker512: linker 5.12 (import/export records)",
+    0x0014: "Cvtomf512: OMF converter 5.12",
+    0x0015: "Utc12_C_Std: VC++ 6.0 Standard C compiler",
+    0x0016: "Utc12_CPP_Std: VC++ 6.0 Standard C++ compiler",
+    0x0017: "Utc12_C_Book: VC++ 6.0 Learning Edition C compiler",
+    0x0018: "Utc12_CPP_Book: VC++ 6.0 Learning Edition C++ compiler",
+    0x0019: "Implib700: VS2002 (7.0) import library records",
+    0x001A: "Cvtomf700: VS2002 (7.0) OMF converter",
+    0x001B: "Utc13_Basic: VS2002 (7.0) Basic compiler",
+    0x001C: "Utc13_C: VS2002 (7.0) C compiler",
+    0x001D: "Utc13_CPP: VS2002 (7.0) C++ compiler",
+    0x001E: "Linker610: linker 6.10",
+    0x001F: "Cvtomf610: OMF converter 6.10",
+    0x0020: "Linker601: linker 6.01",
+    0x0021: "Cvtomf601: OMF converter 6.01",
+    0x0022: "Utc12_1_Basic: VC 6.1 Basic compiler",
+    0x0023: "Utc12_1_C: VC++ 6.1 C compiler",
+    0x0024: "Utc12_1_CPP: VC++ 6.1 C++ compiler",
+    0x0025: "Linker620: linker 6.20",
+    0x0026: "Cvtomf620: OMF converter 6.20",
+    0x0027: "AliasObj70: VS2002 (7.0) alias object",
+    0x0028: "Linker621: linker 6.21",
+    0x0029: "Cvtomf621: OMF converter 6.21",
+    0x002A: "Masm615: MASM 6.15",
+    0x002B: "Utc13_LTCG_C: VS2002 (7.0) LTCG C",
+    0x002C: "Utc13_LTCG_CPP: VS2002 (7.0) LTCG C++",
+    0x002D: "Masm620: MASM 6.20",
+    0x002E: "ILAsm100: .NET 1.0 IL assembler",
+    0x002F: "Utc12_2_Basic: VC 6.0 Processor Pack Basic compiler",
+    0x0030: "Utc12_2_C: VC++ 6.0 Processor Pack C compiler",
+    0x0031: "Utc12_2_CPP: VC++ 6.0 Processor Pack C++ compiler",
+    0x0032: "Utc12_2_C_Std: VC++ 6.0 Processor Pack Standard C compiler",
+    0x0033: "Utc12_2_CPP_Std: VC++ 6.0 Processor Pack Standard C++ compiler",
+    0x0034: "Utc12_2_C_Book: VC++ 6.0 Processor Pack Learning Edition C",
+    0x0035: "Utc12_2_CPP_Book: VC++ 6.0 Processor Pack Learning Edition C++",
+    0x0036: "Implib622: import library records 6.22",
+    0x0037: "Cvtomf622: OMF converter 6.22",
+    0x0038: "Cvtres501: cvtres 5.01 resource converter",
+    0x0039: "Utc13_C_Std: VS2002 (7.0) Standard C compiler",
+    0x003A: "Utc13_CPP_Std: VS2002 (7.0) Standard C++ compiler",
+    0x003B: "Cvtpgd1300: VS2002 (7.0) PGD converter",
+    0x003C: "Linker622: linker 6.22",
+    0x003D: "Linker700: VS2002 (7.0) linker",
+    0x003E: "Export622: export records 6.22",
+    0x003F: "Export700: VS2002 (7.0) export records",
+    0x005D: "Implib710: VS2003 (7.10) import library records",
 }
 
-# Product IDs that identify an actual linker (link.exe).
-# The linker is the last tool to touch the binary and the most direct
-# signal of the VS version that produced it — verdict() prefers these.
-LINKER_IDS = {0x0002, 0x000A, 0x000D, 0x000F, 0x0017, 0x0019, 0x0021}
-
-# Product IDs that are utility tools (converters, importers, resource
-# tools) rather than compilers or linkers. Used by the verdict fallback
-# to skip these when looking for the most-used compiler.
-UTILITY_IDS = {0x0000, 0x0001, 0x0004, 0x000E, 0x0010, 0x0011,
-               0x0018, 0x001E, 0x001F, 0x0020}
+# Product IDs that are compilers (Utc* families): the objects compiled
+# from source. The verdict lists these; everything else (import records,
+# alias objects, assemblers, converters) is library or tooling residue.
+COMPILER_IDS = {0x0007, 0x0008, 0x0009, 0x000A, 0x000B, 0x0015, 0x0016,
+                0x0017, 0x0018, 0x001B, 0x001C, 0x001D, 0x0022, 0x0023,
+                0x0024, 0x002B, 0x002C, 0x002F, 0x0030, 0x0031, 0x0032,
+                0x0033, 0x0034, 0x0035, 0x0039, 0x003A}
 
 
-def decode_rich_header(path):
+def linker_version(data):
+    """
+    Return "major.minor" from the PE optional header, or None.
+    link.exe writes MajorLinkerVersion / MinorLinkerVersion itself, so this
+    is the direct signal for which linker produced the image.
+    """
+    if len(data) < 0x40:
+        return None
+    pe = struct.unpack_from("<I", data, 0x3C)[0]
+    if pe + 26 > len(data) or data[pe:pe + 4] != b"PE\0\0":
+        return None
+    opt = pe + 24
+    return f"{data[opt + 2]}.{data[opt + 3]:02d}"
+
+
+def decode_rich_header(data):
     """
     Return (entries, xor_key, error_str).
     On success entries is a list of (prod_id, build, use_count); error_str is None.
     On failure entries is None; error_str describes the problem.
     """
-    with open(path, "rb") as f:
-        data = f.read()
-
     if len(data) < 2 or data[:2] != b"MZ":
         return None, None, "Not a PE file (missing MZ magic bytes)."
 
     rich_pos = data.find(b"Rich")
     if rich_pos == -1:
-        return None, None, "No 'Rich' marker — binary may not be MSVC, or header is stripped."
+        return None, None, "No 'Rich' marker: binary may not be MSVC, or header is stripped."
 
     xor_key = struct.unpack("<I", data[rich_pos + 4: rich_pos + 8])[0]
     dans_marker = struct.pack("<I", 0x536E6144 ^ xor_key)  # "DanS" XOR key
@@ -133,38 +180,28 @@ def decode_rich_header(path):
     return entries, xor_key, None
 
 
-def verdict(entries):
+def short_name(prod_id):
+    name = PRODUCT_IDS.get(prod_id)
+    return name.split(":")[0] if name else f"unknown 0x{prod_id:04x}"
+
+
+def verdict(entries, linker):
     """
-    Return a one-line toolchain summary suitable for logging.
-
-    Strategy:
-      1. Prefer an actual linker entry (product_id in LINKER_IDS) — link.exe
-         is the last tool to touch the binary and the cleanest VS version
-         signal. Pick the linker with the highest use count if multiple.
-      2. Fall back to the most-used compiler entry (skipping utility
-         tools — converters, importers, .lib imports).
-      3. Final fallback: most-used entry overall.
-
-    No build-number → Service Pack annotation: the same build can appear
-    across different products (cvtres 8447 ships with both VC6 SP5 and
-    standalone SDKs), and that mapping caused false-positive verdicts in
-    v1. Build numbers are reported as-is; interpretation is the reader's.
+    Return a one-line toolchain summary suitable for logging: the PE
+    header's linker version, then every compiler entry, most objects first.
     """
-    linker_entries = [e for e in entries if e[0] in LINKER_IDS]
-    if linker_entries:
-        prod_id, build, _ = max(linker_entries, key=lambda e: e[2])
-    else:
-        compiler_entries = [e for e in entries if e[0] not in UTILITY_IDS]
-        candidates = compiler_entries if compiler_entries else entries
-        prod_id, build, _ = max(candidates, key=lambda e: e[2])
-
-    name = PRODUCT_IDS.get(prod_id, f"unknown product 0x{prod_id:04x}")
-    return f"{name}, build {build}"
+    compilers = sorted((e for e in entries if e[0] in COMPILER_IDS),
+                       key=lambda e: -e[2])
+    parts = [f"{short_name(p)} {b} (x{c})" for p, b, c in compilers]
+    head = f"Linker {linker} (PE header)" if linker else "Linker unknown"
+    return head + "; compilers: " + (", ".join(parts) if parts else "none recorded")
 
 
 def report(path):
-    entries, xor_key, err = decode_rich_header(path)
-    print(f"\nRich Header — {path}")
+    with open(path, "rb") as f:
+        data = f.read()
+    entries, xor_key, err = decode_rich_header(data)
+    print(f"\nRich Header: {path}")
     if err:
         print(f"  RESULT: {err}")
         return False
@@ -177,7 +214,7 @@ def report(path):
         name = PRODUCT_IDS.get(prod_id, f"unknown 0x{prod_id:04x}")
         print(f"   0x{prod_id:04x}   {build:>6}  {count:>6}  {name}")
 
-    print(f"\n  Verdict: {verdict(entries)}")
+    print(f"\n  Verdict: {verdict(entries, linker_version(data))}")
     return True
 
 

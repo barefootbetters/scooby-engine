@@ -18,8 +18,19 @@ title: "WP-005: Engine-Family Check"
 
 | Disc | Code lineage | Formats | Verdict |
 |---|---|---|---|
-| Case File #1 (2002) | Same lineage. Inherited TerraGlyph object files (an MSVC 5.0 C++ 8034 ×17 entry identical to Jinx's, plus Jinx's Linker build 8168); `MMFW` resource strings and `MMVisualCursor.cpp` shared with Jinx (2026-06) | `MMFW` archives and XML config, not `TGIFILE.ART` | **Same engine lineage, different formats.** Under EC-003's file-presence test it is INCOMPATIBLE (no `TGIFILE.ART` or `object.ini`). It stays in scope as the Gen 3 stretch tier because of the code inheritance, per VISION's 2026-06 revision of the scope rule, which this WP confirms. |
-| Case File #2 (2003) | **Not the lineage.** No RTTI, `MMFW`, error templates, source paths or MSVC 5.0 C++ objects shared; dynamic CRT; `R*` framework with Miles, LZO, libjpeg | `.bul`/`.inx` bulk archives | **INCOMPATIBLE**: a different engine |
+| Case File #1 (2002) | Same lineage. `MMFW` resource strings, `MM*` RTTI classes and `MMVisualCursor.cpp` shared with Jinx (2026-06), recompiled by IBS with a newer VC6 build; 36 C objects at Jinx's compiler build 8168 and the same linker 5.12 build 8034 import records (×17). *Corrected 2026-11-14:* the 2026-06 reading of these as inherited MSVC 5.0 object files was a tool mislabel; see the note below. | `MMFW` archives and XML config, not `TGIFILE.ART` | **Same engine lineage, different formats.** Under EC-003's file-presence test it is INCOMPATIBLE (no `TGIFILE.ART` or `object.ini`). It stays in scope as the Gen 3 stretch tier because of the code inheritance, per VISION's 2026-06 revision of the scope rule, which this WP confirms. |
+| Case File #2 (2003) | **Not the lineage.** No RTTI, `MMFW`, error templates or source paths shared; dynamic CRT; VS2002/2003 import libraries in place of the lineage's linker 5.12 import records; `R*` framework with Miles, LZO, libjpeg | `.bul`/`.inx` bulk archives | **INCOMPATIBLE**: a different engine |
+
+**Correction (2026-11-14).** This WP's evidence cited "MSVC 5.0 C++
+build 8034" objects as the lineage's shared compiler entry. That label came
+from a wrong product-ID table in `tools/rich_header.py`, now fixed: the
+entry is `Linker512` import records from linked import libraries, and every
+title, Case File #2 included, is Visual C++ 6.0 with linker 6.00. Both
+verdicts stand. Case File #1's rests on its strings, RTTI and source path;
+Case File #2's rests on the absence of every code marker and on the
+*Powerpuff Girls* framework below. The Rich Header is weak evidence either
+way. Sources and corrected tables:
+[scooby-exe §Toolchain](../formats/scooby-exe.md#toolchain).
 
 The deciding evidence for Case File #2: a *Powerpuff Girls* demo on the
 same disc uses the same `.bul`/`.inx` resources. Its engine DLLs

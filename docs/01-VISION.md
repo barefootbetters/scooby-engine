@@ -93,22 +93,34 @@ once listed as a fourth, is a different engine; see below):
 
 | Gen | Titles | Toolchain | Archive | Config | Cutscenes |
 |---|---|---|---|---|---|
-| **1** | Showdown (2000), Phantom (2001) | VC5 + Linker 5.10 build 8047 | `TGIFILE.ART` (raw count + index) | INI text (`object.ini`, `Scooby.eng`) | Bink (`binkw32.dll` 286 KB) |
-| **2** | Jinx (2001) | VC5 + Linker 5.10 build 8168 | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
-| **3** | Case File #1 (2002) | VC5 + Linker 5.10 builds 8168 + 8797 + one VC6 file | `MMFW` continues | XML via `libexpat.dll` | raw `.avi` |
-| — | Case File #2 (2003) | **Not this lineage** (WP-005, 2026-11-13): no MSVC 5.0 C++ 8034 objects, dynamic MSVCRT, VC6-era entries | `.bul`/`.inx` bulk archives (LZO) | loose `.mps` + `.xml` scripts | Bink (`binkw32.dll` 375 KB, newer SDK) + Miles (`mss32.dll`) |
+| **1** | Showdown (2000), Phantom (2001) | VC6, game C++ build 8966 (richprint: SP5) | `TGIFILE.ART` (raw count + index) | INI text (`object.ini`, `Scooby.eng`) | Bink (`binkw32.dll` 286 KB) |
+| **2** | Jinx (2001) | VC6, C and C++ build 8168 (richprint: release) | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
+| **3** | Case File #1 (2002) | VC6 Processor Pack, game C++ build 8943; 36 C objects at Jinx's 8168 | `MMFW` continues | XML via `libexpat.dll` | raw `.avi` |
+| — | Case File #2 (2003) | **Not this lineage** (WP-005, 2026-11-13): VC6 like the lineage, but no shared code markers, dynamic MSVCRT, VS2002/2003 import libraries | `.bul`/`.inx` bulk archives (LZO) | loose `.mps` + `.xml` scripts | Bink (`binkw32.dll` 375 KB, newer SDK) + Miles (`mss32.dll`) |
 
-The Gen 1 → Gen 2 jump (mid-2001) coincides with a TerraGlyph build
-pipeline upgrade — new linker build, dropped legacy tools (MASM 6.14,
-cvtres), cleaner single-environment build. The Gen 2 → Gen 3 jump
-(late 2001 / 2002) coincides with the TerraGlyph shutdown and
-ImageBuilder Software (IBS) taking over development — confirmed
-concretely by:
+**Toolchain corrected 2026-11-14.** The 2026-06 table read every title as
+Visual C++ 5.0 with Linker 5.10. That came from a wrong product-ID table in
+`tools/rich_header.py`. Every title is Visual C++ 6.0, and every PE header
+says linker 6.00. The build numbers still group the titles the same way;
+what they mean changed. Evidence and sources:
+[scooby-exe §Toolchain](formats/scooby-exe.md#toolchain).
 
-- IBS shipping Jinx-era compiled object files into Case File #1 (the
-  Linker 5.10 build 8168 entries appear in both binaries' Rich Headers)
-- IBS adding their own code on top with an updated toolchain (Linker
-  5.10 build 8797, plus one VC6-compiled source file)
+The Gen 1 → Gen 2 jump (mid-2001) coincides with a change of TerraGlyph
+build environment: Jinx compiles everything with VC6 build 8168, the
+release build, where Gen 1's game code is the later 8966 (SP5). The
+2026-06 text called this an upgrade; the compiler build went the other
+way. The Gen 2 → Gen 3 jump (late 2001 / 2002) coincides with the
+TerraGlyph shutdown and ImageBuilder Software (IBS) taking over
+development, shown by:
+
+- IBS carrying TerraGlyph's MMFW source into Case File #1: the same `MM*`
+  RTTI classes, `MMFW` resource labels and `MMVisualCursor.cpp` source
+  unit as Jinx, under IBS's own source tree
+- IBS rebuilding that source with a newer compiler (the VC6 Processor
+  Pack, build 8943, for all its C++), while 36 C objects keep Jinx's
+  compiler build 8168, possibly a library carried over prebuilt. The
+  2026-06 text said IBS shipped Jinx's compiled object files; none of
+  Jinx's C++ objects is in Case File #1.
 - IBS introducing XML configuration via `libexpat.dll`
 - The Case File #1 disc carrying an `IBSlogo.avi` alongside `TLClogo.avi`
 
@@ -129,9 +141,13 @@ lineage. The evidence, all in
   `MMFW` string, error template, source path or engine string with
   Showdown, Jinx or Case File #1. The overlap is Win32/CRT names and
   product names.
-- **No lineage compiler.** It has no MSVC 5.0 C++ build 8034 objects, the
-  one compiler entry present in Showdown, Jinx and Case File #1. It links
-  the CRT dynamically (`MSVCRT.dll`), which no lineage binary does.
+- **Different libraries.** It links the CRT dynamically (`MSVCRT.dll`),
+  which no lineage binary does, and it links VS2002/2003-era import
+  libraries instead of the 16–17 linker 5.12 import records every lineage
+  binary carries. Its compiler is Visual C++ 6.0 like the lineage's, so
+  the toolchain itself does not separate it. (The 2026-06 wording, "no
+  MSVC 5.0 C++ build 8034 objects", rested on the mislabel corrected
+  2026-11-14.)
 - **Its own framework.** It uses `R*` classes (`RScenePort`,
   `RWorldPort`, `RResourcePort`, `RHotSpot`, `RCharacter`, `RXMLFile`),
   LZO, IJG libjpeg and its own XML writer.

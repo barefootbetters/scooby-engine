@@ -183,7 +183,7 @@ Out of scope:
 
 ## Exit criteria
 
-1. `docs/formats/scooby-exe.md` Findings → "Toolchain" populated with confirmed compiler + linker. ✅ (Rich Header step, 2026-06)
+1. `docs/formats/scooby-exe.md` Findings → "Toolchain" populated with confirmed compiler + linker. ✅ (Rich Header step, 2026-06; corrected 2026-11-14 from Visual C++ 5.0 to 6.0 after a product-ID mislabel in `tools/rich_header.py`)
 2. `docs/formats/scooby-exe.md` Findings → "Imports / runtime surface" populated with the DirectX surfaces in use, Bink integration, and file I/O API set. ✅ (WP-007 import table; cross-checked, no change)
 3. `docs/formats/scooby-exe.md` Findings → "Resource loading map" populated with at least the `TGIFILE.ART` open + dispatch path labeled in Ghidra. ✅ 2026-11-13
 4. The `TGIFILE.ART` decode function is identified (Ghidra function name + entry address recorded) and its pseudo-C decompilation is captured as a code block in `docs/formats/tgifile-art.md` Findings → "Per-entry payload" → new subsection "Decode algorithm (from `Scooby.exe`)". ✅ 2026-11-13: `graphics_Renderer_GetCelPixels` at `0x4398A0`. The page has no "Per-entry payload" heading any more, so the subsection is [Cel format → Decode path in `Scooby.exe`](../formats/tgifile-art.md#decode-path-in-scoobyexe-wp-001). It is restated pseudo-C, not raw decompiler output.
