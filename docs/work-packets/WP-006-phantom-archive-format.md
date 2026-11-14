@@ -119,7 +119,7 @@ Out of scope:
 
 ## Dependencies
 
-- Phantom ISO mountable (already on disk at `C:\pcloud\SCOOBY\Scooby Doo Phantom of the Knight.iso`)
+- Phantom ISO mountable (already on disk at `C:\pcloud\scooby-engine\Scooby Doo Phantom of the Knight.iso`)
 - `Format-Hex` (built into PowerShell)
 
 ## Exit criteria
