@@ -16,10 +16,10 @@ Reverse-engineering and engine implementation project to run
 | Title | Year | Developer | Status |
 |---|---|---|---|
 | *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph | 🔬 Primary RE target |
-| *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph | ⏳ Pending Phase 1 |
-| *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph | ⏳ Pending Phase 1 |
+| *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph | ✅ Same engine and formats as Showdown (Gen 1) |
+| *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph | ✅ Same engine lineage (Gen 2, `MMFW` archives) |
 | *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | ImageBuilder Software | ✅ Same engine lineage (Gen 3, inherited TerraGlyph code) |
-| *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | Unknown | ❓ Gen 4 format break; engine-family verdict pending (WP-005) |
+| *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | Unknown | ❌ Excluded: a different engine, shared with a *Powerpuff Girls* title (WP-005) |
 
 ---
 
