@@ -161,8 +161,11 @@ apply.
 
 ## Next steps
 
-1. Phase 3: an `Audio` loader that reads the index into a name map and
-   opens clips as raw PCM streams from the sector after the header.
+1. ~~Phase 3: an `Audio` loader that reads the index into a name map and
+   opens clips as raw PCM streams from the sector after the header.~~
+   Done 2026-11-14 ([WP-019](../work-packets/WP-019-sound-archives.md)):
+   `SoundArchive` and `Sound` in the fork. Every clip of both Gen 1 titles
+   reads to the same PCM as `probe_audio.py`.
 2. Lip sync: trace the consumer of the `(count, fps, bytes)` block alongside
    the character actor (`0x4048E0` family) in Phase 4.
 3. ~~Run `probe_audio.py --verify --dir <Phantom folder>`~~ Done
