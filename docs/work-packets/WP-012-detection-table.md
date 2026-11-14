@@ -5,12 +5,33 @@ title: "WP-012: Detection Table with Generation Flag"
 
 # WP-012: Detection table with a per-entry generation flag
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 2 (ScummVM engine scaffold)
 **Depends on:** WP-010 ✅ (scaffold and pin), WP-005 ✅ (which titles are in scope), WP-006 ✅ (Phantom is Gen 1)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-012-2026-11-14](../reference/pre-flight-WP-012-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Each disc detected from its root | ✅ Each ISO was mounted with `Mount-DiskImage`, and `scummvm --detect --path=<root>` named the right title: `scooby:showdown`, `scooby:phantomknight`, `scooby:jinxsphinx`, `scooby:casefile1`. Showdown and Phantom are also detected from `\scooby\`. Jinx from `\Jinx\` and Case File #1 from `\MUSEUM\` are not, because a signature file sits elsewhere on the disc. |
+| 2. Right generation, and the engine sees it | ✅ Showdown and Phantom start and log `Starting <id> (generation 1)` on the `resource` channel, after the detector lists the three matched files with their MD5s. Jinx (2) and Case File #1 (3) stop at the unsupported-game dialog, before the engine is created. |
+| 3. No false positives | ✅ No match on Case File #2, Case File #3, *Activity Challenge*, the `tools/exes/casefile2/` cache, or `C:\Windows\System32\drivers`. |
+| 4. Builds | ✅ Scooby-only build: 0 errors, 0 warnings. Build with scooby disabled: only `engines/scooby/detection.o` recompiles, it links, and scooby is not listed. |
+| 5. Fork diff | ✅ `git diff --name-only upstream/master...scooby-engine` lists only `engines/scooby/` files. The commit is [`5a88016fea`](https://github.com/barefootbetters/scummvm/commit/5a88016fea), pushed to `scooby-engine`. |
+
+**Deviations:**
+
+- **Four entries, not five.** Integration §3 asked for Case File #2 as Gen 3. WP-005 excluded it, so §3 is revised.
+- **Signature files differ from §3's draft.** The draft named `Mummy*.MMF`, `HD.*`, `libexpat.dll` and loose `*.xml`. The entries use the files on the discs; see [§3](../02-SCUMMVM-INTEGRATION.md#3-game-detection-table-adgamedescription).
+- **Game ids** `phantomknight` and `jinxsphinx`, not `phantom` and `jinx`, which other engines use.
+- **"Add Game" dialog not clicked through.** `--detect` runs the same detector code. Starting a game was tested from the command line.
+
+**Found in passing:** `ScoobyDoo.iso` (*Scooby-Doo! Activity Challenge*, 2001) ships MMFW archives (`BONUS.MMF`, `.MMA`, `.MMP`, `Bonus.mms`, all starting `MMFW`) and `INSTALL\HDINSTALL\Scooby.exe` (794,624 bytes), alongside the IBS logo video. That is Jinx's layout. The [vision doc](../01-VISION.md) assumes it uses a different engine. It looks like the same lineage, which would make it a fifth candidate. Not classified here. [WP-013](WP-013-activity-challenge-engine-check.md) has since classified it: Gen 2, Jinx's engine. Its detection entry is not part of this WP.
 
 ---
 
@@ -63,15 +84,15 @@ WORK_INDEX.
 
 ## Exit criteria
 
-1. [ ] Each in-scope disc, mounted from its ISO, is detected by
+1. [x] Each in-scope disc, mounted from its ISO, is detected by
    `scummvm --detect` from the disc root, with the right title.
-2. [ ] Each entry carries the right generation: Showdown 1, Phantom 1,
+2. [x] Each entry carries the right generation: Showdown 1, Phantom 1,
    Jinx 2, Case File #1 3. The value reaches the engine (debug line).
-3. [ ] Case File #2, Case File #3 and an unrelated directory produce no
+3. [x] Case File #2, Case File #3 and an unrelated directory produce no
    match.
-4. [ ] Scooby-only build: no errors, no warnings in `engines/scooby/`.
+4. [x] Scooby-only build: no errors, no warnings in `engines/scooby/`.
    Build with scooby disabled still compiles `detection.o`.
-5. [ ] Fork diff touches only `engines/scooby/`.
+5. [x] Fork diff touches only `engines/scooby/`.
 
 ## Deliverables
 
