@@ -213,7 +213,17 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 
 **Acceptance criterion:** Every `BK.XXX` cutscene from *Showdown* plays start-to-end in ScummVM with correct audio sync and no fallback to external Bink runtime.
 
-**Implementation notes:** *TBD. Confirm during Phase 4 that ScummVM's decoder handles all Bink variants present on the disc; the older Bink 1 variant is well-supported but the disc may carry edge cases.*
+**Implementation notes:** WP-022 (2026-11-14).
+
+- **The files.** Every Gen 1 movie is `BK.NNN` in the game folder, Bink `BIKi` at 640 × 480: 42 on Showdown, 56 on Phantom. `Video::BinkDecoder` decodes all of them, and the disc's `binkw32.dll` is never loaded.
+- **`ScoobyEngine::playMovie()`** (`engines/scooby/movie.cpp`) plays one blocking, as the original's main loop does.
+  - It opens the file, sets the output to the screen's RGB565 with `setOutputPixelFormat()`, and plays the movie's sound on `kSFXSoundType`.
+  - It copies each frame when `needsUpdate()` says so, and ends at `endOfVideo()`, on quit, or on a skip.
+  - The engine's own sounds stop first, as the original's do.
+- **Skipping** follows the original's rule: never on the first viewing, unless the `abort_movies` config key (the original's `AbortMovies`) is on. Escape, Space and the mouse buttons skip. The original reads two DirectInput slots whose keys weren't traced, so the keys are a stand-in.
+- **Testing aids.** The console's `movie <id>` and a `start_movie` config key play a movie, like `start_room`.
+- **Damaged files.** A movie whose Bink header (the file size less 8, at offset 4) disagrees with the file is refused with a warning, and the room loads. A truncated file hung the decoder inside a call, so the check runs before the decoder opens the file. A movie that runs 2 s past its length is stopped too.
+- **Checks.** Every movie's frame count, size and length match `ffprobe`, and its first, middle and last frames match `ffmpeg`'s decode in mean colour.
 
 ---
 

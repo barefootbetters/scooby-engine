@@ -1319,6 +1319,40 @@ goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 | `0x409BCA` | When the ghost's sequence ends: go to `ROOM_Ghost_Spot` |
 | `0x434CB0` / `0x434C70` | Stop / play a sound by id, in whichever file holds it |
 
+##### Movies (WP-022)
+
+Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
+fork plays them through `Video::BinkDecoder`.
+
+- **The request** (game vtable `+0x08`, `0x42DE10`) takes a movie id and
+  the next room. An id outside 0–74 means no movie. Ids 0 and 25–28 are
+  title movies, gated by `Scooby.ini`'s `GBHTitleMovies`. Any other id
+  plays every time, and the game remembers it (`+0x10A` + id, saved as
+  `MovieHistory%i`). The first viewing of a movie can't be skipped unless
+  `Settings` / `AbortMovies` is on. Later viewings can. The flag is
+  `+0x290`, read through game vtable `+0x3C`.
+- **Playing** (`0x4362E0`, "Playing movie (%i)"). The main loop sees the
+  id once the tick loop stops, and builds the name `%sBK.%.3d`: movie 32
+  is `BK.032`. It tries the hard-disk folder, then the disc. It stops the
+  sounds (`0x434BF0`), clears the screen, and opens the file in the Bink
+  manager (`0x4422F0`: `BinkSetSoundSystem`, `BinkOpen`). The next room
+  loads when the movie ends.
+- **Skipping.** While a movie plays, input slot 5 or 4, or mouse button
+  0 or 1, closes it (`0x4424F0`, `BinkClose`) if `+0x290` allows. The
+  slots belong to the DirectInput layer, and which keys they hold was not
+  traced.
+- **The files.** Showdown has 42 movies (`BK.001`–`BK.042` without
+  `BK.024`, and `BK.058`), and Phantom 56. All are Bink `BIKi`,
+  640 × 480, at 8, 12 or 24 frames per second.
+
+| Address | What it does |
+|---|---|
+| `0x42DE10` | Game vtable `+0x08`: next room, and the movie before it |
+| `0x4362E0` | Main loop; plays a requested movie (`%sBK.%.3d`) |
+| `0x42E0B0` | Game vtable `+0x3C`: whether the movie may be skipped (`+0x290`) |
+| `0x442210` | Bink manager constructor ("Creating Bink Movie Manager") |
+| `0x4422F0` / `0x4424F0` | Bink manager: open a movie / close it |
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
