@@ -779,15 +779,17 @@ frame.
 | `0x43C5A0` | `audio_SoundFile_ctor` | Reads `u32 1` (else `Invalid sound data file`), `u32 count`, `u32 table offset`; loads `count` × 68-byte `(u32 offset, char[64] name)` records and sorts them by name |
 | `0x434DC0` | `audio_GameSound_LookupId` | Name → sound id, searching `sfx.dat`, `voice.dat`, `music.dat` in that order; `Failed to locate id %s` |
 | `0x434E30` / `0x43CF20` | `audio_GameSound_PreloadSection` | Preloads every `sfx.dat` sound whose name starts with a prefix |
+| `0x446010` | `audio_SoundStream_Open` | Reads the clip's header sector, builds a PCM `WAVEFORMATEX` from it, keeps the lip-sync block, streams PCM from the next sector (WP-004) |
+| `0x445550` | `audio_SoundStream_SetFormat` | Recreates the DirectSound buffer when the format changes; logs `Buffer format = %d channels, %d bits, %d` |
+| `0x442FB0` | `audio_CopyLipSync` | Copies the clip's `(count, fps, bytes)` lip-sync block |
 
 Sounds are named `<Section>.<Clip>` (for example `Global.Scrappy.Help.Wiggle`).
 A numeric sound id is the file's base (`0x1000_0000` sfx, `0x2000_0000`
 voice, `0x3000_0000` music) plus the clip's index in that file's
 name-sorted table. On every room load `script_Game_LoadRoom` preloads the
 `sfx.dat` clips of the `Global` section and of the room's own section. The
-index layout is a lead for
-[WP-004](../work-packets/WP-004-audio-archive-decode.md), recorded in
-[audio-archives.md](audio-archives.md#index-table-wp-001-lead).
+clips are uncompressed PCM; the full format is in
+[audio-archives.md](audio-archives.md#clip-format) (WP-004).
 
 For Case File #1 (Gen 3), the `MMFW` loader is the top research target of [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#research-targets); its function map lands as its own subsection here once a finding reaches Observed.
 
@@ -980,11 +982,9 @@ No name observed required actual sanitization (no spaces, no punctuation, no non
 
 Things the WP-001 trace passed over, each a lead for a later work packet:
 
-- **Audio index** ([WP-004](../work-packets/WP-004-audio-archive-decode.md)):
-  the index layout is resolved (see
-  [audio-archives](audio-archives.md#index-table-wp-001-lead)). The codec is
-  not. Start from `audio_SoundFile_ctor` (`0x43C5A0`) and the stream
-  creation behind `Failed to create stream!!!`.
+- ~~**Audio index and codec**~~ Done by [WP-004](../work-packets/WP-004-audio-archive-decode.md)
+  (2026-11-13): uncompressed PCM, see [audio-archives](audio-archives.md#clip-format).
+  Still open there: the lip-sync bytes' high bits.
 - **Character actors** (Phase 4): `script_Character_ctor` (`0x4048E0`)
   looks up `Global.Scrappy.*` sounds, and `0x405190` formats
   `Global.Idle.%s_P%d%s` / `Global.Idle.%s_S%d%s` and `Global.Scared.*` sound
