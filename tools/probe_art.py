@@ -290,25 +290,90 @@ def frame_cels(frame: int, base: int) -> list[tuple[int, int, Cel]]:
     return out
 
 
-def is_character(obj: str) -> bool:
-    """Gang members, the ghost and other actors placed with a depth of y - 200.
+# Character actors, from the table at 0x46A720 that 0x4091FF checks.
+CHARACTERS = ("NARRATOR", "DAPHNE", "FRED", "SCOOBY", "SHAGGY", "VELMA", "ARTIE", "JENNY",
+              "SHERIFF", "ICDOUBLE", "GUMMY", "DONKEY", "BRAD", "EWAN", "MARIA", "JANE",
+              "WIZARD", "JESTER", "PRINCESS", "UNICYCLE")
 
-    ``0x4091FF`` gives character actors and ``OBJ_GHOST`` the depth
-    ``y - 200``; the gang objects are named ``OBJ_<NAME>_<letter>``.
+
+def load_ini(path: Path) -> dict[str, dict[str, str]]:
+    """``object.ini`` as {section: {lower-case key: value}} (GetPrivateProfileString rules)."""
+    import configparser
+
+    cp = configparser.RawConfigParser(strict=False, interpolation=None)
+    cp.read(path, encoding="latin-1")
+    return {sec: dict(cp.items(sec)) for sec in cp.sections()}
+
+
+def ini_int(value: str | None) -> int:
+    """0x40AD50: atoi, but a non-numeric (or missing, default "bad") value is -1."""
+    value = (value or "bad").strip()
+    try:
+        return int(value)
+    except ValueError:
+        return 0 if value[:1] == "0" else -1
+
+
+class Sprite:
+    """A node of the engine's sprite tree (0x430D60 / 0x430F40 / 0x431000)."""
+
+    def __init__(self, depth: int, paint=None, label: str = "") -> None:
+        self.depth, self.paint, self.label = depth, paint, label
+        self.children: list[Sprite] = []
+
+    def add(self, child: "Sprite") -> "Sprite":
+        # 0x430F40: children stay sorted by descending depth; a new child goes
+        # after every child whose depth is >= its own.
+        k = 0
+        while k < len(self.children) and child.depth <= self.children[k].depth:
+            k += 1
+        self.children.insert(k, child)
+        return child
+
+    def front_to_back(self) -> list["Sprite"]:
+        # 0x431000: children at or above our depth, then us, then the rest.
+        out: list[Sprite] = []
+        k = 0
+        while k < len(self.children) and self.depth <= self.children[k].depth:
+            out += self.children[k].front_to_back()
+            k += 1
+        out.append(self)
+        for c in self.children[k:]:
+            out += c.front_to_back()
+        return out
+
+
+def placement_parent_depth(obj: str, y: int, ini: dict[str, dict[str, str]]) -> tuple[int, int, str]:
+    """Return (layer slot or -1 for the root, depth, kind) for a default placement.
+
+    Follows 0x4091FF / 0x408F90 / 0x408DC0 / 0x401000. Per-room overrides
+    (a room claiming an OBJ by name) are not modelled.
     """
-    return obj == "OBJ_GHOST" or any(
-        obj.startswith(f"OBJ_{n}_") and len(obj) == len(n) + 6
-        for n in ("DAPHNE", "FRED", "SCOOBY", "SHAGGY", "VELMA", "NARRATOR"))
+    sec = ini.get(obj, {})
+    kind = sec.get("id", "simpleobject").strip().lower()
+    if kind == "inventoryobject":
+        return 0, -100, kind
+    if kind == "requiresobject":
+        return 0, 0, kind
+    if kind == "exitobject":
+        return 0, -1000, kind
+    if kind == "clickableobject":
+        layer = ini_int(sec.get("layer"))
+        return (0 if layer == -1 else layer), ini_int(sec.get("priority")), kind
+    stem = obj[:-2] if len(obj) > 2 and obj[-2] == "_" else obj
+    if stem in {f"OBJ_{n}" for n in CHARACTERS} or obj == "OBJ_GHOST":
+        return 0, y - 200, "character"
+    return 1, 0, "sprite"  # parent = layer slot 1, empty in Showdown -> root
 
 
-def render_room(s: SceneBlock, objs: list[ObjectResource]) -> tuple[object, list[str]]:
-    """Composite a room's background and every placement at its first step.
+def render_room(s: SceneBlock, objs: list[ObjectResource],
+                ini: dict[str, dict[str, str]]) -> tuple[object, list[str]]:
+    """Composite a room as the engine sets it up on entry (0x435DC0).
 
-    Draw order (back to front): layer slots 0..9; placed objects in
-    placement order; characters sorted by y; ``*_OVERLAY`` objects last.
-    The layer depths and the character depth come from ``Scooby.exe``; the
-    order of the other placements against the characters is inferred from
-    the WP-009 screenshots, not traced.
+    Builds the sprite tree: a root, the room's layer-slot sprites at depth
+    -110000 + 10000 x slot, and one sprite per placement at step 0 of its
+    sequence, parented and ordered by the default placement rules. Then
+    paints the engine's front-to-back draw list from the back.
     """
     from PIL import Image
 
@@ -316,37 +381,40 @@ def render_room(s: SceneBlock, objs: list[ObjectResource]) -> tuple[object, list
     im = Image.new("RGBA", (s.width, s.height), (0, 0, 0, 255))
     log: list[str] = []
 
-    def draw(frame: int, base: int, x: int, y: int) -> None:
-        for dx, dy, c in frame_cels(frame, base):
-            tile = Image.new("RGBA", (c.width, c.height))
-            tile.putdata(rgba(c, base))
-            _paste_clipped(im, tile, x + dx, y + dy)
+    def painter(frame: int, base: int, x: int, y: int):
+        def paint() -> None:
+            for dx, dy, c in frame_cels(frame, base):
+                tile = Image.new("RGBA", (c.width, c.height))
+                tile.putdata(rgba(c, base))
+                _paste_clipped(im, tile, x + dx, y + dy)
+        return paint
 
+    root = Sprite(-0x7FFFFFFF, label="root")
+    layers: list[Sprite | None] = []
     for slot in range(10):
         off = u32(ART, s.offset + 0x80 + 4 * slot)
-        if off:
-            draw(s.offset + off, s.offset, 0, 0)
+        layers.append(root.add(Sprite(-110000 + 10000 * slot, painter(s.offset + off, s.offset, 0, 0),
+                                      f"layer {slot}")) if off else None)
 
-    placed = []
     for k in range(s.placements):
         p = s.offset + 0xD8 + PLACEMENT * k
         obj = ART[p : p + 64].split(b"\0", 1)[0].decode("ascii")
         anim = ART[p + 64 : p + 128].split(b"\0", 1)[0].decode("ascii")
         x, y = struct.unpack_from("<hh", ART, p + 0x84)
-        placed.append((k, obj, anim, x, y))
-    def order(t):
-        k, obj, _, _, y = t
-        if obj.endswith("_OVERLAY"):
-            return (2, k)
-        if is_character(obj):
-            return (1, y - 200)
-        return (0, k)
-    for k, obj, anim, x, y in sorted(placed, key=order):
+        slot, depth, kind = placement_parent_depth(obj, y, ini)
+        parent = layers[slot] if 0 <= slot < 10 and layers[slot] else root
         o = objs[ids[obj] & 0xFFFFFF]
         frame = sequence_frame(o, ids[anim] & 0x3FFFF, 0)
         n = struct.unpack_from("<H", ART, frame + 4)[0]
-        log.append(f"{k:2d} {obj:32s} {anim:36s} ({x:4d},{y:4d}) cels {n}")
-        draw(frame, o.offset, x, y)
+        parent.add(Sprite(depth, painter(frame, o.offset, x, y), f"{k:2d} {obj}"))
+        log.append(f"{k:2d} {obj:32s} {anim:36s} ({x:4d},{y:4d}) {kind:15s} "
+                   f"parent {parent.label:8s} depth {depth:6d} cels {n}")
+
+    order = root.front_to_back()
+    for sp in reversed(order):
+        if sp.paint:
+            sp.paint()
+    log.append("draw order, front to back: " + ", ".join(sp.label for sp in order if sp.paint))
     return im, log
 
 
@@ -587,6 +655,7 @@ def main() -> int:
     ap.add_argument("--cel", type=int, help="with --obj: only this cel index")
     ap.add_argument("--scene", type=int, help="decode this scene block's background")
     ap.add_argument("--room", help="composite a room with its placed objects (index or ROOM_ name)")
+    ap.add_argument("--ini", type=Path, help="object.ini for --room (default: next to --art)")
     ap.add_argument("--verify", action="store_true", help="decode every cel and check stream bounds")
     ap.add_argument("--no-hash", action="store_true", help="skip the SHA-256 identity check")
     a = ap.parse_args()
@@ -620,7 +689,8 @@ def main() -> int:
         rooms = {name: rid & 0xFFFFFF for rid, name in name_table() if rid >> 24 == 0x10}
         idx = int(a.room) if a.room.isdigit() else rooms[a.room]
         name = next(n for n, i in rooms.items() if i == idx)
-        im, log = render_room(scns[idx], objs)
+        ini_path = a.ini or a.art.parent / "object.ini"
+        im, log = render_room(scns[idx], objs, load_ini(ini_path))
         print("\n".join(log))
         path = a.out / f"room_{idx:02d}_{name}.png"
         path.parent.mkdir(parents=True, exist_ok=True)

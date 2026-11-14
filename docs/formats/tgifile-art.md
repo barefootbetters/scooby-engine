@@ -340,24 +340,58 @@ to `tools/samples/`, which is gitignored.
 3. Placements whose step frame has `n = 0` draw nothing: exits and most
    hotspots are invisible click regions.
 
-**Draw order.** The layer depths (`-110000 + 10000 × slot`) and the
-character depth (`y − 200`, gang members and `OBJ_GHOST`, from `0x4091FF`)
-are traced. Where the other placements sit relative to the characters
-depends on which parent layer sprite each one is attached to, and that
-setup was not traced. The tool uses this order: background, then the other
-placements in record order, then characters by y, then `*_OVERLAY` objects.
-It is checked against three WP-009 frames:
+**Draw order (traced).** The engine keeps a tree of sprites. Each sprite
+has a parent and a depth, and its children are kept sorted by descending
+depth (`0x430F40`). To draw a sprite (`0x431000`), the engine first emits
+its children whose depth is at least its own, then the sprite itself, then
+its remaining children. The result is a front-to-back list, which the
+renderer draws with occlusion (see [Cel format](#cel-format)). Higher depth
+is nearer the viewer; among equal depths, the earlier-added sprite is in
+front.
 
-- **Town Center:** the cactus-and-fence overlay covers the gang's feet as
-  in the game.
-- **Saloon:** the gang positions and overlaps match the frame, with Scooby
-  in front of Velma.
-- **Railroad Station:** the gang trio matches the frame.
+On room entry (`0x435DC0`), the root sprite (depth `-0x7FFFFFFF`) gets one
+child per used layer slot, at depth `-110000 + 10000 × slot`. The game
+keeps those layer sprites in a 10-entry array (Game `+0x58`), which its
+reset (`0x435CD0`) clears. Placements then attach by kind
+(`0x4091FF`, `0x408F90`, `0x408DC0`, `0x401000`):
 
-The differences are game state, not format. The video catches props
-already moved or picked up, and NPCs mid-animation, while the tool shows
-every placement at step 0. All 69 rooms render without errors (497
-visible placements).
+| Placement kind | Parent | Depth |
+|---|---|---|
+| Character: `OBJ_<NAME>` or `OBJ_<NAME>_<x>` for a name in the table at `0x46A720` (NARRATOR, the gang, ARTIE, JENNY, SHERIFF, ICDOUBLE, GUMMY, DONKEY, …), and `OBJ_GHOST` | layer 0 | `y − 200` |
+| `ID=inventoryobject` | layer 0 | −100 |
+| `ID=requiresobject` | layer 0 | 0 |
+| `ID=exitobject` | layer 0 | −1000 |
+| `ID=clickableobject` | layer `layer=` (missing or −1 → 0) | `priority=` (missing → −1) |
+| anything else (`simpleobject`, no section) | layer 1 | 0 |
+
+Showdown never fills layer slot 1. A sprite whose parent slot is empty
+attaches to the root (`0x430F40`). So `simpleobject` placements and
+`layer=1` clickables sit in front of the whole background subtree, gang
+included. That is how overlays such as `OBJ_P01_TC_OVERLAY` (the cactus
+and fence) end up in front of the characters. The table models the
+default placement path only. A room's own class can claim an OBJ by name
+first (see [scooby-exe](scooby-exe.md#objectini-consumer-wp-001)); the tool
+does not model that, and the Post Office trapdoor may be such a case. The
+character name list includes `BRAD`, `EWAN`, `MARIA`, `JANE`, `WIZARD`,
+`JESTER`, `PRINCESS` and `UNICYCLE`, which do not appear in Showdown's
+data. That suggests one Gen 1 table shared with Phantom (inference).
+
+**Checked against WP-009 frames:**
+
+- **Town Center:** the cactus-and-fence overlay covers the gang's feet. The
+  `POPULATION` signpost, whose base is near the bottom of the screen, draws
+  in front of Fred. (The frame was captured after the sign was taken, so it
+  cannot confirm the sign.)
+- **Saloon:** the gang positions and overlaps match, with Scooby in front of
+  Velma and Velma in front of Artie.
+- **Railroad Station:** the gang trio matches.
+
+The remaining differences are game state, not format. The video catches
+props already moved or picked up and NPCs mid-animation, while the tool
+shows every placement at step 0. All 69 rooms render without errors (497
+visible placements). An earlier version of the tool (2026-11-13, before
+this trace) inferred the order; switching to the traced rules changed 26
+of the 69 renders.
 
 #### Scene index = ROOM id (WP-009, 2026-11-13)
 
@@ -707,9 +741,8 @@ The decode itself has no open questions.
    Seek with the descriptors, as the engine does. The object-resource walk is
    a cross-check, not the access path.
 2. ~~Render one room with its placed objects~~ Done 2026-11-13: see
-   [Rendering a room](#rendering-a-room-2026-11-13). What's left for the
-   engine is the parent-layer setup behind the draw order of non-character
-   placements.
+   [Rendering a room](#rendering-a-room-2026-11-13), including the traced
+   draw order. Per-room placement overrides are the part not modelled.
 3. Run `--verify` against Phantom's `TGIFILE.ART` (EC-002 Phase D). It is
    the first chance to see the `0xB0`/`0xB8` room tables populated.
 
