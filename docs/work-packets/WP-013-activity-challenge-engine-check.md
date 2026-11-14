@@ -6,7 +6,7 @@ title: "WP-013: Activity Challenge Engine Check"
 # WP-013: Engine-family check for *Scooby-Doo! Activity Challenge*
 
 **Status:** ✅ Done (2026-11-14)
-**Phase:** 1 — Format Research (follow-on to [WP-005](WP-005-engine-family-check.md), found in passing by WP-012, the detection table)
+**Phase:** 1 — Format Research (follow-on to [WP-005](WP-005-engine-family-check.md), found in passing by [WP-012](WP-012-detection-table.md), the detection table)
 **Depends on:** —
 **Companion EC:** — (WP-005's method; no checklist needed)
 **Estimated effort:** 1–2 hours
@@ -125,7 +125,7 @@ compared with `tools/exes/jinx/Scooby.exe` (847,872 bytes). Full write-up:
 ### Detection (not done here)
 
 The fork's detection table
-(`C:\dev\scummvm` `engines/scooby/detection_tables.h`, added by WP-012)
+(`C:\dev\scummvm` `engines/scooby/detection_tables.h`, added by [WP-012](WP-012-detection-table.md))
 could take a `kGen2` entry for this disc. Using WP-012's method (size and
 MD5 of the first 5,000 bytes; Jinx's `Mummy.mms` reproduces its listed
 `17d996eb…`):
@@ -198,8 +198,6 @@ Out of scope:
 
 ## Notes
 
-- WP-012 (the detection table) was open as PR #40 when this WP was
-  written, so its file is not on `main` yet and is not linked from here.
 - Both titles' `.mms` scripts archives carry `II 03 00` at `0x10` where
   the other archives carry `MM 00 03`. Read as TIFF-style byte-order marks,
   both say version 3: big-endian for Films, Sounds and Pictures,
