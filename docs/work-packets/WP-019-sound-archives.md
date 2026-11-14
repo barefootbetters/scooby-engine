@@ -5,12 +5,28 @@ title: "WP-019: Sound Archives through the Mixer"
 
 # WP-019: Sound archives through `Audio::Mixer` (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (resource loading: audio)
 **Depends on:** WP-004 ✅ (audio format), WP-006 ✅ (Phantom's audio is the same), WP-014 ✅ (engine resource pattern)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-019-2026-11-14](../reference/pre-flight-WP-019-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Every clip matches | ✅ At `audio` level 3 the engine logs each clip's file, name, rate, channels, bits, volume, loop flag, data size and PCM MD5, in name order per file. A reference built on `probe_audio.py`'s index reader and data offsets logs the same lines. The logs are identical: Showdown 1,165 clips (316 / 821 / 28), Phantom 1,067 (282 / 768 / 17), 0 bad. |
+| 2. Playback through the mixer | ✅ `start_sound=Back_Alley.350A_1_FRED` played on the speech channel. The mixer's elapsed time reached 1,000, 2,000 and 3,000 ms at one-second wall-clock steps, and the clip ended about 3.93 s after it started; its length is 172,288 bytes ÷ 44,100 = 3.91 s. `Chase.Music` played as looping music and kept advancing 1,000 ms per second. |
+| 3. Malformed archive rejected | ✅ A scratch game folder had a copied `Sfx.dat` and hard links to the other files. Version 2, and an index offset past the end of the file, are each rejected with `Sfx.dat: bad header (…)`, and the engine stops with "no game data" without crashing. The cached `Sfx.dat` still matches its SHA-256 in `tools/exes/README.md`. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`ac1b4def76`](https://github.com/barefootbetters/scummvm/commit/ac1b4def76) stages its nine files by name, inside `engines/scooby/`, and is pushed. |
+
+**Deviations:**
+
+- **The console wasn't driven.** Keystrokes from a background process never reached the ScummVM window, with either `SendKeys` or `keybd_event`. So the playback test used the pre-flight's fallback, a `start_sound` config key, and `sound_play` was compiled but not run.
+- **Order of work.** WP-018 named the exit transition as next. This WP comes first because the transition plays a voice line.
 
 ---
 
@@ -70,15 +86,15 @@ exit's `scene=` section as the gang walks off, so it needs audio.
 
 ## Exit criteria
 
-1. [ ] Every clip in Showdown (1,165) and Phantom (1,067) reads in the engine
+1. [x] Every clip in Showdown (1,165) and Phantom (1,067) reads in the engine
    to the same PCM bytes, by MD5, as `probe_audio.py`'s data offset and
    size give. Format fields match too.
-2. [ ] A clip started from the console plays through the mixer. The elapsed
+2. [x] A clip started from the console plays through the mixer. The elapsed
    time logged once a second advances with wall time, and a non-looping
    clip ends at its length.
-3. [ ] A malformed archive (bad version, index past the end of the file) is
+3. [x] A malformed archive (bad version, index past the end of the file) is
    rejected with a warning.
-4. [ ] Scooby-only build: 0 errors and 0 warnings. The fork diff stays inside
+4. [x] Scooby-only build: 0 errors and 0 warnings. The fork diff stays inside
    `engines/scooby/`, staged by name.
 
 ## Deliverables
