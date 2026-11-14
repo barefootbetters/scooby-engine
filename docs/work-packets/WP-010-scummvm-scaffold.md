@@ -5,11 +5,46 @@ title: "WP-010: ScummVM Fork & Engine Scaffold"
 
 # WP-010: ScummVM fork + empty `engines/scooby/` scaffold
 
-**Status:** 📦 Queued
+**Status:** ✅ Done (2026-11-13)
 **Phase:** Pre-Work (before Phase 2; benefits Phase 1)
 **Depends on:** —
 **Companion EC:** [EC-005](../execution-checklists/EC-005-scummvm-scaffold.md)
 **Estimated effort:** Half-day
+**Pre-flight:** [pre-flight-WP-010-2026-11-13](../reference/pre-flight-WP-010-2026-11-13.md)
+
+---
+
+## Result (2026-11-13)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Fork exists | ✅ [`barefootbetters/scummvm`](https://github.com/barefootbetters/scummvm), forked from `scummvm/scummvm` |
+| 2. Clone on `scooby-engine` | ✅ At `C:\dev\scummvm` (deviation below), branch `scooby-engine`, remotes `origin` and `upstream`. Two commits on the pin, touching only `engines/scooby/` (12 files). |
+| 3. Builds with scooby enabled | ✅ `--disable-all-engines --enable-engine=scooby`: 0 errors and no warnings in `engines/scooby/`. `scummvm.exe --list-engines` shows `scooby`. |
+| 4. Builds with scooby disabled | ✅ `--disable-engine=scooby`, default engine set: 0 errors. 97 engines listed, without scooby. Only `detection.o` compiles, because detection is built for every engine by default. |
+| 5. Pin recorded | ✅ `c553503d9d433726b22b43b3a6a0a86fd00125e9` in [02-SCUMMVM-INTEGRATION](../02-SCUMMVM-INTEGRATION.md) |
+| 6. Debug channels | ✅ `resource`, `graphics`, `audio`, `script`, `input`. `--list-debugflags=scooby` lists all five. |
+
+**Toolchain:** MSYS2 UCRT64 (g++ 16.2.0, SDL2 2.32.10, GNU Make 4.4.1).
+Jeff chose it on 2026-11-13, and it stays the toolchain through Phase 5.
+
+**Deviations:**
+
+- **Clone location:** `C:\dev\scummvm`, not `C:\www\scummvm`. Code lives under `C:\dev` (D-24739, which this WP predates).
+- **Debug-channel API:** at the pin, engines declare a `DebugChannelDef` table returned by `MetaEngineDetection::getDebugChannels()`, rather than calling `DebugMan.addDebugChannel()` in the engine constructor. Integration §9 is updated.
+- **File count:** 12, not 9. `devtools/create_engine` also emits `console.{h,cpp}`, `credits.pl` and `detection_tables.h`, and `POTFILES` was dropped (no translatable strings yet).
+- **Who did what:** the fork, the clone and both fork commits came from an earlier session on 2026-11-13. This session verified them: it installed the toolchain, ran both builds, recorded the pin, and closed the WP.
+
+**Upstream AI policy (found during this WP):** at the pin, upstream ships
+`AGENTS.md` and `AI-GUIDELINES.md`. They require disclosure of AI
+assistance, no AI (co-)authorship of code, human-written commit and PR
+messages, and, for a whole-engine submission, a human primary maintainer
+who can maintain the engine without AI. A workflow
+(`check-commit-authors.yml`) closes PRs whose commits carry an AI
+`Co-Authored-By:` trailer, and both fork commits carry one. This bears on
+Phase 5, not on this WP. It is recorded in
+[integration §12](../02-SCUMMVM-INTEGRATION.md#12-upstream-pr-checklist)
+as an open decision for Jeff.
 
 ---
 
