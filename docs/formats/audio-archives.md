@@ -6,7 +6,7 @@ title: "Format Spec: Audio Archives"
 # Format Spec: Audio Archives (`Music.dat` / `Sfx.dat` / `Voice.dat`)
 
 **Status:** Decoded (WP-004, 2026-11-13). All three files are a name-indexed set of clips, and every clip is **uncompressed PCM** with a small header and, for voice, a lip-sync track. Layout traced in `Scooby.exe` and checked on all 1,165 clips.  
-**Engine generation:** Gen 1 (Showdown; Phantom unverified)  
+**Engine generation:** Gen 1 (Showdown; Phantom verified by WP-006, 2026-11-13)  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample files:** `scooby\Music.dat` (91.7 MB), `scooby\Sfx.dat` (30.7 MB), `scooby\Voice.dat` (103.8 MB) on the Showdown disc  
 **Source SHA-256s:** `Music.dat` `43CC40E8…EB1E`, `Sfx.dat` `D6E92447…FDCC`, `Voice.dat` `9DB041E4…630E` (full values in [tools/exes/README §Showdown](../../tools/exes/README.md#showdown-gen-1))  
@@ -158,7 +158,6 @@ apply.
 - Where in-game dialogue *text* lives, if anywhere. No text sits alongside
   the clips. The names identify the line and speaker
   (`Back_Alley.350A_1_FRED`), but not the words.
-- Phantom's `.dat` files: same layout predicted (same engine), not checked.
 
 ## Next steps
 
@@ -166,8 +165,14 @@ apply.
    opens clips as raw PCM streams from the sector after the header.
 2. Lip sync: trace the consumer of the `(count, fps, bytes)` block alongside
    the character actor (`0x4048E0` family) in Phase 4.
-3. Run `probe_audio.py --verify --dir <Phantom folder>` when the disc is
-   mounted.
+3. ~~Run `probe_audio.py --verify --dir <Phantom folder>`~~ Done
+   2026-11-13 (WP-006): Phantom's `Sfx.dat` (282 clips), `Voice.dat` (768)
+   and `Music.dat` (17) pass every check. Each index ends at EOF, PCM starts
+   on the sector after the header, and the signal check reads as audio
+   (median 0.23–0.37). Mostly 22050 Hz 16-bit, with some 44100 Hz mono clips
+   in `Sfx.dat` and `Voice.dat`. 693 voice clips carry lip-sync data.
+   Phantom's audio code is byte-identical to Showdown's
+   ([scooby-exe](scooby-exe.md#phantom-archive-format-and-engine-code-wp-006)).
 
 ## Success condition
 

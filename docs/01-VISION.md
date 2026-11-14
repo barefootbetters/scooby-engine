@@ -162,7 +162,11 @@ reuse. This is the strongest possible engine-family signal.
 - **Phantom (2001): Gen 1 confirmed** — `TGIFILE.ART` present on disc (≈109 MB vs
   Showdown's 144 MB), `binkw32.dll` hash identical to Showdown (same Bink SDK build),
   `Scooby.exe` build date 2001-08-22 (same as Showdown — shared release cycle).
-  Archive format locked to Gen 1.
+  Archive format locked to Gen 1. **Verified structurally by WP-006
+  (2026-11-13):** Phantom's `TGIFILE.ART` passes every `--verify` check and
+  its `.dat` audio passes `probe_audio.py --verify`. All 71 functions WP-001
+  traced in Showdown are byte-identical in Phantom's `Scooby.exe`, so Gen 1
+  is one engine build over two data sets.
 - **Case File #3: confirmed out of scope** — Macromedia Director engine,
   TLC/Broderbund publisher. Not part of this lineage.
 

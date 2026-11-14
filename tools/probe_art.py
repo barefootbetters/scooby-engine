@@ -567,8 +567,11 @@ def verify_engine(objs: list[ObjectResource], scns: list[SceneBlock]) -> int:
     print(f"name table: {len(table)} records = {len(tags[0x10])} ROOM + {len(tags[0x20])} OBJ "
           f"+ {len(anims)} ANIM; ANIM count equals the sequence count")
 
-    # Sequence steps: (u32 0, u32 0x8000_0000 | owner << 20 | frame, u32 polygon).
+    # Sequence steps: (u32 unread, u32 0x8000_0000 | owner << 20 | frame, u32 polygon).
+    # The first word is 0 on every Showdown step. Phantom sets it on two
+    # steps of OBJ_KST_MUG; no traced reader touches it, so it is reported.
     steps = polys = 0
+    unread = []
     for o in objs:
         count, table0 = o.tables[0]
         frames = o.tables[1][0]
@@ -578,8 +581,11 @@ def verify_engine(objs: list[ObjectResource], scns: list[SceneBlock]) -> int:
             if u32(ART, r) != 8 + 12 * n:
                 return fail(f"OBJ {o.index} sequence {i}: size != 8 + 12n")
             for k in range(n):
-                zero, ref, poly = struct.unpack_from("<III", ART, r + 8 + 12 * k)
-                if zero or ref >> 31 != 1 or ref >> 20 & 0x7FF != o.index or ref & 0x3FFFF >= frames:
+                first, ref, poly = struct.unpack_from("<III", ART, r + 8 + 12 * k)
+                if first:
+                    dx, dy = struct.unpack("<hh", struct.pack("<I", first))
+                    unread.append(f"OBJ {o.index} seq {i} step {k}: {first:#010x} = i16 ({dx}, {dy})")
+                if ref >> 31 != 1 or ref >> 20 & 0x7FF != o.index or ref & 0x3FFFF >= frames:
                     return fail(f"OBJ {o.index} sequence {i} step {k}: frame ref {ref:#010x}")
                 if poly:
                     pn = u32(ART, o.offset + poly + 4)
@@ -589,6 +595,9 @@ def verify_engine(objs: list[ObjectResource], scns: list[SceneBlock]) -> int:
                 steps += 1
     print(f"sequences: {seqs} sequences, {steps} steps; every frame ref names its owner "
           f"and a frame in range; {polys} step polygons parse")
+    print(f"sequences: {len(unread)} steps carry a non-zero first word (not read by the player)")
+    for line in unread:
+        print(f"  {line}")
 
     # Room blocks: one cel (the background), layer 0 places it at (0, 0);
     # placement (OBJ, ANIM) pairs follow the ANIM ownership rule.

@@ -5,8 +5,8 @@ title: "Format Spec: TGIFILE.ART"
 
 # Format Spec: `TGIFILE.ART`
 
-**Status:** Payload decoded (WP-002, 2026-11-13) and cross-checked against the loader, sequence player and renderer in `Scooby.exe` (WP-001, 2026-11-13). Every image in the file decodes: 453 object resources and 69 room backgrounds, 9,111 cels. The header descriptors, the full name table, sequence records, mask roles and room names are now resolved. Open: room-block word `0x10`, the placement field at `+0x88`, and a few never-populated room tables.  
-**Engine generation:** **Gen 1** (Showdown 2000, Phantom 2001 — Phantom's archive format unverified but predicted Gen 1)  
+**Status:** Payload decoded (WP-002, 2026-11-13) and cross-checked against the loader, sequence player and renderer in `Scooby.exe` (WP-001, 2026-11-13). Every image in the file decodes: 453 object resources and 69 room backgrounds, 9,111 cels. The header descriptors, the full name table, sequence records, mask roles and room names are now resolved. Open: room-block word `0x10`, the placement field at `+0x88`, and a few never-populated room tables. *Phantom of the Knight*'s file passes the same checks (WP-006, 2026-11-13).  
+**Engine generation:** **Gen 1** (Showdown 2000, Phantom 2001). Phantom verified by WP-006 (2026-11-13): the same layout, every check in `--verify`, and the same loader and renderer code. See [Cross-title verification](#cross-title-verification-2026-06).  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample file:** `scooby\TGIFILE.ART` on the Showdown disc  
 **File size:** 144,592,896 bytes (≈ 144 MB)  
@@ -194,7 +194,7 @@ A sequence is one named animation. Each 12-byte step is:
 ```
 Offset  Size  Type      Field
 ------  ----  --------  -----
-0       4     uint32LE  0 on every step; not read by the player
+0       4     uint32LE  0 on every Showdown step; not read by the player
 4       4     uint32LE  frame ref: 0x8000_0000 | (owner OBJ id << 20) | frame index
 8       4     uint32LE  polygon offset (resource-relative), or 0
 ```
@@ -209,6 +209,15 @@ polygon is not clickable. Fred's idle steps point at 4-point polygons.
 
 The `u16` at offset 6 of the sequence header is 0 on 1,263 sequences, 1 on
 two and 2 on one. The traced player does not read it.
+
+Phantom sets the step's first word on exactly two of its 8,304 steps, both
+in sequence 3 of `OBJ_KST_MUG`: `0xFFEE000A` and `0xFFE3000E`. Read as two
+`i16`, that is (10, −18) and (14, −29), which looks like a per-step x, y
+offset for a mug being lifted (inference). Phantom's player code is
+byte-identical to Showdown's (WP-006), and no traced reader touches this
+word, so the engine ignores it. Two Phantom sequence headers also carry a
+non-zero `u16` at offset 6. `--verify` lists non-zero first words instead of
+failing on them.
 
 Playback state lives in the sprite, not the file (`0x430AA0`, `0x430890`):
 a mode, a step index, and a ticks-per-step countdown. The modes are 1 =
@@ -292,7 +301,8 @@ The words at `0x00`–`0x7F` other than those listed are zero on every block.
 - **`0xB0` table:** the loader relocates the `u32` at `+0xC` of each entry
   unless the byte at `+9` is set. **`0xB8` table:** each entry is relocated
   like a whole object resource (`0x43B6C0`), so a room can embed its own
-  objects. Both are empty in Showdown; Phantom may use them.
+  objects. Both are empty in every room of Showdown and of Phantom
+  (WP-006), so no shipped Gen 1 data shows their payload.
 
 A placement record is 148 bytes:
 
@@ -374,7 +384,10 @@ first (see [scooby-exe](scooby-exe.md#objectini-consumer-wp-001)); the tool
 does not model that, and the Post Office trapdoor may be such a case. The
 character name list includes `BRAD`, `EWAN`, `MARIA`, `JANE`, `WIZARD`,
 `JESTER`, `PRINCESS` and `UNICYCLE`, which do not appear in Showdown's
-data. That suggests one Gen 1 table shared with Phantom (inference).
+data. They are Phantom's cast: Phantom's `Scooby.exe` carries the same
+20-name table (at `0x469720`), and its name table holds objects for exactly
+those eight plus the gang (WP-006). One table serves both titles, so
+`--room` renders Phantom rooms unchanged.
 
 **Checked against WP-009 frames:**
 
@@ -702,7 +715,17 @@ The full continuous-block record listing (811 entries, with per-record strings-p
 ### Cross-title verification (2026-06)
 
 - **Showdown (Gen 1):** documented above. `TGIFILE.ART` present at disc root.
-- **Phantom:** disc inspection pending; toolchain (Rich Header) matches Showdown identically — Phantom is classified Gen 1 and is *predicted* to use `TGIFILE.ART`, but the archive header hasn't been hex-checked yet. Lock in next time the disc is mounted with `Format-Hex E:\scooby\TGIFILE.ART -Count 8` and compare against `45 00 00 00`. Once mounted, `py -3 tools/probe_art.py --art <Phantom TGIFILE.ART> --no-hash --verify` is the cross-title check (EC-002 Phase D).
+- **Phantom (Gen 1, verified by WP-006, 2026-11-13):** the same format. `scooby\TGIFILE.ART`, 114,386,944 bytes, SHA-256 `AC24E9AE…BF04` ([tools/exes/README §Phantom](../../tools/exes/README.md#phantom-gen-1)). The header follows the same count-driven layout with Phantom's own counts:
+
+  ```
+  Field          Showdown                  Phantom
+  first u32      45 00 00 00 (69 rooms)    35 00 00 00 (53 rooms)
+  object count   0x0118: 453               0x00D8: 433
+  name count     0x0830: 1,788             0x07A0: 1,634 (53 ROOM + 433 OBJ + 1,148 ANIM)
+  first record   ROOM_P01_Town_Center      ROOM_P31_KST
+  ```
+
+  The first `u32` is the room count, not a magic number, so the old "compare against `45 00 00 00`" test would have misread Phantom. `py -3 tools/probe_art.py --art <Phantom TGIFILE.ART> --no-hash --verify` passes in full. All 5,810 cels decode with exact mask chunks. All descriptors span their blocks. The ANIM count equals the sequence count (1,148). All 8,304 sequence steps name their owner and a frame in range. All 552 placements pair an object with its own sequence. The masks partition every sprite cel. The one difference is the unread step word described in [Sequences](#sequences-table-0). Room blocks match Showdown's field for field: word `0x10` is 1 or 2, only layer slot 0 is used, the `0xB0`/`0xB8` tables are empty, and `+0x88` is again a distinct per-object constant (1–437, not the OBJ id, not the `object.ini` section order). Two Phantom rooms are 1280 × 480, the title screen and `ROOM_Ghost_Spot`. `--room` renders them, the KST tavern and the sign-in screen cleanly (local only).
 - **Jinx (Gen 2):** uses `MMFW`-wrapped archives (`Mummy.MMF`, `HD.MMA`, `HD.MMP`) — confirmed not `TGIFILE.ART`. See [`mmfw-container.md`](mmfw-container.md).
 - **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container.md). No `TGIFILE.ART` on the disc (WP-005 listing, 2026-11-13), so there is no first-64-bytes comparison to make.
 - **Case File #2:** no `TGIFILE.ART`, `object.ini` or `.dat` audio on the disc; its archives are `.bul`/`.inx` bulk files. WP-005 (2026-11-13) places it on a different engine altogether ([scooby-exe §Case File #2](scooby-exe.md#case-file-2-wp-005)).
@@ -721,17 +744,19 @@ transparency (opaque).
 
 Still open:
 
-- Room-block word `0x10` (2 on 59 blocks, 1 on 10). No reader was found in
-  the decompiled code.
+- Room-block word `0x10` (2 on 59 blocks, 1 on 10; Phantom 2 on 43, 1 on
+  10). No reader was found in the decompiled code.
 - The placement field at `+0x88`, a unique per-object constant that no
-  traced handler reads.
+  traced handler reads. Phantom has the same pattern. It is not the OBJ id,
+  the sorted-name rank or the `object.ini` section order in either title.
 - The `u16` at offset 6 of a sequence header (non-zero on 3 of 1,266) and
-  the step's first `u32` (0 on every step). The player does not read them.
+  the step's first `u32` (0 on every Showdown step, a likely x, y offset on
+  two Phantom steps). The player does not read them.
 - Object table 2 (polygons). Its consumer was not traced. The per-step
   polygons are the ones the hit test uses.
 - The room-block `0xB0` and `0xB8` tables. The loader supports them, but
-  they are empty in every Showdown room, so their payloads are unknown.
-  Phantom may use them.
+  they are empty in every Showdown and Phantom room, so their payloads are
+  unknown.
 
 The decode itself has no open questions.
 
@@ -744,8 +769,9 @@ The decode itself has no open questions.
 2. ~~Render one room with its placed objects~~ Done 2026-11-13: see
    [Rendering a room](#rendering-a-room-2026-11-13), including the traced
    draw order. Per-room placement overrides are the part not modelled.
-3. Run `--verify` against Phantom's `TGIFILE.ART` (EC-002 Phase D). It is
-   the first chance to see the `0xB0`/`0xB8` room tables populated.
+3. ~~Run `--verify` against Phantom's `TGIFILE.ART`~~ Done 2026-11-13
+   (WP-006): it passes, and the `0xB0`/`0xB8` tables are empty there too.
+   The Phase 3 reader can treat both Gen 1 titles as one format.
 
 ## Success condition
 
