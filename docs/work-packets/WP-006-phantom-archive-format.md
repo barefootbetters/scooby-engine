@@ -5,11 +5,52 @@ title: "WP-006: Phantom Archive Format"
 
 # WP-006: Phantom archive format verification (Gen 1 vs Gen 2)
 
-**Status:** 📝 Drafted
+**Status:** ✅ Done (2026-11-13)
 **Phase:** 1 — Format Research (follow-on to the Engine Lineage finding in WP-005)
 **Depends on:** —
 **Companion EC:** — (single hex dump; no checklist needed)
 **Estimated effort:** 1 minute
+**Pre-flight:** [pre-flight-WP-006-2026-11-13](../reference/pre-flight-WP-006-2026-11-13.md)
+
+---
+
+## Result (2026-11-13)
+
+**Verdict: Gen 1.** Phantom's `TGIFILE.ART` is the same format as
+Showdown's, checked structurally rather than by its first four bytes. Its
+engine code is the same build.
+
+| Exit criterion | Result |
+|---|---|
+| 1. Verdict recorded in VISION and `tgifile-art.md` | ✅ VISION's Phantom bullet now cites WP-006 (the Engine Lineage table row already read `TGIFILE.ART`). `tgifile-art.md` engine-generation line and Cross-title verification bullet updated. |
+| 2. Hex bytes in the format spec | ✅ A header comparison table in [tgifile-art §Cross-title verification](../formats/tgifile-art.md#cross-title-verification-2026-06): `35 00 00 00` (53 rooms), object count at `0xD8`, name count at `0x7A0`, first record `ROOM_P31_KST` |
+| 3. Structural checks pass | ✅ Went beyond the two checks: `probe_art.py --verify` passes in full on Phantom (5,810 cels, descriptors, name table, 8,304 sequence steps, 552 placements, mask partition) |
+
+**Deviation from §Scope:** the WP fixes the name table at `0x0F60` and the
+object count at `0x0118`. Both offsets are Showdown's, and WP-001 showed
+the header is count-driven: rooms, then objects, then names. Phantom has
+53 rooms, so its object count sits at `0xD8` and its name count at `0x7A0`.
+The checks followed the header. Likewise, `45 00 00 00` is Showdown's room
+count, not a Gen 1 marker. Phantom opens with `35 00 00 00`.
+
+**Beyond the WP:**
+
+- **Same engine code.** All 71 WP-001-labelled functions are byte-identical
+  in Phantom's `Scooby.exe` with addresses masked (`+0xD30` from
+  `0x430790` up), and the 20-name character table is the same list. See
+  [scooby-exe §Phantom](../formats/scooby-exe.md#phantom-archive-format-and-engine-code-wp-006).
+- **Audio** (scope amendment in the pre-flight): `probe_audio.py --verify`
+  passes on Phantom's `Sfx.dat`, `Voice.dat` and `Music.dat` (1,067 clips).
+- **One data difference:** two steps of `OBJ_KST_MUG` set the sequence
+  step's first word, which reads as an x, y offset. The engine never reads
+  it. `--verify` now reports such words instead of failing (Showdown passes
+  unchanged).
+- **Still open in both titles:** room word `0x10`, placement `+0x88`, and
+  the `0xB0`/`0xB8` room tables, which are empty in Phantom too.
+
+**Not done:** the WP's note to cache Phantom's files was already met on
+2026-06-03. No Phantom images or audio are committed. Renders stayed in the
+session scratchpad.
 
 ---
 
