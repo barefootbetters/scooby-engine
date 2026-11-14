@@ -25,7 +25,7 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 | `Scooby.exe` | ⏳ Ghidra analysis queued |
 | Case File #1 executable (decompdecomp) | 🚧 Access received; executable identity confirmed with the collaborator's copy; local build and capped trial next ([WP-011](docs/work-packets/WP-011-casefile-decompdecomp)) |
 
-Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. Case File #1's place in the lineage rests on toolchain evidence; the Case File #2 verdict is still open.
+Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. Case File #1's place in the lineage rests on string, RTTI and source-path evidence; Case File #2 runs a different engine (WP-005). All five titles' executables are Visual C++ 6.0 builds (corrected 2026-11-14 from an earlier Visual C++ 5.0 reading).
 
 ---
 

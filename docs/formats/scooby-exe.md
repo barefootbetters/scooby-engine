@@ -53,7 +53,7 @@ small (476 KB) but still contains far more than we need.
 | Most gameplay rules are driven by `object.ini`, with the exe acting as interpreter | `object.ini` is 1,405 lines naming every object, room, and cursor. WP-001: object *kinds* and their keys come from `object.ini` (looked up live per object), but rooms are C++ objects and several override placements in code | Medium (asset binding confirmed; logic partly in code) |
 | Puzzle state machines are exe-resident (not in `object.ini`) | `object.ini` shows static room/object data, not logic branches | Medium |
 | The exe is single-threaded | Edutainment titles of the era rarely use worker threads | High |
-| Compiler is MSVC (not Borland/Watcom) | Standard for Windows-first Learning Company titles of 2000 | Medium |
+| Compiler is MSVC (not Borland/Watcom) | Standard for Windows-first Learning Company titles of 2000. **Confirmed:** Visual C++ 6.0, linker 6.00 ([§Toolchain](#toolchain), corrected 2026-11-14) | Confirmed |
 
 ## Investigation plan
 
@@ -92,7 +92,7 @@ Targeted manual work: entry points, imports, strings and cross-references, resou
 
 ### Track B — decompdecomp-assisted analysis ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md))
 
-Cooperative, AI-assisted decompilation with [decompdecomp](https://github.com/n-delic/decompdecomp): function extraction, candidate C reconstruction, byte matching against the original compiler output, parallel agent processing, a cooperative room that hands out unhandled functions to collaborators, and reuse and matching across related executables. Its output is a stream of leads for Track A. Initial binary: Case File #1 (Gen 3). Simeon Armenchev ([monyarm](https://github.com/monyarm)) started that decompilation in his private repository. Machine setup is in [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md). Case File #1's place in the lineage rests on toolchain evidence, and the Case File #2 verdict is still open (WP-005); see WP-011 §Background.
+Cooperative, AI-assisted decompilation with [decompdecomp](https://github.com/n-delic/decompdecomp): function extraction, candidate C reconstruction, byte matching against the original compiler output, parallel agent processing, a cooperative room that hands out unhandled functions to collaborators, and reuse and matching across related executables. Its output is a stream of leads for Track A. Initial binary: Case File #1 (Gen 3). Simeon Armenchev ([monyarm](https://github.com/monyarm)) started that decompilation in his private repository. Machine setup is in [Setting Up decompdecomp on Windows](../reference/decompdecomp-setup.md). Case File #1's place in the lineage rests on string, RTTI and source-path evidence, with the toolchain as support, and WP-005 found Case File #2 to be a different engine; see WP-011 §Background.
 
 **A byte-identical match is evidence, not understanding.** It shows that candidate C is equivalent to the original bytes. It does not establish correct high-level semantics, suitable names, a readable architecture, or anything usable in ScummVM. Track B findings use the [WP-011 evidence model](../work-packets/WP-011-casefile-decompdecomp.md#evidence-model) (Reported → Observed → Matched → Corroborated → Integrated → Accepted). Matched C and generated assembly stay out of this public repo. The ScummVM engine is written independently from documented behavior.
 
@@ -124,60 +124,112 @@ Extraction tooling: [`tools/extract_strings.py`](../../tools/extract_strings.py)
 
 ### Toolchain
 
-**Family across all titles checked:** Visual C++ 5.0 (1997 toolchain) +
-MASM 6.13 + Cvtomf 5.10 + Linker 5.10. TerraGlyph did not migrate to
-VC6 before shipping any of Showdown/Phantom/Jinx, and ImageBuilder
-Software did not migrate the inherited engine to VC6 for Case File #1
-either (except for one stray VC6-compiled object file).
+**Corrected 2026-11-14: every title checked is Visual C++ 6.0, not 5.0.**
+The 2026-06 reading ("Visual C++ 5.0 + MASM 6.13 + Cvtomf 5.10 + Linker
+5.10") came from a wrong product-ID table in
+[`tools/rich_header.py`](../../tools/rich_header.py). Three independent
+sources agree on the correction:
 
-The toolchain *build numbers* split the titles into three generations
-(see Cross-title comparison below) and that split aligns with the
-archive-format split (`TGIFILE.ART` → `MMFW`) and the developer-studio
-split (TerraGlyph → IBS) — strong corroboration that the engine
-evolved along generation boundaries.
+- **Microsoft's own `prodid` enum** (names as tabulated in
+  [kirschju/richheader](https://github.com/kirschju/richheader)
+  `prodids.py`): 0x000A is `Utc12_C`, 0x000B is `Utc12_CPP` (the VC++ 6.0
+  C and C++ compilers), 0x000E is `Masm613`, 0x000C is `AliasObj60`,
+  0x0004 is `Linker600`, 0x0013 is `Linker512`, 0x0006 is `Cvtres500`, and
+  0x0031 is `Utc12_2_CPP` (VC++ 6.0 with the Processor Pack).
+- **richprint's empirical comp.id database**
+  ([dishather/richprint](https://github.com/dishather/richprint)
+  `comp_id.txt`), which matches the enum and ties builds to releases.
+- **The PE optional header** of all five binaries says
+  `MajorLinkerVersion.MinorLinkerVersion` = **6.00**. link.exe writes that
+  field itself; Linker 5.10 would write 5.10.
+
+The old script called the VC6 C compiler "Linker 5.10", the VC6 C++
+compiler "MASM 6.13", MASM 6.13 "Cvtomf 5.10", and the linker 5.12
+import records "MSVC 5.0 C++". It now uses the enum names and reads the
+linker version from the PE header. VC6-era link.exe does not record itself
+in the Rich Header; the `Linker*` entries that do appear are import/export
+records inside linked `.lib` files.
+
+**What each title's own code was compiled with** (the largest C++ entry;
+service-pack attributions are richprint's, not checked against a
+known-good binary here):
+
+| Title | Gen | Linker (PE header) | Game C++ code | Other compiled objects |
+|---|---|---|---|---|
+| Showdown | 1 | 6.00 | VC6 `Utc12_CPP` build **8966** (×114), richprint: VC6 SP5 | C 8047 (×113) and C++ 8047 (×10), which richprint marks "likely libs" |
+| Phantom | 1 | 6.00 | VC6 `Utc12_CPP` build **8966** (×120) | same as Showdown |
+| Jinx | 2 | 6.00 | VC6 `Utc12_CPP` build **8168** (×157), richprint: VC6 RTM | C 8168 (×160) |
+| Case File #1 | 3 | 6.00 | VC6 Processor Pack `Utc12_2_CPP` build **8943** (×161), richprint: VC6 SP4 + Processor Pack | C 8797 (×126), C 8168 (×36), C++ 8797 (×8), one VS2002 `Utc13_C` 8830 object |
+| Case File #2 | — | 6.00 | VC6 Processor Pack `Utc12_2_CPP` build **9044** (×71), richprint: VC6 SP5 + Processor Pack; plus VC6 `Utc12_CPP` 8966 (×53) | C 8966 (×26), C 8047 (×11), C++ 8047 (×2), one VS2002 `Utc13_CPP` 9178 object |
+
+The CRT is linked statically in Gen 1–3 (see the import tables below), so
+part of each title's C object count is CRT and library code, not game
+code.
+
+**What still holds.** The build numbers still split the titles into
+groups that line up with the archive-format split (`TGIFILE.ART` →
+`MMFW`) and the studio split (TerraGlyph → IBS): Showdown and Phantom are
+identical, Jinx uses one compiler build throughout, and Case File #1
+shares build 8168 with Jinx. **What changes:** the direction of the Gen 1
+→ Gen 2 step, and what Case File #1's entries say about inheritance (see
+below).
 
 ### Cross-title toolchain comparison (engine generations)
 
-| Title | Gen | Linker 5.10 build(s) | MSVC 5.0 C++ build(s) | MASM 6.13 build(s) | Total entries | Verdict (rich_header.py) |
-|---|---|---|---|---|---|---|
-| Showdown | 1 | 8047 (×113) | 8034 (×16), 9049 (×10) | 8047 (×10), 8966 (×114) | 11 | Linker 5.10, build 8047 |
-| Phantom  | 1 | 8047 (×113) | 8034 (×16), 9049 (×10) | 8047 (×10), 8966 (×120) | 11 | Linker 5.10, build 8047 |
-| Jinx     | 2 | **8168** (×160) | 8034 (×17) | **8168** (×157) | 6 | Linker 5.10, build 8168 |
-| Case File #1 | 3 | **8168** (×36) + **8797** (×126) | 8034 (×17) | 8797 (×8) | 10 | Linker 5.10, build 8797 |
-| Case File #2 | — (not this lineage, WP-005) | 8047 (×11) + 8966 (×26), plus Linker 6.12 build 9466 (×4) | **none** (one MSVC 6.0 C++ 9178 object) | 8047 (×2), 8966 (×53); MASM 6.14 7291 (×13) | 13 | Linker 5.10, build 8966 |
+Rich Header entries by `prodid` enum name, from the corrected
+`tools/rich_header.py` (2026-11-14). C and C++ are compiled objects;
+`Linker512`/`Linker600`/`Implib*` are import/export records from linked
+libraries; `Import0` is imports with no comp.id.
 
-**Gen 1 (Showdown ↔ Phantom):** identical toolchain at every row.
-Only difference: Phantom carries 6 additional MASM 6.13 (build 8966)
-compilations vs. Showdown. Same engine + incremental ASM additions
-across the 2000–2001 release gap.
+| Title | Gen | C++ (`Utc12_CPP` / `Utc12_2_CPP`) | C (`Utc12_C`) | MASM 6.13 | Import records | Other | Entries |
+|---|---|---|---|---|---|---|---|
+| Showdown | 1 | 8966 (×114), 8047 (×10) | 8047 (×113) | 7299 (×30) | `Linker512` 8034 (×16), 9049 (×10); `Linker600` 8447 (×13); `Import0` ×202 | `AliasObj60` 7291 (×1), `Cvtres500` 1735, unmarked ×2 | 11 |
+| Phantom | 1 | 8966 (×120), 8047 (×10) | 8047 (×113) | 7299 (×30) | same as Showdown | same as Showdown | 11 |
+| Jinx | 2 | **8168** (×157) | **8168** (×160) | 7299 (×29) | `Linker512` 8034 (×17); `Import0` ×278 | `Cvtres500` 1720 | 6 |
+| Case File #1 | 3 | PP **8943** (×161), 8797 (×8) | 8797 (×126), **8168** (×36); VS2002 `Utc13_C` 8830 (×1) | 7299 (×30) | `Linker512` 8034 (×17); `Linker600` 8447 (×2); `Import0` ×248 | `Cvtres500` 1735 | 10 |
+| Case File #2 | — (not this lineage, WP-005) | PP 9044 (×71), 8966 (×53), 8047 (×2); VS2002 `Utc13_CPP` 9178 (×1) | 8966 (×26), 8047 (×11) | 7299 (×2) | `Implib710` 2179 (×19); `Implib700` 9466 (×4); `Linker600` 8047 (×2); `Import0` ×363 | `AliasObj60` 7291 (×13), `Cvtres500` 1735 | 13 |
 
-**Gen 2 (Jinx):** TerraGlyph upgraded the build pipeline mid-2001.
-Newer linker build (8168 vs 8047), single dev environment (one MSVC
-5.0 C++ build instead of two), dropped legacy tools (MASM 6.14,
-cvtres). 39% more compiled units overall (Linker count 160 vs ~113;
-.lib imports 278 vs 202). Consistent with engine evolution +
-feature additions on the same core.
+**Gen 1 (Showdown ↔ Phantom):** identical toolchain at every row. The
+only difference is six more C++ objects in Phantom (×120 against ×114):
+the same engine plus a few added source files. (The 2026-06 text said six
+more *MASM* compilations; that was the mislabel.)
 
-**Gen 3 (Case File #1):** the load-bearing finding —
-ImageBuilder Software **inherited** TerraGlyph's compiled object files:
+**Gen 2 (Jinx):** a different build environment, not an upgrade.
+*Corrected 2026-11-14:* the 2026-06 text called this a pipeline upgrade
+("newer linker build 8168"). Build 8168 is the VC6 release (RTM) compiler,
+older than Gen 1's 8966. Jinx compiled everything, C and C++, with that
+one build, and links neither `OLDNAMES.LIB` alias objects nor the
+`Linker600` import libraries Gen 1 uses. Its compiled-object count is
+higher (317 C and C++ objects against 237) and it imports through more
+library records (278 against 202), consistent with a larger code base.
 
-- The Linker 5.10 build **8168** entry (count 36) is the **same linker
-  version Jinx used**. These are almost certainly inherited engine
-  modules built with the Jinx-era toolchain.
-- The Linker 5.10 build **8797** entry (count 126) is newer — fresh
-  IBS-written code on top of the inherited engine.
-- The MSVC 5.0 C++ build **8034** entry (count 17) is **identical
-  byte-for-byte** to Jinx's (same product ID, same build, same count).
-  This is the strongest possible signal: IBS shipped TerraGlyph's
-  compiled `.obj` files directly into the Case File #1 link, then
-  added their own code on top.
-- One VC6 (`MSVC 6.0 C / Utc12_C_Book`) object file appears (count 1)
-  — likely an experimental IBS file with a VC6-only dependency.
-  Doesn't indicate engine migration; the bulk is still VC5.
+**Gen 3 (Case File #1):** ImageBuilder Software (IBS) inherited
+TerraGlyph's engine as **source** and rebuilt it with a newer compiler.
+*Corrected 2026-11-14:* the 2026-06 text said IBS shipped TerraGlyph's
+compiled `.obj` files directly, based on two mislabelled entries.
 
-This is **direct code-level inheritance from TerraGlyph to IBS**, not
-just architectural reuse or source-code licensing. The post-shutdown
-engine continuation is concrete and binary-confirmed.
+- Case File #1's C++ is all newer than Jinx's: 161 objects from the VC6
+  Processor Pack (build 8943) and 8 from build 8797. **None of Jinx's
+  8168 C++ objects is in it.** The `MM*` framework classes it shares with
+  Jinx were recompiled. That fits the strings: its `MMVisualCursor.cpp`
+  `__FILE__` path is IBS's own source tree (`F:\Scooby\Museum\framework\`),
+  not Jinx's.
+- 36 C objects carry **build 8168**, Jinx's compiler build, while the
+  rest of Case File #1's C is 8797. They may be a C library carried over
+  prebuilt from the Jinx-era tree. Build 8168 is the stock VC6 release,
+  so this is suggestive, not proof.
+- The `Linker512` build 8034 ×17 entry, identical in Jinx and Case File #1
+  (Showdown has ×16), is **import records from linked import libraries**,
+  not compiled code. It shows the same import-library set, which is weaker
+  than the 2026-06 reading of "TerraGlyph's `.obj` files shipped
+  byte-for-byte."
+- The "one stray VC6 file" of the 2026-06 text is a single VS2002
+  (`Utc13_C`) build 8830 C object, which richprint marks "likely libs".
+
+The lineage verdict for Case File #1 still stands, but on the string,
+RTTI and source-path evidence ([Case File #1 strings](#case-file-1-gen-3)),
+with the toolchain as supporting evidence, not the "binary-confirmed
+`.obj` inheritance" the 2026-06 text claimed.
 
 ### Cross-title runtime dependencies
 
@@ -354,7 +406,7 @@ Both titles share `Common\Options_Room.cpp` and have their own `<title>\Options_
 - Registry usage: **Yes** — same keys as Showdown (`Software\TerraGlyph\%s`, `Software\Microsoft\DirectX`)
 - Hardcoded paths: **No** — same `%s`-prefixed pattern as Showdown
 - Filename anchors for Ghidra: **`TGIFILE.ART`, `object.ini`, `Scooby.ini`, `music.dat`, `sfx.dat`, `voice.dat`** (identical set to Showdown)
-- Cross-title delta vs Showdown: **near-identical** for the engine-surface strings (filename anchors, format strings, registry keys, error templates, asset-key conventions). The Phantom-specific delta is the per-title `FBF\` source module + per-title `ROOM_*`/`ANIM_*` content (`KST_*` etc.) — title content, not engine. Phantom has 122 fewer ANSI strings than Showdown (1837 vs 1959); the difference is entirely in per-title content strings (Showdown has more `ROOM_Artifact_*` variants and other content). The 4,096-byte size delta vs Showdown noted in [tools/exes/README](../../tools/exes/README.md) §Showdown — Phantom *smaller* despite +6 MASM 6.13 entries in the Rich Header — is consistent with Phantom having less per-title content; not surprising once strings counts are this close.
+- Cross-title delta vs Showdown: **near-identical** for the engine-surface strings (filename anchors, format strings, registry keys, error templates, asset-key conventions). The Phantom-specific delta is the per-title `FBF\` source module + per-title `ROOM_*`/`ANIM_*` content (`KST_*` etc.) — title content, not engine. Phantom has 122 fewer ANSI strings than Showdown (1837 vs 1959); the difference is entirely in per-title content strings (Showdown has more `ROOM_Artifact_*` variants and other content). The 4,096-byte size delta vs Showdown noted in [tools/exes/README](../../tools/exes/README.md) §Showdown — Phantom *smaller* despite six more C++ objects in the Rich Header — is consistent with Phantom having less per-title content; not surprising once strings counts are this close.
 
 #### Jinx (Gen 2)
 
@@ -422,7 +474,7 @@ This is a substantially different engine surface from Gen 1 — class-based, hea
 - Registry usage: **No** — `ADVAPI32.dll` not statically imported; no `HKEY_*` / `Software\*` strings
 - Hardcoded paths: **No** — generic `%s_%s_%04X` resource key template only; no asset paths in the binary
 - Filename anchors for Ghidra (≥3 required — asset/data anchors): **`Scooby.ini`, `MMFW Films`, `MMFW Pictures`, `MMFW Scripts`, `MMFW Sounds`** (five anchors). Note: only `Scooby.ini` is a literal filename; the four `MMFW <category>` strings are MMFW-resource-type identifiers that play the same Ghidra-navigation role as Gen 1's filename anchors (xrefs lead to the resource-registration code paths). The actual archive filenames (`Mummy.*`) are not in the EXE — anchored by `MMFW *` instead. This is a real architectural difference from Gen 1, not a gap in the dump.
-- Cross-title delta vs Showdown: **disjoint** for engine-surface strings (no `TGIFILE.ART`, no `object.ini`, no `Software\TerraGlyph\%s`, no Bink class strings). Asset-key convention renamed `ROOM_*` → `SCENE_*`. C++ class hierarchy visible (Gen 1's procedural style is gone). Confirms the [Gen 1 → Gen 2 boundary](../01-VISION.md#engine-lineage-2026-06-finding) at the source-string level: this is the same engine *family* (per the Rich Header sharing `MSVC 5.0 C++ build 8034`), but the framework was rewritten between Gen 1 and Gen 2 — MMFW is a substantively new abstraction layer over the same toolchain and the same general engine concepts.
+- Cross-title delta vs Showdown: **disjoint** for engine-surface strings (no `TGIFILE.ART`, no `object.ini`, no `Software\TerraGlyph\%s`, no Bink class strings). Asset-key convention renamed `ROOM_*` → `SCENE_*`. C++ class hierarchy visible (Gen 1's procedural style is gone). Confirms the [Gen 1 → Gen 2 boundary](../01-VISION.md#engine-lineage-2026-06-finding) at the source-string level: this is the same studio's engine *family*, but the framework was rewritten between Gen 1 and Gen 2 — MMFW is a substantively new abstraction layer over the same general engine concepts. (*Corrected 2026-11-14:* the 2026-06 text cited a shared "MSVC 5.0 C++ build 8034" entry here. That entry is `Linker512` import records from linked import libraries, which shows a shared library set, not shared code. Both titles are Visual C++ 6.0, with different compiler builds: 8966 for Gen 1, 8168 for Jinx.)
 
 #### Case File #1 (Gen 3)
 
@@ -437,7 +489,7 @@ SHA-256 of source binary: `9813A3DDBE58BC9D7CC898030F4A2F93658FD4A69156BA8531C6E
 - `INTRO_01.avi`, `INTRO_02.avi`, `INTRO_03.avi` — opening cutscenes (matches disc-side root `\Scripts and Resources\` inventory per [tools/exes/README](../../tools/exes/README.md) §Case File #1)
 - `ExitJoke.avi`, `GhostCapture.avi` — gameplay cutscenes
 - `libexpat.dll`, `ole32.dll`, `SHFOLDER.DLL` — DLL reference strings (mix of static imports and dynamic-load candidates)
-- `MMFW Films`, `MMFW Pictures`, `MMFW Scripts`, `MMFW Sounds` — same MMFW resource-type labels as Jinx (confirms MMFW carryover into Gen 3 — direct code inheritance evidence at the string level, alongside the linker-build 8168 evidence from the [cross-title toolchain comparison](#cross-title-toolchain-comparison-engine-generations))
+- `MMFW Films`, `MMFW Pictures`, `MMFW Scripts`, `MMFW Sounds` — same MMFW resource-type labels as Jinx (confirms MMFW carryover into Gen 3 — code inheritance evidence at the string level; the [cross-title toolchain comparison](#cross-title-toolchain-comparison-engine-generations) shows the `MM*` C++ was recompiled by IBS, with 36 C objects still at Jinx's compiler build 8168)
 
 Format string: `%s_%s_%04X` — same generic resource key template as Jinx (carry-over from MMFW).
 
@@ -481,13 +533,19 @@ on 2026-11-13. Both stay local.
 **Verdict: a different engine, not part of the Gen 1–3 lineage.** The
 evidence:
 
-- **Rich Header.** Every Gen 1–3 binary carries MSVC 5.0 C++ build 8034
-  objects (Showdown ×16, Jinx ×17, Case File #1 ×17). Case File #2 has
-  none: its one C++ object is MSVC 6.0 (build 9178), and it adds Linker
-  6.12 entries. Its Linker 5.10 / MASM 6.13 builds 8047 and 8966 are the
-  same tool versions Showdown used, but the counts differ (11 vs 113,
-  53 vs 114). A shared tool build shows the same compiler release, not
-  shared code.
+- **Rich Header (weak evidence; corrected 2026-11-14).** The 2026-06
+  labels were wrong ([§Toolchain](#toolchain)). Read correctly, every
+  binary here, Case File #2 included, is Visual C++ 6.0 with linker 6.00,
+  so the compiler does not separate Case File #2 from the lineage. What
+  differs is the linked libraries: every Gen 1–3 binary carries 16–17
+  `Linker512` build 8034 import records, and Case File #2 has none; it
+  links VS2002 and VS2003 import libraries instead (`Implib700` ×4,
+  `Implib710` ×19). Its C and C++ builds 8047 and 8966 are the same VC6
+  builds Showdown used, but the counts differ (C 8047 ×11 against ×113,
+  C++ 8966 ×53 against ×114), and its largest C++ entry is a Processor
+  Pack build (9044 ×71) that no lineage binary has. A shared compiler
+  build shows the same compiler release, not shared code. The verdict
+  rests on the next four points.
 - **No shared engine strings.** Case File #2 shares 104–129 strings with
   each lineage binary. Minus what the lineage shares with itself, the
   overlap is Win32 API names, CRT code fragments, and product names
@@ -597,7 +655,7 @@ The `EndDoc`/`EndPage`/`StartDocA`/`StartPage` GDI functions are printing primit
 - DirectDraw / Direct3D version: **DirectDraw 7** (`DirectDrawCreate`) — no D3D imports; 2D path only
 - DirectSound: **static** — `DSOUND.dll` ordinal-1 (`DirectSoundCreate`)
 - DirectInput: **static** — `DINPUT.dll::DirectInputCreateEx` (DirectInput 7)
-- CRT: **static** — no `MSVCRT.dll` / `MSVCR*.dll` import; CRT linked into the binary at build time (consistent with VC++ 5.0 single-environment build)
+- CRT: **static** — no `MSVCRT.dll` / `MSVCR*.dll` import; CRT linked into the binary at build time (Visual C++ 6.0 static CRT; see [§Toolchain](#toolchain))
 - Cross-title delta vs Showdown: n/a (this is Showdown)
 - Notable: WINSPOOL printing API + IMM32 IME — both are Win9x edutainment-app patterns rather than game-specific patterns
 
@@ -607,7 +665,7 @@ SHA-256 of source binary: `619EA6871A2FD305CA30814C438F9552DB85FDADB65AD7BE5B82A
 
 **Byte-identical to Showdown's import table.** SHA-256 of normalized `imports.txt` matches across both binaries (verified via `diff tools/exes/showdown/imports.txt tools/exes/phantom/imports.txt` returning empty). Every group above for Showdown applies to Phantom verbatim — same 216 entries in the same DLL distribution, including the 11 Bink symbols and the WINSPOOL/IMM32 surfaces.
 
-This is the strongest possible cross-title evidence of engine-level identity at the Gen 1 link boundary: Phantom and Showdown were linked against the same import-library set with the same configuration. Combined with the [Rich Header match](#cross-title-toolchain-comparison-engine-generations) (Linker 5.10 build 8047, identical compile-product distribution), Showdown and Phantom are the same engine binary up to per-title content. The Phantom-specific `FBF\` source-tree paths in the [strings findings](#phantom-gen-1) are the only meaningful binary delta.
+This is the strongest possible cross-title evidence of engine-level identity at the Gen 1 link boundary: Phantom and Showdown were linked against the same import-library set with the same configuration. Combined with the [Rich Header match](#cross-title-toolchain-comparison-engine-generations) (the same VC6 builds and entries; Phantom has six more C++ objects), Showdown and Phantom are the same engine binary up to per-title content. The Phantom-specific `FBF\` source-tree paths in the [strings findings](#phantom-gen-1) are the only meaningful binary delta.
 
 ##### Conclusions (Phantom — imports)
 
@@ -762,7 +820,7 @@ These three are the canonical COM-client initialization triad. Combined with the
 Binary: `Scooby.exe`, SHA-256 `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478`.
 Ghidra 12.1.4, default auto-analysis (107 s), project at
 `C:\dev\scooby-engine\ghidra\scooby.gpr` (local, gitignored). The binary is
-not packed: it is ordinary VC5 code, and its `__FILE__` strings name the
+not packed: it is ordinary Visual C++ 6.0 code, and its `__FILE__` strings name the
 source files, which anchor the subsystems.
 
 Labels use the engine's debug channels (`resource`, `graphics`, `audio`,

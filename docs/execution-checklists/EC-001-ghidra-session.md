@@ -26,8 +26,8 @@ The Ghidra session has a habit of sprawling — once the binary is open, every i
 
 - [x] Open `Scooby.exe` in PE inspector
 - [x] Locate the Rich Header (between DOS stub and PE signature)
-- [x] Decode `@comp.id` entries; identify compiler + linker version
-- [x] Verify whether the binary is packed (UPX signature, anomalous section names, low entropy mismatch). If packed, unpack before continuing. *Not packed: Ghidra auto-analysis finds ordinary VC5 code and `__FILE__` strings.*
+- [x] Decode `@comp.id` entries; identify compiler + linker version *(2026-06 reading "VC 5.0 / Linker 5.10" was a mislabel in `tools/rich_header.py`; corrected 2026-11-14 to Visual C++ 6.0, linker 6.00 from the PE header. See [scooby-exe §Toolchain](../formats/scooby-exe.md#toolchain).)*
+- [x] Verify whether the binary is packed (UPX signature, anomalous section names, low entropy mismatch). If packed, unpack before continuing. *Not packed: Ghidra auto-analysis finds ordinary Visual C++ 6.0 code and `__FILE__` strings.*
 - [x] Record findings in `scooby-exe.md` → Findings → "Toolchain"
 
 **Outcome of this step:** Compiler family and version are known. Skip to Step 4 if the binary turns out to be packed (Ghidra on a packed binary is wasted time).

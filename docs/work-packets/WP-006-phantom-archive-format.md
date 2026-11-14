@@ -59,7 +59,9 @@ session scratchpad.
 Determine whether *Scooby-Doo! Phantom of the Knight*'s archive format is
 **Gen 1** (`TGIFILE.ART`, same as Showdown) or **Gen 2** (`MMFW` wrapper,
 same as Jinx). The Rich Header data classifies Phantom as Gen 1 by
-toolchain (identical to Showdown's Linker 5.10 build 8047), but the
+toolchain (identical to Showdown's Rich Header; corrected 2026-11-14:
+both are Visual C++ 6.0, game C++ build 8966, not "Linker 5.10 build
+8047"), but the
 archive format is the other half of the generation classification and
 hasn't been inspected on the Phantom disc yet.
 
@@ -68,11 +70,14 @@ hasn't been inspected on the Phantom disc yet.
 The Phase 1 Engine Lineage finding identified three format generations:
 Gen 1 (Showdown / Phantom predicted), Gen 2 (Jinx), Gen 3 (Case File #1
 + Case File #2 predicted). Toolchain build numbers and archive format
-*coincide* across generation boundaries — same Linker 5.10 build 8047
-appears with `TGIFILE.ART` (Showdown); same build 8168 appears with
-`MMFW` (Jinx); both 8168 and 8797 appear with `MMFW` (Case File #1).
+*coincide* across generation boundaries — the same VC6 builds (8047
+library objects, 8966 game C++) appear with `TGIFILE.ART` (Showdown);
+build 8168 appears with `MMFW` (Jinx); 8168, 8797 and the Processor Pack's
+8943 appear with `MMFW` (Case File #1). (The 2026-06 text read these
+builds as "Linker 5.10"; see
+[scooby-exe §Toolchain](../formats/scooby-exe.md#toolchain).)
 
-Phantom's Rich Header matches Showdown's exactly (build 8047). The
+Phantom's Rich Header matches Showdown's (six more C++ objects). The
 prediction is that Phantom's archives are therefore also Gen 1
 `TGIFILE.ART`. But Phantom shipped in Aug 2001 and Jinx in Oct 2001 —
 TerraGlyph cut the Gen 2 format somewhere in that window, and we don't
@@ -130,6 +135,6 @@ Out of scope:
 
 ## Notes
 
-- **Expected result:** Gen 1. The build-pipeline upgrade that introduced Gen 2 (newer linker 8168, dropped MASM 6.14 + cvtres) coincides with the archive format change, and Phantom's Rich Header shows the *old* toolchain (linker 8047). If the format follows the toolchain, Phantom is Gen 1.
+- **Expected result:** Gen 1. The build-environment change that introduced Gen 2 (one VC6 build, 8168, for everything; no `OLDNAMES.LIB` alias objects or `Linker600` import libraries) coincides with the archive format change, and Phantom's Rich Header shows the Gen 1 toolchain. (*Corrected 2026-11-14:* this line first read "newer linker 8168, dropped MASM 6.14 + cvtres", from the tool's mislabel.) If the format follows the toolchain, Phantom is Gen 1.
 - **If the result is unexpectedly Gen 2,** that's meaningful: it would mean the engine evolved during a single linker build cycle, with archive format changing at a different cadence than toolchain. Worth a one-paragraph follow-up in [`docs/formats/scooby-exe.md`](../formats/scooby-exe.md) Findings → cross-generation analysis.
 - **Worth caching while you're at it:** since you'll have the Phantom disc mounted, copy `Scooby.exe` (and the archive file you Format-Hex'd) into `tools/exes/phantom/` per the [tools/exes/ README](../../tools/exes/README.md). Future analysis won't need to re-mount.

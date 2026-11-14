@@ -256,7 +256,7 @@ Required conclusions block:
 #### Conclusions (per title)
 
 - ANSI string count: <N>
-- UTF-16LE string count: <N>  (≈0 expected for VC5/Win9x targets)
+- UTF-16LE string count: <N>  (≈0 expected for VC6/Win9x targets)
 - Registry usage: [Yes — keys: ... | No]
 - Hardcoded paths: [Yes — examples: ... | No]
 - Filename anchors for Ghidra (≥ 3 required, must be asset/data filenames —
