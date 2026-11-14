@@ -5,12 +5,32 @@ title: "WP-017: Sprite Animation at the Original Tick Rate"
 
 # WP-017: Sprite animation at the original tick rate (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (graphics; leads into Phase 4 room logic)
 **Depends on:** WP-016 ✅ (rooms with placed sprites), WP-001 ✅ (sprite player traced)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-017-2026-11-14](../reference/pre-flight-WP-017-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Tick 0 and tick 37 match | ✅ At `graphics` level 3 the engine loads each room, hashes it, runs 37 ticks and hashes it again. A reference model logs the same hashes; it uses the probe's tree, the WP-016 blend model, and each placement at step `floor(T / 3) mod n`. The logs are identical: 69 Showdown rooms (55 of which change by tick 37) and 53 Phantom rooms (34 change). Draw orders still match too. |
+| 2. 36 ticks per second | ✅ A live run of the Saloon logged 36, 72 … 360 ticks at 1,000 … 10,000 ms, and 432 at 12,002 ms. That is exact, because the engine counts ticks from `getMillis()` with the original's integer formula. |
+| 3. Captures differ | ✅ Two window captures 0.25 s apart differ: Scooby's tail, the chandelier candles and the steam over the pie. Both were sent to Jeff and are not in git. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`7fd40d5da6`](https://github.com/barefootbetters/scummvm/commit/7fd40d5da6) stages its four files by name, inside `engines/scooby/`, and is pushed. |
+
+**Notes:**
+
+- **Some props loop that shouldn't.** Every placement starts in mode 1, because that's the default placement path. In the Saloon the root-beer sign and the piano bench cycle through what look like one-shot puzzle animations. In the game, the room's own code would hold or trigger those. That is the same per-room override WP-016 left out, and it belongs to Phase 4.
+- **The tick trace.**
+  - `0x430890` is slot `+8` of the sprite vtables (18 of them).
+  - Its only driver is the tree walk `0x431130`, called once per tick from `0x435BC0`.
+  - `0x431110`, which the main loop also calls, is an empty recursion, likely compiled-out code.
+- **Cost.** Redraws repaint the room from cached cels only when a step changes, at most 12 times a second for the default placements.
 
 ---
 
@@ -81,14 +101,14 @@ From WP-001's decompile, read again for this WP:
 
 ## Exit criteria
 
-1. [ ] After 0 and after 37 ticks (step 12 mod `n`), every room in Showdown
+1. [x] After 0 and after 37 ticks (step 12 mod `n`), every room in Showdown
    and Phantom matches a reference model (MD5), which uses the probe's tree
    and blend model with each sprite at step `floor(T / 3) mod n`.
-2. [ ] The engine's tick counter advances 36 ticks per second of wall time,
+2. [x] The engine's tick counter advances 36 ticks per second of wall time,
    within ±1 over 10 s.
-3. [ ] Two window captures a fraction of a second apart show the same room
+3. [x] Two window captures a fraction of a second apart show the same room
    at different steps.
-4. [ ] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`. The
+4. [x] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`. The
    fork diff stays inside `engines/scooby/`, staged by name.
 
 ## Deliverables
