@@ -27,7 +27,7 @@ decompdecomp is young and self-updates, and its docs leave some screens undescri
 
 - Windows 10 or 11, x86-64, with an account that can approve an installer. *decompdecomp:* Windows PC games don't need WSL 2.
 - Your own legally obtained Case File #1 files: the executable and `libexpat.dll`. This project keeps them in the gitignored `tools/exes/casefile1/` ([tools/exes/README](../../tools/exes/README.md)). *WP-011:* the executable's SHA-256 must match the [WP-007 lock](../formats/scooby-exe.md#binary-identity-wp-007-baseline). *decompdecomp:* every member of a room needs an identical copy.
-- *Case File #1 project:* a local clone of [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp), Mony Armenchev's Case File #1 decompilation, outside this checkout. The repository is private: ask Mony ([@monyarm](https://github.com/monyarm)) for access. Put the game files in the clone's gitignored `orig/` folder as `orig/casefile1.exe` and `orig/libexpat.dll`.
+- *Case File #1 project:* a local clone of the Case File #1 decompilation by Simeon Armenchev ([monyarm](https://github.com/monyarm)), outside this checkout. The repository is private: ask Mony for access. Put the game files in the clone's gitignored `orig/` folder as `orig/casefile1.exe` and `orig/libexpat.dll`.
 
 ## 1. Install decompdecomp
 
@@ -156,7 +156,7 @@ There are three separate places. Nothing moves between them except what the [Tri
 | Place | What lives there | Rules |
 |---|---|---|
 | **This repository** (public) | Docs, evidence, the trial record | Never commit a room link, an API key, the game files, a decompdecomp project, or matched C. `.gitignore` blocks `tools/decomp/`, `decompdecomp/`, `.env` files and the game data, but those rules are a backstop, not the process. |
-| **Mony's repository**, [monyarm/scooby-tlr-decomp](https://github.com/monyarm/scooby-tlr-decomp) (private) | Matched C, project config, the game files in gitignored `orig/` | Its contents stay off this public site ([WP-011 §Legal and repository hygiene](../work-packets/WP-011-casefile-decompdecomp.md#legal-and-repository-hygiene)). Read-only for us: Mony pushes the room's progress, ours included, every day or so. |
+| **Mony's repository** (private) | Matched C, project config, the game files in gitignored `orig/` | Its contents stay off this public site ([WP-011 §Legal and repository hygiene](../work-packets/WP-011-casefile-decompdecomp.md#legal-and-repository-hygiene)). Read-only for us: Mony pushes the room's progress, ours included, every day or so. |
 | **decompdecomp's own folder** (`Decomp` under your user folder, `~/Decomp` in its docs) | The app's projects, logs and room state | Already outside both repositories. Leave it there. |
 
 Run `git status` before every commit, in both repositories.
