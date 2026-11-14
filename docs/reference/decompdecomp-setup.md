@@ -59,7 +59,7 @@ Ghidra runs on Java, and step 4 uses it twice: for decompdecomp's own Ghidra and
 
 ### On Windows
 
-1. Install a 64-bit Windows JDK, version 21 or newer. Any JDK that meets Ghidra's minimum works; a long-term support (LTS) release, 21 or 25, changes least over the trial.
+1. Install a 64-bit Windows JDK, version 21 or newer. Any JDK that meets Ghidra's minimum works; a long-term support (LTS) release, 21 or 25, changes least over the trial. Oracle JDK 27.0.1 also works with decompdecomp's Ghidra (observed 2026-11-13).
    - **Oracle JDK:** on [Oracle's Java downloads](https://www.oracle.com/java/technologies/downloads/), pick the version's tab, then **Windows → x64 Installer**.
    - **Eclipse Temurin:** the `.msi` from [adoptium.net](https://adoptium.net/), with **Add to PATH** left on.
 2. In a new PowerShell window, check that decompdecomp will accept it. This repeats its own test, and must print `True` and a version of 21 or more:
@@ -90,7 +90,7 @@ decompdecomp doesn't run on a Pi, and this setup doesn't put Ghidra there either
 So give it a Windows JDK first:
 
 1. Install it and run the check in [step 3](#on-windows), then restart decompdecomp.
-2. Choose **Install** on the Ghidra card. It should download Ghidra only, with no Java development kit.
+2. Choose **Install** on the Ghidra card. It downloads Ghidra only, with no Java development kit, and needs no WSL distribution. Observed 2026-11-13 with Oracle JDK 27.0.1: it installed Ghidra 12.1.4 into `%LOCALAPPDATA%\decompnet\toolchains\ghidra`, and that folder's `.decompnet-toolchain.json` says `"wsl": false`.
 
 There are two other ways through. Whichever you pick, record it in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
 
