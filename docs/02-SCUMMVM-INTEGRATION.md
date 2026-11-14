@@ -196,7 +196,12 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 - **Checks.** Every clip's PCM matches `probe_audio.py` by MD5: 1,165 Showdown clips and 1,067 Phantom clips.
 - **Testing aids.** The console's `sound_play` and a `start_sound` config key play a clip. Like `start_room`, the key is a test convenience to revisit before Phase 5.
 
-Which sounds play when (room music, ambience, voice lines) is game logic, starting with the exit transition (WP-020).
+**WP-020 (2026-11-14): a handle per file, and lip sync.**
+
+- `Sound` keeps one `Audio::SoundHandle` per file, so a voice line no longer stops the music. The original keeps a buffer per clip; two clips from one file can't overlap here, and the transition never needs them to.
+- `SoundArchive::readLipSync()` reads a clip's lip-sync bytes. `Sound::getLipShape()` returns the shape at `trunc(fps × seconds played)`, with the time from `Audio::Mixer::getElapsedTime()`. The original divides DirectSound's play cursor by the bytes per second (`0x442DD0`).
+
+Which sounds play when, beyond the exit scenes (room music, ambience), is room code.
 
 ---
 
