@@ -9,7 +9,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 > Each WP is one unit of work with a goal, dependencies, and exit criteria.
 > ECs are step-by-step checklists for the WPs most likely to sprawl.
 >
-> **Last updated:** 2026-11-14 (WP-012 ✅: detection table with an engine generation; WP-013 ✅: *Activity Challenge* runs Jinx's engine, Gen 2)
+> **Last updated:** 2026-11-14 (WP-014 ✅: `TGIFILE.ART` read as a `Common::Archive` in the fork)
 >
 > **Status vocabulary (closed set):**
 > ✅ Done · 🚧 In Progress · 📝 Drafted (WP file authored, not yet started) · 📦 Queued (deps met, WP file not yet authored) · ⏸ Blocked (dep unmet) · 🔮 Placeholder (forward-looking, intentionally not authored)
@@ -18,12 +18,13 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 ## Current state
 
-**Current phase:** Phase 2. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM, and the detection table (WP-012 ✅ 2026-11-14) recognises the four in-scope discs with their generations. Phase 2's provisional scope is done; Phase 3 (Gen 1 resource loading) is next.
+**Current phase:** Phase 3. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM, and the detection table (WP-012 ✅ 2026-11-14) recognises the four in-scope discs with their generations. Phase 2's provisional scope is done. In Phase 3, the Gen 1 art file is read through `Common::Archive` (WP-014 ✅ 2026-11-14); `object.ini`, audio and cel decoding are next.
 **Primary blocker:** none for images. ~~WP-002 (TGIFILE.ART payload decode)~~ ✅ 2026-11-13: every `TGIFILE.ART` image decodes (RLE over big-endian RGB565). Phase 1 exit criterion #1 is met on recognizability, so Phase 2 is no longer blocked by art. Phase 1 exit criterion #3 (audio codec) is met by WP-004 ✅ 2026-11-13, and #4 (engine-family answer) by WP-005 ✅ 2026-11-13. All four Phase 1 exit criteria are met.
 **Next unblocked:** Phase 0 pre-work. WP-007 ✅ landed 2026-06-02; WP-003 ✅ landed 2026-06-02; **WP-008 ✅ landed 2026-06-03** (object.ini interpreter behavior characterized; engine is name-driven, MODE_A). Remaining order: WP-010 (WP-001 ✅, WP-002 ✅ and WP-009 ✅ 2026-11-13). The WP-003 baseline (pre-payload region characterized as the engine name table; no palette present; off-by-4 header-offset correction landed) is now available to WP-001 (palette-hunt scope drops from EC-001; the OBJ→asset-entry 1:1 mapping cuts asset-resolution scope) and to WP-002 (first-decode strategy: palette is NOT in the pre-payload region — it is either per-asset leading bytes or per-record metadata; investigate both). The WP-008 baseline (engine name-driven, 215 OBJ_* sections discriminated by `ID=`, deterministic naming rule confirmed) gives WP-002's `probe_art.py` a direct labeling path (`entry_<index>_<wp003_name>.png`) and gives WP-009 a canonical room-ID list to use for screenshot naming.
 
 ### Phase 1 findings landed (2026-06)
 
+- **WP-014 `TGIFILE.ART` archive (2026-11-14): the first Phase 3 reader.** The fork's `ArtArchive` serves every Gen 1 room and object block by name through `Common::Archive`, and the engine opens it at startup from the disc root. Its block list and each block's size word match `probe_art.py` on Showdown (522 blocks) and Phantom (486). Malformed name records are rejected with a warning. [Evidence](WP-014-tgifile-art-archive.md#result-2026-11-14).
 - **WP-012 detection table (2026-11-14): four discs, each with its generation.** The fork detects Showdown (`showdown`, Gen 1), Phantom (`phantomknight`, Gen 1), Jinx (`jinxsphinx`, Gen 2) and Case File #1 (`casefile1`, Gen 3) from the disc root, each on three files by size and MD5. Gen 2 and Gen 3 are marked unsupported for now. Case File #2, Case File #3 and *Activity Challenge* are not matched. *Activity Challenge* has no entry yet; WP-013 has since classified it as Gen 2. [Evidence](WP-012-detection-table.md#result-2026-11-14).
 - **WP-013 *Activity Challenge* verdict (2026-11-14): Gen 2, Jinx's engine.** Its `Scooby.exe` comes from the same source tree as Jinx's (`C:\Projects\Scooby\Bonus\Mmfw\` beside `C:\Projects\SCOOBY\mummy\Mmfw\`) and was linked a day earlier. All 112 of its `MM*` classes are Jinx classes, and 532 of its 549 engine strings are Jinx's. Its four `MMFW` archives open with Jinx's header bytes. Its game layer is its own: mini-games around a campfire hub. VISION's "almost certainly a different engine" is withdrawn, and the title moves from Excluded to **Unassigned** in the Phase 5 scope rule; placing it in a tier is a separate decision. [Evidence](../formats/scooby-exe.md#activity-challenge-wp-013).
 - **Toolchain corrected (2026-11-14): Visual C++ 6.0, not 5.0.** `tools/rich_header.py` mislabelled Rich Header product IDs (it called the VC6 C compiler "Linker 5.10" and the VC6 C++ compiler "MASM 6.13"). Checked against Microsoft's `prodid` enum names, richprint's comp.id database and each binary's PE header (linker 6.00 in all five); the script is fixed. Game C++: Gen 1 build 8966, Jinx 8168, Case File #1 the VC6 Processor Pack (8943). The build-number grouping across generations holds; the "Gen 2 upgrade" and "IBS shipped Jinx's `.obj` files" readings do not. For decompdecomp, which supplies VC 6.0, byte-identical matches become plausible. [Evidence](../formats/scooby-exe.md#toolchain).
@@ -106,12 +107,16 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 
 | Provisional scope |
 |---|
-| `TGIFILE.ART` parser as `Common::Archive` subclass (Gen 1) |
+| `TGIFILE.ART` parser as `Common::Archive` subclass (Gen 1): **[WP-014](WP-014-tgifile-art-archive.md) ✅ 2026-11-14** |
 | `MMFW` container parser as `Common::Archive` subclass (Gen 2 / Gen 3) |
 | Audio loader through `Audio::Mixer` |
 | `Scooby.eng` parser (Gen 1 / Gen 2) |
 | `object.ini` parser into engine structs (Gen 1 / Gen 2) |
 | XML config parser (Gen 3) — likely wraps ScummVM's bundled libxml or a small in-engine parser |
+
+| WP | Title | Status | Depends on | EC | Notes |
+|---|---|---|---|---|---|
+| [WP-014](WP-014-tgifile-art-archive.md) | `TGIFILE.ART` reader as a `Common::Archive` (Gen 1) | ✅ Done (2026-11-14) | WP-012 ✅, WP-001 ✅, WP-006 ✅ | — (inline) | `ArtArchive` in fork commit `155144012a`. Room and object blocks by name; the block list and every block's size word match `probe_art.py` on Showdown and Phantom. See [WP-014 §Result](WP-014-tgifile-art-archive.md#result-2026-11-14). Pre-flight: [pre-flight-WP-014-2026-11-14](../reference/pre-flight-WP-014-2026-11-14.md). |
 
 ---
 
@@ -166,6 +171,7 @@ This section carries only 1–2 representative thumbnails as a teaser linking to
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports.md), [WP-008](WP-008-object-ini-catalog.md), [WP-009](WP-009-reference-screenshots.md), [WP-010](WP-010-scummvm-scaffold.md)
 - Executable analysis: [WP-001](WP-001-ghidra-session.md) (Ghidra), [WP-011](WP-011-casefile-decompdecomp.md) (decompdecomp collaboration)
 - Phase 2 WPs: [WP-012](WP-012-detection-table.md) (detection table)
+- Phase 3 WPs: [WP-014](WP-014-tgifile-art-archive.md) (`TGIFILE.ART` archive)
 
 ---
 

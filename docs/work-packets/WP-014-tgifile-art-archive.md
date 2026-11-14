@@ -5,12 +5,30 @@ title: "WP-014: TGIFILE.ART Archive Reader"
 
 # WP-014: `TGIFILE.ART` reader as a `Common::Archive` (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (resource loading)
 **Depends on:** WP-012 ✅ (detection and generation flag), WP-001 ✅ (header and descriptors traced), WP-006 ✅ (Phantom uses the same format)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-014-2026-11-14](../reference/pre-flight-WP-014-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Member list matches `probe_art.py` | ✅ Each title was started from its mounted ISO at `resource` level 2. The engine's list of every room and object (index, name, offset, size) is identical to one generated from `probe_art.py`'s parser: Showdown 522 blocks, Phantom 486. At level 3 the engine also reads every block back through `createReadStreamForMember()`. Each block's leading size word matches the reference and fits its span (rooms exactly, objects within the last sector): 0 bad in either title. |
+| 2. Counts | ✅ Showdown 69 rooms, 453 objects, 1,788 names (1,266 ANIM). Phantom 53, 433, 1,634 (1,148 ANIM). |
+| 3. Malformed file rejected | ✅ with a deviation. A truncated file never reaches the reader, because its size no longer matches the detection entry, so the game is not detected. The test instead corrupted one name record (record 100, at `0x22C4`) in a scratch copy, past the 5,000 bytes the detection MD5 covers. A zeroed name, an unknown type tag (`0x70000000`), and a ROOM id beyond the descriptors (`0x100003E7`) are each rejected with a warning that names the record. The engine stops with "no game data" and doesn't crash. The size and descriptor checks are in the code but can't be reached with a detectable file. |
+| 4. No direct file APIs | ✅ The grep finds nothing in `engines/scooby/`. |
+| 5. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The fork diff is inside `engines/scooby/`, in commit [`155144012a`](https://github.com/barefootbetters/scummvm/commit/155144012a), pushed to `scooby-engine`. |
+
+**Notes:**
+
+- **Disc root.** Both titles were started with the disc root as the game path. The `scooby` subdirectory added to `SearchMan` is what finds `TGIFILE.ART`.
+- **Console.** `art_list` and `art_info` replace the template's `test` command. They were compiled but not driven interactively.
+- **Disabled-engine build not rerun.** The change only adds engine objects; `detection.o` is unchanged since WP-012.
 
 ---
 
@@ -63,16 +81,16 @@ counts (WP-006).
 
 ## Exit criteria
 
-1. [ ] Showdown and Phantom: the engine's member list (name, offset, size)
+1. [x] Showdown and Phantom: the engine's member list (name, offset, size)
    matches one computed by `probe_art.py`'s parser, for every room and
    object.
-2. [ ] The name-table count and type counts match (Showdown 69 / 453 /
+2. [x] The name-table count and type counts match (Showdown 69 / 453 /
    1,266; Phantom 53 / 433 / 1,148).
-3. [ ] A malformed or truncated file is rejected with an error instead of a
+3. [x] A malformed or truncated file is rejected with an error instead of a
    crash. Tested with a truncated copy.
-4. [ ] `grep -E '(fopen|std::ifstream|CreateFile[AW]?)' engines/scooby/`
+4. [x] `grep -E '(fopen|std::ifstream|CreateFile[AW]?)' engines/scooby/`
    finds nothing (integration §4).
-5. [ ] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`.
+5. [x] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`.
    The fork diff stays inside `engines/scooby/`.
 
 ## Deliverables
