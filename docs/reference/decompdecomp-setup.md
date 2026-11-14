@@ -25,7 +25,7 @@ decompdecomp is young and self-updates, and its docs leave some screens undescri
 
 ## Before you start
 
-- Windows 10 or 11, x86-64, with an account that can approve an installer. *decompdecomp:* Windows PC games don't need WSL 2.
+- Windows 10 or 11, x86-64, with an account that can approve an installer. *decompdecomp:* Windows PC games don't need WSL 2. The exception is decompdecomp's own Ghidra when there's no Windows JDK. That route needs a WSL Linux distribution, and installing one needs administrator rights ([step 4](#ghidra-inside-decompdecomp-install-a-windows-jdk-first)).
 - Your own legally obtained Case File #1 files: the executable and `libexpat.dll`. This project keeps them in the gitignored `tools/exes/casefile1/` ([tools/exes/README](../../tools/exes/README.md)). *WP-011:* the executable's SHA-256 must match the [WP-007 lock](../formats/scooby-exe.md#binary-identity-wp-007-baseline). *decompdecomp:* every member of a room needs an identical copy.
 - *Case File #1 project:* a local clone of the Case File #1 decompilation by Simeon Armenchev ([monyarm](https://github.com/monyarm)), outside this checkout. The repository is private: ask Mony for access. Put the game files in the clone's gitignored `orig/` folder as `orig/casefile1.exe` and `orig/libexpat.dll`.
 
@@ -92,7 +92,14 @@ So give it a Windows JDK first:
 1. Install it and run the check in [step 3](#on-windows), then restart decompdecomp.
 2. Choose **Install** on the Ghidra card. It should download Ghidra only, with no Java development kit.
 
-The other ways through: install WSL 2 (`wsl --install` in an administrator PowerShell, restart, open Ubuntu once) so decompdecomp's own Temurin can run. Or skip Ghidra: agents then work without Ghidra drafts, and step 6's build doesn't use it either. Record which in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
+There are two other ways through. Whichever you pick, record it in the [trial record](#trial-record-for-wp-011), because it changes what the agents start from.
+
+- **Skip Ghidra.** The agents then work without Ghidra drafts. Step 6's build doesn't use Ghidra either.
+- **Install a WSL Linux distribution**, so decompdecomp's own Temurin can run. This needs administrator rights:
+  1. Open PowerShell with **Run as administrator**. Without it, the install stops with "The requested operation requires elevation" and `Wsl/ERROR_CANCELLED` (observed 2026-11-14). If your account can't elevate, ask IT to run this step.
+  2. Run `wsl --install -d Ubuntu`. You need this even when WSL itself is already installed. `wsl --version` can print a WSL version while no distribution is installed. `wsl --list --verbose` tells them apart: on a computer with no distribution it says "Windows Subsystem for Linux has no installed distributions" (observed 2026-11-14).
+  3. Restart if Windows asks you to. Then open **Ubuntu** from the Start menu once and create its Linux user name and password.
+  4. Quit decompdecomp completely, start it again, and choose **Install** on the Ghidra card.
 
 ### Ghidra for this project's own analysis
 
