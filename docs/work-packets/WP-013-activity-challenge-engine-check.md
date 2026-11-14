@@ -5,7 +5,7 @@ title: "WP-013: Activity Challenge Engine Check"
 
 # WP-013: Engine-family check for *Scooby-Doo! Activity Challenge*
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 1 — Format Research (follow-on to [WP-005](WP-005-engine-family-check.md), found in passing by WP-012, the detection table)
 **Depends on:** —
 **Companion EC:** — (WP-005's method; no checklist needed)
