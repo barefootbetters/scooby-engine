@@ -113,9 +113,17 @@ as noise.
 character code. There is one byte per frame. For 677 of the 706 voice clips
 that carry a block, `count` is within 1.5 frames of the clip's duration ×
 fps. The values are mouth shapes 0–6, some with the high bits set
-(`0x70`–`0x76`, `0x80`–`0x86`). What the high bits do was not traced; that
-belongs to the character-animation work. Twelve `Sfx.dat` clips also carry
+(`0x70`–`0x76`, `0x80`–`0x86`). Twelve `Sfx.dat` clips also carry
 blocks, for character actions such as `Gummy.Whistle1a`–`3c`.
+
+The reader is `0x442DD0` (WP-020). It takes the byte at
+`trunc(fps × seconds played)`, where seconds played is the play cursor
+divided by the bytes per second, and returns its low nibble as the mouth
+shape and its high nibble separately. The character code (`0x404B70`) uses
+only the low nibble: a shape *s* > 0 shows step *s* − 1 of the speaker's
+`TALKS` sequence, and 0 keeps the step. No byte of the 1,047 clips spoken
+by a character with a `TALKS` sequence points past its last step. What
+the high nibble does was not traced.
 
 **Checks** (`py -3 tools/probe_audio.py --verify`). For all 1,165 clips it
 confirms:
@@ -166,8 +174,10 @@ apply.
    Done 2026-11-14 ([WP-019](../work-packets/WP-019-sound-archives.md)):
    `SoundArchive` and `Sound` in the fork. Every clip of both Gen 1 titles
    reads to the same PCM as `probe_audio.py`.
-2. Lip sync: trace the consumer of the `(count, fps, bytes)` block alongside
-   the character actor (`0x4048E0` family) in Phase 4.
+2. ~~Lip sync: trace the consumer of the `(count, fps, bytes)` block alongside
+   the character actor (`0x4048E0` family) in Phase 4.~~ Done 2026-11-14
+   ([WP-020](../work-packets/WP-020-exit-transition.md)): `0x442DD0`, above.
+   Characters talk with it in the fork.
 3. ~~Run `probe_audio.py --verify --dir <Phantom folder>`~~ Done
    2026-11-13 (WP-006): Phantom's `Sfx.dat` (282 clips), `Voice.dat` (768)
    and `Music.dat` (17) pass every check. Each index ends at EOF, PCM starts

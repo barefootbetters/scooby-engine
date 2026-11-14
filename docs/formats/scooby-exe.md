@@ -1014,7 +1014,9 @@ RGB555) and, on a 555 display, converts each cel once at load, not per
 frame.
 
 **Rooms and `object.ini`** (`script`): see
-[`object.ini` consumer](#objectini-consumer-wp-001) below.
+[`object.ini` consumer](#objectini-consumer-wp-001) below, and
+[the exit transition](#the-exit-transition-wp-020) for characters, scenes
+and the walk-off.
 
 **Sound** (`audio`, `GameSound.cpp` / `GameSoundFile.cpp`):
 
@@ -1059,7 +1061,7 @@ The file is **not** organized by entity type. It is a flat list of **215 `[OBJ_*
 
 | `ID=` value | Count | Role |
 |---|---|---|
-| `exitobject` | 77 | Room-to-room navigation triggers (carry `destinationroom=`, `character=`, `direction=`, per-character `direction` overrides) |
+| `exitobject` | 77 | Room-to-room navigation triggers. The constructor reads `destinationroom=`, `movie=`, `scene=` and a direction per gang member (`fred=` … `scooby=`); `character=` and `direction=` are never read ([exit transition](#the-exit-transition-wp-020)) |
 | `clickableobject` | 103 | Interactive hotspots (carry `sequence=`, `priority=`, `layer=`, `rolloveranim=`) |
 | `inventoryobject` | 11 | Pickable items (carry `toolbaranim=`, `usecursor=`, `pickupanim/sfx/movie=`) |
 | `requiresobject` | 13 | Hotspots gated by an inventory cursor (carry `requiredanim=`) |
@@ -1183,8 +1185,10 @@ its own logic.
 constructor stores the value. On a click (`script_ExitObject_OnClick`,
 `0x402130`), if the cursor is `ANIM_CURSORSCRAPPY_ANIM` (Scrappy's hint
 mode), it calls `audio_GameSound_LookupId(scrappyid)` and has the toolbar
-Scrappy speak the clip. Otherwise it performs the exit: it logs to the
-`Exits` channel and walks to `destinationroom=`. On rollover
+Scrappy speak the clip. Otherwise it performs the exit: it writes the exit
+to the save file's `Exits` section and hands it to the room
+([the exit transition](#the-exit-transition-wp-020)). WP-018 read the
+`Exits` write as a log channel. On rollover
 (`input_ExitObject_GetRolloverCursor`, `0x402410`) the cursor becomes
 `ANIM_CURSORSCRAPPY_ANIM` in hint mode when the object has a `scrappyid`,
 and `rolloveranim=` otherwise. Inventory objects read `scrappyid` too.
@@ -1202,6 +1206,80 @@ two ordinary objects: `OBJ_TOOLBAR` (id 295) and `OBJ_CURSOR` (id 20). All
 slot as an `OBJ_TOOLBAR` sprite playing the item's `toolbaranim`. The
 cursor (`0x4089E0`) is an `OBJ_CURSOR` sprite, `ANIM_CURSORARROW` by
 default. There is no separate inventory art store.
+
+##### The exit transition (WP-020)
+
+Traced 2026-11-14 for [WP-020](../work-packets/WP-020-exit-transition.md);
+the fork plays it.
+
+1. **The click** (`script_ExitObject_OnClick`, `0x402130`, the exit's
+   vtable `+0x0C`, run each tick with a clicked flag at `+8`) writes the
+   exit's name to the save file's `Exits` section. It then packs the exit
+   (`0x404820`) and passes it to the current room object's vtable `+0x24`
+   (`0x4024C0`).
+2. **The handler.** The base room class (vtable `0x45E5FC`) uses
+   `0x40C1E0`. It fades the cursor out (`0x435150`), blocks input (game
+   `+0x24`), starts the scene (`0x40B400`) and parks the exit on the room.
+   Showdown builds 47 room classes in its factory (`0x42E0E0`, game vtable
+   `+0x14`). 31 keep `0x40C1E0`. The other 16 override it to gate exits
+   on story state or swap in another scene, and each then calls
+   `0x40C1E0`.
+3. **The scene** (room vtable `+0x38`, `0x40C810`, every tick). Once the
+   speaker is done (`0x406060`), it moves to line *n* + 1. The first
+   character in the game's list (`+0x19C`: the room's character
+   placements in order, then `OBJ_NARRATOR_A` from `0x409670`) that has a
+   clip `<scene><n>_<NAME>` speaks it (`0x404DB0`). If none has one, the
+   scene ends.
+4. **The walk-off** (`0x40BE20`, from the room tick `0x40B490` once the
+   scene is over). Each gang member's walk length is its sequence's step
+   count (`0x404EA0`). The first strictly longest of Fred, Velma, Daphne,
+   Shaggy and Scooby leads and starts at once. In the order Fred,
+   Daphne, Velma, Shaggy, Scooby, each other member starts on the first
+   tick when the leader's steps left, less 1, are no more than its own
+   length. When the leader is on its last step, game vtable `+0x08`
+   (`0x42DE10`) plays `movie=` if set and changes room.
+
+**Exit keys.** The constructor (`0x401850`) reads `destinationroom=`,
+`rolloveranim=`, `scrappyid=`, `movie=`, `scene=`, and one direction per
+gang member: `fred=`, `daphne=`, `velma=`, `shaggy=`, `scooby=`. It never
+reads `character=` or `direction=`. It clears `scene=` when the save's
+`Exits` entry for the exit is `1`, `on`, `On`, `ON` or `TRUE`, so a scene
+plays once.
+
+**Characters** (`0x4048E0`). `OBJ_FRED_A` is named `FRED` with the set
+`_A`. A state change (`0x405190`) builds an object and a sequence name,
+switches the sprite's object when the name differs, and starts the
+sequence:
+
+| State | Object | Sequence | Mode | Then (`+0x78`) |
+|---|---|---|---|---|
+| 0, a direction such as `UR` | `OBJ_FRED_STARTWALK_UR_A` | `ANIM_FRED_STARTWALK_UR_A1` | once | 7: stay |
+| 0, a direction such as `TURN_UR` | `OBJ_FRED_A` | `ANIM_FRED_ATURN_UR` | once | 7: stay |
+| 6 idle | `OBJ_FRED_A` | `ANIM_FRED_AIDLE_MASTER` | loop | — |
+| 8 talk | `OBJ_FRED_A` | `ANIM_FRED_ATALKS` | stopped | 6 when the clip ends |
+
+The update (`0x404B70`, character vtable `+0x0C`) goes to the next state
+when the sequence stops (states other than 6 and 8). While talking, it
+shows step *shape* − 1 from the lip sync (`0x442DD0`). Starting a walk
+(`0x405D90`) moves the character 50 in front for a direction starting
+with `D`, and 50 behind for one starting with `U` (`0x430EE0`). States 2–5
+and 9–18 (random idles, Velma's reactions, fright) are not traced here.
+
+| Address | What it does |
+|---|---|
+| `0x40C1E0` | Default exit handler (room vtable `+0x24`) |
+| `0x40B400` | Start a scene, if none is playing and no exit is parked |
+| `0x40C810` | Scene player (room vtable `+0x38`) |
+| `0x40B490` | Room tick (room vtable `+0x04`): scene, delayed scene, walk-off, snacks |
+| `0x40BE20` | Walk-off |
+| `0x4048E0` / `0x405190` / `0x404B70` | Character constructor, state change, update |
+| `0x404DB0` / `0x406060` | Say a line; talking or a line waiting |
+| `0x404EA0` / `0x405D90` | Walk length; start a walk |
+| `0x40A800` | First character in the game's list with a name |
+| `0x409670` | Add the narrator |
+| `0x430EE0` | Move a sprite to a new depth among its siblings |
+| `0x442DD0` | Lip-sync shape of a playing clip |
+| `0x42DE10` | Game vtable `+0x08`: movie, then the next room |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
