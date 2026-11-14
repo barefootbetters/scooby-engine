@@ -5,12 +5,30 @@ title: "WP-020: The Exit Transition"
 
 # WP-020: The exit transition: characters, scenes and the walk-off (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (game logic: the first scripted behaviour)
 **Depends on:** WP-017 ✅ (sequence player), WP-018 ✅ (exit click), WP-019 ✅ (sound)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** One day
 **Pre-flight:** [pre-flight-WP-020-2026-11-14](../reference/pre-flight-WP-020-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Every exit matches the reference | ✅ At `script` level 3 the engine walks every exit of every room: the scene's lines as their clips resolve, then the walk-off simulated tick by tick with the scene skipped. A reference built on `probe_art.py`, `probe_audio.py` and `object.ini` computes the same plan in closed form. The logs are identical: Showdown 71 exits in 69 rooms, Phantom 82 in 53, none stuck. 42 exits have scene lines and 91 have walks. |
+| 2. Live transition | ✅ In Showdown's Saloon, the exit to the Hotel Hall spoke `Saloon.360S1_` on the speech channel: Daphne at tick 76, Fred at 135 and Scooby at 247. Each line ended on its clip's length (1.59 s, 3.05 s and 0.58 s). All 190 lip-sync readings logged match the clips' bytes, and the byte index ran each clip's length at 12 fps. Fred then led the walk (`UR`, 21 steps). Daphne turned 39 ticks later, and the Hotel Hall loaded 60 ticks after the walk began, as the check predicts. Back in the Saloon, the same exit skipped its scene. |
+| 3. No scene, no walkers, missing walks | ✅ Exits with no walkers change room on their first tick (`OBJ_HC_EXIT`, `OBJ_P12_SALOON_PIE_NOON`). In the data, every gang member left out of a walk-off has an empty direction (42 in Showdown, 77 in Phantom). A scratch copy of `object.ini` was edited to keep its length, so detection still passes: `fred=XX` and a scene with no clips. Fred was left out, Daphne led, the scene ended at once, and nothing crashed. The cached `object.ini` still matches its SHA-256. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`7e03ae779a`](https://github.com/barefootbetters/scummvm/commit/7e03ae779a) stages its 13 files by name, inside `engines/scooby/`, and is pushed. The WP-018 room renders and hit grids of all 122 rooms are unchanged. |
+
+**Deviations:**
+
+- **The 16 room overrides aren't implemented.** In the original, some exits are refused or play another scene until the story allows them (Town Center, for one). Here every room uses the default handler.
+- **Taken exits last for the session.** Saves don't exist yet, so the `Exits` marks are kept in memory.
+- **Characters keep their placement's sequence on entry.** The constructor's switch to `IDLE_MASTER` would only change the three set pieces, which their rooms' code drives.
+- **The cursor hides at once**; the original fades it out over 18 ticks. Movies are logged, not played.
 
 ---
 
@@ -99,19 +117,19 @@ the click goes further:
 
 ## Exit criteria
 
-1. [ ] For every exit in every room of Showdown and Phantom, the engine's
+1. [x] For every exit in every room of Showdown and Phantom, the engine's
    simulated transition matches an independent reference built on
    `probe_art.py` and `probe_audio.py`: the scene's lines and speakers,
    each walker's sequence, length and start tick, the leader, and the
    tick the room changes.
-2. [ ] Live, an exit with a scene plays its lines in order on the speech
+2. [x] Live, an exit with a scene plays its lines in order on the speech
    channel, the speaker's talking step follows the lip-sync bytes, the
    gang walks off, and the destination room loads. A second use of the
    same exit skips the scene.
-3. [ ] An exit with no scene and no walkers still loads its destination at
+3. [x] An exit with no scene and no walkers still loads its destination at
    once. A missing walk sequence leaves that character out, without a
    crash.
-4. [ ] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
+4. [x] Scooby-only build: 0 errors and 0 warnings. The fork diff stays
    inside `engines/scooby/`, staged by name.
 
 ## Deliverables
