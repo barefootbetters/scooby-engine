@@ -105,6 +105,21 @@ His answers, and what they change here:
 
 **For the trial:** DeepSeek Flash did most of the cheap early matching. What's left is the larger functions, where his notes put Claude Opus ahead, so expect the cost per match to rise.
 
+### Tool versions from the collaborator (2026-11-14)
+
+We asked Mony which tool versions he runs, so that our matches build the way his do. His answers are **Reported**; the "Ours" column is **Observed** on this project's PC.
+
+| Tool | His (Reported) | Ours | Same? |
+|---|---|---|---|
+| decompdecomp | `v1.0.10-alpha.1`; he updates to each new release as it comes out | `v1.0.10-alpha.1` | Yes, today. Both sides track releases, so record the version at the time of each trial session. |
+| Visual C++ 6.0 and 7.x | The copies decompdecomp supplies. He hasn't checked the service pack yet and will. | The copies decompdecomp supplies | Same source, so very likely the same build (Inferred). Whether that build matches Case File #1's Processor Pack 8943 is still [open question 7](#open-questions). |
+| Ghidra | The copy decompdecomp supplies | 12.1.4, from decompdecomp, on Oracle JDK 27.0.1 | Same source (Inferred). He didn't give a version number. |
+| Compiler flags | decompdecomp's detected defaults. It also tries permutations and sets different flags for single functions where needed. | The same app does the same | Yes: the flags are per function and come from the room's project, not from each member's setup. |
+| Functions on 7.x | decompdecomp detects which functions were built with a different compiler from the default. About 6 or 7 so far; he'll confirm the count when he next pushes. | — | The [first look](#first-look-at-the-repository-2026-11-11) found one source file pinned to 7.1. Whether that file holds those 6 or 7 functions is to check against his next push. |
+| Agents | Mostly DeepSeek and Claude, one instance of each for now. He'll add DeepSeek instances and try other models when his opencode usage resets. | Not chosen yet | — |
+
+**What this changes:** nothing in our setup. The compilers, Ghidra and the flags all come from decompdecomp itself, so matching his tools means running the same decompdecomp release he does. Our trial record already notes the version for each session.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -309,7 +324,7 @@ Engine lineage:
 Toolchain and tooling:
 
 6. Which compiler and settings produced each executable? *Answered in part (2026-11-14, Observed):* all are Visual C++ 6.0 with linker 6.00. Game C++ builds: Showdown and Phantom 8966, Jinx 8168, Case File #1 8943 (Processor Pack). The 2026-06 "VC 5.0" reading was a tool mislabel. Exact flags are unknown.
-7. How reliably can decompdecomp reproduce these functions byte for byte? Its VC 6.0 is the right major version; which VC6 build it installs, and whether that matches the Processor Pack's 8943, is open.
+7. How reliably can decompdecomp reproduce these functions byte for byte? Its VC 6.0 is the right major version; which VC6 build it installs, and whether that matches the Processor Pack's 8943, is open. The host uses decompdecomp's own VC6 too and will check its service pack (2026-11-14, Reported).
 8. Which functions need manual reconstruction after automated processing stalls, and does that set cluster by subsystem?
 
 Using the results:
@@ -325,7 +340,7 @@ For the host, about the room:
 14. How are function claims made and expired, and how are conflicts resolved? *Partly answered (source, 2026-11-13):* claims go through the room, so no two agents work the same function. Expiry and conflicts are still open.
 15. How does a member's match get merged, and what does the host share back? *Partly answered (source, 2026-11-13):* the host checks the match against its copy, credits it to `<member>.<agent>`, and shares it with the room. The host then pushes the work to the repository every day or so.
 16. Does the room check that every member's executable is identical, or is that on each member? *Partly answered:* the project pins the game by SHA-1, and this project's copy matches it. Whether the room enforces it on join is still open.
-17. Which compiler and version is the room configured with, and which decompdecomp version? *Partly answered:* the project defaults to VC 6.0 (one file on 7.1). The decompdecomp app version the room runs is still open; the project files record only a tools revision.
+17. Which compiler and version is the room configured with, and which decompdecomp version? The project files default to VC 6.0 (one file on 7.1). *Answered (2026-11-14, Reported):* decompdecomp `v1.0.10-alpha.1`, updated to each new release; the compilers and Ghidra are the ones decompdecomp supplies; flags are decompdecomp's detected defaults, varied per function where needed; about 6 or 7 functions are detected as built with 7.x. See [§Tool versions from the collaborator](#tool-versions-from-the-collaborator-2026-11-14).
 18. What are the terms of the private repository: license, who may read it, what may be quoted publicly, and how the collaborator wants to be credited? *Partly answered (2026-11-13, 2026-11-14):* credit as "Simeon Armenchev (monyarm)", with the repository URL once it's public. The repository stays private until the decompilation is finished, and he may publish AI-written docs instead of the code. License and what may be quoted are still open.
 
 For Jeff:
@@ -352,7 +367,7 @@ Trial checklist. Tick these off in this file as they happen.
 - [ ] Use only a legally obtained local copy of the game.
 - [ ] Record the exact executable filename (`Case File #1.exe` on disc), size, version-resource information, and SHA-256 (plus SHA-1 and MD5 if the room uses them). Confirm SHA-256 against the WP-007 lock and against the host's copy. Size and SHA-1 match the host project's pinned copy (2026-11-11); version-resource information is still to record.
 - [ ] Confirm that `git status` shows no executable, asset, project folder or credential before every commit.
-- [ ] Match tool versions with the host: decompdecomp version, compiler and flags, Ghidra version. Ours: decompdecomp `v1.0.10-alpha.1`, Visual C++ 6.0/7.1, Ghidra 12.1.4 on Oracle JDK 27.0.1; the host's are not yet asked.
+- [ ] Match tool versions with the host: decompdecomp version, compiler and flags, Ghidra version. Ours: decompdecomp `v1.0.10-alpha.1`, Visual C++ 6.0/7.1, Ghidra 12.1.4 on Oracle JDK 27.0.1. The host's (2026-11-14, Reported): the same decompdecomp release, with the compilers and Ghidra it supplies ([§Tool versions](#tool-versions-from-the-collaborator-2026-11-14)). Still open: his VC6 service pack, and the version at the time of each trial session, since both sides update.
 - [ ] Build one of the host's pushed commits locally and measure how many of its C functions match. This turns the Reported progress into a local measurement. Since 2026-11-13 it isn't a step before joining: the room credits our matches by member name ([§Reply from the collaborator](#reply-from-the-collaborator-2026-11-13)).
 - [ ] Connect to the cooperative room.
 - [ ] Run a limited trial, not open-ended agent use: set the provider spend cap, the helper count and a function cap first (suggested: 2 helpers, 100 functions or a fixed dollar cap Jeff sets, whichever comes first).
@@ -408,6 +423,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-14 | **Correction (Observed): the toolchain is Visual C++ 6.0, not 5.0; the collaborator was right.** `tools/rich_header.py` mislabelled Rich Header product IDs: 0x000A (`Utc12_C`, the VC6 C compiler) as "Linker 5.10", 0x000B (`Utc12_CPP`, VC6 C++) as "MASM 6.13", 0x000E (MASM 6.13) as "Cvtomf 5.10", and 0x0013 (`Linker512` import records) as "MSVC 5.0 C++". Checked against three sources: Microsoft's `prodid` enum names (as tabulated in [kirschju/richheader](https://github.com/kirschju/richheader) `prodids.py`), [richprint](https://github.com/dishather/richprint)'s `comp_id.txt`, and the PE optional header, which says linker **6.00** in all five binaries. The script is fixed and rerun on Showdown, Phantom, Jinx and both Case Files. Case File #1's own C++ is the VC6 Processor Pack, build 8943. **Consequences:** byte-identical matching with decompdecomp's VC 6.0 is plausible, with the service-pack level still to check ([open question 7](#open-questions)); the build-number grouping across generations holds; the claim that IBS shipped Jinx's compiled `.obj` files does not (Case File #1 recompiled the `MM*` C++, and only 36 C objects keep Jinx's build). Corrected in [scooby-exe §Toolchain](../formats/scooby-exe.md#toolchain), the VISION lineage table, WP-005, WP-006, EC-001 and this WP. |
 | 2026-11-14 | **Finding (Observed): the Showdown exe is a 2001 patch build.** The cached Showdown disc is TLC's August 2001 re-pressing; its `Scooby.exe` is `Gold v1.19`, built 2001-08-23, ten months after the game first shipped. For the Showdown decompdecomp project this is the build in hand; the 2000 release exe and its compiler are unknown. Evidence: [scooby-exe §Gen 1 discs are 2001 reissues](../formats/scooby-exe.md#gen-1-discs-are-2001-reissues-2026-11-14). |
 | 2026-11-14 | **Ghidra inside decompdecomp installed on the Windows JDK route (Observed).** With Oracle JDK 27.0.1 on the PATH (`javac` beside `java`, installed 2026-11-13), decompdecomp's **Install** on the Ghidra card fetched only NSA's `ghidra_12.1.4_PUBLIC_20260921.zip` into `%LOCALAPPDATA%\decompnet\toolchains\ghidra` (2026-11-13). Its toolchain manifest records `"wsl": false`; no Temurin or other JDK was downloaded; and `wsl --list --verbose` still reports no installed distribution, although WSL 3.0.5 itself is present. This confirms the 2026-11-11 reading of its source: a Windows JDK 21+ avoids WSL entirely. JDK 27 is newer than the LTS releases the [setup page](../reference/decompdecomp-setup.md#3-install-java) suggests, and works. |
+| 2026-11-14 | Collaborator reply on tool versions (**Reported**): the same decompdecomp release as ours (`v1.0.10-alpha.1`), updated to each new release; the compilers and Ghidra decompdecomp supplies; decompdecomp's detected flags, varied per function; about 6 or 7 functions detected as 7.x; mostly DeepSeek and Claude, one instance each for now. His VC6 service pack is still to check ([open question 7](#open-questions)). Open question 17 answered. A current room link came with the reply; links aren't recorded. See [§Tool versions from the collaborator](#tool-versions-from-the-collaborator-2026-11-14). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
