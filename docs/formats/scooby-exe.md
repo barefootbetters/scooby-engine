@@ -1062,7 +1062,7 @@ The file is **not** organized by entity type. It is a flat list of **215 `[OBJ_*
 | `ID=` value | Count | Role |
 |---|---|---|
 | `exitobject` | 77 | Room-to-room navigation triggers. The constructor reads `destinationroom=`, `movie=`, `scene=` and a direction per gang member (`fred=` … `scooby=`); `character=` and `direction=` are never read ([exit transition](#the-exit-transition-wp-020)) |
-| `clickableobject` | 103 | Interactive hotspots (carry `sequence=`, `priority=`, `layer=`, `rolloveranim=`) |
+| `clickableobject` | 103 | Interactive hotspots. Showdown's sections hold only `ID=`, sometimes `priority=` and `layer=`, and an empty `sequence=`; what a click does comes from the placed ANIM's name ([clickables](#clickables-wp-021)) |
 | `inventoryobject` | 11 | Pickable items (carry `toolbaranim=`, `usecursor=`, `pickupanim/sfx/movie=`) |
 | `requiresobject` | 13 | Hotspots gated by an inventory cursor (carry `requiredanim=`) |
 | `simpleobject` | 11 | Pure visual hotspots (carry `sequence=`, `priority=`, `layer=`) |
@@ -1263,7 +1263,7 @@ when the sequence stops (states other than 6 and 8). While talking, it
 shows step *shape* − 1 from the lip sync (`0x442DD0`). Starting a walk
 (`0x405D90`) moves the character 50 in front for a direction starting
 with `D`, and 50 behind for one starting with `U` (`0x430EE0`). States 2–5
-and 9–18 (random idles, Velma's reactions, fright) are not traced here.
+and 9–17 (random idles, Velma's reactions, fright) are not traced here; 18 (`0x12`) is under [Clickables](#clickables-wp-021).
 
 | Address | What it does |
 |---|---|
@@ -1280,6 +1280,44 @@ and 9–18 (random idles, Velma's reactions, fright) are not traced here.
 | `0x430EE0` | Move a sprite to a new depth among its siblings |
 | `0x442DD0` | Lip-sync shape of a playing clip |
 | `0x42DE10` | Game vtable `+0x08`: movie, then the next room |
+
+##### Clickables (WP-021)
+
+Traced 2026-11-14 for [WP-021](../work-packets/WP-021-clickable-actions.md),
+in Showdown; Phantom has the same functions at the same addresses.
+
+A clickable keeps a **state**, an ANIM name (`+0x60`), and a **sound**,
+`SFX_` plus the state without `ANIM_` (`+0x68`). The state starts as the
+placement's ANIM, or as the save file's `Clickables` entry for the object.
+A click plays the state once (mode 3, 3 ticks per step) with its sound,
+advances the state, and tells the room. When the sequence ends, the object
+rests stopped on step 0 of its new state. The state advances by its last
+character + 1, unless that gives a digit 1–9; a name the art file doesn't
+have goes back to `A`. So `…HOTSPOT1A` → `…1B` → `…1C`, and a state with
+no next letter stays. If the state is missing even then (Showdown's `…CHANDPUMA`),
+`SetAnim` (`0x430A00`) stores id 0 and starts nothing; `SelectFrame`
+(`0x4309C0`) selects no frame and the hit test (`0x430D10`) fails, so the
+object is neither drawn nor clickable.
+
+A click can call the **ghost** instead: if the clickable was built by the
+default path, `rand() % 30 == 0`, and the room placed `OBJ_GHOST`. The
+ghost is shown and plays once, `Ghost_Appears` plays, and every character
+goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
+`Global.Scared.<NAME>`. When the ghost's sequence ends, the game loads
+`ROOM_Ghost_Spot`.
+
+| Address | What it does |
+|---|---|
+| `0x408DC0` | Build a clickable from a placement: `layer=` picks the parent, ghost flag set |
+| `0x401000` / `0x401350` | Clickable constructor (reads `Clickables`) / destructor (writes it) |
+| `0x401440` | Clickable update (vtable `+0x0C`): the click, the ghost's chance, the rest |
+| `0x401650` | Advance the state; rebuild the sound name |
+| `0x4015F0` | Rollover (vtable `+0x18`): `ANIM_CURSOROPEN` while the string at game `+0x238` equals game `+0xA0` (likely: no item held; not traced) |
+| `0x40A850` | Game vtable `+0x40`: pass a click to the room's vtable `+0x14` |
+| `0x404440` | Default room `+0x14`: nothing. Story rooms override it (Boot Hill's graves: `0x40F250`) |
+| `0x40A990` | The ghost appears |
+| `0x409BCA` | When the ghost's sequence ends: go to `ROOM_Ghost_Spot` |
+| `0x434CB0` / `0x434C70` | Stop / play a sound by id, in whichever file holds it |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
