@@ -128,7 +128,17 @@ The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` h
 
 **Acceptance criterion:** A `grep -E '(fopen|std::ifstream|CreateFile[AW]?)' engines/scooby/` returns no matches outside comments. (`Common::File::open()` is permitted — only direct OS file APIs are banned.) The `TGIFILE.ART` parser opens its archive via `Common::File::open(name)` and exposes individual assets as `Common::SeekableReadStream`.
 
-**Implementation notes:** *TBD. The asset entry table from `docs/formats/tgifile-art.md` becomes the index used by a `Common::Archive` subclass that surfaces logical asset IDs.*
+**Implementation notes:** WP-014 (2026-11-14). `Scooby::ArtArchive` (`engines/scooby/art_archive.{h,cpp}`) is a `Common::Archive` over the Gen 1 `TGIFILE.ART`.
+
+- **Index.** The index is the room and object sector descriptors plus the name table ([tgifile-art §Header layout](formats/tgifile-art.md#header-layout)). The "asset entry table" this note first named turned out not to be offsets.
+- **Members.** Room and object names are the members, looked up case-insensitively. Both titles' names are unique even ignoring case.
+- **Streams.** `createReadStreamForMember()` opens its own `Common::File` and returns a `SeekableSubReadStream` over the block's whole sector span, which is what the original engine reads.
+- **ANIM names** are not members. `findName()` resolves them to their id.
+- **Validation.** `open()` checks every count, descriptor span, id and name against the file size and the descriptor arrays. It returns false with a warning rather than indexing bad data.
+- **Startup.** The engine adds the disc's `scooby` directory to `SearchMan`, so a game added at the disc root finds the file. Then it opens `TGIFILE.ART` in `run()`, for Gen 1 only.
+- **Debugging.** At `resource` level 2 the engine logs every block. At level 3 it also reads each one back through the archive and checks its size word. The console's `art_list` and `art_info` commands show the same index.
+
+The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork commit `155144012a`.
 
 ---
 
