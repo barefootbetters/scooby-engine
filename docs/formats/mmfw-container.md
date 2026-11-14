@@ -46,12 +46,26 @@ Offset  Size  Type        Value (Jinx Mummy.MMF)          Notes
 
 Both share the **identical sub-header bytes at offset 0x10:** `4D 4D 00 03`. This is the strongest signal that Gen 2 and Gen 3 use the same container format — they only differ in which content tags they ship.
 
+**Activity Challenge against Jinx (WP-013, 2026-11-14).** Each archive's
+first 20 bytes equal those of its Jinx counterpart; the per-file fields
+start at `0x14`. The scripts archive (`.mms`) carries a different marker
+at `0x10` in both titles:
+
+| Activity Challenge | Jinx counterpart | Bytes `0x00`–`0x13` (both) | Content tag |
+|---|---|---|---|
+| `BONUS.MMF` | `Mummy.MMF` | `4D 4D 46 57 20 46 69 6C 6D 73 00 00 00 00 00 00 4D 4D 00 03` | "MMFW Films" |
+| `BONUS.MMA` | `Mummy.MMA` | `4D 4D 46 57 20 53 6F 75 6E 64 73 00 00 00 00 00 4D 4D 00 03` | "MMFW Sounds" |
+| `BONUS.MMP` | `Mummy.MMP` | `4D 4D 46 57 20 50 69 63 74 75 72 65 73 00 00 00 4D 4D 00 03` | "MMFW Pictures" |
+| `Bonus.mms` | `Mummy.mms` | `4D 4D 46 57 20 53 63 72 69 70 74 73 00 00 00 00 49 49 03 00` | "MMFW Scripts" |
+
 ### Observed content tags
 
 - `MMFW Pictures` — graphics archive (backgrounds, sprites)
 - `MMFW Films` — video / cutscene archive (separate from the disc-root `.avi` files in Gen 3)
+- `MMFW Sounds` — `.MMA` audio archives (Jinx and Activity Challenge, WP-013)
+- `MMFW Scripts` — `.mms` scripts archives (Jinx and Activity Challenge, WP-013)
 
-Other tags expected but not yet observed (predict from filename patterns): `MMFW Sounds` or `MMFW Audio` for `.MMA` files; possibly `MMFW Package` or `MMFW Project` for `.MMP` files when used as combined containers.
+The earlier guess of `MMFW Package` or `MMFW Project` for `.MMP` files is not borne out: `Mummy.MMP` and `BONUS.MMP` are both `MMFW Pictures`. The four tags match the four `MMFW` resource labels in Jinx's and Activity Challenge's executables.
 
 ---
 
@@ -60,6 +74,7 @@ Other tags expected but not yet observed (predict from filename patterns): `MMFW
 | Hypothesis | Evidence | Confidence |
 |---|---|---|
 | `MM\x00\x03` is a version-3 marker — implying versions 1 and 2 existed internally before shipping | Standard versioning pattern; Gen 1's `TGIFILE.ART` had no such marker (it was effectively v0 or "untagged") | Medium |
+| `MM 00 03` and `II 03 00` are TIFF-style byte-order marks over the same version 3: big-endian for Films, Sounds and Pictures, little-endian for Scripts (`.mms`) | Both titles' `.mms` carry `II 03 00`, every other archive `MM 00 03` (WP-013). Not traced in code. | Medium |
 | The 12 bytes after `MMFW` are a space-prefixed ASCII content type, null-padded to fixed width | Both observed samples conform; null padding is consistent | High |
 | Sub-header at 0x10 carries entry count + offset table, analogous to `TGIFILE.ART` | Same archive role; engine is a direct descendant | Medium |
 | `.MMF`, `.MMA`, `.MMP` extensions encode content category (Film/Audio/Project) and the wrapper tag is redundant | Three-letter extensions correlate but tags duplicate the info | Medium |
@@ -97,6 +112,7 @@ Other tags expected but not yet observed (predict from filename patterns): `MMFW
 | 1 | Showdown | `TGIFILE.ART`, `Music.dat`, `Sfx.dat`, `Voice.dat` | [`tgifile-art.md`](tgifile-art.md) (+ [`audio-archives.md`](audio-archives.md) for Gen 1 audio) |
 | 1 | Phantom | unverified, predicted same as Showdown | same as Showdown |
 | 2 | Jinx | `Mummy*.MMF`, `HD.MMA`, `HD.MMP`, `Mummy_HD.MMF`, `Mummy.mms` | this doc |
+| 2 | Activity Challenge (WP-013) | `BONUS.MMF`, `BONUS.MMA`, `BONUS.MMP`, `Bonus.mms` | this doc |
 | 3 | Case File #1 | `MuseumCD.MMP`, `MuseumCD.MMA` | this doc |
 | 3 (predicted) | Case File #2 | TBD | predicted this doc |
 
