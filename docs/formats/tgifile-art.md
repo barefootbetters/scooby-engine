@@ -228,6 +228,19 @@ the data: the animated-sprite constructor (`0x430790`) takes object name,
 ANIM name, parent, depth, mode, ticks per step and start step, and the
 default placement path passes mode 1 at 3 ticks per step.
 
+**Tick unit and start step (WP-017, 2026-11-14).**
+
+- **The tick unit.** The game loop (`0x435BC0`) owes `elapsed_ms × 36 / 1000` ticks since
+  its base time. It runs each owed tick, then draws once. A tick walks the
+  sprite tree front to back, calling every sprite's tick (`0x431130`, skipped
+  for paused subtrees). So a tick is 1/36 s, and a default placement shows
+  12 steps per second: after `T` ticks it is at step `floor(T / 3) mod n`.
+  Phantom's loop is byte-identical.
+- **The countdown.** Start (`0x430AA0`) sets it to the ticks per step. Each
+  tick decrements it, and at 0 it resets and the step moves by the mode.
+- **The start step.** −1 is step 0 in modes 1 and 3 and the last step in
+  modes 2 and 4. A value past the end becomes the last step.
+
 **ANIM names select a sequence.** There are exactly as many `ANIM` names in
 the name table (1,266) as sequences in all objects. An ANIM id is:
 
