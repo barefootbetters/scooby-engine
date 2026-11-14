@@ -173,6 +173,10 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
   - `Room::hitTest()` is the original hit walk, with both test types.
   - The cursor is drawn in software as an `OBJ_CURSOR` sprite at the mouse, playing the hovered object's rollover or `ANIM_CURSORARROW`. There is no `CursorMan` cursor, so translucent cursor edges blend like any sprite.
   - Clicking an exit loads `destinationroom=` directly.
+- **The inventory and the toolbar (WP-023, 2026-11-14).**
+  - `Scooby::Inventory` lasts the whole game. On each room entry it adds the toolbar to the room's sprite tree, as root sprites the engine owns. The toolbar is the van and what it tows, placed relative to their parents.
+  - The game cursor (an item in use, or the arrow) is the cursor the sprite shows when the hovered object has no rollover.
+  - Clicks reach the inventory as the original's do, in its tick order: the toolbar first, then the room's objects, then the game's wrong-item check.
 
 ---
 
