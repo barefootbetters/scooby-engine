@@ -150,9 +150,17 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 
 **Upstream reference:** `common/system.h` (`OSystem`), `graphics/surface.h`, `graphics/paletteman.h`.
 
-**Acceptance criterion:** Room 1 of *Showdown* renders at the original resolution, with the original palette, in ScummVM's window on Windows, macOS, and Linux without per-platform code paths in the engine.
+**Acceptance criterion:** Room 1 of *Showdown* renders at the original resolution in ScummVM's window on Windows, macOS, and Linux without per-platform code paths in the engine. *(Revised 2026-11-14 by WP-015: the original also asked for "the original palette", but there is none. Pixels are RGB565 truecolour, per WP-002 and WP-001.)*
 
-**Implementation notes:** *TBD. Resolution and palette format determined by Phase 1 `TGIFILE.ART` decode work.*
+**Implementation notes:** WP-015 (2026-11-14).
+
+- **Screen.** The engine asks for 640 × 480 RGB565 (`initGraphics()`) and returns `kUnsupportedColorMode` if the backend can't provide it. It draws into its own `Graphics::Surface` and hands that to `copyRectToScreen()`. There are no per-platform paths.
+- **Decoding.** `Scooby::Cel` (`engines/scooby/cel.{h,cpp}`) decodes one cel from a room or object block into 16-bit words plus a coverage map: transparent, opaque (mask A) or translucent (mask B). It handles RLE (big-endian words), raw (little-endian) and solid cels. Every run, offset and mask span is checked against the block and the image.
+- **Drawing.** `drawRoomLayers()` draws each used layer slot's frame record in the opaque pass. Translucent (mask B) blending waits for sprites, since backgrounds have no mask B.
+- **Checked on both Gen 1 titles.**
+  - Every cel's pixels and coverage match `probe_art.py` (MD5 per cel): 9,111 in Showdown, 5,810 in Phantom.
+  - The screen after drawing room 0 matches the probe's composite pixel for pixel.
+- **Wide rooms.** Rooms 1,920 pixels wide show their left 640 pixels; scrolling is not done yet.
 
 ---
 
