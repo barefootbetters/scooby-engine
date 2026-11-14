@@ -178,7 +178,7 @@ Out of scope:
 ## Dependencies
 
 - Ghidra installed locally (any recent version; record version in EC-001 pre-flight)
-- `Scooby.exe` extracted from the mounted Showdown ISO to `C:\pcloud\SCOOBY\extracted\showdown\Scooby.exe` (or equivalent local path)
+- `Scooby.exe` extracted from the mounted Showdown ISO to `tools/exes/showdown/Scooby.exe`, per the [tools/exes README](../../tools/exes/README.md) cache convention
 - A PE inspector for the Rich Header check (`CFF Explorer`, `PE-bear`, or `pefile` Python lib)
 
 ## Exit criteria
