@@ -939,7 +939,9 @@ These are the format facts that came out of the trace, each written up in
 | `0x430D60` | `graphics_Sprite_ctor` | Sprite node: holds an object resource (via `GetObject`), parent, depth; children kept sorted by depth |
 | `0x430790` | `graphics_AnimSprite_ctor` | `(obj name, ANIM name, parent, depth, mode, ticks per step, start step)` |
 | `0x430A00` | `graphics_AnimSprite_SetAnim` | ANIM name → id (`GetId`) → `sequences[id & 0x3FFFF]` of the held object |
-| `0x430AA0` / `0x430890` | `graphics_AnimSprite_Start` / `_Tick` | Modes 1–5 (loop fwd/back, once fwd/back, jump to end); countdown of ticks per step |
+| `0x430AA0` / `0x430890` | `graphics_AnimSprite_Start` / `_Tick` | Modes 1–5 (loop fwd/back, once fwd/back, jump to end); countdown of ticks per step. `_Tick` is sprite vtable slot `+8` |
+| `0x431130` | (sprite tree tick) | Walks the tree front to back and calls each sprite's `+8` (tick) and `+0xC`, unless the subtree is paused (`+0x30`). WP-017 |
+| `0x435BC0` | (game tick loop) | `ticks = elapsed_ms × 36 / 1000 − done`. Runs each owed tick (tree tick, room update) and then draws once: **36 ticks per second**. Phantom: `0x4368F0`, byte-identical. WP-017 |
 | `0x4309C0` | `graphics_AnimSprite_SelectFrame` | Current step's frame ref → frame record |
 | `0x430D10`, `0x431350`, `0x4312A0` | `input_AnimSprite_HitTest`, `input_PolygonHitTest`, `input_PointInPolygon` | Step polygon: bounding box, then even-odd test |
 | `0x438660` | `graphics_Renderer_RenderFrame` | Opaque pass front to back, then alpha regions back to front |

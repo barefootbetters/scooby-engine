@@ -164,6 +164,10 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 - **Whole rooms (WP-016, 2026-11-14).** `Scooby::RoomRenderer` (`engines/scooby/room.{h,cpp}`) builds a room as the original sets it up on entry. It creates the layer sprites, then one sprite per placement at step 0 of its sequence, in the traced sprite tree. Placement kinds come from `object.ini`, which is read through `Common::INIFile`. It paints back to front into a room-sized RGB565 surface. `Cel::draw()` copies opaque pixels and blends translucent ones with the original 565 blitter's formula and tables ([tgifile-art §Cel format](formats/tgifile-art.md#cel-format)).
   - For all 69 Showdown and 53 Phantom rooms, the draw order and room surface (MD5) match an exact 565 model.
   - An optional `start_room` key in the game's config domain picks the first room. It is a test convenience to revisit before Phase 5.
+- **Animation (WP-017, 2026-11-14).** `Scooby::Room` keeps the sprite tree it builds on entry, and each placed sprite plays its sequence with the original player.
+  - The engine loop runs `elapsed_ms × 36 / 1000` game ticks from `OSystem::getMillis()`, as `0x435BC0` does, and redraws when a step changes.
+  - Cels are decoded once per room and cached.
+  - All 122 rooms match a reference model at tick 0 and tick 37.
 
 ---
 
