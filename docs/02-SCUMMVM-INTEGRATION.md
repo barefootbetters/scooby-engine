@@ -263,6 +263,15 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 
 At the pin, channel values are ids starting at 1, not bit masks.
 
+**Live tests (WP-024, 2026-11-14).** A `test_script` key in the game's config domain plays input inside the engine, without the host's mouse. It holds steps separated by `;`:
+
+- `move x y` and `click x y` go through the same handler as real mouse events;
+- `wait ms` pauses the script;
+- `shot name` saves the screen as `name.bmp` in the `test_shots` folder;
+- `quit` ends the game.
+
+With `start_room` and `start_items`, it runs a live test minimized, so it doesn't take over the mouse of a machine in use.
+
 ---
 
 ## 10. Build system integration
