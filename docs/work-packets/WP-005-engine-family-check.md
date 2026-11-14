@@ -5,11 +5,47 @@ title: "WP-005: Engine-Family Check"
 
 # WP-005: Engine-family check across Case File ISOs
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Done (2026-11-13)
 **Phase:** 1 — Format Research
 **Depends on:** —
 **Companion EC:** [EC-003](../execution-checklists/EC-003-engine-family-check.md)
 **Estimated effort:** Half-day
+**Pre-flight (Case File #2 half):** [pre-flight-WP-005-2026-11-13](../reference/pre-flight-WP-005-2026-11-13.md)
+
+---
+
+## Result (2026-11-13)
+
+| Disc | Code lineage | Formats | Verdict |
+|---|---|---|---|
+| Case File #1 (2002) | Same lineage. Inherited TerraGlyph object files (an MSVC 5.0 C++ 8034 ×17 entry identical to Jinx's, plus Jinx's Linker build 8168); `MMFW` resource strings and `MMVisualCursor.cpp` shared with Jinx (2026-06) | `MMFW` archives and XML config, not `TGIFILE.ART` | **Same engine lineage, different formats.** Under EC-003's file-presence test it is INCOMPATIBLE (no `TGIFILE.ART` or `object.ini`). It stays in scope as the Gen 3 stretch tier because of the code inheritance, per VISION's 2026-06 revision of the scope rule, which this WP confirms. |
+| Case File #2 (2003) | **Not the lineage.** No RTTI, `MMFW`, error templates, source paths or MSVC 5.0 C++ objects shared; dynamic CRT; `R*` framework with Miles, LZO, libjpeg | `.bul`/`.inx` bulk archives | **INCOMPATIBLE**: a different engine |
+
+The deciding evidence for Case File #2: a *Powerpuff Girls* demo on the
+same disc uses the same `.bul`/`.inx` resources. Its engine DLLs
+(`trinket.dll`, `ompp32x.dll` "OM++", `tcx.dll`, `rbink6x.dll`) carry 17 of
+Case File #2's `R*` class names and its bulk-file loader errors. The same
+framework runs the publisher's launcher on both Case File discs. Full
+evidence: [scooby-exe §Case File #2](../formats/scooby-exe.md#case-file-2-wp-005).
+
+| Exit criterion | Result |
+|---|---|
+| 1. File listings for Case File #1 and #2 | ✅ Read from the ISOs with 7-Zip (Showdown 236 files, Case File #1 271, Case File #2 277, minus platform noise). Kept local; see below. |
+| 2. Diff against Showdown | ✅ Shared basenames: Case File #1 122, Case File #2 48. All of them are installer, DirectX, registration, Acrobat, font, Bink or publisher files. **Neither disc has a single Gen 1 engine file** (`TGIFILE.ART`, `Scooby.exe`, `object.ini`, `Scooby.eng`, `*.dat`). Recorded here and in VISION. |
+| 3. Verdict per disc | ✅ Table above |
+| 4. `tgifile-art.md` cross-title section | ✅ Neither Case File has a `TGIFILE.ART` to compare; recorded |
+| 5. VISION Phase 5 scope rule | ✅ Case File #2 moved to Excluded. The Engine Lineage section, implementation implication and cross-title risk are corrected (three generations, three archive formats). |
+
+**Deliverable deviation:** the WP names `docs/findings/case-file-disc-diff.md`,
+but `docs/findings/*` is gitignored except its README. The diff summary is
+recorded in this section and in VISION instead, and the raw listings stay
+in the session scratchpad.
+
+**Not done here:** the project `README.md` title table still says
+"engine-family verdict pending (WP-005)" for Case File #2, and
+[WP-011](WP-011-casefile-decompdecomp.md) still plans a Case File #2
+comparison as "Gen 4". Both sit outside this WP's scope lock and are listed
+as follow-ups.
 
 ---
 

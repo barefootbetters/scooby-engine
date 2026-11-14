@@ -704,7 +704,8 @@ The full continuous-block record listing (811 entries, with per-record strings-p
 - **Showdown (Gen 1):** documented above. `TGIFILE.ART` present at disc root.
 - **Phantom:** disc inspection pending; toolchain (Rich Header) matches Showdown identically — Phantom is classified Gen 1 and is *predicted* to use `TGIFILE.ART`, but the archive header hasn't been hex-checked yet. Lock in next time the disc is mounted with `Format-Hex E:\scooby\TGIFILE.ART -Count 8` and compare against `45 00 00 00`. Once mounted, `py -3 tools/probe_art.py --art <Phantom TGIFILE.ART> --no-hash --verify` is the cross-title check (EC-002 Phase D).
 - **Jinx (Gen 2):** uses `MMFW`-wrapped archives (`Mummy.MMF`, `HD.MMA`, `HD.MMP`) — confirmed not `TGIFILE.ART`. See [`mmfw-container.md`](mmfw-container.md).
-- **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container.md).
+- **Case File #1 (Gen 3):** uses `MMFW`-wrapped archives (`MuseumCD.MMP`, `MuseumCD.MMA`) — same wrapper as Jinx. See [`mmfw-container.md`](mmfw-container.md). No `TGIFILE.ART` on the disc (WP-005 listing, 2026-11-13), so there is no first-64-bytes comparison to make.
+- **Case File #2:** no `TGIFILE.ART`, `object.ini` or `.dat` audio on the disc; its archives are `.bul`/`.inx` bulk files. WP-005 (2026-11-13) places it on a different engine altogether ([scooby-exe §Case File #2](scooby-exe.md#case-file-2-wp-005)).
 
 The `TGIFILE.ART` format is **specific to Gen 1**. Cross-title implementation does not generalize to Gen 2/3 via this spec — those need the separate MMFW parser. Whether the Gen 2/3 picture payloads reuse this cel format (`F0` runs over big-endian RGB565) is now a cheap test, the hypothesis in [mmfw-container](mmfw-container.md#hypotheses-unverified).
 
