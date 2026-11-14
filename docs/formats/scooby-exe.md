@@ -159,6 +159,7 @@ known-good binary here):
 | Showdown | 1 | 6.00 | VC6 `Utc12_CPP` build **8966** (×114), richprint: VC6 SP5 | C 8047 (×113) and C++ 8047 (×10), which richprint marks "likely libs" |
 | Phantom | 1 | 6.00 | VC6 `Utc12_CPP` build **8966** (×120) | same as Showdown |
 | Jinx | 2 | 6.00 | VC6 `Utc12_CPP` build **8168** (×157), richprint: VC6 RTM | C 8168 (×160) |
+| Activity Challenge | 2 (WP-013) | 6.00 | VC6 `Utc12_CPP` build **8447** (×135), plus 8168 (×8) | C 8168 (×160), as in Jinx |
 | Case File #1 | 3 | 6.00 | VC6 Processor Pack `Utc12_2_CPP` build **8943** (×161), richprint: VC6 SP4 + Processor Pack | C 8797 (×126), C 8168 (×36), C++ 8797 (×8), one VS2002 `Utc13_C` 8830 object |
 | Case File #2 | — | 6.00 | VC6 Processor Pack `Utc12_2_CPP` build **9044** (×71), richprint: VC6 SP5 + Processor Pack; plus VC6 `Utc12_CPP` 8966 (×53) | C 8966 (×26), C 8047 (×11), C++ 8047 (×2), one VS2002 `Utc13_CPP` 9178 object |
 
@@ -186,6 +187,7 @@ libraries; `Import0` is imports with no comp.id.
 | Showdown | 1 | 8966 (×114), 8047 (×10) | 8047 (×113) | 7299 (×30) | `Linker512` 8034 (×16), 9049 (×10); `Linker600` 8447 (×13); `Import0` ×202 | `AliasObj60` 7291 (×1), `Cvtres500` 1735, unmarked ×2 | 11 |
 | Phantom | 1 | 8966 (×120), 8047 (×10) | 8047 (×113) | 7299 (×30) | same as Showdown | same as Showdown | 11 |
 | Jinx | 2 | **8168** (×157) | **8168** (×160) | 7299 (×29) | `Linker512` 8034 (×17); `Import0` ×278 | `Cvtres500` 1720 | 6 |
+| Activity Challenge | 2 (WP-013) | 8447 (×135), **8168** (×8) | **8168** (×160) | 7299 (×29) | `Linker512` 8034 (×17); `Import0` ×280 | `Cvtres500` 1735 | 7 |
 | Case File #1 | 3 | PP **8943** (×161), 8797 (×8) | 8797 (×126), **8168** (×36); VS2002 `Utc13_C` 8830 (×1) | 7299 (×30) | `Linker512` 8034 (×17); `Linker600` 8447 (×2); `Import0` ×248 | `Cvtres500` 1735 | 10 |
 | Case File #2 | — (not this lineage, WP-005) | PP 9044 (×71), 8966 (×53), 8047 (×2); VS2002 `Utc13_CPP` 9178 (×1) | 8966 (×26), 8047 (×11) | 7299 (×2) | `Implib710` 2179 (×19); `Implib700` 9466 (×4); `Linker600` 8047 (×2); `Import0` ×363 | `AliasObj60` 7291 (×13), `Cvtres500` 1735 | 13 |
 
@@ -277,6 +279,58 @@ Phantom's cast already in that table.
 
 Method: a byte comparison in a session script. Ghidra was not run on
 Phantom's binary.
+
+### Activity Challenge (WP-013)
+
+Settled 2026-11-14. *Scooby-Doo! Activity Challenge* (2001) runs Jinx's
+`MMFW` framework: **Gen 2**. Its executable is
+`INSTALL\HDINSTALL\Scooby.exe` on the disc (794,624 bytes, SHA-256
+`CE2D0F51…F9A9AB8`; see the
+[cache entry](../../tools/exes/README.md#activity-challenge-gen-2)). It
+was compared with Jinx's using the WP-005 method.
+
+| Marker | Jinx | Activity Challenge |
+|---|---|---|
+| `__FILE__` path | `C:\Projects\SCOOBY\mummy\Mmfw\MMVisualCursor.cpp` | `C:\Projects\Scooby\Bonus\Mmfw\MMVisualCursor.cpp` |
+| PE timestamp (UTC) | 2001-09-19 20:49 | 2001-09-18 18:32 |
+| RTTI type names | 551 | 510; 323 shared with Jinx |
+| `MM*` framework classes | 119 | 112, **all** in Jinx |
+| Title classes | `MummyApplication`, `MummyStage`, `MummyInteractionScene`, `MummyGameProgress` | `BonusApplication`, `BonusStage`, `BonusInteractionScene`, `BonusGameProgress` |
+| Engine strings (non-RTTI, ≥ 8 chars) | 594 | 549; 532 shared |
+| Archive names (wide strings) | `Mummy*.MM?`, `Hd.mma`, `Hd.mmp` | `Bonus.MMA`, `Bonus.MMF`, `Bonus.MMP`, `Bonus.MMS` |
+| Company and title path string (no `ADVAPI32` import, so not a registry key) | `The Learning Company\Jinx At The Sphinx` | `The Learning Company\Campfire` |
+| Imports | 204, from `GDI32`, `KERNEL32`, `MSVFW32`, `USER32`, `WINMM` | 206, same five DLLs; 202 shared |
+
+- **Shared engine strings** include the `MMFW Films`, `Pictures`,
+  `Scripts` and `Sounds` labels and every resource-file error template
+  (`Bad header`, `Bad checksum`, `Bad time stamp` and `Bad version number
+  in … resource file '%s'.`). Activity Challenge's binary still contains
+  `Scooby Doo -- Jinx At The Sphinx`.
+- **Jinx's seven extra `MM*` classes** are `MMBitmapPictureCollection`,
+  `MMBitmapPictureManager` and their resource helper,
+  `MM2DTransitionFadeToBlack`, `MM2DTransitionWipeLeft`,
+  `MMHighlightable` and `MMSingleEventInterpreter`. Activity Challenge
+  links a subset of the framework, and nothing from outside it.
+- **Activity Challenge's own 187 type names** are mostly two mini-game
+  namespaces, `KnightsTable` (86) and `PieNoon` (74). The rest are a
+  skiing game (`SnowMonster`, `SkiingCharacter`), a campfire hub
+  (`SceneCampFire`, `CampFireSequencePlayState`) and movement and input
+  classes (`MovementThread`, `PollingMouseInputStrategy`,
+  `DynamicMovingObject`).
+- **Imports** differ by five functions: Activity Challenge adds `MulDiv`,
+  `SetCursorPos` and `ShowCursor` and drops `SetEndOfFile` and `FillRect`.
+  The video path (`MSVFW32` `DrawDib`) and the dynamic DirectSound load
+  (`DSOUND.DLL`, `DirectSoundCreate`) are Jinx's.
+- **Toolchain:** the C objects (8168 ×160), MASM (×29) and `Linker512`
+  import records (×17) match Jinx exactly. The C++ was compiled with a
+  later VC6 build, 8447 (×135), with 8 objects still at 8168. Both
+  binaries are linker 6.00 with the same five sections and no version
+  resource.
+
+Reading: one source tree (`C:\Projects\Scooby\`) with a project folder per
+title, each with its own `Mmfw` folder. The two games were built a
+day apart. The format half is in
+[mmfw-container](mmfw-container.md#confirmed-magic-bytes-across-samples).
 
 ### String literals (WP-007)
 

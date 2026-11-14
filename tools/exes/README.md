@@ -28,6 +28,7 @@ tools/exes/
   jinx/Scooby.exe            ← from Scooby Doo Jinx at the Sphinx.iso
   casefile1/Scooby.exe       ← from Case File 1.iso
   casefile2/Scooby.exe       ← from Case File #2.iso
+  activity/Scooby.exe        ← from ScoobyDoo.iso (Activity Challenge)
 ```
 
 Per-disc subdirectory + canonical filename means:
@@ -141,6 +142,58 @@ Mode                 LastWriteTime         Length Name
 - `Mummy.mms` (887 KB) is a strong candidate for the Gen 2 analogue of
   Showdown's `Scooby.eng` — small, plain-data sized, root-level. Cached under
   `tools/exes/jinx/Mummy.mms` for Gen 1↔Gen 2 comparison without re-mounting.
+
+### Activity Challenge (Gen 2)
+
+- **ISO source:** `C:\pcloud\scooby-engine\ScoobyDoo.iso` (231,700,480 bytes, volume label `ScoobyDoo`), mounted with `Mount-DiskImage` and dismounted afterwards
+- **Cached EXE:** `tools/exes/activity/Scooby.exe` (794,624 bytes). The original disc name is `Scooby.exe` at `\INSTALL\HDINSTALL\Scooby.exe`, so no rename was needed.
+- **SHA-256:** `CE2D0F51191BCBA346D7908FED3F4F706ACD8CDB4C1386DED34894363F9A9AB8`
+- **Additional cached payload files:** all four `MMFW` archives, so the disc does not need re-mounting for engine work. Strings and imports dumps (`strings-ansi.txt`, `strings-wide.txt`, `imports.txt`) sit alongside, as for the other titles.
+- **Captured:** 2026-11-14, for [WP-013](../../docs/work-packets/WP-013-activity-challenge-engine-check.md)
+
+**Activity Challenge cached-payload identity table** (all gitignored):
+
+| File | Disc path | Size (bytes) | SHA-256 | Notes |
+|---|---|---|---|---|
+| `Scooby.exe` | `\INSTALL\HDINSTALL\Scooby.exe` | 794,624 | `CE2D0F51191BCBA346D7908FED3F4F706ACD8CDB4C1386DED34894363F9A9AB8` | Gen 2 engine binary, linked 2001-09-18 |
+| `BONUS.MMF` | `\BONUS.MMF` | 19,744,128 | `BDA131BB38FB691A34A51133F35647E162A54B411728C35E6257462C29DCF8C9` | `MMFW Films` |
+| `BONUS.MMA` | `\BONUS.MMA` | 57,713,128 | `4F4382B4A4A63EC7F8C8FB6BA094501D485C6C070659364E33CBF99D8BF31AE8` | `MMFW Sounds` |
+| `BONUS.MMP` | `\BONUS.MMP` | 68,733,610 | `DE0B7A19CDEF45B0148B98467F4301314968FBC27B8AA937DBACBC4103694A47` | `MMFW Pictures` |
+| `Bonus.mms` | `\Bonus.mms` | 289,844 | `ECFF5AB9BCF2A9599235A110CA7EA9AFA424BE0BCCF7A77490609B8E295CAB2F` | `MMFW Scripts` |
+
+**Shared with Jinx, byte for byte** (same SHA-256 on both discs; not cached):
+
+| File | Size (bytes) | SHA-256 |
+|---|---|---|
+| `IBSlogo.avi` | 9,021,440 | `8DDBE5B14DD8C8747BA5A70AF8E4AF59F42ADB3853BE59BA9BDB86B10F3B4473` |
+| `TLCLOGO.avi` | 8,221,184 | `D1A936BE0AC49CA0A8B3D973BEA674D70630990D6FCFA0F23C1F21C38F8A8AD7` |
+| `WBLOGO.avi` | 2,180,096 | `8DF4A1BF6D6C18BBF47B3DB8B211BADB65D605FAE39C18F745674BAE0FDE6806` |
+| `PLAY.EXE`, `SETUP.EXE` | 45,056 each | `BBAFEDA4819394408046BFEB7232C1436E26EECD7ACC176BDFF3F94D4E1F7AA2` (the same launcher twice) |
+
+**Skipped** (not engine-relevant): the rest of `INSTALL\`: the InstallShield setup, DirectX 8, QuickTime 5, Acrobat Reader 4, `BINKW32.DLL`, `SMACKW32.DLL` and `Sdreadme.pdf`. 158 of its 189 files match Jinx's `INSTALL\` by path and size.
+
+**Disc inventory — root:**
+
+```
+Name           Length      LastWriteTime
+----           ------      -------------
+INSTALL                    9/13/2001 9:19 AM
+AUTORUN.INF          173   7/3/2001 4:15 AM
+BONUS.MMA       57713128   9/10/2001 4:40 AM
+BONUS.MMF       19744128   9/6/2001 9:30 AM
+BONUS.MMP       68733610   9/18/2001 3:14 AM
+Bonus.mms         289844   9/18/2001 4:26 AM
+IBSlogo.avi      9021440   9/7/2001 5:11 AM
+PLAY.EXE           45056   5/16/2001 4:16 AM
+SETUP.EXE          45056   5/16/2001 4:16 AM
+TLCLOGO.avi      8221184   9/6/2001 6:08 AM
+WBLOGO.avi       2180096   9/18/2001 5:38 AM
+```
+
+**Notes:**
+
+- `Bonus` is the disc's internal codename, as `Mummy` is Jinx's. The executable's wide strings name exactly these four archives. The disc marker is `INSTALL\TLC\BONUSCD.CD`.
+- Unlike Jinx, the executable is not in a title folder: it sits in `INSTALL\HDINSTALL\` and the archives sit at the root.
 
 ### Showdown (Gen 1)
 

@@ -50,9 +50,16 @@ partially open (Case Files) — see the provenance check below.
 Also on disk: `ScoobyDoo.iso` (221 MB). Identified via the companion
 `archive.org-activity-challenge.url` shortcut (pointing to
 `archive.org/details/scooby-dooac2001`) as **Scooby-Doo! Activity Challenge**
-(2001). This is an edutainment title rather than a point-and-click
-adventure, so it almost certainly uses a different engine — treat as
-out of scope unless Phase 1 inspection shows otherwise.
+(2001). It is a set of mini-games rather than a point-and-click
+adventure, and this page assumed it used a different engine. **WP-013
+(2026-11-14) found the opposite:** it runs Jinx's engine (Gen 2). Its
+`Scooby.exe` was built from the same source tree as Jinx's
+(`C:\Projects\Scooby\Bonus\Mmfw\` beside Jinx's
+`C:\Projects\SCOOBY\mummy\Mmfw\`), one day earlier. All 112 of its `MM*`
+framework classes are Jinx classes, and its archives are `MMFW`
+(`BONUS.MMF`/`.MMA`/`.MMP`, `Bonus.mms`). It is no longer excluded on
+engine grounds. Whether it joins a Phase 5 tier is not yet decided, since
+its mini-games would be new game-layer work (see Phase 5).
 
 The `C:\pcloud\scooby-engine\` directory also contains `archive.org-*.url`
 shortcuts for each disc, recording the provenance of the rips.
@@ -94,7 +101,7 @@ once listed as a fourth, is a different engine; see below):
 | Gen | Titles | Toolchain | Archive | Config | Cutscenes |
 |---|---|---|---|---|---|
 | **1** | Showdown (2000), Phantom (2001) | VC6, game C++ build 8966 (richprint: SP5) | `TGIFILE.ART` (raw count + index) | INI text (`object.ini`, `Scooby.eng`) | Bink (`binkw32.dll` 286 KB) |
-| **2** | Jinx (2001) | VC6, C and C++ build 8168 (richprint: release) | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
+| **2** | Jinx (2001); *Activity Challenge* (2001, WP-013) | VC6, C and C++ build 8168 (richprint: release); Activity Challenge's C++ is mostly build 8447 | `MMFW` wrapper container | TBD (likely INI) | Bink + Smacker |
 | **3** | Case File #1 (2002) | VC6 Processor Pack, game C++ build 8943; 36 C objects at Jinx's 8168 | `MMFW` continues | XML via `libexpat.dll` | raw `.avi` |
 | — | Case File #2 (2003) | **Not this lineage** (WP-005, 2026-11-13): VC6 like the lineage, but no shared code markers, dynamic MSVCRT, VS2002/2003 import libraries | `.bul`/`.inx` bulk archives (LZO) | loose `.mps` + `.xml` scripts | Bink (`binkw32.dll` 375 KB, newer SDK) + Miles (`mss32.dll`) |
 
@@ -185,6 +192,13 @@ reuse. This is the strongest possible engine-family signal.
   is one engine build over two data sets.
 - **Case File #3: confirmed out of scope** — Macromedia Director engine,
   TLC/Broderbund publisher. Not part of this lineage.
+- **Activity Challenge (2001): Gen 2** — WP-013 (2026-11-14). Same `MMFW`
+  framework as Jinx, from the same source tree. 323 of its 510 RTTI names
+  and 532 of its 549 engine strings are Jinx's, and its imports differ by
+  five functions. Its `MMFW` headers match Jinx's, and its logo videos and
+  launcher are byte-identical to Jinx's. The game layer is its own:
+  `KnightsTable`, `PieNoon` and skiing mini-games around a campfire hub.
+  Evidence: [scooby-exe §Activity Challenge](formats/scooby-exe.md#activity-challenge-wp-013).
 
 **Implementation implication:** the `scooby` ScummVM engine covers one
 engine lineage with format-version-aware adapters: **three** archive
@@ -481,7 +495,8 @@ Scope rule (revised per Engine Lineage finding above):
 - **Extended (high confidence):** Showdown + Phantom (Gen 1 — identical toolchain, confirmed identical `binkw32.dll` hash).
 - **Extended (medium confidence):** + Jinx (Gen 2 — requires `MMFW` container parser as a sibling to the Gen 1 `TGIFILE.ART` parser).
 - **Stretch (medium confidence):** + Case File #1 (Gen 3 — requires MMFW parser, XML config via `libexpat.dll`, raw `.avi` cutscene path alongside the Bink path).
-- **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13), Case File #3 (Macromedia Director / TLC-Broderbund) and Activity Challenge.
+- **Unassigned:** Activity Challenge (Gen 2 by code, WP-013, 2026-11-14). Its archives would open with the Jinx-tier `MMFW` parser, but its real-time mini-games are game-layer work no adventure title needs. It joins a tier by decision, not by default.
+- **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13) and Case File #3 (Macromedia Director / TLC-Broderbund).
 
 Each generation extends the engine with one new adapter per axis; the
 shared engine core handles room/scene management, cursor/inventory,
