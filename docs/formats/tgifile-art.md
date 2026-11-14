@@ -762,10 +762,12 @@ The decode itself has no open questions.
 
 ## Next steps
 
-1. Phase 2 can start: [WP-010](../work-packets/WP-010-scummvm-scaffold.md)
-   and the Phase 3 `Common::Archive` reader can be written from this page.
-   Seek with the descriptors, as the engine does. The object-resource walk is
-   a cross-check, not the access path.
+1. ~~Phase 2 can start: WP-010 and the Phase 3 `Common::Archive` reader can
+   be written from this page~~ Done:
+   [WP-010](../work-packets/WP-010-scummvm-scaffold.md) (scaffold) and
+   [WP-014](../work-packets/WP-014-tgifile-art-archive.md) (2026-11-14,
+   `ArtArchive` in the fork). The reader seeks with the descriptors, as the
+   engine does. Its block list matches `probe_art.py` on both Gen 1 titles.
 2. ~~Render one room with its placed objects~~ Done 2026-11-13: see
    [Rendering a room](#rendering-a-room-2026-11-13), including the traced
    draw order. Per-room placement overrides are the part not modelled.
