@@ -122,6 +122,57 @@ Case File #2 was not covered by this baseline (its disc was not cached at the ti
 
 Extraction tooling: [`tools/extract_strings.py`](../../tools/extract_strings.py) and [`tools/extract_imports.py`](../../tools/extract_imports.py). Raw outputs (`strings-ansi.txt`, `strings-wide.txt`, `imports.txt`) live under `tools/exes/<title>/`, gitignored per [tools/exes/README](../../tools/exes/README.md). Determinism confirmed: re-running each script against the same binary produces byte-identical output.
 
+### Gen 1 discs are 2001 reissues (2026-11-14)
+
+The cached Showdown and Phantom discs are **not first pressings**. They are
+one re-pressing of both games, mastered by The Learning Company three
+minutes apart on 2001-08-24, about ten months after the games first came
+out. Everything below was read from the ISOs and the cached binaries:
+
+| | Showdown | Phantom |
+|---|---|---|
+| ISO volume created | 2001-08-24 07:51 | 2001-08-24 07:48 |
+| `Scooby.exe` PE timestamp (UTC) | 2001-08-23 01:47 | 2001-08-23 01:51 |
+| `Scooby.exe` version resource | `Gold v1.19` (file 1.0.1.9), © 2000 TerraGlyph | `Gold v1.16` (file 1.0.1.6), © 2000 TerraGlyph |
+| `TGIFILE.ART` file date | 2001-08-24 | 2001-08-24 |
+| Game data (`*.dat`, `object.ini`) | 2000-08-31 to 2000-09-01 | 2000-09-19 to 2000-10-04 |
+| Installer `Setup.inf` | SKU 380326, `S_VERSION = 1.2` | SKU 380325, `S_VERSION = 1.2` |
+| Readme PDF | © 2001 TLC; Windows 95/98/Me/2000/XP; DirectX 8a | same |
+
+Both discs carry the same 2001 installer kit (DirectX 8 dated 2001-06-08,
+Acrobat Reader 4, the AOL and TLC e-registration bundles), the same
+"Mystery Adventures" series branding, and the same "Groovy Goodies"
+trailer for an upcoming Scooby-Doo movie. For comparison, Jinx's ISO was
+mastered 2001-09-27 and *Activity Challenge*'s 2001-09-18.
+
+**First release.** The game data dates and the "© 2000" in both exes fit
+a 2000 release for both titles. Public listings agree on Showdown
+(October 2000) but not on Phantom: Kotaku gives 2000-10-31; GamePressure
+gives 2001-03-12. This repo's title tables keep their 2000 and 2001
+until a primary source settles it.
+
+**What this changes:**
+
+- **The Gen 1 binaries are post-gold patch builds**, not the 2000 release
+  builds. The toolchain rows below (VC6 build 8966) describe what TerraGlyph
+  compiled in August 2001. What the 2000 release exes were compiled with
+  is unknown: we don't have them.
+- **The Gen 1 → Gen 2 toolchain change is not a sequence.** TerraGlyph
+  built the Gen 1 reissue exes on 2001-08-23 with VC6 build 8966 and
+  Jinx's on 2001-09-19 with build 8168, four weeks apart. That is two build
+  environments in use at once, which supports the "different build
+  environment, not an upgrade" reading below and rules out a mid-2001
+  switch-over.
+- **Showdown and Phantom sharing a build date is the reissue, not a
+  shared original release cycle.** That they are the same engine build
+  (WP-006: 71 functions byte-identical) is expected of two exes built four
+  minutes apart.
+- **The format specs describe the 2001 data.** `TGIFILE.ART` was rebuilt
+  (or at least rewritten) for the reissue. A first-pressing disc could
+  differ in its exe, its archive, or both. WP-012's detection entries
+  (size and MD5 of three files) match only this pressing; a first-pressing
+  disc would go undetected until one is found and added.
+
 ### Toolchain
 
 **Corrected 2026-11-14: every title checked is Visual C++ 6.0, not 5.0.**
@@ -152,7 +203,8 @@ records inside linked `.lib` files.
 
 **What each title's own code was compiled with** (the largest C++ entry;
 service-pack attributions are richprint's, not checked against a
-known-good binary here):
+known-good binary here). The Showdown and Phantom rows are the August 2001
+reissue builds; see [Gen 1 discs are 2001 reissues](#gen-1-discs-are-2001-reissues-2026-11-14):
 
 | Title | Gen | Linker (PE header) | Game C++ code | Other compiled objects |
 |---|---|---|---|---|
@@ -204,6 +256,9 @@ one build, and links neither `OLDNAMES.LIB` alias objects nor the
 `Linker600` import libraries Gen 1 uses. Its compiled-object count is
 higher (317 C and C++ objects against 237) and it imports through more
 library records (278 against 202), consistent with a larger code base.
+The Gen 1 exes compared here were built four weeks before Jinx's (both
+in 2001), so the two environments ran side by side; see
+[Gen 1 discs are 2001 reissues](#gen-1-discs-are-2001-reissues-2026-11-14).
 
 **Gen 3 (Case File #1):** ImageBuilder Software (IBS) inherited
 TerraGlyph's engine as **source** and rebuilt it with a newer compiler.
