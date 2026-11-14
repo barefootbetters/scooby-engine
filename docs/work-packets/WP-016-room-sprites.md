@@ -5,12 +5,28 @@ title: "WP-016: Room Sprites and Translucent Blending"
 
 # WP-016: A whole room on screen: placed sprites, draw order and translucent blending (Gen 1)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done (2026-11-14)
 **Phase:** 3 (resource loading; graphics)
 **Depends on:** WP-015 ✅ (cel decoder), WP-001 ✅ (draw order and blitters traced), WP-008 ✅ (`object.ini`)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half-day
 **Pre-flight:** [pre-flight-WP-016-2026-11-14](../reference/pre-flight-WP-016-2026-11-14.md)
+
+---
+
+## Result (2026-11-14)
+
+| Exit criterion | Result |
+|---|---|
+| 1. Draw order matches | ✅ At `graphics` level 3 the engine renders every room offscreen and logs its front-to-back order. The order matches the probe's tree code (`Sprite`, `placement_parent_depth`, `sequence_frame`) for all 69 Showdown and all 53 Phantom rooms. |
+| 2. Exact pixels | ✅ Each room surface's MD5 (row-major, little-endian words) matches an exact 565 model for all 122 rooms, translucent pixels included. The model reads the blend tables from each title's `Scooby.exe` and paints the probe's tree. The 1,280- and 1,920-pixel rooms are hashed at full width. |
+| 3. Screenshots | ✅ Town Center (the default first room) and the Saloon (`start_room=ROOM_P12_Saloon`) were captured from the ScummVM window and sent to Jeff. They match `probe_art.py --room` by eye: the signpost in front of Fred, the cactus-and-fence overlay over the gang's feet, and Scooby in front of Velma in front of Artie. |
+| 4. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. Fork commit [`8717f5da6b`](https://github.com/barefootbetters/scummvm/commit/8717f5da6b) stages its seven files by name, inside `engines/scooby/`, and is pushed. |
+
+**Notes:**
+
+- **Blend tables.** Read from WP-001's decompile of `0x439170` and dumped from both executables before any code was written. The 4-bit table is `17i`, as the probe assumed. The 5- and 6-bit tables round where the probe floors, so the exactness check uses a 565 model, not the probe's PNGs. The engine computes the tables from their closed form, and the model asserts that form against the dumped bytes.
+- **Not modelled.** Per-room code that claims objects by name, animation past step 0, and scrolling. The cel check from WP-015 still passes: 9,111 and 5,810 cels, 0 bad.
 
 ---
 
@@ -88,14 +104,14 @@ exactly as the original 565 blitter does.
 
 ## Exit criteria
 
-1. [ ] For every room in Showdown and Phantom, the engine's draw order
+1. [x] For every room in Showdown and Phantom, the engine's draw order
    matches `probe_art.py`'s traced order (`render_room`).
-2. [ ] For every room in both titles, the room surface matches an exact
+2. [x] For every room in both titles, the room surface matches an exact
    565 model built on the probe's tree code and the dumped tables, by MD5.
    This includes the translucent pixels.
-3. [ ] Screenshots of Town Center and Saloon in the ScummVM window match the
+3. [x] Screenshots of Town Center and Saloon in the ScummVM window match the
    probe's `--room` renders by eye.
-4. [ ] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`.
+4. [x] Scooby-only build: 0 errors and 0 warnings in `engines/scooby/`.
    The fork diff stays inside `engines/scooby/`, and only named files are
    staged in the shared checkout.
 
