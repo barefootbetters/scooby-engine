@@ -67,7 +67,7 @@ a PR unless every one of these is true:
 
 **Acceptance criterion:** The ScummVM launcher's "Add Game" dialog discovers a mounted *Showdown* disc without prompting the user to identify it manually.
 
-**Implementation notes:** *TBD.*
+**Implementation notes:** WP-010 and WP-012 (2026-11-14). `ScoobyMetaEngineDetection` derives from `AdvancedMetaEngineDetection<Scooby::ScoobyGameDescription>` and `ScoobyMetaEngine` from `AdvancedMetaEngine<Scooby::ScoobyGameDescription>`, so `createInstance()` receives the extended description (§3) and passes it to the engine. Detection was checked with `scummvm --detect --path=<disc root>` on each mounted ISO. That is the same advanced-detector code the "Add Game" dialog runs, but the dialog itself was not clicked through.
 
 ---
 
@@ -77,19 +77,46 @@ a PR unless every one of these is true:
 
 | Generation | Titles | Signature files |
 |---|---|---|
-| Gen 1 | Showdown, Phantom | `Scooby.exe`, `TGIFILE.ART`, `object.ini`, `Scooby.eng` |
-| Gen 2 | Jinx | `Scooby.exe` (in title-named subdir), `Mummy*.MMF`, `HD.MMA`, `HD.MMP` |
-| Gen 3 | Case File #1, Case File #2 | `Case File #N.exe`, `*.MMP`, `*.MMA`, `libexpat.dll`, `*.xml` launcher configs |
+| Gen 1 | Showdown, Phantom | `Scooby.exe`, `TGIFILE.ART`, `object.ini` (all in `\scooby\`) |
+| Gen 2 | Jinx | `Scooby.exe`, `Mummy.mms` (in `\Jinx\`), `Mummy.MMP` (disc root) |
+| Gen 3 | Case File #1 | `Case File #1.exe` (in `\MUSEUM\`), `Museum.MMS` (in `\MUSEUM\Scripts and Resources\`), `MuseumCD.MMP` (in `\Scripts and Resources\`) |
 
-Match on file presence + size; MD5 only for version differentiation. Never match on ISO filename or disc directory layout.
+Case File #2 runs a different engine and has no entry ([WP-005](work-packets/WP-005-engine-family-check.md)). Signature files are the ones WP-012 matches. Earlier drafts of this table listed `libexpat.dll` and loose `*.xml` files for Gen 3; the XML is inside the MMFW archives.
+
+Match on file presence, size and MD5. The MD5 covers the first 5,000 bytes, the advanced detector's default, so detection stays fast on 100 MB archives. Never match on ISO filename or disc directory layout.
 
 **Per-entry generation flag.** Each detection-table row carries a `gen` field (or equivalent flag in the `flags` bitfield) recording which generation the title belongs to. The engine reads this at startup and selects the appropriate archive parser, config parser, and cutscene path. This is the load-bearing piece — without it, the engine would need either runtime format sniffing (slow + brittle) or per-title hardcoded paths (PR-blocking).
 
 **Upstream reference:** `engines/advancedDetector.h`; `engines/<engine>/detection_tables.h` patterns across existing engines. For multi-format engines see existing engines with a `flags` field carrying format-version info (e.g. AGI's `GType_*` field).
 
-**Acceptance criterion:** Each of the five in-scope candidate ISOs is detected with the correct generation flag (Showdown=1, Phantom=1, Jinx=2, Case File #1=3, Case File #2=3 predicted). Case File #3 (Flash re-release) is correctly rejected. No false positives on a directory containing unrelated DOS/Windows-era game files.
+**Acceptance criterion:** Each of the four in-scope ISOs is detected with the correct generation flag (Showdown=1, Phantom=1, Jinx=2, Case File #1=3). Case File #2 (a different engine, per WP-005) and Case File #3 (a Director title) are not detected. No false positives on a directory containing unrelated DOS/Windows-era game files. *(Revised 2026-11-14 by WP-012; the original asked for five ISOs with Case File #2 as Gen 3.)*
 
-**Implementation notes:** *TBD. Cross-reference `docs/formats/tgifile-art.md` (Gen 1) and `docs/formats/mmfw-container.md` (Gen 2/3) for the MD5 / size values to embed here. The `gen` flag is the cleanest extension point — Phase 3 archive code can dispatch on it without expanding the detection table again later.*
+**Implementation notes:** WP-012 (2026-11-14). `detection.h` declares:
+
+```cpp
+enum ScoobyGeneration { kGen1 = 1, kGen2 = 2, kGen3 = 3 };
+
+struct ScoobyGameDescription {
+	AD_GAME_DESCRIPTION_HELPERS(desc);
+
+	ADGameDescription desc;
+	ScoobyGeneration generation;
+};
+```
+
+The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` has four entries:
+
+| Game id | Title | Generation | Flag |
+|---|---|---|---|
+| `showdown` | *Showdown in Ghost Town* | 1 | `ADGF_UNSTABLE` |
+| `phantomknight` | *Phantom of the Knight* | 1 | `ADGF_UNSTABLE` |
+| `jinxsphinx` | *Jinx at the Sphinx* | 2 | `ADGF_UNSUPPORTED` |
+| `casefile1` | *Case File #1: The Glowing Bug Man* | 3 | `ADGF_UNSUPPORTED` |
+
+- **Game ids.** `phantom` and `jinx` are already used by MADS (*Return of the Phantom*) and Glk/Adrift. Two engines with the same id make a bare id on the command line ambiguous, so the entries use `phantomknight` and `jinxsphinx`.
+- **Flags.** Gen 1 is `ADGF_UNSTABLE` while it is being built. Gen 2 and Gen 3 are detected but `ADGF_UNSUPPORTED`, so the launcher refuses to start them until their archive readers exist. Moving an entry to a playable flag is a Phase 3 or Phase 5 change, not a table restructure.
+- **Directories.** `_maxScanDepth = 3` and `_directoryGlobs` = `scooby`, `jinx`, `museum`, `scripts and resources`. Matching is by base name. The disc root works for all four titles. For Showdown and Phantom the `\scooby\` directory alone also works. Jinx and Case File #1 keep their signature files in two directories, so they need the root.
+- **Values.** Sizes and MD5s are in the fork's [`detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/detection_tables.h). The sizes match the [`tools/exes/` identity tables](../tools/exes/README.md#currently-cached).
 
 ---
 

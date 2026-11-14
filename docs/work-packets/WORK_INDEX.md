@@ -9,7 +9,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 > Each WP is one unit of work with a goal, dependencies, and exit criteria.
 > ECs are step-by-step checklists for the WPs most likely to sprawl.
 >
-> **Last updated:** 2026-11-14 (WP-013 ✅: *Activity Challenge* runs Jinx's engine, Gen 2)
+> **Last updated:** 2026-11-14 (WP-012 ✅: detection table with an engine generation; WP-013 ✅: *Activity Challenge* runs Jinx's engine, Gen 2)
 >
 > **Status vocabulary (closed set):**
 > ✅ Done · 🚧 In Progress · 📝 Drafted (WP file authored, not yet started) · 📦 Queued (deps met, WP file not yet authored) · ⏸ Blocked (dep unmet) · 🔮 Placeholder (forward-looking, intentionally not authored)
@@ -18,12 +18,13 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 
 ## Current state
 
-**Current phase:** Phase 2. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM; the next Phase 2 work is the detection table.
+**Current phase:** Phase 2. The scaffold (WP-010 ✅ 2026-11-13) builds against the pinned ScummVM, and the detection table (WP-012 ✅ 2026-11-14) recognises the four in-scope discs with their generations. Phase 2's provisional scope is done; Phase 3 (Gen 1 resource loading) is next.
 **Primary blocker:** none for images. ~~WP-002 (TGIFILE.ART payload decode)~~ ✅ 2026-11-13: every `TGIFILE.ART` image decodes (RLE over big-endian RGB565). Phase 1 exit criterion #1 is met on recognizability, so Phase 2 is no longer blocked by art. Phase 1 exit criterion #3 (audio codec) is met by WP-004 ✅ 2026-11-13, and #4 (engine-family answer) by WP-005 ✅ 2026-11-13. All four Phase 1 exit criteria are met.
 **Next unblocked:** Phase 0 pre-work. WP-007 ✅ landed 2026-06-02; WP-003 ✅ landed 2026-06-02; **WP-008 ✅ landed 2026-06-03** (object.ini interpreter behavior characterized; engine is name-driven, MODE_A). Remaining order: WP-010 (WP-001 ✅, WP-002 ✅ and WP-009 ✅ 2026-11-13). The WP-003 baseline (pre-payload region characterized as the engine name table; no palette present; off-by-4 header-offset correction landed) is now available to WP-001 (palette-hunt scope drops from EC-001; the OBJ→asset-entry 1:1 mapping cuts asset-resolution scope) and to WP-002 (first-decode strategy: palette is NOT in the pre-payload region — it is either per-asset leading bytes or per-record metadata; investigate both). The WP-008 baseline (engine name-driven, 215 OBJ_* sections discriminated by `ID=`, deterministic naming rule confirmed) gives WP-002's `probe_art.py` a direct labeling path (`entry_<index>_<wp003_name>.png`) and gives WP-009 a canonical room-ID list to use for screenshot naming.
 
 ### Phase 1 findings landed (2026-06)
 
+- **WP-012 detection table (2026-11-14): four discs, each with its generation.** The fork detects Showdown (`showdown`, Gen 1), Phantom (`phantomknight`, Gen 1), Jinx (`jinxsphinx`, Gen 2) and Case File #1 (`casefile1`, Gen 3) from the disc root, each on three files by size and MD5. Gen 2 and Gen 3 are marked unsupported for now. Case File #2, Case File #3 and *Activity Challenge* are not matched. *Activity Challenge* has no entry yet; WP-013 has since classified it as Gen 2. [Evidence](WP-012-detection-table.md#result-2026-11-14).
 - **WP-013 *Activity Challenge* verdict (2026-11-14): Gen 2, Jinx's engine.** Its `Scooby.exe` comes from the same source tree as Jinx's (`C:\Projects\Scooby\Bonus\Mmfw\` beside `C:\Projects\SCOOBY\mummy\Mmfw\`) and was linked a day earlier. All 112 of its `MM*` classes are Jinx classes, and 532 of its 549 engine strings are Jinx's. Its four `MMFW` archives open with Jinx's header bytes. Its game layer is its own: mini-games around a campfire hub. VISION's "almost certainly a different engine" is withdrawn, and the title moves from Excluded to **Unassigned** in the Phase 5 scope rule; placing it in a tier is a separate decision. [Evidence](../formats/scooby-exe.md#activity-challenge-wp-013).
 - **Toolchain corrected (2026-11-14): Visual C++ 6.0, not 5.0.** `tools/rich_header.py` mislabelled Rich Header product IDs (it called the VC6 C compiler "Linker 5.10" and the VC6 C++ compiler "MASM 6.13"). Checked against Microsoft's `prodid` enum names, richprint's comp.id database and each binary's PE header (linker 6.00 in all five); the script is fixed. Game C++: Gen 1 build 8966, Jinx 8168, Case File #1 the VC6 Processor Pack (8943). The build-number grouping across generations holds; the "Gen 2 upgrade" and "IBS shipped Jinx's `.obj` files" readings do not. For decompdecomp, which supplies VC 6.0, byte-identical matches become plausible. [Evidence](../formats/scooby-exe.md#toolchain).
 - **WP-010 ScummVM scaffold (2026-11-13): builds clean, pin recorded.** The `barefootbetters/scummvm` `scooby-engine` branch is based on `c553503d9d`. It builds with MSYS2 UCRT64, with the engine enabled (0 warnings in `engines/scooby/`) and disabled (default engine set, scooby absent). The five debug channels are listed by `--list-debugflags=scooby`. Upstream's `AI-GUIDELINES.md` (no AI co-authorship, human maintainer) is recorded as a Phase 5 decision. [Evidence](WP-010-scummvm-scaffold.md#result-2026-11-13).
@@ -91,9 +92,13 @@ Authored after Phase 1 exit. Tracked here to maintain phase ordering only.
 |---|---|
 | Fork `scummvm/scummvm`; pin commit hash in `02-SCUMMVM-INTEGRATION.md` | **Moved to WP-010 (Phase 0)** |
 | Create `engines/scooby/` skeleton with `module.mk`, `configure.engine`; debug channel stubs | **Moved to WP-010 (Phase 0)** |
-| `MetaEngineDetection` + `MetaEngine` subclasses; engine class with empty `run()` | [`02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION.md) §1, §2 |
-| `ADGameDescription` table populated from Phase 1 findings, **carrying a per-entry generation flag** (Gen 1/2/3) per the engine lineage finding | §3 |
+| `MetaEngineDetection` + `MetaEngine` subclasses; engine class with empty `run()` | **Done in WP-010** ([`02-SCUMMVM-INTEGRATION.md`](../02-SCUMMVM-INTEGRATION.md) §1, §2) |
+| `ADGameDescription` table populated from Phase 1 findings, **carrying a per-entry generation flag** (Gen 1/2/3) per the engine lineage finding | **[WP-012](WP-012-detection-table.md) ✅ 2026-11-14** (§3) |
 | `POTFILES` (after translatable strings exist) | §10 |
+
+| WP | Title | Status | Depends on | EC | Notes |
+|---|---|---|---|---|---|
+| [WP-012](WP-012-detection-table.md) | Detection table with a per-entry generation flag | ✅ Done (2026-11-14) | WP-010 ✅, WP-005 ✅, WP-006 ✅ | — (inline) | Four entries (Showdown and Phantom Gen 1, Jinx Gen 2, Case File #1 Gen 3), tested on the mounted ISOs. Fork commit `5a88016fea`. Game ids `phantomknight` and `jinxsphinx` avoid ids other engines use. See [WP-012 §Result](WP-012-detection-table.md#result-2026-11-14). Pre-flight: [pre-flight-WP-012-2026-11-14](../reference/pre-flight-WP-012-2026-11-14.md). |
 
 ---
 
@@ -160,6 +165,7 @@ This section carries only 1–2 representative thumbnails as a teaser linking to
 - Format specs: [docs/formats/tgifile-art](../formats/tgifile-art.md), [audio-archives](../formats/audio-archives.md), [scooby-exe](../formats/scooby-exe.md), [mmfw-container](../formats/mmfw-container.md)
 - Phase 0 WPs: [WP-007](WP-007-strings-and-imports.md), [WP-008](WP-008-object-ini-catalog.md), [WP-009](WP-009-reference-screenshots.md), [WP-010](WP-010-scummvm-scaffold.md)
 - Executable analysis: [WP-001](WP-001-ghidra-session.md) (Ghidra), [WP-011](WP-011-casefile-decompdecomp.md) (decompdecomp collaboration)
+- Phase 2 WPs: [WP-012](WP-012-detection-table.md) (detection table)
 
 ---
 
