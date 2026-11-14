@@ -5,11 +5,52 @@ title: "WP-004: Audio Archive Decode"
 
 # WP-004: Audio archive index + codec identification
 
-**Status:** 📝 Drafted
+**Status:** ✅ Done (2026-11-13)
 **Phase:** 1 — Format Research
 **Depends on:** —
 **Companion EC:** — (single afternoon's work; no checklist needed)
-**Estimated effort:** Half-day to 1 day
+**Estimated effort:** Half-day to 1 day. Actual: one session, after WP-001 had already found the index.
+**Pre-flight:** [pre-flight-WP-004-2026-11-13](../reference/pre-flight-WP-004-2026-11-13.md)
+
+---
+
+## Result (2026-11-13)
+
+All three files are a name-indexed set of **uncompressed PCM** clips. The
+full spec is in [audio-archives.md](../formats/audio-archives.md).
+
+- **Index:** the header's third field is the index offset. The index holds
+  68-byte `(offset, name)` records and ends at EOF (found during WP-001,
+  confirmed here).
+- **Clip:** a 16-byte header with data size, rate, channels, bits, pan,
+  volume, loop flag, lip-sync fps and lip-sync count. After it come the
+  lip-sync bytes and zero padding, then PCM from the next 2,048-byte sector.
+- **Engine:** `SoundStream::Open` (`0x446010`) builds a `wFormatTag = 1`
+  `WAVEFORMATEX` from the header and streams the bytes into a DirectSound
+  buffer with no decoder.
+- **Data:** `tools/probe_audio.py --verify` checks the header rules, the
+  zero padding and the slot fit on all 1,165 clips. A signal check gives a
+  median of 0.29–0.33 in every file, where a misread gives about 1.1.
+- **Mistake caught mid-session:** a first reading that put the PCM right
+  after the lip-sync block turned odd-length voice clips into noise. The
+  signal check caught it, and the engine's own read position confirmed the
+  fix.
+
+| Exit criterion | Result |
+|---|---|
+| 1. Codec named | ✅ Uncompressed PCM (`wFormatTag` 1) in all three files: 22050 Hz 16-bit signed LE, mono or stereo; 4 clips at 44100 Hz; one 8-bit unsigned clip |
+| 2. A clip extracted and plays externally | ✅ `--extract` writes WAVs. Four clips (voice, two sfx, music) decode in ffmpeg as `pcm_s16le` with normal levels. I measured them rather than listened; Jeff to confirm by ear. |
+| 3. Index location and record format documented | ✅ |
+| 4. Third header field resolved | ✅ Index offset |
+| 5. ScummVM codec coverage | ✅ `Audio::makeRawStream` (`audio/decoders/raw.h`); no new decoder; Miles not involved |
+
+Also found: voice clips carry a lip-sync track, one mouth shape (0–6) per
+frame at 12 or 30 fps. The high bits on some shape bytes are not traced.
+No dialogue text was found alongside the clips.
+
+**Deliverable note:** the WP lists `tools/samples/audio-clip-0.<ext>`.
+Extracted clips are copyrighted derivatives, so they stay local
+(`tools/samples/` is gitignored), named `<clip name>.wav`.
 
 ---
 

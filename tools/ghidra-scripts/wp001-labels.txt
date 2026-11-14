@@ -71,3 +71,6 @@
 0043c5a0 audio_SoundFile_ctor
 0043ce80 audio_SoundFile_Find
 0043cf20 audio_SoundFile_PreloadPrefix
+00446010 audio_SoundStream_Open
+00445550 audio_SoundStream_SetFormat
+00442fb0 audio_CopyLipSync
