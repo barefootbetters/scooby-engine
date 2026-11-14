@@ -81,7 +81,10 @@ Phantom's Rich Header matches Showdown's (six more C++ objects). The
 prediction is that Phantom's archives are therefore also Gen 1
 `TGIFILE.ART`. But Phantom shipped in Aug 2001 and Jinx in Oct 2001 —
 TerraGlyph cut the Gen 2 format somewhere in that window, and we don't
-know yet which side of the cut Phantom lands on.
+know yet which side of the cut Phantom lands on. (*Corrected 2026-11-14:*
+August 2001 is the reissue disc's date, not Phantom's first release; its
+game data dates from September–October 2000. See
+[scooby-exe §Gen 1 discs are 2001 reissues](../formats/scooby-exe.md#gen-1-discs-are-2001-reissues-2026-11-14).)
 
 Locking this in matters for:
 

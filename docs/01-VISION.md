@@ -66,7 +66,10 @@ shortcuts for each disc, recording the provenance of the rips.
 
 **Provenance check (2026-06):** archive.org and MobyGames confirm the five
 core ISOs are original Learning Company pressings (only Case File #3 is a
-re-release). Developer attribution splits the list into two eras:
+re-release). *Refined 2026-11-14:* the Showdown and Phantom discs are TLC's
+August 2001 re-pressing of both games (installer version 1.2, exes
+"Gold v1.19" and "Gold v1.16"), not their first 2000 pressings; see
+[scooby-exe §Gen 1 discs are 2001 reissues](formats/scooby-exe.md#gen-1-discs-are-2001-reissues-2026-11-14). Developer attribution splits the list into two eras:
 
 - **TerraGlyph Interactive Studios** developed *Showdown* (2000),
   *Phantom of the Knight* (2001), and *Jinx at the Sphinx* (2001). TLC
@@ -112,11 +115,13 @@ says linker 6.00. The build numbers still group the titles the same way;
 what they mean changed. Evidence and sources:
 [scooby-exe §Toolchain](formats/scooby-exe.md#toolchain).
 
-The Gen 1 → Gen 2 jump (mid-2001) coincides with a change of TerraGlyph
-build environment: Jinx compiles everything with VC6 build 8168, the
-release build, where Gen 1's game code is the later 8966 (SP5). The
-2026-06 text called this an upgrade; the compiler build went the other
-way. The Gen 2 → Gen 3 jump (late 2001 / 2002) coincides with the
+The Gen 1 → Gen 2 jump coincides with a different TerraGlyph build
+environment: Jinx compiles everything with VC6 build 8168, the release
+build, where Gen 1's game code is the later 8966 (SP5). The 2026-06 text
+called this an upgrade; the compiler build went the other way. The Gen 1
+exes we have are August 2001 reissue builds, made four weeks before
+Jinx's, so the two environments were in use at the same time; what the
+2000 release exes were built with is unknown. The Gen 2 → Gen 3 jump (late 2001 / 2002) coincides with the
 TerraGlyph shutdown and ImageBuilder Software (IBS) taking over
 development, shown by:
 
@@ -184,7 +189,9 @@ reuse. This is the strongest possible engine-family signal.
   the same disc (see above). The 2026-06-03 "Gen 4" label is withdrawn.
 - **Phantom (2001): Gen 1 confirmed** — `TGIFILE.ART` present on disc (≈109 MB vs
   Showdown's 144 MB), `binkw32.dll` hash identical to Showdown (same Bink SDK build),
-  `Scooby.exe` build date 2001-08-22 (same as Showdown — shared release cycle).
+  `Scooby.exe` build date 2001-08-22, the same as Showdown's, because both
+  cached discs are the August 2001 reissue (corrected 2026-11-14; the
+  2026-06 text read this as a shared original release cycle).
   Archive format locked to Gen 1. **Verified structurally by WP-006
   (2026-11-13):** Phantom's `TGIFILE.ART` passes every `--verify` check and
   its `.dat` audio passes `probe_audio.py --verify`. All 71 functions WP-001
