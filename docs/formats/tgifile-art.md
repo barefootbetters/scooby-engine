@@ -528,6 +528,26 @@ nibble, then 4-bit red, green and blue. The blitter (`0x439170` for a 565
 screen, `0x4394D0` for 555) expands each nibble to 8 bits through a table
 and blends `out = (dst × (255 − a) + src × a + 0x80) >> 8`.
 
+**Blend tables (WP-016, 2026-11-14).** The 565 blitter expands every channel through static
+`int32` tables in `.data`. Showdown has them at `0x4708DC` (4-bit), `0x47075C` (5-bit) and
+`0x4707DC` (6-bit); Phantom's bytes are identical.
+
+```
+T4[i] = 17 × i
+T5[i] = round(255 × i / 31)   (= (255i + 15) / 31)
+T6[i] = round(255 × i / 63)   (= (255i + 31) / 63)
+
+a   = T4[src >> 12]
+R8  = (T5[dst >> 11]        × (255 − a) + 0x80 + T4[src >> 8 & 15] × a) >> 8
+G8  = (T6[dst >> 5 & 63]    × (255 − a) + 0x80 + T4[src >> 4 & 15] × a) >> 8
+B8  = (T5[dst & 31]         × (255 − a) + 0x80 + T4[src & 15]      × a) >> 8
+out = (R8 >> 3) << 11 | (G8 >> 2) << 5 | (B8 >> 3)
+```
+
+`probe_art.py`'s `rgb()` floors the 5- and 6-bit expansion, and its renders
+composite in 8-bit RGBA. They are a visual reference, not the exact 565
+screen.
+
 **Transparency.** The masks decide it, not the pixel value. Mask A marks
 opaque pixels, mask B translucent ones, and every other pixel is
 transparent. Checked over all 9,042 sprite cels (`--verify`): masks A and B

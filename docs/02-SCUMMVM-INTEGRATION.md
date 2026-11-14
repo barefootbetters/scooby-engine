@@ -161,6 +161,9 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
   - Every cel's pixels and coverage match `probe_art.py` (MD5 per cel): 9,111 in Showdown, 5,810 in Phantom.
   - The screen after drawing room 0 matches the probe's composite pixel for pixel.
 - **Wide rooms.** Rooms 1,920 pixels wide show their left 640 pixels; scrolling is not done yet.
+- **Whole rooms (WP-016, 2026-11-14).** `Scooby::RoomRenderer` (`engines/scooby/room.{h,cpp}`) builds a room as the original sets it up on entry. It creates the layer sprites, then one sprite per placement at step 0 of its sequence, in the traced sprite tree. Placement kinds come from `object.ini`, which is read through `Common::INIFile`. It paints back to front into a room-sized RGB565 surface. `Cel::draw()` copies opaque pixels and blends translucent ones with the original 565 blitter's formula and tables ([tgifile-art §Cel format](formats/tgifile-art.md#cel-format)).
+  - For all 69 Showdown and 53 Phantom rooms, the draw order and room surface (MD5) match an exact 565 model.
+  - An optional `start_room` key in the game's config domain picks the first room. It is a test convenience to revisit before Phase 5.
 
 ---
 
