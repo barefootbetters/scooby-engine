@@ -203,13 +203,28 @@ the XML parser introduction, is an IBS-era architectural choice — not
 a TerraGlyph one — and the import-table evidence now corroborates the
 disc-side evidence.
 
-### Pending: Phantom archive format
+### Phantom archive format and engine code (WP-006)
 
-Phantom's Rich Header matches Showdown's exactly (Gen 1 by toolchain),
-but its archive format is not yet verified. Predicted to be Gen 1
-`TGIFILE.ART`, not Gen 2 `MMFW`, but a one-minute
-`Format-Hex E:\scooby\TGIFILE.ART -Count 8` check on the mounted
-Phantom disc settles it.
+Settled 2026-11-13. Phantom's `TGIFILE.ART` is the Gen 1 format and passes
+every `--verify` check ([tgifile-art §Cross-title verification](tgifile-art.md#cross-title-verification-2026-06)),
+and its `.dat` audio files pass `probe_audio.py --verify`
+([audio-archives](audio-archives.md)).
+
+The code agrees. All 71 functions labelled by WP-001
+([`wp001-labels.txt`](../../tools/ghidra-scripts/wp001-labels.txt)) were
+compared between the two `Scooby.exe` builds, with absolute addresses
+and `call`/`jmp` targets masked. All 71 are identical over the compared span
+(up to the next label, at most 2 KB). Functions below `0x40B000` (exit,
+inventory, requires and clickable objects, characters, `object.ini`) sit at
+the same addresses. From `0x430790` up (sprites, the sequence player, the
+resource manager, the art-file loader and relocation, the renderer, audio)
+Phantom's copies sit `0xD30` higher. So the WP-001 labels apply to Phantom
+with that shift, and the character-name table moves from `0x46A720` to
+`0x469720` with the same 20 entries. Showdown's engine was built with
+Phantom's cast already in that table.
+
+Method: a byte comparison in a session script. Ghidra was not run on
+Phantom's binary.
 
 ### String literals (WP-007)
 
