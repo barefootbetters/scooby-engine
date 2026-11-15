@@ -152,6 +152,26 @@ Four short emails from Mony, sent over one evening and the next morning, his tim
 - **Research target 4 narrows.** The XML parser is stock Expat 1.95.3, so there's no parser to reverse engineer. What's left is the game's own code: what calls Expat, and the element handlers that read `launch.xml` and the XML inside the `MMFW` archives. ScummVM already has an XML parser of its own (`Common::XMLParser`), so the engine reads those files without Expat (Inferred; to check when the files' schema is known).
 - **Progress slowed and moved to bigger functions.** In about a day the count went from 2,078 to 2,086, eight functions, while matched code went from 28.2 % to 30.5 %. That's what [§Update from the collaborator](#update-from-the-collaborator-2026-11-12) predicted: the remaining functions are the large ones.
 
+### Reply on the compiler build (2026-11-15)
+
+We sent Mony the Rich Header's per-object builds and pointed him to decomp.me's Processor Pack compiler. His reply is **Reported**.
+
+| Item | Reported value |
+|---|---|
+| Build 8943 | He couldn't find it when he searched, so he assumed it was a rare beta. He hadn't thought of decomp.me. |
+| Compilers | He'll give the agents decomp.me's compilers at the builds the Rich Header names. He expects that to raise the match rate for quite a few functions. |
+| Matched code | 28.4 %, with `libexpat.dll` removed |
+| Functions matched | 1,765 of 2,760, with 995 left |
+| Last agent attempt | One attempt matched 40 functions at once, just before his usage ran out |
+| Status | Out of all AI usage, and in the middle of a lot of work on the decompilation repository. He'll say when it's done. |
+| Next games | He'll start decompiling the games this project is working on now "soon". Those are the Gen 1 titles: Showdown and Phantom (WP-020 to WP-036). |
+
+**What this changes:**
+
+- **The "between 6 and 7" build is the Processor Pack.** He took the Rich Header reading. A beta compiler was his guess, made because the build couldn't be found. Case File #1's C++ was built with a released compiler, and decomp.me has it. [Open question 7](#open-questions) now hangs on one measurement: how many functions match once the project uses that build.
+- **The new totals aren't comparable with the old ones.** Before: 2,086 of 3,371 and 30.5 %. After: 1,765 of 2,760 and 28.4 %. The total dropped by 611 functions, but the [first look](#first-look-at-the-repository-2026-11-11) counted only 313 in `libexpat.dll`. So something more than Expat also left the count, unless his tool counts differently from that summary. Ask him what else was removed. Matched code fell from 30.5 % to 28.4 %, which suggests the removed code was matched at a higher rate than the rest (Inferred).
+- **A Gen 1 project needs the same executables as ours.** This project's Showdown exe is the 2001 `Gold v1.19` patch build ([§Gen 1 discs are 2001 reissues](../formats/scooby-exe.md#gen-1-discs-are-2001-reissues-2026-11-14)). Before he starts, compare his Showdown and Phantom executables with the [WP-007 locks](../formats/scooby-exe.md#binary-identity-wp-007-baseline): Showdown `13284543…7478` (487,473 bytes) and Phantom `619EA687…07ED` (483,377 bytes). If his are another build, function addresses won't line up with this project's notes. That answers [open question 20](#open-questions) in practice: a Showdown project comes now, not after Case File #1.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -378,7 +398,7 @@ For the host, about the room:
 For Jeff:
 
 19. Past the capped trial, does this project commit agent capacity to finishing Case File #1 with the host, as he proposes? The trial's cost per match on the remaining, larger functions is the input to that decision. *Deferred (Jeff, 2026-11-13):* decide after the trial. Until then the host finishes Case File #1 at his own pace, and this project uses what it turns up.
-20. Would the host take on Showdown (Gen 1) as the next decompdecomp project, ahead of Case File #2? Showdown is this project's primary target. *Answered (2026-11-14, Reported):* yes. Once Case File #1 is finished, Showdown comes next, before the rest. He questions the VC5 reading of the toolchain: he finds Case File #1 is mostly VC6, and will see when Showdown is imported. He was right: the VC5 reading was a tool mislabel, corrected the same day (see the 2026-11-14 decision-log rows).
+20. Would the host take on Showdown (Gen 1) as the next decompdecomp project, ahead of Case File #2? Showdown is this project's primary target. *Answered (2026-11-14, Reported):* yes. Once Case File #1 is finished, Showdown comes next, before the rest. He questions the VC5 reading of the toolchain: he finds Case File #1 is mostly VC6, and will see when Showdown is imported. He was right: the VC5 reading was a tool mislabel, corrected the same day (see the 2026-11-14 decision-log rows). *Updated 2026-11-15 (Reported):* he'll start on the Gen 1 games "soon", not after Case File #1 is finished ([§Reply on the compiler build](#reply-on-the-compiler-build-2026-11-15)).
 
 ## Immediate next actions
 
@@ -457,6 +477,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-14 | **Ghidra inside decompdecomp installed on the Windows JDK route (Observed).** With Oracle JDK 27.0.1 on the PATH (`javac` beside `java`, installed 2026-11-13), decompdecomp's **Install** on the Ghidra card fetched only NSA's `ghidra_12.1.4_PUBLIC_20260921.zip` into `%LOCALAPPDATA%\decompnet\toolchains\ghidra` (2026-11-13). Its toolchain manifest records `"wsl": false`; no Temurin or other JDK was downloaded; and `wsl --list --verbose` still reports no installed distribution, although WSL 3.0.5 itself is present. This confirms the 2026-11-11 reading of its source: a Windows JDK 21+ avoids WSL entirely. JDK 27 is newer than the LTS releases the [setup page](../reference/decompdecomp-setup.md#3-install-java) suggests, and works. |
 | 2026-11-14 | Collaborator reply on tool versions (**Reported**): the same decompdecomp release as ours (`v1.0.10-alpha.1`), updated to each new release; the compilers and Ghidra decompdecomp supplies; decompdecomp's detected flags, varied per function; about 6 or 7 functions detected as 7.x; mostly DeepSeek and Claude, one instance each for now. His VC6 service pack is still to check ([open question 7](#open-questions)). Open question 17 answered. A current room link came with the reply; links aren't recorded. See [§Tool versions from the collaborator](#tool-versions-from-the-collaborator-2026-11-14). |
 | 2026-11-14 | Collaborator emails (**Reported**): 30.5 %, 2,086 of 3,371 functions; scripts that permute near matches past decompdecomp's bounded pass, through its internal HTTP API; `libexpat.dll` comes out of the project because it is open-source Expat; he'll move to the next decompdecomp release; and the game's compiler is a build between 6 and 7, which he's testing for the project default. **Observed the same day:** decompdecomp's `6.0` is VC6 RTM 8168, while Case File #1's C++ is Processor Pack 8943, which fits his finding; the DLL is Expat 1.95.3; decompdecomp `v1.0.10-alpha.2` is out (this PC runs `alpha.1`). [Open question 7](#open-questions) partly answered. See [§Progress, libexpat and the compiler build](#progress-libexpat-and-the-compiler-build-2026-11-14-to-11-15). |
+| 2026-11-15 | Collaborator reply (**Reported**): he takes the Processor Pack reading and will give the agents decomp.me's compilers at the Rich Header's builds; 28.4 %, 1,765 of 2,760 functions with `libexpat.dll` removed, 995 left; one agent attempt matched 40 functions at once; out of AI usage for now. He'll start decompiling the Gen 1 games "soon", so their executables need comparing with the WP-007 locks first. The total fell by 611, more than libexpat's 313, which is to ask him about. See [§Reply on the compiler build](#reply-on-the-compiler-build-2026-11-15). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
