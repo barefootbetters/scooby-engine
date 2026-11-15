@@ -2389,6 +2389,45 @@ first scenes are their openings (`+0x78`). The base room starts an opening
 only then does `0x40B400` turn the music down. Credits' opening is the
 factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
 
+##### Street 2 and Street 3 (WP-033)
+
+Traced 2026-11-14 for [WP-033](../work-packets/WP-033-streets.md), in
+Showdown. Both rooms have the music group 2 and no opening of their own
+(their constructors pass `2` and an empty string; Street 3's passes
+`Street_3.320A_`).
+
+**Street 2** (`0x42C3E0`, vtable `0x45F27C`):
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42CB40` | `+0x30` | Before the opening: `Street_1.130A_` (`0x40C6B0`) while `MoaningActive`, else none; not played (`+0x10` = 0). So it plays on every visit while the moans are on. Street 1's `+0x30` (`0x42BCD0`) is the same |
+| `0x42C440` | `+0x0C` entry | Gummy, if built: `SLEEPS` looping (`0x406210`, state `0x10`) until `GummyPuzzle`. With `GummyPuzzle` and Gummy a clue owner (`0x40A870`, `ClueOwners`, game `+0xD8`), he and the donkey are 50.0 along. Both get hit type 0 (`+0x4`). Walk-ins: from the general store Daphne `UR`; from the station Fred `UL`; from Town Center Fred `DL` (`0x405F20`) and Daphne `DR` (`0x405EA0`) |
+| `0x42C7A0` | `+0x18` placements | `OBJ_DONKEY…` and `OBJ_GUMMY…`: not built until Artie is met (`0x40A930`). `OBJ_P04_STREET2_CLOCK`: a plain sprite in layer 0, depth 0, `ANIM_P04_STREET2_CLOCKA`, or `…CLOCKB` once `OBJ_INV_CLOCK` is taken. `OBJ_P04_STREET2_WINDOW`: a plain sprite in layer 0, depth −1, hit type 0, once Gummy is a clue owner; else not built |
+| `0x42CAE0` | `+0x14` event | `OBJ_P04_STREET2_HOTSPOT1`: `Street_2.100C_`; `…HOTSPOT2`: `Street_2.100D_`; neither blocks |
+| `0x42C600` | `+0x24` exit | To `ROOM_P10_Front_Of_General_Store`, the scene is `Street_2.General_Store1_` or `…2_` (`rand() & 1`); then the base exit |
+
+**Street 3** (`0x42CB80`, vtable `0x45F2C0`):
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42CBE0` | `+0x08` reset | The moan timer (`+0xB8`) at 36 ticks; the music flag (`+0xBC`) on; the hotspot scene (`+0xC8`) at 0 |
+| `0x42CE50` | `+0x0C` entry | From Town Center Fred `DL`; from the Saloon Velma `U`; from the Bank Shaggy `UR`. The music flag on |
+| `0x42CD10` | `+0x04` tick | Moans (`Street_3.Moan.1`–`4`) every 5–14 seconds with `MoaningActive`. Hotspot 2 stopped with the music flag on: the flag off and the music group 2 (`0x40AA10`), whose next variant plays because the group changed. On step 3 of `ANIM_P11_STREET3_HOTSPOT3B`: `Street_3.HOTSPOT3_`, blocking |
+| `0x42CF00` | `+0x18` placements | `OBJ_P11_STREET3_HOTSPOT2` and `…HOTSPOT3`: clickables under their `layer=`, kept |
+| `0x42CC10` | `+0x14` event | `OBJ_P11_STREET3_HOTSPOT`: `Street_3.130X1_`, `…130X2_`, `…130X3_` in turn, blocking. `…HOTSPOT2`: the music group −1 and the music flag on. The hotspot's own sound, `SFX_P11_STREET3_HOTSPOT2A`, is in `Music.dat` and so replaces the music |
+| `0x42CCC0` | `+0x34` idle chatter | `rand() & 1`: `Street_3.100B2_` with `MoaningActive`, or `Street_3.1100A_` |
+
+**Shared pieces:**
+
+- **Walk-ins** (`0x405E60` `UR`, `0x405EA0` `DR`, `0x405EE0` `UL`,
+  `0x405F20` `DL`, `0x405FE0` `U`). Each keeps the depth (`+0x9C`), moves
+  50 behind it for `U…` and 50 in front for `D…`, and goes to state 1.
+- **State `0x10`** (`0x406210`): `ANIM_<NAME><set><action>` looping, and it
+  stays.
+- **Hit type 0** is never hit: the hit walk (`0x4311F0`) tests only types 1
+  and 2.
+- **A plain sprite** (`graphics_AnimSprite_ctor`) takes its parent, depth,
+  mode (1, looping) and ticks a step (3); a room may set its hit type.
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
