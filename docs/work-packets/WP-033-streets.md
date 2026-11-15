@@ -27,6 +27,7 @@ title: "WP-033: Street 2 and Street 3"
 
 - **Street 1 is WP-034.** It needs the clue each suspect gives (game vtable `+0x44`, `0x42F990`, chosen by the villain), the Sheriff, the pump, the strong box key and the brick that sets `FinalClue`.
 - **Hit type 0** now means "never hit" for every sprite, as `0x4311F0` has it; before, the fork treated it as 1. Nothing else sets it.
+- **A room's plain sprite is hit by its cels** (type 1), as `graphics_Sprite_ctor` (`0x430D60`) leaves it. Only the default placement path sets 2 (`0x4094C0`). This WP's sprite claims defaulted to 2, so Street 2's clock was hit by its polygon. The WP-001 session noticed it while doing WP-037. Fixed on 2026-11-15 in fork [`36ce94a2f5`](https://github.com/barefootbetters/scummvm/commit/36ce94a2f5). The default is now 1, which changes only the `hit` value in 16 check lines: Street 2's clock and the chase rooms' branches, P25 overlay and canned run-offs.
 - **Not checked:** Daphne walking in `UR` from the general store, and Fred `UL` from the station. They are the same code as the walk-ins checked.
 
 ---

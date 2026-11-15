@@ -398,7 +398,7 @@ than parent and depth:
 | clickable | `0x401000` (via `0x408DC0`) | **0** | no | step polygon (type 2) |
 | character | `0x4048E0` | 1 | no | cels (type 1) |
 | `OBJ_GHOST` | `0x430790`, then `0x4313F0(1)` and `Start(0, 3, −1)` | **0** | **yes** | cels (type 1), but hidden sprites are skipped |
-| anything else | `0x430790` | 1 | no | step polygon (type 2) |
+| anything else | `0x430790` | 1 | no | step polygon (type 2, set after the constructor at `0x4094C0`; `0x430D60` itself sets 1) |
 
 - **Clickables.** The constructor can resume a sequence saved under a
   `Clickables` settings key. A fresh game has none.
