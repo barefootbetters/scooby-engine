@@ -2389,6 +2389,130 @@ first scenes are their openings (`+0x78`). The base room starts an opening
 only then does `0x40B400` turn the music down. Credits' opening is the
 factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
 
+##### Street 2 and Street 3 (WP-033)
+
+Traced 2026-11-14 for [WP-033](../work-packets/WP-033-streets.md), in
+Showdown. Both rooms have the music group 2 and no opening of their own
+(their constructors pass `2` and an empty string; Street 3's passes
+`Street_3.320A_`).
+
+**Street 2** (`0x42C3E0`, vtable `0x45F27C`):
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42CB40` | `+0x30` | Before the opening: `Street_1.130A_` (`0x40C6B0`) while `MoaningActive`, else none; not played (`+0x10` = 0). So it plays on every visit while the moans are on. Street 1's `+0x30` (`0x42BCD0`) is the same |
+| `0x42C440` | `+0x0C` entry | Gummy, if built: `SLEEPS` looping (`0x406210`, state `0x10`) until `GummyPuzzle`. With `GummyPuzzle` and Gummy a clue owner (`0x40A870`, `ClueOwners`, game `+0xD8`), he and the donkey are 50.0 along. Both get hit type 0 (`+0x4`). Walk-ins: from the general store Daphne `UR`; from the station Fred `UL`; from Town Center Fred `DL` (`0x405F20`) and Daphne `DR` (`0x405EA0`) |
+| `0x42C7A0` | `+0x18` placements | `OBJ_DONKEY…` and `OBJ_GUMMY…`: not built until Artie is met (`0x40A930`). `OBJ_P04_STREET2_CLOCK`: a plain sprite in layer 0, depth 0, `ANIM_P04_STREET2_CLOCKA`, or `…CLOCKB` once `OBJ_INV_CLOCK` is taken. `OBJ_P04_STREET2_WINDOW`: a plain sprite in layer 0, depth −1, hit type 0, once Gummy is a clue owner; else not built |
+| `0x42CAE0` | `+0x14` event | `OBJ_P04_STREET2_HOTSPOT1`: `Street_2.100C_`; `…HOTSPOT2`: `Street_2.100D_`; neither blocks |
+| `0x42C600` | `+0x24` exit | To `ROOM_P10_Front_Of_General_Store`, the scene is `Street_2.General_Store1_` or `…2_` (`rand() & 1`); then the base exit |
+
+**Street 3** (`0x42CB80`, vtable `0x45F2C0`):
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42CBE0` | `+0x08` reset | The moan timer (`+0xB8`) at 36 ticks; the music flag (`+0xBC`) on; the hotspot scene (`+0xC8`) at 0 |
+| `0x42CE50` | `+0x0C` entry | From Town Center Fred `DL`; from the Saloon Velma `U`; from the Bank Shaggy `UR`. The music flag on |
+| `0x42CD10` | `+0x04` tick | Moans (`Street_3.Moan.1`–`4`) every 5–14 seconds with `MoaningActive`. Hotspot 2 stopped with the music flag on: the flag off and the music group 2 (`0x40AA10`), whose next variant plays because the group changed. On step 3 with the hotspot's state (`+0x60`) `ANIM_P11_STREET3_HOTSPOT3B`, that is while it plays its A: `Street_3.HOTSPOT3_`, blocking |
+| `0x42CF00` | `+0x18` placements | `OBJ_P11_STREET3_HOTSPOT2` and `…HOTSPOT3`: clickables under their `layer=`, kept |
+| `0x42CC10` | `+0x14` event | `OBJ_P11_STREET3_HOTSPOT`: `Street_3.130X1_`, `…130X2_`, `…130X3_` in turn, blocking. `…HOTSPOT2`: the music group −1 and the music flag on. The hotspot's own sound, `SFX_P11_STREET3_HOTSPOT2A`, is in `Music.dat` and so replaces the music |
+| `0x42CCC0` | `+0x34` idle chatter | `rand() & 1`: `Street_3.100B2_` with `MoaningActive`, or `Street_3.1100A_` |
+
+**Shared pieces:**
+
+- **Walk-ins** (`0x405E60` `UR`, `0x405EA0` `DR`, `0x405EE0` `UL`,
+  `0x405F20` `DL`, `0x405FE0` `U`). Each keeps the depth (`+0x9C`), moves
+  50 behind it for `U…` and 50 in front for `D…`, and goes to state 1.
+- **State `0x10`** (`0x406210`): `ANIM_<NAME><set><action>` looping, and it
+  stays.
+- **Hit type 0** is never hit: the hit walk (`0x4311F0`) tests only types 1
+  and 2.
+- **A plain sprite** (`graphics_AnimSprite_ctor`) takes its parent, depth,
+  mode (1, looping) and ticks a step (3); a room may set its hit type.
+##### Street 1 and the clues (WP-034)
+
+Traced 2026-11-14 for [WP-034](../work-packets/WP-034-street1.md), in
+Showdown.
+
+**The clue a suspect gives** (game vtable `+0x44`, `0x42F990`):
+
+1. Nothing if the suspect is already one of `ClueOwners0`–`4` (`0x40A870`,
+   game `+0xD8`), or if no `CluesFound` slot (game `+0xB0`) is empty.
+2. **The villain** (`Whodunit`, game `+0x100`) gives a red herring
+   (`0x4301E0`): `rand() % 5`, drawn until it is neither the villain's nor
+   the giver's number, picks one of `RH_ARTIE_BRUSH`, `RH_GUMMY_CLOTH`,
+   `RH_IC_SOAP`, `RH_JENNY_GHOSTLY_TALES`, `RH_SHERIFF_GOLD_STAR` (suspects
+   numbered Artie, Gummy, ICDouble, Jenny, Sheriff).
+3. **Anyone else** first draws `rand() & 1`. Their clues are five
+   (`0x46FA3C`): three of their own (Artie: `ESCAPE_BOOK`, `CLASS_LIST`,
+   `MAP`), then two more (`CLOTH`, `HATBAND`).
+   - While any of their own three isn't found (`0x4301A0`, game vtable
+     `+0x68`), one of the three (`rand() % 3`).
+   - Once all three are, at level 0 (game `+0x160`) the fourth or fifth by
+     the first draw; above it, a red herring as in 2.
+4. A clue already found is drawn again. It goes to the first empty
+   `CluesFound` slot, the suspect to `ClueOwners` at the same index, and
+   game `+0x109` (a new clue, for Scrappy) is set.
+
+**Street 1** (`0x42AE70`, vtable `0x45F23C`; music group 2):
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42AED0` | `+0x08` reset | Its flags, the pump count (`+0xC0`) and the hint (`+0xCC`) at 0 |
+| `0x42BCD0` | `+0x30` | The moaning opening, as Street 2's |
+| `0x42B960` | `+0x0C` entry | If the Sheriff isn't a clue owner and isn't waiting (`SheriffWaiting`, `+0x26D`): one of `Street_1.130C1_`–`3_`, blocking, his clue (`+0x44`), and he gives when idle (`+0xBD`). From Town Center Fred `DR`; from the Sheriff's office Shaggy `UR`. Once he is a clue owner, the Sheriff stands at (501.0, 270.0) |
+| `0x42BD10` | `+0x18` placements | `OBJ_SHERIFF`: only once Artie is a clue owner and until the brick is taken. `OBJ_P03_TO_P02`: only in his puzzle (`SheriffPuzzle`, `+0x26C`) once he has the sign. `OBJ_P03_STREET1_DOOR_OVERLAY`: a plain sprite in layer 0 at depth −1000 otherwise. `OBJ_INV_STRONGBOXKEY`: a requires object, hidden until `KeyVisible`; not built once taken. `OBJ_P03_STREET1_TROUGH`: a requires object, playing `TROUGHB`, `C` or `D` for 1, 2 or 3+ pumps once the handle is on the pump (taken, not in a slot, `0x4070C0`); with the brick taken it asks for `ANIM_CURSORBRICK` (`+0x5C`). `OBJ_P03_STREET1_HOTSPOT2`: kept |
+| `0x42AF60` | `+0x04` tick | Below |
+| `0x42C120` | `+0x14` event | The trough with its cursor: the brick gives `Street_1.Wash_Brick_`, takes the brick and sets `FinalClue` (game `+0x108`) and `+0xC4`; the handle sets the pumps to 0, takes the handle, plays `Street_1.130E_` and asks for a pump (`+0xD0`). With the arrow: a pump once the handle is on, else `130D_`, `130D2_`, `130D3_` by the pump count, which wraps to 0. The key: Scooby takes it (`+0xD2`) |
+| `0x42BB50` | `+0x24` exit | To the post office with the lantern taken, no scene |
+| `0x42AF10` | `+0x10` leave | A key Scooby was taking goes in the toolbar |
+| `0x42C2E0` / `0x42C360` | `+0x1C` / `+0x20` | The base keys, then `PumpAttempts` (`%i`), `SheriffIntroPlayed` and `KeyVisible` |
+
+The tick:
+
+- **The Sheriff gives** when idle after `+0xBD`: `ANIM_SHERIFFGIVES` once
+  (`0x4061F0`), the cursor gone and input held (`+0xBE`). When he is idle
+  again, or gone, the room's exit handler takes an exit to
+  `ROOM_Suspect_Chooser` with the scene `Global.Thank_You_`.
+- **A click on him** (game `+0x20` bit 4, the character's `+0x8`):
+  - **with the sign**, in his puzzle and waiting (`ANIM_CURSORPOP_SIGN`):
+    the sign is taken, the cursor is the arrow, `SheriffWaiting` goes off,
+    and `Street_1.220D1_` plays, blocking, its done flag `+0xBC`.
+  - **with the arrow**, the first time (`SheriffIntroPlayed`, `+0xC5`):
+    Big Head (`Street_1.130B_` on `BIG_HEAD_BG_P03`, then `ROOM_Sheriff`),
+    and he is met (`0x40A8B0`).
+  - **with the arrow, later:** in his puzzle, `Global.1000SA_` once he has
+    the sign, else `Street_1.Hint1_`–`3_` in turn, neither blocking; out of
+    it, `ROOM_Sheriff`.
+  - **with any other item**, nothing here.
+- **`220D1_` over** and the Sheriff idle: one of `130C1_`–`3_`, his clue,
+  and he gives (`+0xBD`).
+- **The brick washed**, with no scene and the opening done: movie 14 and
+  `ROOM_Suspect_Chooser` (game vtable `+0x08`).
+- **The pump** (`+0xD0`), once Shaggy is idle with no scene: Shaggy plays
+  an object of his own (`0x406130`, state `0xD`: the object, and
+  `ANIM_<object without OBJ_>1` once), with its sound; the trough hides.
+  - pump count 0: `OBJ_SHAGGY_P03_PUT_HANDLE`, `Shaggy.Puts.Handle.On`;
+  - 1: `PUMPA`, `Shaggy.Pumps.Gets.Water`;
+  - 2 (then 3) and 3: `PUMPB`, `Shaggy.Pumps.Gets.Key`;
+  - 4 or more: `PUMPC`, `Shaggy.Pumps.No.Water`.
+
+  Input is held. When he is idle again, the count goes up, and the old
+  count picks the trough and the scene:
+
+  | Old count | Scene | Trough |
+  |---|---|---|
+  | 0 | `Street_1.130F2_` | `TROUGHB` |
+  | 1 | `Street_1.130F_` | `TROUGHC` |
+  | 3 | `Street_1.130F3_` | `TROUGHD`, and the key shows (`KeyVisible`) |
+  | 4+ | none | `TROUGHD` |
+
+  Count 2 becomes 3 when Shaggy starts.
+- **The key** (`+0xD2`), once Scooby is idle with no scene:
+  `OBJ_SCOOBY_P03_TAKES_KEY` with `Scooby.Takes.Key`, the key hidden; when
+  he is idle again, `OBJ_INV_STRONGBOXKEY` goes in the toolbar.
+- **The second hotspot** playing, on step 0, with its state (`+0x60`)
+  `ANIM_P03_STREET1_HOTSPOT2B`, so playing its A: `Street_1.HOTSPOT2A_`,
+  blocking.
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
