@@ -28,7 +28,7 @@ The reference is `wp023_ref.py`, written from the trace. It reads `TGIFILE.ART` 
 
 **Deviations and gaps:**
 
-- **The toolbar is in every room.** The original's menu and set-piece rooms hide it through their own classes (`0x407CC0`), which aren't implemented yet.
+- ~~**The toolbar is in every room.**~~ Closed by [WP-025](WP-025-toolbar-rooms.md): the rooms whose classes hide it (`0x407CC0`) or never build it now start without it.
 - **No story yet.** Pick-ups and uses reach the room as events that the base room ignores, as the original's base class does. Doors and puzzles wait for the story rooms' code.
 - **The snack box and Scrappy** draw, but their clicks do nothing yet.
 - **The inventory lasts the session.** The save's `Inventory` section is not written.
