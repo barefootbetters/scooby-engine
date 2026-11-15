@@ -2990,6 +2990,55 @@ snacks given (`+0x88`) than the level plus two:
 
 Otherwise, and to the tunnel, the room's default exit handler runs.
 
+##### The tunnel (WP-041)
+
+Traced 2026-11-15 for [WP-041](../work-packets/WP-041-tunnel.md).
+
+**ROOM_P14_Tunnel_Dark** (`0x4194D0`, vtable `0x45EB1C`):
+- **The base's opening** is `Tunnel_Dark.170A_`.
+- **Its placements:** Shaggy and Scooby; a way out to the post office;
+  three clickables; and the crate, OBJ_P14_TUNNEL_DARK_CRATE, a requires
+  object whose `requiredanim` is ANIM_CURSORARROW, so a click with the
+  arrow counts as the right item.
+
+**Its fields:**
+- `+0xB8`: the crate.
+- `+0xBC`: which line the way out gets.
+- `+0xC0`: the crate clicked.
+- `+0xC1`: Shaggy is at it.
+- `+0xC4`: the tries this visit.
+
+| Address | What it does |
+|---|---|
+| `0x419950` (+0x18) | The crate, a requires object (`0x408C80` with -1: layer 0) |
+| `0x4199C0` (+0x0C) | Entry, after the base entry: the line, the tries and both flags back to 0 |
+| `0x419920` (+0x14) | The crate with its item, the arrow: `+0xC0` |
+| `0x419530` (+0x24) | A way out: `Tunnel_Dark.170A2_` and `170A3_` in turn, without holding input. The default handler isn't called, so the gang stays |
+| `0x419610` (+0x04) | The tick, after the base tick. See below |
+
+**The tick** (`0x419610`), while the crate is clicked; input is held on
+every tick:
+1. **Shaggy tries.** With Shaggy and Scooby idle, no scene and the opening
+   done:
+   - on the visit's first try, Shaggy plays `OBJ_SHAGGY_P14_NO_PUSH_CRATE`
+     with `Shaggy.Cant.Push.Crate`;
+   - on any later try, the crate and Scooby hide, and Shaggy plays
+     `OBJ_SHAGGY_P14_PUSH_CRATE` with `Shaggy.Scooby.Push.Crate`.
+2. **Shaggy idle again:**
+   - after the first try, input is freed;
+   - after a push, the crate shows ANIM_P14_TUNNEL_DARK_CRATEB, looping,
+     and Shaggy hides. A sprite of his push's last step takes his place in
+     layer 0 at depth 500, and ROOM_P08_Post_Office loads.
+
+**ROOM_P18_Tunnel_Lit** (`0x4199F0`, vtable `0x45EB5C`) has the gang and
+two ways out: to the post office, and to Boot Hill 2 with the scene
+`Tunnel_Light.180A_`. Its exit handler (`0x419A50`, +0x24) keeps the
+scene of the first way out the gang takes (`BootHillCommentPlayed`,
+`+0xB8`). After that it clears the exit's scene, then calls the default
+handler. So the way to Boot Hill has its comment only if it's the first
+way out taken. `BootHillCommentPlayed` is saved in the room's section
+(`0x419BD0`, `0x419C10`) and cleared by the reset (`0x419BB0`).
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
