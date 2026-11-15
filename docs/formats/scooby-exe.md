@@ -2712,7 +2712,17 @@ has five classes:
 | ROOM_Open_Safe | `0x429BE0` | `0x45F168` |
 | ROOM_SB1 to SB5 | `0x42A340` | `0x45F1A8` |
 
-This section covers the vault and the open safe.
+This section covers the vault and the open safe; the bank and its clock
+are [below](#the-bank-and-the-vault-clock-wp-039).
+
+**ROOM_SB1 to SB5 are unreachable** in the shipped game (checked for
+[WP-040](../work-packets/WP-040-boot-hill.md)):
+- Only the factory names them; nothing in the art, `object.ini` or the
+  executable sends the gang there, and no code builds the names.
+- Their class shows a strong box's lid opening, with `Strongbox.opens` and
+  `Bank_Vault.340D_`, then the vault again. In play, the right strong box
+  plays movie 38–41 instead (`0x429350`).
+- The fork leaves them the base class.
 
 **ROOM_P16_Bank_Vault**'s placements:
 - the gang;
@@ -2923,6 +2933,62 @@ and no others do.
    called again every tick until the room changes; the fork calls it once.
 5. **The click:** a hand on a new step plays `Vault_Clock.Dial.Click`
    again from its start.
+
+##### Boot Hill (WP-040)
+
+Traced 2026-11-15 for [WP-040](../work-packets/WP-040-boot-hill.md).
+ROOM_P21_Boot_Hill1, ROOM_P22_Boot_Hill2 and ROOM_P23_Boot_Hill3 share one
+class (`0x40ECB0`, vtable `0x45E74C`), one object a room. Each room has:
+- the gang and the ghost;
+- three graves, clickables;
+- its exits (1 to 2 and 3; 2 to 1 and the lit tunnel; 3 to 1).
+
+`GraveLocation` (game `+0x280`, drawn 0–8 by a new game) names the grave
+with the brick: 0–2 Boot Hill 1's first to third, 3–5 Boot Hill 2's, 6–8
+Boot Hill 3's.
+
+**Its fields:**
+- `+0xB8`: the dig scene's done flag.
+- `+0xB9`: `DigScenePlayed`.
+- `+0xBA`: the brick dug up, for the next entry.
+
+| Address | What it does |
+|---|---|
+| `0x40ED30` (+0x30) | The opening. Dug up, without `DigScenePlayed`, in the brick's room: `Boot_Hill_1.210B_`, unplayed. Else in Boot Hill 2 `Boot_Hill_2.340E2_`, or none. `0x40C6B0` sets only the name, so whether it has played stays as it was |
+| `0x40F4F0` (+0x18) | The graves are not built once the brick is dug up or was ever taken |
+| `0x40EE10` (+0x0C) | Entry, after the base entry. See below |
+| `0x40F250` (+0x14) | A grave clicked. See below |
+| `0x40F210` (+0x04) | After the base tick: the dig scene over, the brick is dug up (`+0xBA`) and the room loads again through movie 3 (game vtable `+0x08`) |
+| `0x40EFD0` (+0x24) | Boot Hill 2's way back to 1 or 3. See below |
+| `0x40ED10` (+0x08) | Reset: the three flags cleared |
+| `0x40F660` / `0x40F6A0` (+0x1C / +0x20) | `DigScenePlayed` in the room's section, after the base keys |
+
+**The entry** (`0x40EE10`), after the base entry:
+- `Boot_Hill.Ambient` plays.
+- The room needs the level's snacks plus two (`+0x24`).
+- **The brick:** dug up, it goes in the toolbar (ANIM_TOOLBARBRICK,
+  ANIM_CURSORBRICK) if never taken. In a slot, `DigScenePlayed` is set.
+- **The gang walks in:**
+  - Velma up into 2 from 1;
+  - Fred down-left into 3 from 1;
+  - Daphne down-right into 1 from 2;
+  - Shaggy up-right into 1 from 3;
+  - Fred down-left from the lit tunnel.
+
+**A grave clicked** (`0x40F250`):
+- **The brick's grave:** with the brick never taken, no scene and the
+  opening done, `Boot_Hill_1.190B_`, `190B2_` or `190B3_` (`rand() % 3`)
+  plays, holding input, with its done flag.
+- **Any other grave:** the ghost appears (`0x40A990`), and with it the
+  ghost spot.
+
+**Boot Hill 2's way back** (`0x40EFD0`): to Boot Hill 1 or 3, with fewer
+snacks given (`+0x88`) than the level plus two:
+- the gang stays;
+- `Boot_Hill_1.190A_`, `190A2_` or `190A3_` by level plays, holding input;
+- the snack box flashes (`0x40D4D0`).
+
+Otherwise, and to the tunnel, the room's default exit handler runs.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
