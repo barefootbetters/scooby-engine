@@ -2389,6 +2389,64 @@ first scenes are their openings (`+0x78`). The base room starts an opening
 only then does `0x40B400` turn the music down. Credits' opening is the
 factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
 
+##### The chase (WP-035)
+
+Traced 2026-11-14 for [WP-035](../work-packets/WP-035-chase.md), in
+Showdown; Phantom has no chase. After ROOM_P40_Chase_Start (music only),
+the gang runs through two kinds of room, both with `Chase.Music`:
+
+- **Chase B**, the branches, P24 to P29 (`0x41E6B0`, vtable `0x45EDA8`): a
+  fork in the path, with an OBJ_BRANCH sprite.
+- **Chase C**, the run-offs, P33 to P39 (`0x41FBB0`, vtable `0x45EDE8`): a
+  canned animation, then the next branch.
+
+The close-up, P25A (`0x4119F0`), is ICDouble's scene; it waits for the
+clue API.
+
+**Chase B's fields:** `+0xB8` the OBJ_BRANCH sprite; `+0xBC` the countdown;
+`+0xC0` the pending room; `+0xC8` the oil can taken here; `+0xCC` the oil
+can's requires object.
+
+| Address | What it does |
+|---|---|
+| `0x41ED40` (+0x18) | Placements. OBJ_BRANCH* (the first 10 characters): a sprite under layer 0, depth 0, looping. OBJ_INV_OILCAN: a requires object (`0x408C80` with -1: layer 0) unless the oil can is held, then not built. OBJ_P25_OVERLAY: a sprite at depth -1 while OBJ_INV_SAFE_COMBO isn't held and ICDOUBLE is a clue owner (`0x40A870`, game `+0xD8`), else not built |
+| `0x41FA80` (+0x2C) | The opening, by where the gang came from: `Chase_Branch_3.230_` in P26; none in P24, P27, or from the corral; otherwise `rand() & 3` of `Chase_Branch_3.230_`, `.230B2_`, `.230C_`, `.230D_`. Never marked played |
+| `0x41F650` (+0x0C) | Entry: the countdown at 720, nothing pending. P27 leaves for C6 and P24 for C4 at once. From the close-up, `Chase.Branch_2` and ANIM_BRANCH2A_FIN, pending C3; from the corral, `Chase.Branch_5_from_HC` and ANIM_BRANCH5A_FIN, pending C6. ICDOUBLE is never hit |
+| `0x41E7A0` (+0x24) | Leave for a room, once: it becomes pending, the branch plays its run-off (mode 3, 3 ticks a step) with its sound, and input stops (`0x435150`, game `+0x24`). The exit's own scene and walk-off never play |
+| `0x41EBC0` (+0x14) | OBJ_INV_OILCAN taken: the flag, and leave for C5 |
+| `0x41EFC0` (+0x04) | The countdown: when its old value is below 0 with nothing pending, it starts again at 2160 and B2 leaves for C3, B3 for C2, B5 for C6, B6 for C5. While something is pending: on step 22 of the run-off with the flag set, the oil can goes in the toolbar and its sprite hides; when the run-off has played out, the room changes (game `+0x04`), or to the corral through movie 8 (game `+0x08`) |
+| `0x41E780` (+0x08) | Reset: the countdown at 720 |
+
+**The run-offs** (`0x41E7A0`), by the room they lead to:
+
+| To | Branch | Run-off | Sound |
+|---|---|---|---|
+| B2 | | ANIM_BRANCH3B | `Chase.Branch_3b` |
+| C3 | | ANIM_BRANCH2B | `Chase.Branch_2` |
+| P25A, the close-up | | ANIM_BRANCH2A | `Chase.Branch_2` |
+| C2 | | ANIM_BRANCH3A | `Chase.Branch_3a` |
+| C4 | | ANIM_BRANCH1A | `Chase.Branch_1a` |
+| The corral | | ANIM_BRANCH5A | `Chase.Branch_5a` |
+| C6 | OBJ_BRANCH5 | ANIM_BRANCH5B | `Chase.Branch_5b` |
+| C5, the oil can taken | | ANIM_BRANCH6C | `Chase.Branch_6c` |
+| C5 | | ANIM_BRANCH6A | `Chase.Branch_6a` |
+| B4 | OBJ_BRANCH6 | ANIM_BRANCH6B | `Chase.Branch_6b` |
+| C6 | OBJ_BRANCH4 | ANIM_BRANCH4A | `Chase.Branch_4` |
+
+A destination with no run-off still holds input, and with the branch
+still looping the room never changes; no room's exits lead to one.
+
+**Chase C** (`0x420690`, `0x420510`, `0x41FC10`):
+- **Placements:** OBJ_CANNED* is a sprite under layer 0, moved to depth −1
+  and started once through (`graphics_AnimSprite_Start` 3, 3, −1).
+- **Entry:** the toolbar hides, input stops, and `Chase.Canned_1` to `_6`
+  plays (C1, C2, C3, C4, C5, C6).
+- **Each tick** input stays held. When the run-off has played out, the
+  default exit handler (`0x40C1E0`) takes C1 to B3, C2 to B1, C3 to B5,
+  C4 to B6, and C5 and C6 back to ROOM_P40_Chase_Start through movie 31.
+  It is called again every tick until the room changes; the fork calls it
+  once.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
