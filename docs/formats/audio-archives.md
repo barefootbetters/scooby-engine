@@ -122,8 +122,13 @@ divided by the bytes per second, and returns its low nibble as the mouth
 shape and its high nibble separately. The character code (`0x404B70`) uses
 only the low nibble: a shape *s* > 0 shows step *s* − 1 of the speaker's
 `TALKS` sequence, and 0 keeps the step. No byte of the 1,047 clips spoken
-by a character with a `TALKS` sequence points past its last step. What
-the high nibble does was not traced.
+by a character with a `TALKS` sequence points past its last step.
+
+The high nibble is Big Head's (WP-031). While a line plays there, a
+non-zero high nibble *n* hides the talking heads and shows the villain's
+clue picture `ANIM_BIG_HEAD_CLUES_<villain><n>` instead. Showdown has
+pictures 7 and 8 for each villain: the `0x70` and `0x80` bits. See
+[scooby-exe](scooby-exe.md#the-accusation-suspects-and-clues-and-big-head-wp-031).
 
 **Checks** (`py -3 tools/probe_audio.py --verify`). For all 1,165 clips it
 confirms:
@@ -161,8 +166,8 @@ apply.
 
 ## Remaining unknowns
 
-- The meaning of the lip-sync bytes' high bits (`0x70`, `0x80`), and how
-  the character code maps shapes 0–6 (up to 8 in `Sfx.dat`) to mouth frames.
+- How the character code maps shapes 0–6 (up to 8 in `Sfx.dat`) to mouth
+  frames. (The high bits are Big Head's clue pictures: WP-031.)
 - Where in-game dialogue *text* lives, if anywhere. No text sits alongside
   the clips. The names identify the line and speaker
   (`Back_Alley.350A_1_FRED`), but not the words.

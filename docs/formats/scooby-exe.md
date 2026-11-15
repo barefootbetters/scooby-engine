@@ -2006,6 +2006,163 @@ The fork has no room music yet.
 | `0x40B0D0` | Every movie seen |
 | `0x409740` | The player's `.sav` path |
 
+##### The accusation: suspects and clues, and Big Head (WP-031)
+
+Traced 2026-11-14 for [WP-031](../work-packets/WP-031-accusation.md), in
+Showdown, and compared with Phantom byte for byte once addresses are
+masked.
+- **Big Head** is the same code in both titles.
+- **The suspects and clues** is the same code except where it names its
+  suspects, movies and scenes: the entry, the accusation and the verdict.
+  The tables below give both titles' values.
+
+**The clue state on the game object**, written by `0x40A270` and read by
+`0x40A540`:
+
+| Field | Key | What it is |
+|---|---|---|
+| `+0x100` | `Whodunit` | The villain |
+| `+0x108` | `FinalClue` | The final clue is found: the accusation is open |
+| `+0xB0` + 8i | `CluesFound0`–`4` | Each clue found, by name (`ARTIE_MAP`, `EWAN_FILM`, …) |
+| `+0xD8` + 8i | `ClueOwners0`–`4` | (not read by these rooms) |
+| `+0x174` + 8i | `Suspect0`–`4` | The suspects met |
+| `+0x109` | — | A clue just found, for Scrappy to name; not saved, cleared by `0x4087B0` |
+
+**The suspects and clues** (`0x426910`, vtable `0x45F068`, music
+`Suspect.Music`, Phantom `Track6.Music`): tick `0x4269E0`, entry `0x426B40`,
+`+0x10` `0x4270E0`, placements `0x427100`, exit `0x426F30`.
+- **Entry from the room itself** is the way back from the accusation's
+  movie: the verdict, below.
+- **Entry otherwise:**
+  - the toolbar hides, and the room left (unless `ROOM_Quit`) is kept
+    (`+0xE8`);
+  - the idle time (`+0xF0`) is set to 360 ticks;
+  - the introduction plays (`+0xF4`):
+    `Suspect_and_Clues.Solve_Game` with the final clue, else
+    `Suspect_and_Clues.SHAGGY_Introduce_Screen`.
+- **The clues.** Each `CluesFound<i>` that isn't empty becomes:
+  - a button (`OBJ_SUSPECT_CLUES`, `ANIM_SUSPECT_CLUES<name>`) at its
+    slot's place: (90, 283), (184, 286), (286, 283), (372, 280),
+    (473, 280);
+  - a hotspot (`OBJ_SUSPECT_CLUES_HOTSPOT`,
+    `ANIM_SUSPECT_CLUES_HOTSPOT<'1' + n>`) hit by its polygon.
+  The hotspot is numbered by how many clues came before it, so a gap in
+  the slots puts a clue and its hotspot apart. The final clue adds the
+  hotspot `…HOTSPOT6`. Every clue, hotspot and picture has the rollover
+  `ANIM_CURSOROPEN`.
+- **The placements:**
+
+| Placement | What it becomes |
+|---|---|
+| `OBJ_SUSPECT_PICTURES` `…PICTURES1`–`5` | A button at depth −1 for a met suspect (`0x40A930`); nothing otherwise |
+| `OBJ_SUSPECT_CLUES`, `…CLUES_HOTSPOT` | Nothing: the entry builds its own |
+| `OBJ_SUSPECT_CLUE_INFO` | The clue card, at the placement under the first layer, hidden |
+| `OBJ_SUSPECT_FINAL_CLUE` | A button with the final clue; nothing otherwise |
+| An ANIM ending `EXITICON` | Nothing, with the final clue: there's no way back |
+
+| Picture | Showdown | Scrappy (`Suspect_and_Clues.SCRAPPY_<…>_Info`) | Phantom | Scrappy |
+|---|---|---|---|---|
+| 1 | `SHERIFF` | `Chuck` | `EWAN` | `Ewan` |
+| 2 | `JENNY` | `Jenny` | `BRAD` | `Brad` |
+| 3 | `ICDOUBLE` | `ICDouble` | `MARIA` | `Maria` |
+| 4 | `ARTIE` | `Artie` | `WIZARD` | `Wizard` |
+| 5 | `GUMMY` | `Gummy` | `JESTER` | `Chester` |
+
+- **Each tick:**
+  - **The new clue.** While a new clue is pending, input is held and the
+    cursor hidden. Once the introduction is over, Scrappy says
+    `Global.Scrappy.Clue.<CluesFound[count − 1]>`; the flag clears and
+    input comes back.
+  - **Idle.** Without the final clue, the line
+    `Suspect_and_Clues.SHAGGY.Click_On_Back_Button` plays on the 361st
+    tick, then every 361 ticks.
+  - **The card** (`0x427AA0`). With a clue or its hotspot under the mouse,
+    the card shows `ANIM_SUSPECT_CLUE_INFO<name>`; with the final clue or
+    its hotspot, `…INFOFINAL_CLUE`. Otherwise it is hidden.
+- **A clue clicked** (`0x4278C0`). Every sound stops, the idle time resets,
+  and Scrappy says `Global.Scrappy.Clue.<name>`. The final clue's name is
+  `FINAL_CLUE`; a hotspot's is its clue's.
+- **A picture clicked** (`0x427600`). Every sound stops.
+  - Before the final clue, Scrappy describes the suspect.
+  - With it, the suspect is accused (`0x427C70`): whether they're the
+    villain goes in `+0xFC`. The true villain's movie then plays, and this
+    room comes again.
+
+| Villain | Showdown movie | Reveal | Villain | Phantom movie | Reveal |
+|---|---|---|---|---|---|
+| `SHERIFF` | 13 | `…B_` | `EWAN` | 15 | `…A_` |
+| `JENNY` | 12 | `…C_` | `BRAD` | 13 | `…B_` |
+| `ICDOUBLE` | 11 | `…E_` | `MARIA` | 16 | `…C_` |
+| `ARTIE` | 9 | `…A_` | `WIZARD` | 17 | `…E_` |
+| `GUMMY` | 10 | `…D_` | `JESTER` | 14 | `…D_` |
+
+- **The verdict** (`0x427DE0`). The scene is `Street_1.720<letter>_` for
+  the right suspect and `…730<letter>_` for a wrong one (Phantom
+  `Treasury.`). It goes to Big Head with:
+  - `BIG_HEAD_BG_P03` (Phantom `…P16`);
+  - then `ROOM_Credits`.
+
+  `Scooby.ini`'s `Scooby` section gets `GBH=Yes` (Phantom `FBF=Yes`). Only
+  this function references that key.
+- **The exit** (`+0x24`) goes back to the room kept on entry. Leaving
+  (`+0x10`) stops every sound.
+
+**Big Head** (`0x403070`, vtable `0x45E44C`): entry `0x403180`, tick
+`0x403C70`, `+0x10` `0x403920`, opening `+0x30` `0x4038F0`, scene step
+`+0x38` `0x403940`.
+- **The game sets three fields**, then asks for `ROOM_Big_Head` (game vtable
+  `+0x04`):
+  - the scene (game `+0x220`);
+  - the background (`+0x228`);
+  - the room after (`+0x230`).
+- **Who uses it.**
+  - The verdict, above.
+  - Showdown's chase close-up (`0x412020`: `Chase_Branch_2.260A_` on
+    `BIG_HEAD_BG_P25A`).
+  - Phantom's rooms with the backgrounds `P10`, `P11`, `P13`, `P14`,
+    `P44P22`, `PLAQUE` and `SKULLS`.
+- **The opening** (`+0x30`) is the scene, marked unplayed.
+- **Entry:**
+  - keeps the room left (`+0xCC`);
+  - loads `OBJ_BIG_HEAD_CLUES_<Whodunit>`;
+  - takes the first line's speaker: the first of the 20 names (`0x46A720`)
+    with a clip `<scene>1_<NAME>`;
+  - builds the speaker's mouth (`OBJ_<NAME>_BIG_MOUTH`, `…_BIG_MOUTHTALKS`)
+    and body (`OBJ_<NAME>_BIG_BODY`, `…_BIG_BODYA`), and a partner's pair,
+    all under the first layer, stopped;
+  - hides the toolbar.
+- **The partner** (`0x403F90`):
+  - Shaggy's is Scooby, in front (depth 1);
+  - Scooby's is Shaggy, behind (−1);
+  - Fred's is Daphne (1);
+  - Daphne's is Fred (−1);
+  - nobody else has one.
+- **The background** (`0x404270`) is the first layer itself, set to
+  `OBJ_<bg>` with `ANIM_<bg><NAME>`, or `ANIM_<bg>DEFAULT` if the art has
+  none for that name.
+- **The scene step** (`+0x38`) replaces the base scene player. With no line
+  playing, the next line is `%s%i_%s`: the scene, the line number and the
+  first name with that clip. That name's head comes up and the line plays.
+  With no such clip the opening counts as played, and the next tick leaves
+  for the room after.
+- **Each tick:** the lip sync of the line playing (`0x434D40` → `0x442DD0`)
+  gives two values.
+  - **The low nibble** moves the mouth to step *shape* − 1.
+  - **The high nibble, if 0,** shows the heads and the speaker's background.
+  - **Otherwise** it hides the heads and puts the villain's clue picture on
+    the first layer: `OBJ_BIG_HEAD_CLUES_<Whodunit>` with
+    `ANIM_BIG_HEAD_CLUES_<Whodunit><n>`. Showdown has pictures 7 and 8 for
+    each villain: the `0x70` and `0x80` bits
+    [audio-archives](audio-archives.md#clip-format) noted.
+
+| Address | What it does |
+|---|---|
+| `0x427C70` / `0x427DE0` | Accuse / the verdict |
+| `0x4278C0` / `0x427600` / `0x427AA0` | Clue clicked / picture clicked / the clue card |
+| `0x403F90` / `0x404270` | Big Head: the partner / the background |
+| `0x40A930` | Is a suspect met |
+| `0x404480` | The room after Big Head (game `+0x230`) |
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
