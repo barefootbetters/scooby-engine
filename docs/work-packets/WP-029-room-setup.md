@@ -27,6 +27,7 @@ title: "WP-029: Room Setup and Town Center"
 
 - **The music never rotates on its own.** Every music clip has the loop flag, so `0x409CB3`'s "clip over" never comes. The rotation runs as traced; the check forces it by stopping the clip.
 - **Not done:** the game's idle time restarting when Scooby takes the sign (`0x436810`, game `+0x34`/`+0x3C`, not modelled).
+- **Not traced: the music during scenes.** Every scene start calls `0x434F10(90, 2)` (`0x40B400`). Every scene end calls `0x434F30(100, 4)` (`0x40C810`), and the room load calls `0x434F30(100, 3)`. These are probably the music fading down and back. The fork's music stays level.
 - **Not traced:** the idle line's name (`+0x28`, `0x40CB50`), and which of its two factory scenes the Credits room keeps as its opening.
 - **Background music isn't "the sound".** The fork's log and the menu check follow the clip played last. Room music doesn't become it, or the music restarting after a check stops every sound would hide the button's sound.
 - **Walk-ins checked from Street 1 only.** Velma's (Street 2) and Shaggy's (Street 3) are the same code with another character and direction.
