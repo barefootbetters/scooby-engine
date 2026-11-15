@@ -50,6 +50,7 @@ You don't need to install Visual Studio, old or new. decompdecomp's docs don't m
 1. Open **Compilers & tools** from the sidebar.
 2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards, and **Microsoft Visual C++ (your own copy)**.
 3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 6 uses that folder.
+4. *WP-011:* the `6.0` folder holds VC6 **RTM**, build 8168 (its `CL.EXE`, `C1XX.DLL` and `C2.DLL` all report 12.00.8168, observed 2026-11-14). Case File #1's own C++ was built with the later Processor Pack, build 8943. Mony is testing which build comes closest, to make it the project default. If the project moves to a compiler outside this card, this step changes. See [WP-011 §Progress, libexpat and the compiler build](../work-packets/WP-011-casefile-decompdecomp.md#progress-libexpat-and-the-compiler-build-2026-11-14-to-11-15).
 
 ![The Compilers & tools screen. The Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC) card is at the right of the second row, and Ghidra is at the top left.](images/decompdecomp-compilers-and-tools.png)
 
