@@ -1613,6 +1613,117 @@ and the live writes below).
 - **`Scooby.ini`'s `Settings`** (`AbortMovies`, `WesternStartRoom`, …) are
   the machine's settings, not the player's (`0x409D70`).
 
+##### Room classes and the front end (WP-027)
+
+Traced 2026-11-14 for [WP-027](../work-packets/WP-027-front-end.md), in
+Showdown. Phantom's classes are the same code with its own strings, compared
+byte for byte at the title's entry and the level buttons: `FBFTitleMovies`
+for `GBHTitleMovies`, and `ROOM_P01_Drawbridge` for `ROOM_P01_Town_Center`.
+
+**Room classes.** The factory (game vtable `+0x14`, `0x42E0E0`) builds one
+object per room name when the game starts, and keeps it. A class's state
+therefore lasts across visits. The base class (vtable `0x45E5FC`) is the
+default; a room class overrides some of these slots:
+
+| Slot | Base | What it is |
+|---|---|---|
+| `+0x04` | `0x40B490` | Tick |
+| `+0x08` | `0x40CD20` | Reset (when the game starts) |
+| `+0x0C` | `0x40B920` | Entry, with the room left as the argument |
+| `+0x14` | `0x404440` | An event from an object (game `+0x40`) |
+| `+0x18` | `0x404450` | Claim a placement and build it (true) or leave it to the default path (false) |
+| `+0x1C` / `+0x20` | `0x40C410` / `0x40C470` | Write / read its profile keys |
+| `+0x24` | `0x40C1E0` | Leave by an exit |
+
+The front end's classes:
+
+| Room | Class (vtable) | Overrides |
+|---|---|---|
+| Title Screen | `0x428260` (`0x45F0A8`) | reset, tick, entry, placements |
+| Main Menu | `0x4229C0` (`0x45EF2C`) | entry, placements |
+| Difficulty | `0x422680` (`0x45EEEC`) | entry, placements |
+| Quit | `0x423DB0` (`0x45EFB8`) | tick, entry |
+| Sign In | `0x424770` (`0x45F024`) | tick, entry, `+0x10`, placements, exit (not traced) |
+| Options | `0x4235D0` (`0x45EF6C`) | `+0x08`, entry, `+0x10`, placements (not traced) |
+| Credits | `0x421740` (`0x45EE68`) | tick, `+0x08`, entry, `+0x10` (not traced) |
+
+**The button** (`0x436C50`, vtable `0x45F4DC`).
+- **What it is.** A sprite built stopped on step 0, with a sound (`+0x60`)
+  and a second sound (`+0x64`), plus two callbacks into its room: click
+  (`0x437070`, `+0x78`/`+0x7C`) and rollover (`0x437090`, `+0x80`/`+0x84`).
+- **Its update** (vtable `+0x08`, `0x436D70`) sets the step to its state:
+  0 at rest, 1 under the mouse, 2 pressed or clicked.
+  - **Coming under the mouse** from rest plays its sound, unless that is
+    the button sound already playing (`0x475F50`). A silent button stops
+    that one. It also calls rollover(on).
+  - **Leaving** state 1 calls rollover(off).
+  - **A click** (mouse released over it) calls the click callback.
+  - The second sound plays a second after the first ends; no front-end
+    button has one.
+- **Its hit test** (`0x436FC0`) is the step polygon if any step has one,
+  else its cels.
+- **Unresolved.** Every menu button of both titles has a polygon on step 0
+  only. The hit test (`0x430D10`) reads the current step's, so taken
+  literally a button would be lost the tick it shows step 1. The fork keeps
+  step 0's shape for a button's other steps; what keeps the original
+  steady isn't traced.
+
+**The title** (`0x428380` entry, `0x4282E0` tick, `0x428480` placements).
+- **Movies first.** The reset sets the step (`+0xBC`) to 2. Entry at steps
+  1, 2 and 3 asks for title movie 26, 27 or 28 and this room again (game
+  vtable `+0x08`), without the base entry, and moves to the next step. So
+  a game starts with movies 27 and 28.
+- **Then the title.** The base entry runs, and the background (layer 0)
+  starts at x −640. Input stops, the cursor fades, and the toolbar hides.
+  The countdown (`+0xB8`) is 324 ticks, and the machine's
+  `GBHTitleMovies` becomes `Yes`.
+- **The placements.** `OBJ_TITLE_SCOOBY`, `…DAPHNE` and `…LEGAL` are built
+  at depths 1, −1 and 100.
+- **Each tick** the layer moves 2 pixels right, and back 1280 once past 0,
+  across the 1920-pixel room, until the countdown ends. Then the game goes
+  to Sign In (game vtable `+0x04`); input slot 5 goes there at once.
+- **Skipping the title movies.** `0x42DE10` treats ids 0 and 25–28 apart:
+  they always play, and can be skipped only once `GBHTitleMovies` is
+  `Yes`. They aren't kept in the movie history.
+
+**The main menu** (`0x422A90` entry, `0x422B00` placements).
+- **Entry** keeps the room it was opened from (`+0xBC`), unless that was
+  Quit or Options, and hides the toolbar.
+- **The buttons** are built from the placements `OBJ_MAIN_MENU_PLAY`,
+  `…OPTIONS`, `…MYSTERY` and `…QUIT`, at the placement's x and y.
+- **Where they go.** Each leaves by the room's exit (`+0x24`):
+
+| Button | Click | Rollover |
+|---|---|---|
+| Play (`0x423120`) | Back to `+0xBC`; Sign In if that is the title | — |
+| Options (`0x4233D0`) | `ROOM_Options` | `Main_Menu.Sound_NARRATOR` (`0x423580`) |
+| New Mystery (`0x422FC0`) | `ROOM_Sign_In` | `Main_Menu.New_Mystery_NARRATOR` (`0x423530`) |
+| Quit (`0x422E60`) | `ROOM_Quit` | — |
+
+The menu is reached from a game through the toolbar's quit button
+(`Sign_In.Quit_Button`, then `ROOM_Main_Menu`).
+
+**The level select** (`0x4226E0` entry, `0x422700` placements).
+- **The buttons** are `OBJ_DIFFICULTY_SPOOKY`, `…SPOOKIER` and
+  `…SPOOKTAC`, built at (0, 0); the placement's x and y aren't read. Each
+  sounds `Level_Select.SHAGGY.Spooky`, `…Spookier` or `…Spooktacular` under
+  the mouse.
+- **A click** (`0x422930`, `0x422960`, `0x422990`) sets the level (game
+  `+0x160`: 0, 1, 2, the profile's `Difficulty`). It then asks for movie 1
+  and `ROOM_P01_Town_Center`.
+
+**The quit screen** (`0x423E90` entry, `0x424140` tick).
+- **Entry** keeps the room it came from (`+0xB8`). It builds two buttons,
+  `OBJ_QUIT_BUTTONS` playing `…YES` and `…NO`, the eyes (`…EYES`) and the
+  mouth (`OBJ_QUIT_BIG_MOUTH`, `…TALKS`), all at (0, 0).
+- **The eyes** look at Yes (step 2) or No (step 1) (`0x4240E0`,
+  `0x424110`).
+- **A click** stops input and has Scooby say `Quit_Screen.Yes_1_SCOOBY` or
+  `…No_1_SCOOBY` (`0x424040`, `0x424090`), the mouth following the lip
+  sync.
+- **When the line ends,** Yes sets game `+0x110`, and the game quits. No
+  leaves by the room's exit for the room it came from.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
