@@ -1581,6 +1581,38 @@ in Showdown; Phantom's executable carries the same names. The fork plays both.
 | `0x4061F0` | A character plays `ANIM_<NAME><set><action>` once (state `0xF`) |
 | `0x40B490` | The room's update: feeding Scooby or Shaggy, the snack-given line |
 
+##### The player profile (WP-026)
+
+Traced 2026-11-14 for [WP-026](../work-packets/WP-026-profile-saves.md),
+in Showdown; the fork's saves hold this profile.
+
+**No save slots.** The original keeps one profile per player, an INI file
+that the Win32 profile API reads and writes. The Sign In room
+(`0x425210`) picks the player and names the file `%s%s%s.sav` after the
+player. Then it hands the file to the game (vtable `+0x58`, `0x42F640`,
+read). The game writes the profile as it plays (vtable `+0x54`, `0x42F3A0`,
+and the live writes below).
+
+**Sections and keys.**
+
+| Section | Keys | Written by | Read by |
+|---|---|---|---|
+| `Game` | `StartRoom`: the last room that isn't a menu (game `+0x24C`, set on entry by `0x40B920` through vtable `+0x48`; the menus are Main Menu, Options, Suspect Chooser, Sign In, Difficulty, Quit, Big Head) | `0x42F3A0` | `0x42F640`, which then goes there |
+| `Game` | `Difficulty`, `Whodunit` (the villain, drawn by `0x42DBC0`), `FinalClue`, `CluesFound0`–`4`, `ClueOwners0`–`4`, `Suspect0`–`4` (met), `MovieHistory0`–`74` | `0x40A270` | `0x40A540` |
+| `Game` | Story flags: `MoaningActive`, `SheriffPuzzle`, `SheriffWaiting`, `GummyPuzzle`, `TunnelLit`, `HotelHallDoor`, `VaultOpen`, `ArtifactType`, `GraveLocation`, `ClockHour`, `ClockMinute`, `StrongBox`, `ArtifactsBuilt`, `BagsRandomized`, `BagDown0`–`3`, `LeverAlias0`–`3`; then each room class's own keys (its vtable `+0x1C` / `+0x20`) | `0x42F3A0` | `0x42F640` |
+| `Exits` | `<exit OBJ>=1`, when the exit is taken | `0x402130` | `0x401850` (taken for `1`, `on`, `On`, `ON`, `TRUE`) |
+| `Clickables` | `<OBJ>=<state ANIM>` | `0x401350`, when the room is left | `0x401000` |
+| `Inventory` | `Snacks`, `Slot0`–`3`, `Anim0`–`3`, `Cursor0`–`3`, `History0`–`31`; `Nothing` for an empty one | `0x407780` | `0x407430` (an empty `Snacks` is 1) |
+
+**Value rules.**
+- **Booleans** are written `Yes` or `No` (`0x40A070`). Only `Yes`, case
+  and all, reads as true (`0x40A170`). A missing key leaves the value as
+  it was.
+- **Numbers** are written with `%i` (`0x409FD0`) and read with `atoi`
+  (`0x40A0F0`).
+- **`Scooby.ini`'s `Settings`** (`AbortMovies`, `WesternStartRoom`, …) are
+  the machine's settings, not the player's (`0x409D70`).
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
@@ -1619,7 +1651,7 @@ Things the WP-001 trace passed over, each a lead for a later work packet:
   have no traced reader (see
   [tgifile-art §Remaining unknowns](tgifile-art.md#remaining-unknowns)).
 - **Bink**: imports confirmed (WP-007); integration not traced.
-- **Save games** (`%s%s%s.sav`): not traced.
+- **Save games** (`%s%s%s.sav`): the player profile, traced for WP-026 ([The player profile](#the-player-profile-wp-026)).
 
 ---
 

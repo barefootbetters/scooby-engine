@@ -239,7 +239,12 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 
 **Acceptance criterion:** Either (a) save/load works through ScummVM's standard dialogs and a state saved before a room transition restores correctly after engine restart, or (b) the engine returns `MetaEngineFeature` flags indicating no save support, and the ScummVM GUI correctly hides save/load options.
 
-**Implementation notes:** *TBD. Original save format is owned by `docs/formats/scooby-exe.md` Findings → "Save-game format" (deferred until Phase 4 per the vision).*
+**Implementation notes:** WP-026 (2026-11-14). The original has no slots. It keeps one profile per player, an INI `<name>.sav` it writes as it plays ([scooby-exe](formats/scooby-exe.md#the-player-profile-wp-026)). A ScummVM save holds that profile's text, so the format is the original's.
+
+- **Writing** (`engines/scooby/profile.cpp`). `saveGameStream()` builds the profile: `Game` (`StartRoom`, `MovieHistory0`–`74`, `Suspect0`–`4`), `Exits`, `Clickables` and `Inventory`, by the original's rules. The stream holds a magic `SCBY`, a version, and the INI text.
+- **Reading.** `loadGameStream()` reads it back by the original's rules, then shows `StartRoom`. Keys the engine doesn't model yet, such as the story's flags, are kept as read, so they survive a save. An original `.sav` reads the same way.
+- **Flags.** The metaengine declares `kSupportsListSaves`, `kSupportsDeleteSave`, `kSupportsLoadingDuringStartup` and `kSavesUseExtendedFormat` with meta info, thumbnails, dates and play time. The engine declares `kSupportsLoadingDuringRuntime` and `kSupportsSavingDuringRuntime`. Saving waits while a scene or an exit plays.
+- **The console's `profile`** prints the profile a save would hold.
 
 ---
 
