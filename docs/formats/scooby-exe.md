@@ -3039,6 +3039,89 @@ handler. So the way to Boot Hill has its comment only if it's the first
 way out taken. `BootHillCommentPlayed` is saved in the room's section
 (`0x419BD0`, `0x419C10`) and cleared by the reset (`0x419BB0`).
 
+##### The hotel (WP-042)
+
+Traced 2026-11-15 for [WP-042](../work-packets/WP-042-hotel.md).
+
+**The music's volume.** `0x40AA10` takes a second argument, a volume in
+percent. If the group asked for is already playing, only the volume
+changes; otherwise the group starts, then takes the volume. The hall asks
+for group 3 at 95, the room for group 3 at 90.
+
+**ROOM_P17_Hotel_Hall** (`0x410BB0`, vtable `0x45E810`):
+- **Its placements:** Daphne and Fred; ways out to the hotel room and the
+  saloon; the door, OBJ_P17_HOTEL_HALL_DOOR, a requires object; and three
+  clickables: hotspots 1 and 2, and the chandelier.
+- **Its fields:** `+0xB8` `SecondEntrance`; `+0xC0` the door; `+0xC4` the
+  chandelier's next line; `+0xC8` hotspot 1; `+0xCC` Daphne.
+
+| Address | What it does |
+|---|---|
+| `0x410C10` (+0x08) | Reset, after the base reset: `SecondEntrance` cleared |
+| `0x410CC0` (+0x30) | The opening `Hotel_Hall.1100BE3_` by name, whether it has played left as it was (`0x40C6B0`). Once it has played, and without `SecondEntrance`: `Hotel_Hall.1100B2_`, unplayed, and `SecondEntrance` set, so the second visit has its own opening once |
+| `0x410DC0` (+0x18) | The door a requires object (`0x408C80` with -1: layer 0) at depth 1; hotspot 2 a clickable at depth -100; the chandelier a clickable at depth -1, or not built once the nickel has been used; hotspot 1 the default clickable |
+| `0x410C40` (+0x0C) | Entry, after the base entry: with `HotelHallDoor` the door shows ANIM_P17_HOTEL_HALL_DOORANIM from step 5. From the saloon Daphne walks in from the left (`0x405F60`); from anywhere else Fred walks in from the right (`0x405FA0`). Both keep the character's depth. Then the music, and the chandelier's line back to the first |
+| `0x410F80` (+0x14) | The door, with Fred idle (`+0x74` = 6), whatever the item: DOORANIM from step 5, `HotelHallDoor` (game `+0x255`), Fred's special OBJ_FRED_P17_OPEN_DOOR and the sound `Hotel_Hall.Unlocked_Door`. The chandelier: `Hotel_Hall.400A_`, `400A2_`, `400A3_` in turn, without holding input |
+| `0x410D00` (+0x04) | The tick, after the base tick: hotspot 1 on step 6 of a sequence ending in A, or step 4 of one ending in B: Daphne scared (state `0x11`) and `Hotel_Hall.Scream_`, not held |
+| `0x411090` / `0x4110D0` | Save / load `SecondEntrance` in the room's section |
+
+Fred has no end-walk sequence from the right in Showdown's art
+(OBJ_FRED_ENDWALK_R_B is missing). Starting it fails, which leaves his
+sprite stopped (`0x430AA0`), so he goes idle on the next tick.
+
+**ROOM_P20_Hotel_Room** (`0x411110`, vtable `0x45E850`):
+- **Its placements:** Daphne and Fred; a way out to the hall; the window,
+  OBJ_P20_HOTEL_WINDOW, a way out whose destination is the room itself;
+  hotspots 2 and 4; and the nickel, OBJ_INV_NICKEL.
+- **Its fields:**
+  - `+0xB8` / `+0xBC`: hotspots 2 and 4.
+  - `+0xC0`: the nickel.
+  - `+0xC4`: the nickel clicked.
+  - `+0xC5`: Daphne is picking it up.
+  - `+0xC6`: `LookedOutAuto`.
+  - `+0xC7`: the window still to take by itself.
+  - `+0xC8`: the window count.
+
+| Address | What it does |
+|---|---|
+| `0x411170` (+0x08) | Reset, after the base reset: the count, `LookedOutAuto` and `+0xC7` cleared |
+| `0x411190` (+0x2C) | Arrival. See below |
+| `0x411280` (+0x18) | Hotspots 2 and 4 clickables; the nickel a requires object (layer 0), hidden once it has been had |
+| `0x411250` (+0x0C) | Entry, after the base entry: the music; `+0xC4` and `+0xC5` cleared |
+| `0x4113B0` (+0x14) | Hotspot 2 while its state (`+0x60`) is ANIM_P20_HOTEL_HOTSPOT2C: `Hotel_Room.410X_`, not held. The nickel with the arrow as the cursor: `+0xC4` |
+| `0x411440` (+0x24) | A way out. See below |
+| `0x4115D0` (+0x04) | The tick, after the base tick. See below |
+| `0x411910` (+0x10) | Leaving, after the base leave: the nickel clicked and not yet had goes in the toolbar |
+| `0x411960` / `0x4119A0` | Save / load `LookedOutAuto` in the room's section |
+
+**Arrival** (`0x411190`):
+- **From the room itself** (through the window), without the brick: the
+  count goes up by one. If it was 1, the opening is `Hotel_Room.410C_`; if
+  it was 2, `Hotel_Room.410C2_`, and the count goes back to 1. Otherwise
+  the opening is marked unplayed.
+- **Else, without `LookedOutAuto`:** the opening `Hotel_Room.280C_`, and
+  `LookedOutAuto` and `+0xC7` set.
+- **Else:** no opening.
+
+So the window's comments alternate, and with the brick there are none.
+
+**A way out** (`0x411440`): an exit to the room itself, which is the
+window, plays movie 15 + `GraveLocation`, one per grave. The first way out
+taken keeps its scene and sets the count to 1; after that the exit's
+scene is cleared. Then the default handler runs.
+
+**The tick** (`0x4115D0`):
+1. **The window by itself.** With `+0xC7`, no scene playing and the
+   opening done, `+0xC7` is cleared and the room takes the window as if
+   clicked. So the first visit ends with a look out of it.
+2. **The nickel.** Clicked, with Daphne idle and the room free: Daphne
+   plays OBJ_DAPHNE_P20_GRAB_COIN, input held. On her step 14 the nickel
+   hides. Idle again: the nickel goes in the toolbar
+   (ANIM_TOOLBARBuffalo_Nickel, cursor ANIM_CURSORBuffalo_Nickel), and
+   `Hotel_Room.410A_` plays, blocking.
+3. **Hotspot 4** on step 11: `Hotel_Room.HOTSPOT4_`.
+4. **Hotspot 2** on step 18 of its C or D: Daphne scared.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
