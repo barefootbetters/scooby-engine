@@ -3238,6 +3238,95 @@ trapdoor. `+0x25C`–`+0x268` are `LeverAlias0`–`3`, drawn by the new game.
 4. **Every sandbag stopped** and the trapdoor shut: the levers' hit types
    go back to 2, and the levers can be clicked again.
 
+##### The jail (WP-044)
+
+Traced 2026-11-15 for [WP-044](../work-packets/WP-044-jail.md).
+
+**A clickable's depth.** The default path builds a clickable with
+`0x408DC0(object, 1, -1)`, and so do the classes that keep one. It calls
+`0x401000` with -10000, which sets the depth from the object's
+`priority=` through `0x40AD50`: -1 when there is none. A clickable's
+`+0x7C` gives it the open hand with the arrow (`0x4015F0`, its vtable
+`+0x18`); `0x401770` clears it.
+
+**ROOM_P07_Jail** (`0x412E60`, vtable `0x45E910`; music `5`, no opening):
+- **Its placements:**
+  - Shaggy and Scooby;
+  - the blanket, OBJ_INV_BLANKET, over the bunk;
+  - hotspot 2, the bed under it;
+  - hotspot 3, the cell door;
+  - hotspot 4, the window;
+  - the hole and the stool, OBJ_P07_JAIL_OVERLAY_HOLE and `_STOOL`, for
+    when the bed is broken.
+
+  It has no exit object: the hole is the only way out.
+- **Its fields:**
+  - `+0xB8`: hotspot 3's next line.
+  - `+0xBC`: Shaggy leaving by the exit handler.
+  - `+0xBD`, `+0xBE`: the blanket clicked, and Shaggy taking it.
+  - `+0xC0`, `+0xC4`, `+0xC8`: the blanket, the bed, hotspot 4.
+  - `+0xCC`: `BedBroken`, saved in the room's section.
+  - `+0xCD`, `+0xCE`: the bed clicked, and Scooby breaking it.
+  - `+0xCF`: `150D_`'s done flag (`0x40B400`'s third argument). It isn't
+    saved.
+  - `+0xD0`: the two going down the hole.
+  - `+0xD4`, `+0xD8`: the hole and the stool.
+
+| Address | What it does |
+|---|---|
+| `0x412EC0` (+0x08) | Reset, after the base reset: `+0xB8`, `+0xBC`, `+0xCC` and `+0xCF` cleared |
+| `0x413690` (+0x18) | The blanket a requires object under layer 0 at depth 1, hidden once taken (`0x407060`). Hotspots 2 and 4 clickables, as the default path builds them. The hole and the stool sprites under layer 0 at depths 0 and 500, hidden unless `BedBroken` |
+| `0x413600` (+0x0C) | Entry, before the base entry: what was under way is cleared. With `BedBroken`, the bed is hidden without its open hand, and the hole and the stool are shown. With `+0xCF`, the room goes straight to ROOM_P14_Tunnel_Dark (game vtable `+0x04`), and the base entry doesn't run |
+| `0x413310` (+0x10) | Leave, after the base leave: a blanket clicked goes in the toolbar, and a bed clicked sets `BedBroken` |
+| `0x413470` (+0x14) | The room's event. See below |
+| `0x412EF0` (+0x04) | The tick, after the base tick. See below |
+| `0x413370` (+0x24) | The exit handler. See below |
+| `0x4138B0`, `0x4138F0` (+0x1C, +0x20) | `BedBroken` saved and read, after the base keys |
+
+**The event** (`0x413470`). Every scene here holds input.
+- **The blanket** with the arrow: `+0xBD`, input held and the cursor
+  faded.
+- **Hotspot 4,** moved on to its B: `Jail_Cell.150X3_`.
+- **The bed,** moved on to its B: `Jail_Cell.150X1_`. Moved back to its A,
+  on the second click: `+0xCD`, its hit type 0, and its B looping
+  (sprite vtable `+0x24`, mode 1).
+- **Hotspot 3:** `Jail_Cell.150X2_` and `150X23_` in turn.
+
+**The tick** (`0x412EF0`). Each step waits for Shaggy or Scooby to be idle.
+1. **`+0xBC`:** Shaggy is hidden, and the room goes to the dark tunnel.
+2. **The blanket:** Shaggy plays OBJ_SHAGGY_P07_TAKE_BLANKET (`0x406130`),
+   and the blanket is hidden. Idle again, he puts OBJ_INV_BLANKET in the
+   toolbar (ANIM_TOOLBARBLANKET, ANIM_CURSORBLANKET), and
+   `Jail_Cell.150C_` plays.
+3. **The bed:** Scooby plays OBJ_SCOOBY_P07_BREAK_BED, with the sound
+   `Scooby_Breaks_Bed`. Idle again, the bed is hidden without its open
+   hand, the hole and the stool are shown, and `BedBroken` is set.
+4. **`BedBroken` without `+0xCF`:** `Jail_Cell.150D_`, with `+0xCF` as its
+   done flag.
+5. **`+0xCF`:** Shaggy plays OBJ_SHAGGY_P07_LEAVE_JAIL in front of the
+   stool (its depth + 1). Scooby is hidden, and the sound
+   `Scooby_Shaggy_Fall_In_Hole` is asked for. On Shaggy's step 6 he goes
+   behind the stool (its depth - 1). Idle again, the room goes to the dark
+   tunnel, and Shaggy is hidden.
+
+While steps 2, 3 and 5 are under way, input is held and the cursor faded.
+
+**The two sounds aren't on the disc.** `0x434DC0` looks a name up as it
+is, and Sfx.dat names them `Scooby.Breaks.Bed` and
+`Scooby.Shaggy.Fall.In.Hole`, with dots. The original logs "Failed to
+locate id" and plays nothing.
+
+**The exit handler** (`0x413370`) never calls the default one. It acts only
+when all four of these hold:
+- the blanket is in a slot (`0x4070C0`);
+- `+0xBC` is clear;
+- no scene is playing (`+0x14`);
+- the opening is done.
+
+It then sets `+0xBC`, and Shaggy plays OBJ_SHAGGY_P07_LEAVE_JAIL. The jail
+has no exit object, so on this disc the handler runs only when something
+else asks for it.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
