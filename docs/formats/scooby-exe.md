@@ -2599,7 +2599,7 @@ takes the player through three visits:
 |---|---|
 | `0x412300` (+0x18) | Placements. OBJ_INV_SAFE_COMBO, unless held: a requires object (`0x408C80` with -1: layer 0) at depth 500, stopped on its last step (`graphics_AnimSprite_Start` 5, 3, -1), hidden until `ComboBlewOn`. Held: not built |
 | `0x412020` (+0x0C) | Entry, after the base entry. `+0xC3` is whether ICDOUBLE is a clue owner (`0x40A870`). Not one, with `ArtifactsBuilt` exactly 1: `Chase_B2_Closeup.260C1_` to `260C3_` (`rand() % 3`), holding input, then his clue (game vtable `+0x44`) and `+0xB8`. Then `+0xC0`, `+0xC1` cleared and the countdown at 24. Not met yet (game `+0x174`): he is met, and Big Head plays `Chase.Branch_2.260A_` on `BIG_HEAD_BG_P25A`, then the artifact's room. Else, with the combination built, not blown in, and `+0xC3`: input holds |
-| `0x412490` | The artifact's room: `ROOM_Artifact_<ArtifactType>_` and `09`, `12` or `15` by level |
+| `0x412490` | The artifact's room: `ROOM_Artifact_<ArtifactType>_` and `09`, `12` or `15` by level ([the puzzle](#the-artifact-puzzle-wp-037)) |
 | `0x411AC0` (+0x04) | The tick, after the base tick. See below |
 | `0x411FC0` (+0x14) | OBJ_INV_SAFE_COMBO with the arrow: `Chase.Branch_2.486_`, its done flag `+0xC0`, told to hold input |
 | `0x411A70` (+0x10) | Leave, after the base leave: `+0xC0` set, the combination goes in the toolbar if it isn't there |
@@ -2630,6 +2630,74 @@ takes the player through three visits:
    game `+0x24`) on every tick. That frees the hold of the combination's
    scene and of Shaggy taking it in the tick they start, so neither holds
    input.
+
+##### The artifact puzzle (WP-037)
+
+Traced 2026-11-15 for [WP-037](../work-packets/WP-037-artifact.md). The
+nine ROOM_Artifact_<Bowl|Deer|Vase>_<09|12|15> rooms (`0x40D8A0`, vtable
+`0x45E6CC`, `Track9.Music`) are the puzzle the close-up sends the gang to.
+Each is a jigsaw of 9, 12 or 15 bones, by its level. Each room's
+placements are:
+- the exit back to the close-up;
+- the artifact, OBJ_ARTIFACT_<TYPE>, which morphs when built;
+- the pieces, one object (OBJ_ARTIFACT_<size>_<TYPE>) with one sequence
+  per piece;
+- the outline, that object's COMPLETE sequence.
+
+**Its fields:**
+- `+0xB8`: the pieces' sprites, numbered as they are built.
+- `+0xF8`: the artifact's sprite.
+- `+0xFC` and `+0x138`: each piece's place, its placement's position.
+- `+0x174`: the piece count.
+- `+0x178`: the piece carried, or −1.
+- `+0x17C`: the artifact is morphing.
+- `+0x180` and `+0x184`: the carried piece's offset from the mouse.
+- `+0x188`: `PiecePlaced0`–`14`.
+
+| Address | What it does |
+|---|---|
+| `0x40E0E0` (+0x18) | Placements, each a sprite under layer 0 hit by its cels (`0x430D60` sets `+4` to 1). The artifact: depth 2, hidden. The outline (the COMPLETE sequence): depth 0. Each piece: depth 1, at its start for the level, or at its place if `PiecePlaced` |
+| `0x40E060` (+0x0C) | Entry, after the base entry: the toolbar slides off (`0x407CC0`), and `Artifact.Intro_1_ICDOUBLE` plays |
+| `0x40DA50` (+0x04) | The tick. See below; the base tick runs last |
+| `0x40D940` | A piece in its place: `Artifact.Clink1` to `3` (`rand() % 3`). With every piece exactly in its place, the artifact shows and plays once (3, 3, −1), `ArtifactsBuilt` (game `+0x270`) is 1, `+0x17C` is set, and `Artifact.Morph` plays |
+| `0x40E0C0` (+0x10) | Leave, after the base leave: the piece count and the artifact cleared |
+| `0x40D900` (+0x08) | Reset: the count, `+0x17C`, the artifact, the carried piece (−1) and every `PiecePlaced` cleared |
+| `0x40E640` / `0x40E6F0` (+0x1C / +0x20) | `PiecePlaced0` to `14` in the room's section, after the base keys |
+
+**Where the pieces start**, by level, in build order (`0x46AE10`,
+`0x46AE58`, `0x46AEB8`; `(x, y)` in layer 0):
+
+| Level | Starts |
+|---|---|
+| 09 | (133,185) (210,185) (317,188) (101,256) (207,256) (345,262) (73,350) (220,360) (382,360) |
+| 12 | (136,178) (210,178) (315,178) (107,234) (218,234) (339,237) (91,300) (212,303) (358,299) (71,372) (218,378) (383,371) |
+| 15 | (140,168) (223,167) (310,167) (115,217) (219,214) (335,213) (102,263) (224,263) (359,263) (88,314) (215,316) (372,311) (77,371) (219,380) (385,373) |
+
+The tick (`0x40DA50`) reads the mouse from the cursor sprite (game `+0x18`,
+its `+0xC`, `+0x10`) and the click from game `+0x20` bit 4:
+1. **The cursor:** over a piece off its place on both axes, ANIM_CURSOROPEN;
+   otherwise the default cursor.
+2. **Not carrying, a click on a piece not in its place:**
+   - within 10 pixels of its place on both axes, it snaps in: depth 1,
+     `PiecePlaced`, then `0x40D940`;
+   - otherwise it is carried: its offset from the mouse is kept, and its
+     depth is its y.
+3. **Carrying, no click:**
+   - a piece exactly in its place stays carried;
+   - otherwise, within 10 of its place it snaps in, as above, and is let
+     go;
+   - otherwise it follows the mouse at its offset, at the depth of its y.
+
+   The snap tests where the piece was, so it comes a tick after the mouse
+   brings it close.
+4. **Carrying, a click:** the piece goes back to its start for the level
+   (the last two letters of the room's name), at depth 1, with
+   `Artifact.Wrong`.
+5. **The artifact morphing,** played out and with `Artifact.Morph` over
+   (`0x434CE0`): the room's exit handler takes the gang to
+   ROOM_P25A_Chase_B2_Closeup.
+6. **The cursor sprite** is hidden (`0x435150`) while a piece is carried,
+   and shown (`0x4351C0`) otherwise. Input stays on.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
