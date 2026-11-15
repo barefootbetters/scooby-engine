@@ -190,6 +190,37 @@ What other decompilation projects have published, and what follows from it:
 - **Case File #1's Processor Pack is an earlier one.** Its entries are `Utc12_2_CPP` build **8943**, which richprint labels "VS6 SP4 PP": the first Processor Pack, for SP4. decomp.me doesn't ship it. `msvc6.5pp` is the nearest decomp.me has, the same product line one build later. How much 8943 and 9044 differ in output is not known. Functions that fail only under 9044 point to that difference.
 - **A quick look at the code generator (Observed).** One documented difference is the x87 compare: the 9044 code generator writes `fnstsw ax; test ah,44h` or `test ah,5`, and plain VC6 writes `test ah,40h` or `test ah,1` (`maci0/rebrew` `toolchain_detect.py`). A whole-file scan of the exes counted Showdown 0 and 63, Phantom 0 and 57, Jinx 0 and 35, and Case File #1 **2 and 29** (Processor Pack style first, plain second). Gen 1 and Jinx are plain throughout. Case File #1 is mixed. The scan doesn't separate the game's own code from the statically linked CRT and the build-8168 C objects. So it can't yet say whether 8943 writes the 9044 idiom; the function map will.
 
+### Library matching, the Processor Pack default and outmatch (2026-11-15)
+
+Four emails from Mony that afternoon and evening, after our reply with the compiler builds and the Gen 1 hashes. Everything below is **Reported**, except the outmatch rows marked **Observed**.
+
+| Item | Value |
+|---|---|
+| Why the total fell by 611 | Dropping Expat, plus a new script that matches statically linked library functions directly against the `.lib` files and sets them aside. That answers the question in [§Reply on the compiler build](#reply-on-the-compiler-build-2026-11-15). |
+| Library matching so far | Run against VC6 RTM's libraries only. Running it on the libraries of the other compiler builds the game used should set aside a few more. |
+| Compiler nondeterminism | He has added known ways to steer MSVC's output, from other projects' findings on what changes what, to his scripts. |
+| `msvc6.5pp` | Added as a custom compiler and made the project default. All functions are going through it again. **84 new matches** before a quarter of the list was done. |
+| Polish mode | While his usage resets, the decompdecomp agents run in polish mode, adding types and names. |
+| Repository | Everything so far is committed and pushed. A progress report came with the email; its figures aren't recorded here yet. Next commit expected 2026-11-16, after his usage resets: the interrupted subagents, the other compiler builds and their libraries. |
+| Gen 1 hashes | He'll compare his Showdown and Phantom executables with ours when he gets to them. |
+| outmatch | He published his tools as [monyarm/outmatch](https://github.com/monyarm/outmatch) and shared them with the decompdecomp developers. |
+
+**outmatch, read from its README (Observed 2026-11-15).** A public repository, created 2026-11-15, in Python with a shell entry point (`outmatch.sh`), with no license file. It runs beside a decompdecomp project while the app is open. It submits every candidate through the app's own `POST /api/try`, so the app compiles, scores and commits each match the same way its **Try** button does. Its commands:
+
+- `loop`: works the whole near-miss queue unattended and keeps a ledger.
+- `msvc`, `levers`, `pragma`: catalogues of source changes known to steer MSVC's output.
+- `flags`: per-file compiler-flag sweeps.
+- `compiler`: tries each function under every installed compiler build.
+- `libmatch`: the library matching above. It compares functions with the VC6 libraries' own objects and records the matches as set aside.
+
+Its README paths are Unix-style (`~/Decomp`, `/tmp/outmatch`), so running it on this project's Windows PC is untested.
+
+**What this changes:**
+
+- **The first measurement for [open question 7](#open-questions).** Moving to the Processor Pack added 84 matches early in the pass. Many functions that RTM couldn't match do match under 9044. Whether any still need 8943 is open until the pass ends.
+- **The denominator is now game code.** With Expat and identified library code set aside, the remaining count is closer to the game's own functions. That's the set the [research targets](#research-targets) care about. Percentages before 2026-11-15 still aren't comparable with later ones.
+- **Better tooling for the trial's large functions.** The trial will start on what's left after outmatch and the Processor Pack pass. That will be the hardest functions, so expect a lower match rate.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -394,7 +425,7 @@ Engine lineage:
 Toolchain and tooling:
 
 6. Which compiler and settings produced each executable? *Answered in part (2026-11-14, Observed):* all are Visual C++ 6.0 with linker 6.00. Game C++ builds: Showdown and Phantom 8966, Jinx 8168, Case File #1 8943 (Processor Pack). The 2026-06 "VC 5.0" reading was a tool mislabel. Exact flags are unknown.
-7. How reliably can decompdecomp reproduce these functions byte for byte? *Partly answered (2026-11-14, Observed):* the VC6 it installs is RTM build 8168, not the Processor Pack's 8943, so only Case File #1's 36 build-8168 C objects were built by exactly that compiler. The host found the same thing from the other side: the game was built with a compiler between 6 and 7, and he's testing which build comes closest (2026-11-15, Reported). *Updated 2026-11-15 (Observed):* decomp.me's `msvc6.5pp` is a later Processor Pack, code generator 13.00.9044, which other projects show stamps build 9044, not 8943. No decomp.me compiler is exactly 8943. Still open: how many of the game's functions `msvc6.5pp` matches that RTM didn't, and whether any need the 8943 pack itself. Gen 1 (8966) has an exact match in decomp.me's `msvc6.5`. See [§decomp.me's VC6 builds](#decompmes-vc6-builds-2026-11-15).
+7. How reliably can decompdecomp reproduce these functions byte for byte? *Partly answered (2026-11-14, Observed):* the VC6 it installs is RTM build 8168, not the Processor Pack's 8943, so only Case File #1's 36 build-8168 C objects were built by exactly that compiler. The host found the same thing from the other side: the game was built with a compiler between 6 and 7, and he's testing which build comes closest (2026-11-15, Reported). *Updated 2026-11-15 (Observed):* decomp.me's `msvc6.5pp` is a later Processor Pack, code generator 13.00.9044, which other projects show stamps build 9044, not 8943. No decomp.me compiler is exactly 8943. *Updated 2026-11-15 (Reported):* with `msvc6.5pp` as the project default, the rerun matched 84 new functions in its first quarter. Still open: the full count once the rerun ends, and whether any functions need the 8943 pack itself. Gen 1 (8966) has an exact match in decomp.me's `msvc6.5`. See [§decomp.me's VC6 builds](#decompmes-vc6-builds-2026-11-15).
 8. Which functions need manual reconstruction after automated processing stalls, and does that set cluster by subsystem?
 
 Using the results:
@@ -497,6 +528,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-14 | Collaborator emails (**Reported**): 30.5 %, 2,086 of 3,371 functions; scripts that permute near matches past decompdecomp's bounded pass, through its internal HTTP API; `libexpat.dll` comes out of the project because it is open-source Expat; he'll move to the next decompdecomp release; and the game's compiler is a build between 6 and 7, which he's testing for the project default. **Observed the same day:** decompdecomp's `6.0` is VC6 RTM 8168, while Case File #1's C++ is Processor Pack 8943, which fits his finding; the DLL is Expat 1.95.3; decompdecomp `v1.0.10-alpha.2` is out (this PC runs `alpha.1`). [Open question 7](#open-questions) partly answered. See [§Progress, libexpat and the compiler build](#progress-libexpat-and-the-compiler-build-2026-11-14-to-11-15). |
 | 2026-11-15 | Collaborator reply (**Reported**): he takes the Processor Pack reading and will give the agents decomp.me's compilers at the Rich Header's builds; 28.4 %, 1,765 of 2,760 functions with `libexpat.dll` removed, 995 left; one agent attempt matched 40 functions at once; out of AI usage for now. He'll start decompiling the Gen 1 games "soon", so their executables need comparing with the WP-007 locks first. The total fell by 611, more than libexpat's 313, which is to ask him about. See [§Reply on the compiler build](#reply-on-the-compiler-build-2026-11-15). |
 | 2026-11-15 | **decomp.me's VC6 builds (Observed).** We downloaded `msvc6.4`, `msvc6.5` and `msvc6.5pp` outside this checkout and read their file versions. `msvc6.5` (SP5, `C2.DLL` 12.00.8966) matches Gen 1's C++ 8966. `msvc6.5pp` is SP5 with the Processor Pack's 13.00.9044 code generator, a later pack than Case File #1's 8943 (SP4). So the 2026-11-14 tip to Mony was close but not exact, and the correction goes to him. An x87-idiom scan finds Gen 1 and Jinx plain, and Case File #1 mixed. See [§decomp.me's VC6 builds](#decompmes-vc6-builds-2026-11-15). |
+| 2026-11-15 | Collaborator emails (**Reported**). The 611-function drop is Expat plus a script that matches statically linked library code against the `.lib` files and sets it aside. `msvc6.5pp` is now the project default, and the rerun found 84 new matches in its first quarter ([open question 7](#open-questions)). Agents are in polish mode, adding types and names. He'll check the Gen 1 hashes when he gets there. His tools are public as [monyarm/outmatch](https://github.com/monyarm/outmatch) (**Observed**: Python, no license file, submits through decompdecomp's `POST /api/try`). See [§Library matching, the Processor Pack default and outmatch](#library-matching-the-processor-pack-default-and-outmatch-2026-11-15). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
