@@ -1990,7 +1990,8 @@ The fork has no room music yet.
     - From 1: the TGI's, the same way.
     - From 2: leave for `ROOM_Sign_In`.
 - **Starting a scene** (`0x40B400`) needs no scene playing and no exit
-  under way. It fades the music over 90 ticks (`0x434F10`).
+  under way. It turns the music down to 90% (`0x434F10`; see
+  [the music's fade](#the-musics-fade-wp-032)).
 - **Leaving** (`+0x10`). If the last movie played (game `+0x90`, set by
   the main loop `0x4362E0`) is 58, the game is over:
   - the player's `.sav` is deleted (`0x409740` names it);
@@ -2336,6 +2337,57 @@ masked.
 | `0x403F90` / `0x404270` | Big Head: the partner / the background |
 | `0x40A930` | Is a suspect met |
 | `0x404480` | The room after Big Head (game `+0x230`) |
+
+##### The music's fade (WP-032)
+
+Traced 2026-11-14 for [WP-032](../work-packets/WP-032-music-fade.md), in
+Showdown. The sound manager (`0x475F48`, returned by `0x434A30`) keeps one
+fade for the music file:
+
+| Field | What it is |
+|---|---|
+| `+0x10` / `+0x11` | Fading down / up |
+| `+0x14` | The target, in percent |
+| `+0x18` | The interval, in game ticks |
+| `+0x1C` | The countdown to the next step |
+| Music file `+0x18` | The music's percent now (100 at start) |
+
+| Address | What it does |
+|---|---|
+| `0x434F10` (target, interval) | Fade down: the down flag on, the up flag off, the countdown at the interval |
+| `0x434F30` (target, interval) | Fade up, the same way |
+| `0x434F50` | Stop either fade, and set every music clip to 100% (`0x43C940` with `0xFFFFFFF`) |
+| `0x434C00` | Once a game tick (`0x435BC0`, after the room's tick): the countdown goes down by one; at 0 it starts again from the interval, and a fade moves the percent one step |
+| `0x43C940` (clip, percent) | Store the music file's percent, and set each playing clip's volume to percent × the file's gain (`+0x14`, the Options slider's 0.7–1.0) |
+| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there |
+
+**A step** (`0x434C00`):
+- **Fading up,** percent + 1. Reaching the target stops the fade and sets
+  the target exactly.
+- **Fading down,** percent − 1. Reaching the target, or passing it, stops
+  the fade at the target.
+
+A fade that starts at its target stops on its first step, with no change.
+
+**Who fades the music:**
+
+| Caller | When | Fade |
+|---|---|---|
+| `0x40B400` | A scene starts (openings, exits' scenes, the rooms' own) | Down to 90, a step every 2 ticks: 100 → 90 in 20 ticks |
+| `0x40C810` (`0x40CA85`) | A scene ends, played out or skipped | Up to 100, a step every 4 ticks: 90 → 100 in 40 ticks |
+| `0x435DC0` (`0x4360B0`) | A room has loaded, after its entry | Up to 100, a step every 3 ticks |
+| `0x428380` (`0x42846E`) | The title shows | `0x434F50`: straight to 100 |
+| `0x41936E`, `0x422478` | A story room near P14, and the room whose tick is `0x422350` | `0x434F50` (not modelled yet) |
+
+**Big Head's own player** (`0x403940`) never reaches `0x40C810`'s end. A
+Big Head scene therefore turns the music down when it starts, and it stays
+down until the next room loads.
+
+**The opening's delay applies to Big Head and Credits too.** Both rooms'
+first scenes are their openings (`+0x78`). The base room starts an opening
+100 ticks after entry (`+0x74`), holding input meanwhile (`0x40C7B0`), and
+only then does `0x40B400` turn the music down. Credits' opening is the
+factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
