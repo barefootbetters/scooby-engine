@@ -1643,7 +1643,7 @@ The front end's classes:
 | Main Menu | `0x4229C0` (`0x45EF2C`) | entry, placements |
 | Difficulty | `0x422680` (`0x45EEEC`) | entry, placements |
 | Quit | `0x423DB0` (`0x45EFB8`) | tick, entry |
-| Sign In | `0x424770` (`0x45F024`) | tick, entry, `+0x10`, placements, exit (not traced) |
+| Sign In | `0x424770` (`0x45F024`) | tick, entry, `+0x10`, placements, exit ([WP-028](#sign-in-and-the-new-game-wp-028)) |
 | Options | `0x4235D0` (`0x45EF6C`) | `+0x08`, entry, `+0x10`, placements (not traced) |
 | Credits | `0x421740` (`0x45EE68`) | tick, `+0x08`, entry, `+0x10` (not traced) |
 
@@ -1723,6 +1723,168 @@ The menu is reached from a game through the toolbar's quit button
   sync.
 - **When the line ends,** Yes sets game `+0x110`, and the game quits. No
   leaves by the room's exit for the room it came from.
+
+##### Sign In and the new game (WP-028)
+
+Traced 2026-11-14 for [WP-028](../work-packets/WP-028-sign-in.md), in
+Showdown. Phantom's Sign In is the same code: every function below
+matches Showdown's byte for byte once addresses are masked (Phantom's
+class sits `0x1F10` lower). The one difference is in the tick's delete
+path, where Phantom builds a local object a few instructions earlier.
+Phantom's story values (its game vtable `+0x4C`) aren't traced.
+
+**Entry** (`0x425050`, after the base entry):
+- hides the toolbar;
+- sets the idle time (`+0xC4`) to 1080 ticks and the prompt countdown
+  (`+0xCC`) to 90, with no leaving line (`+0xC8`) and typing off (`+0x100`);
+- preloads the `Sign_In` sound section and reads the players (`0x426630`:
+  `<save path>*.sav`, each name without `.sav`);
+- builds four list rows at the list's top left, 30 pixels apart, and the
+  typed field;
+- clears the name (`+0x104`), with no row selected (`+0x10C`), none under
+  the mouse (`+0x110`), and the scroll (`+0x114`) at 0.
+
+**The placements** (`0x425560`):
+
+| Placement | What it becomes |
+|---|---|
+| `OBJ_SIGN_IN_CHARACTERS` | A button, in a 560 × 125 box at (0, 350) that leaves it where it is placed. A click (`0x425B90`) types its ANIM's last letter, under 10 letters, with `Sign_In.Click`. |
+| `OBJ_SIGN_IN_PLAY` / `…QUIT` | Buttons: Play (`0x425C70`), Quit (`0x425E00`). |
+| `OBJ_SIGN_IN_U_ARROW` / `…D_ARROW` | Buttons that scroll the list (`0x4260D0`, `0x426070`). |
+| `OBJ_SIGN_IN_R_ARROW` / `…L_ARROW` | Buttons for space (`0x425EF0`) and backspace (`0x425E70`). |
+| `ANIM_SIGN_IN_TEXT_FIELDA` | Only its x and y: the typed field's top left. Not drawn. |
+| `ANIM_SIGN_IN_TEXT_FIELDNAMES` | Only its x and y: the list's top left; the list is 240 × 120. Not drawn. |
+
+The buttons are all placed at (0, 0); their cels carry where they show.
+The characters' placement order is the art's: Showdown's and Phantom's
+start with `M`, and put `0` where `M` would be.
+
+**A text field** (`0x424340`, 140 bytes):
+- **What it is.** A 240 × 30 box (`0x4370D0`) under the room's first layer
+  (game `+0x58`), holding:
+  - a highlight (`OBJ_SIGN_IN_TEXT_FIELD`, `ANIM_SIGN_IN_TEXT_FIELDHIGHLIGHT`,
+    depth 0), shown on the selected row (`0x424660`);
+  - ten letters (`OBJ_SIGN_IN_FONT`, `ANIM_SIGN_IN_FONTCHARSET`, depth 1).
+  All start hidden.
+- **The row under the mouse** switches its letters to
+  `ANIM_SIGN_IN_FONTHIGHLIGHTED`, each on the step it shows (`0x424680`).
+- **Laying out a line** (`0x4244F0`), which does nothing if the text is
+  unchanged:
+  - A letter's step is its value: `0`–`9` are steps 0–9, `A`–`Z` steps
+    10–35.
+  - Each letter goes at x = 1 + the widths before it, y = 1.
+  - A letter's width is its first cel's (`0x430BA0`), plus 2.
+  - A space is hidden and counts 10 + 2.
+  - Then every letter moves right by (240 − the total) × 0.5, so the line
+    is centred. The constants are floats at `0x45F01C`, `0x45E590`,
+    `0x45EB18`, `0x45F020` and `0x45E7CC`.
+
+**Each tick** (`0x424900`, after the base tick). Nothing is read while
+leaving or while an exit runs.
+- **Idle.** The idle time counts down. At 0 it goes back to 1080 and
+  Shaggy says `Sign_In.SHAGGY.Type_Name_Idle`. If there are players and
+  `rand()` is even, he says `…Saved_Game` instead.
+- **The prompt.** The countdown reaches 0 at tick 90: Shaggy says
+  `…Type_Name` (kept in `+0xD0`), the keys so far are dropped, and typing
+  starts.
+- **Typing** starts once the countdown is under 30. Until then the keys
+  are dropped.
+- **Keys** (`0x4264B0`), each resetting the idle time:
+  - backspace;
+  - space (as the right arrow);
+  - `A`–`Z` and `0`–`9`, `a`–`z` made upper case, under 10 letters, with
+    `Sign_In.Click`;
+  - Enter plays.
+- **The list** (`0x426280`). Inside the list's box, row r takes the mouse
+  strictly between y + 30r and y + 30r + 30. Only rows holding a player
+  count, at most four. A click selects the row; a second click on the
+  selected row within 1000 ms plays.
+- **A click in the typed field** (244 × 30) lets go of the selection.
+- **The skip key** (input slot 5, while the flag `0x475F00` is set; entry
+  clears it):
+  - stops the prompt (or marks it said);
+  - zeroes the countdown and starts typing;
+  - stops a leaving line.
+- **Leaving.** When the leaving line ends, the room leaves by its exit
+  (`+0x24`): for `ROOM_Quit` after `Sign_In.Quit_Button`, else for
+  `ROOM_Difficulty`.
+- **A changed name** is laid out in the typed field, and the selection is
+  let go.
+- **The rows** (`0x426130`) show the players from the scroll.
+  - **Up** shows if there are players and (the scroll isn't 0 or the
+    selected row is past the first).
+  - **Down** shows if there are players and (a selected row isn't the
+    last player, or the scroll is under count − 4).
+- **Deleting.** Input slot 18 (`0x12`) with a row selected deletes that
+  player's `.sav`. The row is removed and the selection let go. The scroll
+  goes back one if old count − 5 < scroll and the new count is over 3. The
+  rows show it on the next tick.
+
+**The buttons.**
+- **Up** (`0x4260D0`) moves the selection up, or the scroll if the first
+  row is selected or none is.
+- **Down** (`0x426070`) moves the selection down, or the scroll if none is
+  selected or the last row is.
+- **Space** (`0x425EF0`) adds one under 10 letters, never first and never
+  twice.
+- **Backspace** (`0x425E70`).
+- Each one plays `Sign_In.Click`.
+
+**Play** (`0x425C70`) takes the selected row's player as the name.
+- **With a name:** a trailing space goes. Shaggy says
+  `Sign_In.SHAGGY.Click_Play` as the leaving line, every other sound
+  stops, the selection goes, the cursor fades and input stops.
+- **Without a name:** Shaggy says `…Type_Name_Idle`, unless he is saying
+  it already.
+
+**Quit** (`0x425E00`): `Sign_In.Quit_Button` as the leaving line, every
+other sound stopped, the cursor faded and input stopped.
+
+**The exit** (`0x425210`). Anywhere but `ROOM_Quit` starts a new game for
+the name:
+1. game vtable `+0x4C` (Showdown `0x42DBC0`, below);
+2. every room object's reset (`0x435780`);
+3. the inventory's reset (`+0x50`);
+4. the player's name into game `+0x16C`.
+
+A name in the list then reads that player's `%s%s%s.sav` (game `+0x58`),
+which goes to its `StartRoom`. Otherwise the base exit goes to the level
+select.
+
+**The new game.** `0x4087B0`, shared by both titles:
+- clears the level, the speech lock, the suspects, the clues and the
+  player's name;
+- seeds `rand()` from the clock;
+- sets `StartRoom` to `ROOM_Difficulty`.
+
+Showdown's `+0x4C` (`0x42DBC0`) then sets the story's values. Checked
+against the writer `0x42F3A0` and the `0x40A270` it calls:
+
+| Field | Value | Profile key |
+|---|---|---|
+| `+0x254`, `+0x26D` | 1 | `MoaningActive`, `SheriffWaiting` (`Yes`) |
+| `+0x255`, `+0x26C`, `+0x274`, `+0x275`, `+0x276`, `+0x256` | 0 | `HotelHallDoor`, `SheriffPuzzle`, `GummyPuzzle`, `TunnelLit`, `VaultOpen`, `BagsRandomized` (`No`) |
+| `+0x284`, `+0x288` | 12, 0 | `ClockHour`, `ClockMinute` |
+| `+0x280` | `rand() % 9` | `GraveLocation` |
+| `+0x28C` | `rand() & 3` | `StrongBox` |
+| `+0x25C`–`+0x268` | `rand() & 3` each, drawn again until it differs from those before it | `LeverAlias0`–`3` |
+| `+0x100` | `rand() % 5`: `ARTIE`, `ICDOUBLE`, `JENNY`, `SHERIFF`, `GUMMY` | `Whodunit` |
+| `+0x278` | `rand() % 3`: `Bowl`, `Deer`, `Vase` | `ArtifactType` |
+| `+0x10A`–`+0x154` | 0 | `MovieHistory0`–`74` |
+
+Two more fields are zeroed with no key in the writer: the dword `+0x270`
+and the byte `+0x290`.
+
+| Address | What it does |
+|---|---|
+| `0x424340` / `0x4244F0` | Text field: constructor / lay out a line |
+| `0x424660` / `0x424680` | Text field: highlight / font under the mouse |
+| `0x424900` / `0x425050` | Sign In: tick / entry |
+| `0x425560` / `0x425210` | Sign In: placements / exit |
+| `0x4264B0` / `0x426280` / `0x426130` | Keys / the list under the mouse / the rows and arrows |
+| `0x426630` | Read the players (`%s%s*.sav`) |
+| `0x4087B0` / `0x42DBC0` | New game: shared / Showdown's story values |
+| `0x435780` | Reset every room object (vtable `+0x08`) |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
