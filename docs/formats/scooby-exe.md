@@ -2525,8 +2525,7 @@ the gang runs through two kinds of room, both with `Chase.Music`:
 - **Chase C**, the run-offs, P33 to P39 (`0x41FBB0`, vtable `0x45EDE8`): a
   canned animation, then the next branch.
 
-The close-up, P25A (`0x4119F0`), is ICDouble's scene; it waits for the
-clue API.
+The close-up, P25A (`0x4119F0`), is ICDouble's scene: [below](#the-close-up-p25a-wp-036).
 
 **Chase B's fields:** `+0xB8` the OBJ_BRANCH sprite; `+0xBC` the countdown;
 `+0xC0` the pending room; `+0xC8` the oil can taken here; `+0xCC` the oil
@@ -2571,6 +2570,66 @@ still looping the room never changes; no room's exits lead to one.
   C4 to B6, and C5 and C6 back to ROOM_P40_Chase_Start through movie 31.
   It is called again every tick until the room changes; the fork calls it
   once.
+
+##### The close-up, P25A (WP-036)
+
+Traced 2026-11-15 for [WP-036](../work-packets/WP-036-closeup.md).
+ROOM_P25A_Chase_B2_Closeup (`0x4119F0`, vtable `0x45E890`, `Track9.Music`)
+has ICDouble digging, the gang, the exit back to P25, and the safe's
+combination (OBJ_INV_SAFE_COMBO, an inventory object by `object.ini`). It
+takes the player through three visits:
+1. **Meeting ICDouble.**
+2. **His clue,** once the artifact is built.
+3. **The combination,** which blows in once he has given his clue.
+
+**Its fields:**
+- `+0xB8`: he gives when next idle.
+- `+0xB9`: then the thanks.
+- `+0xBC`: the combination's sprite.
+- `+0xC0`: `Chase.Branch_2.486_`'s done flag.
+- `+0xC1`: Shaggy is taking it.
+- `+0xC2`: `ComboBlewOn`.
+- `+0xC3`: ICDouble was a clue owner on entry.
+- `+0xC4`: the countdown to the blow-in.
+
+**The game fields it reads:** game `+0x270` is `ArtifactsBuilt`, `+0x278`
+`ArtifactType` (Bowl, Deer, Vase), `+0x160` the level.
+
+| Address | What it does |
+|---|---|
+| `0x412300` (+0x18) | Placements. OBJ_INV_SAFE_COMBO, unless held: a requires object (`0x408C80` with -1: layer 0) at depth 500, stopped on its last step (`graphics_AnimSprite_Start` 5, 3, -1), hidden until `ComboBlewOn`. Held: not built |
+| `0x412020` (+0x0C) | Entry, after the base entry. `+0xC3` is whether ICDOUBLE is a clue owner (`0x40A870`). Not one, with `ArtifactsBuilt` exactly 1: `Chase_B2_Closeup.260C1_` to `260C3_` (`rand() % 3`), holding input, then his clue (game vtable `+0x44`) and `+0xB8`. Then `+0xC0`, `+0xC1` cleared and the countdown at 24. Not met yet (game `+0x174`): he is met, and Big Head plays `Chase.Branch_2.260A_` on `BIG_HEAD_BG_P25A`, then the artifact's room. Else, with the combination built, not blown in, and `+0xC3`: input holds |
+| `0x412490` | The artifact's room: `ROOM_Artifact_<ArtifactType>_` and `09`, `12` or `15` by level |
+| `0x411AC0` (+0x04) | The tick, after the base tick. See below |
+| `0x411FC0` (+0x14) | OBJ_INV_SAFE_COMBO with the arrow: `Chase.Branch_2.486_`, its done flag `+0xC0`, told to hold input |
+| `0x411A70` (+0x10) | Leave, after the base leave: `+0xC0` set, the combination goes in the toolbar if it isn't there |
+| `0x411A50` (+0x08) | Reset: `+0xB8`, `+0xB9`, `+0xC2` cleared |
+| `0x412410` / `0x412450` (+0x1C / +0x20) | `ComboBlewOn` in the room's section, after the base keys |
+
+**The tick** (`0x411AC0`), in order:
+1. **ICDouble clicked** with the arrow (game `+0x20` bit 4, his `+0x08`):
+   - before the artifact is built (`ArtifactsBuilt` < 1), back to the
+     artifact's room;
+   - after, `Chase_B2_Closeup.1901_` to `1904_` (`rand() & 3`), not held.
+2. **ICDouble idle with `+0xB8`:**
+   - he plays GIVES, `+0xB9` is set, and input holds;
+   - idle again with `+0xB9`: the room's exit handler (`+0x24`) with
+     `Global.Thank_You_` to ROOM_Suspect_Chooser.
+3. **`+0xC0` set, the combination's scene over:**
+   - with Shaggy idle and no scene or opening, he plays
+     `OBJ_SHAGGY_P25A_TAKE_COMBO`, the combination hides, and input holds;
+   - idle again: OBJ_INV_SAFE_COMBO goes in the toolbar
+     (ANIM_TOOLBARSAFE_COMBO, ANIM_CURSORSAFE_COMBO) and input is free.
+4. **The blow-in:** with the combination built, not blown in, and `+0xC3`,
+   the countdown's old value below 1:
+   - `ComboBlewOn`, and it shows;
+   - it plays once (3, 3, −1) at Shaggy's depth − 1, with
+     `ICDouble.Combo.Blows.In`, 25 ticks after entry.
+5. **On step 38,** while it plays, it moves to Shaggy's depth + 1.
+6. **Once blown in and stopped,** with `+0xC3`, input is freed (`0x4351C0`,
+   game `+0x24`) on every tick. That frees the hold of the combination's
+   scene and of Shaggy taking it in the tick they start, so neither holds
+   input.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
