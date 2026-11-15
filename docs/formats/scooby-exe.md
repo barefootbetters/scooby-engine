@@ -2699,6 +2699,113 @@ its `+0xC`, `+0x10`) and the click from game `+0x20` bit 4:
 6. **The cursor sprite** is hidden (`0x435150`) while a piece is carried,
    and shown (`0x4351C0`) otherwise. Input stays on.
 
+##### The bank vault and the open safe (WP-038)
+
+Traced 2026-11-15 for [WP-038](../work-packets/WP-038-vault.md). The bank
+has five classes:
+
+| Room | Class | Vtable |
+|---|---|---|
+| ROOM_P13_Bank (the vault door) | `0x428660` | `0x45F0E8` |
+| ROOM_Vault_Clock (its dial) | `0x42A780` | `0x45F1E8` |
+| ROOM_P16_Bank_Vault | `0x429220` | `0x45F128` |
+| ROOM_Open_Safe | `0x429BE0` | `0x45F168` |
+| ROOM_SB1 to SB5 | `0x42A340` | `0x45F1A8` |
+
+This section covers the vault and the open safe.
+
+**ROOM_P16_Bank_Vault**'s placements:
+- the gang;
+- the exits to the bank and, through the safe, to ROOM_Open_Safe;
+- the safe's door, OBJ_P16_DOOR, a requires object for ANIM_CURSORSAFE_COMBO;
+- four strong boxes, hotspots 1–4, requires objects for
+  ANIM_CURSORSTRONG_BOX_KEY;
+- the dust, hotspot 6, a clickable.
+
+**Its fields:**
+- `+0xB8`: the door.
+- `+0xBC`: the dust.
+- `+0xC0`: `DustVisible`.
+- `+0xC4`: which of two lines a box clicked with the arrow gets.
+- `+0xC8`: the door clicked.
+- `+0xC9`: Daphne has tried it.
+
+An item **used** below is one taken (`0x407060`) and no longer in a slot
+(`0x4070C0`).
+
+| Address | What it does |
+|---|---|
+| `0x4295E0` (+0x18) | Placements. The door: a requires object (`0x408C80` with -1: layer 0) at depth 1, showing ANIM_P16_DOOROPEN on its last step (start 5) once the combination is used. Hotspots 1–5: not built once the key is used. Hotspot 6: a clickable (`script_CreateClickableObject` 1, -1), on ANIM_P16_BANK_VAULT_HOTSPOT6C (start 0) with its state set (`0x401780`) while `DustVisible` |
+| `0x4292A0` (+0x0C) | Entry, after the base entry: `+0xC8` and `+0xC9` cleared; with the key used and the dentures never taken, OBJ_INV_DENTURES goes in the toolbar |
+| `0x429350` (+0x14) | Events. See below |
+| `0x429870` (+0x04) | The tick, after the base tick. See below |
+| `0x429280` (+0x08) | Reset: `DustVisible` and `+0xC4` cleared |
+| `0x4297F0` / `0x429830` (+0x1C / +0x20) | `DustVisible` in the room's section, after the base keys |
+
+**The events** (`0x429350`):
+- **The door:** with the combination, it is used (`0x406C80`) and the
+  cursor goes back to the default. Either way `+0xC8` is set, and input
+  holds.
+- **A strong box with the arrow:** `Bank_Vault.340A_` and
+  `Bank_Vault.340A2_` in turn, holding input.
+- **A strong box with the key:**
+  - in the right box, whose number less one is `StrongBox` (game
+    `+0x28C`), the vault loads again through movie 38 + (box − 1) (game
+    vtable `+0x08`, with the box's last character − `0xB`), and the key is
+    used;
+  - in a wrong box, `Bank_Vault.340B_`, `340B2_` or `340B3_`
+    (`rand() % 3`), holding input.
+- **The dust:**
+  - until `DustVisible`, it becomes visible when its next state is
+    ANIM_P16_BANK_VAULT_HOTSPOT6C;
+  - after, `Bank_Vault.340X_` plays, and the dust is put back on C, its
+    state too.
+
+**The tick** (`0x429870`), only with `+0xC8` set:
+1. **Daphne tries the safe.** With Daphne idle, no scene, and the opening
+   done:
+   - without the combination used, she plays
+     `OBJ_DAPHNE_P16_NO_UNLOCK_SAFE` with `Daphne.No_Open_Safe`;
+   - with it, she plays `OBJ_DAPHNE_P16_UNLOCK_SAFE` with
+     `Daphne.Opens_Safe`, and the door hides.
+
+   Then `+0xC9` is set.
+2. **Input holds** on every tick.
+3. **Daphne idle again** after her try:
+   - without the combination, `Bank_Vault.340E_` plays;
+   - with it, the door shows ANIM_P16_DOOROPEN (start 0, step 0) again,
+     and the room's exit handler takes the gang to ROOM_Open_Safe.
+
+   Then both flags clear.
+
+**ROOM_Open_Safe** has no music. Its placements are the gang in the vault,
+OBJ_GANG_VAULT_<NAME>, each a talking mouth.
+
+| Address | What it does |
+|---|---|
+| `0x42A040` (+0x18) | Each of the gang a sprite under layer 1 (game `+0x5C`) at depth 1: Daphne `+0xC0`, Fred `+0xC4`, Velma `+0xC8`, Shaggy `+0xCC`, Scooby `+0xD0` |
+| `0x429C40` (+0x0C) | Seen before (the opening played): ROOM_P19_Back_Alley. Then the base entry, the toolbar off (`0x407CC0`), the countdown `+0xBC` at 72, and `Open_Safe.340F_` started, holding input |
+| `0x42A320` (+0x3C) | Input held and the cursor hidden, on every tick |
+| `0x429CB0` (+0x38) | The scene's step, its own line player. See below |
+| `0x429F10` (+0x04) | The tick. See below |
+
+**The scene's step** (`0x429CB0`):
+- **The next line:** with the countdown run out, the scene on and no line
+  playing, it takes the first of the 20 speakers (`0x46A720`, Big Head's)
+  with a clip `<scene><line>_<NAME>`, and plays it.
+- **Its mouth** is the speaker's: Daphne, Fred, Scooby, Velma, or else
+  Shaggy's.
+- **The end:** with no line left, or on input slot 5 (which also stops the
+  line), the scene is over.
+
+**The tick** (`0x429F10`):
+1. **The base tick,** with the scene's step in it.
+2. **The mouths:** each of the gang goes to step 0, and the speaker's to
+   the lip sync's shape − 1.
+3. **A line over** (its position −1) frees the next.
+4. **The scene over:** the opening counts as played, and ROOM_P19_Back_Alley
+   loads.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
