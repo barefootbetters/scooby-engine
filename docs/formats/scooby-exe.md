@@ -1599,7 +1599,8 @@ and the live writes below).
 |---|---|---|---|
 | `Game` | `StartRoom`: the last room that isn't a menu (game `+0x24C`, set on entry by `0x40B920` through vtable `+0x48`; the menus are Main Menu, Options, Suspect Chooser, Sign In, Difficulty, Quit, Big Head) | `0x42F3A0` | `0x42F640`, which then goes there |
 | `Game` | `Difficulty`, `Whodunit` (the villain, drawn by `0x42DBC0`), `FinalClue`, `CluesFound0`–`4`, `ClueOwners0`–`4`, `Suspect0`–`4` (met), `MovieHistory0`–`74` | `0x40A270` | `0x40A540` |
-| `Game` | Story flags: `MoaningActive`, `SheriffPuzzle`, `SheriffWaiting`, `GummyPuzzle`, `TunnelLit`, `HotelHallDoor`, `VaultOpen`, `ArtifactType`, `GraveLocation`, `ClockHour`, `ClockMinute`, `StrongBox`, `ArtifactsBuilt`, `BagsRandomized`, `BagDown0`–`3`, `LeverAlias0`–`3`; then each room class's own keys (its vtable `+0x1C` / `+0x20`) | `0x42F3A0` | `0x42F640` |
+| `Game` | Story flags: `MoaningActive`, `SheriffPuzzle`, `SheriffWaiting`, `GummyPuzzle`, `TunnelLit`, `HotelHallDoor`, `VaultOpen`, `ArtifactType`, `GraveLocation`, `ClockHour`, `ClockMinute`, `StrongBox`, `ArtifactsBuilt`, `BagsRandomized`, `BagDown0`–`3`, `LeverAlias0`–`3` | `0x42F3A0` | `0x42F640` |
+| *the room's name* | `OpeningPlayed`, `SnacksGiven`, then the room class's own keys (room vtable `+0x1C` / `+0x20`; the section is the room object's name, `+0x8`, [WP-029](#each-rooms-own-setup-wp-029)) | `0x40C410` | `0x40C470` |
 | `Exits` | `<exit OBJ>=1`, when the exit is taken | `0x402130` | `0x401850` (taken for `1`, `on`, `On`, `ON`, `TRUE`) |
 | `Clickables` | `<OBJ>=<state ANIM>` | `0x401350`, when the room is left | `0x401000` |
 | `Inventory` | `Snacks`, `Slot0`–`3`, `Anim0`–`3`, `Cursor0`–`3`, `History0`–`31`; `Nothing` for an empty one | `0x407780` | `0x407430` (an empty `Snacks` is 1) |
@@ -2005,6 +2006,179 @@ The fork has no room music yet.
 | `0x40B400` | Start a scene, fading the music |
 | `0x40B0D0` | Every movie seen |
 | `0x409740` | The player's `.sav` path |
+
+##### Each room's own setup (WP-029)
+
+Traced 2026-11-14 for [WP-029](../work-packets/WP-029-room-setup.md), in
+Showdown. Phantom's base room functions (`0x40B0F0`, `0x40B920`,
+`0x40B490`, `0x40AA10`, `0x40C7B0`, `0x40C6C0`, `0x40C410`, `0x40C470`) are
+the same code at the same addresses; their decompiles differ only in
+names.
+
+**The base room's fields** (constructor `0x40B0F0`, which takes the room's
+name, its music and its opening scene):
+
+| Field | What it is |
+|---|---|
+| `+0x10` | The opening has played; saved as the room's `OpeningPlayed` |
+| `+0x14` | The scene playing (`0x40B400`) |
+| `+0x24` | Snacks Scooby needs here: 0, unless the class's reset sets it (Town Center: 1) |
+| `+0x28` | The opening can be skipped: 1 |
+| `+0x68` | The music, from the class constructor |
+| `+0x74` | The opening's delay: 100 ticks, set again when the room is left (vtable `+0x10`, `0x40BB70`, from the room unload `0x435CD0`) |
+| `+0x78` | The opening scene, from the class constructor |
+| `+0x88` | Snacks eaten here; saved as the room's `SnacksGiven` |
+| `+0xB4` | The idle timer: (`rand() % 30` + 25) × 36 ticks |
+
+- **Music** (`0x40B920` → `0x40AA10`). `atoi` of the music: a group if 1
+  or more, played as `Group<g>_<n>.Music`. Each time the group changes,
+  `n` is the group's next variant (game `+0x1E4`), back to 1 when that clip
+  doesn't exist. The game constructor (`0x408480`) starts with no group
+  (`+0x20C` −1). The clip is stopped, then played (`0x434CB0`, `0x434C70`).
+  Any other music, an empty string too, leaves no group and plays the clip
+  by that name. So a room without a class keeps the music that was playing.
+  While a group plays, the game's update (`0x409CB3`) picks its next variant
+  once the clip is done (`0x434CE0`). Every music clip has the loop flag,
+  so with looping clips this never fires.
+- **The opening** (room vtable `+0x3C`, `0x40C7B0`, at the end of the base
+  entry). If it isn't played and a character here (the game's list
+  `+0x19C`) has its first line, `<scene>1_<NAME>` (`0x40C6C0`), the cursor
+  fades and input is held. Otherwise the scene name is cleared, and it
+  counts as played. The room's tick (`0x40B490`) starts it, blocking, when
+  it isn't played, no exit is parked, no scene plays, and the delay has run
+  out: on tick 100 after entry. Its end marks it played (`+0x80` points at
+  `+0x10`). Input slot 5 marks it played and gives input back
+  (`0x40B490`), and ends any scene playing (`0x40C810`). Entering any room
+  from `ROOM_Ghost_Spot` sets its opening to one of
+  `Global.Ghost_Spot_`, `…B_` or `…C_` (`rand() % 3`), not played.
+- **Snacks** (`0x40B490`). Each snack Scooby or Shaggy eats here adds one
+  to `+0x88`. The snack-given line, and the toolbar closing after it, wait
+  until `+0x88` reaches `+0x24`.
+- **Idle chatter** (room vtable `+0x34`). The scene player (`0x40C810`)
+  starts the idle timer again on every tick a scene plays. When it runs
+  out with no scene, and the opening played or there is none, the tick
+  calls `+0x34` and starts it again. The base class does nothing.
+- **The profile** (`0x40C410`, `0x40C470`). Every room writes its section:
+  `OpeningPlayed` (`Yes`/`No`) and `SnacksGiven` (`%i`), then the class's own
+  keys. Read back, only `Yes` is true. A missing key reads as empty, so `No`
+  or 0 (`0x40C560`).
+
+The rest of the room vtable:
+
+| Slot | Base | What it is |
+|---|---|---|
+| `+0x10` | `0x40BB70` | Leave: the scene, the parked exit and the delay are reset; the speech lock is let go |
+| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. Not traced further |
+| `+0x2C` | `0x404460` | On entry, with the room left: nothing |
+| `+0x30` | `0x404810` | On entry, first: nothing |
+| `+0x34` | `0x404470` | Idle chatter: nothing |
+| `+0x38` | `0x40C810` | The scene player |
+| `+0x3C` | `0x40C7B0` | The opening, at entry |
+
+Each room's music and opening, from each class constructor's call to
+`0x40B0F0`:
+
+**Showdown** (rooms without a class: no music change, no opening):
+
+| Music | Opening | Rooms |
+|---|---|---|
+| `Chase.Music` | — | P24_Chase_B1, P25_Chase_B2, P26_Chase_B3, P27_Chase_B4, P28_Chase_B5, P29_Chase_B6, P33_Chase_C1, P37_Chase_C2, P38_Chase_C3, P39_Chase_C4, P34_Chase_C5, P35_Chase_C6, P40_Chase_Start |
+| `Ghost_Spot.Music` | — | Ghost_Spot |
+| `Gummy.Music` | `Gummy_Puzzle.220B_` | Gummy |
+| `Horseshoe_Corral.Music` | — | P30_Horseshoe_Corral |
+| `Suspect.Music` | — | Suspect_Chooser |
+| `Title_Screen.Music` | — | Title_Screen |
+| `Track9.Music` | — | P25A_Chase_B2_Closeup, Artifact_Bowl_09, Artifact_Bowl_12, Artifact_Bowl_15, Artifact_Deer_09, Artifact_Deer_12, Artifact_Deer_15, Artifact_Vase_09, Artifact_Vase_12, Artifact_Vase_15 |
+| group 1 | — | Sign_In, Difficulty, Options, Main_Menu, Quit, Test_Scroll |
+| group 2 | `Street_3.320A_` | P11_Street3 |
+| group 2 | `Town_Center.100B_` | P01_Town_Center |
+| group 2 | — | P03_Street1, P04_Street2, P08_Post_Office, P09_Railroad_Station, P10_Front_Of_General_Store |
+| group 3 | `Saloon.360A_` | P12_Saloon |
+| group 3 | — | P17_Hotel_Hall, P20_Hotel_Room, Artie |
+| group 4 | — | P05_Stage, P06_Stage_Trapdoor |
+| group 5 | `Back_Alley.350A_` | P19_Back_Alley |
+| group 5 | `Tunnel_Dark.170A_` | P14_Tunnel_Dark |
+| group 5 | — | P02_Sheriffs_Office, P07_Jail, P13_Bank, P15_General_Store_Interior, P16_Bank_Vault, P18_Tunnel_Lit, Sheriff, Vault_Clock |
+| group 6 | — | P21_Boot_Hill1, P22_Boot_Hill2, P23_Boot_Hill3, Cheat |
+| — | — | P32_Pie_Noon, Big_Head, Open_Safe, SB1, SB2, SB3, SB4, SB5 |
+
+**Phantom** (rooms without a class: no music change, no opening):
+
+| Music | Opening | Rooms |
+|---|---|---|
+| `Bagpipes.Music` | `Town.110_` | P04_Town |
+| `Drawbridge.Music` | `Drawbridge.100A_` | P01_Drawbridge |
+| `Ghost_Spot.Music` | — | Ghost_Spot |
+| `Hedge_Maze.Music` | — | Hedge_Maze |
+| `Knights.Music` | `Knights_of_the_Snack_Table.350X_` | P31_KST |
+| `Princess_Bedroom.Music` | `Princess_Bedroom.280_` | P29_Princess_Bedroom |
+| `Princess_Bedroom.Music` | — | P26_Castle_Balcony, P27A_Below_Balcony_Door, P28_Veranda |
+| `Skull_Puzzle.Music` | — | Wizards_Skull |
+| `Title_Screen.Music` | — | Title_Screen |
+| `Track6.Music` | — | Suspect_Chooser, Options, Main_Menu, Quit |
+| group 1 | `Arena_1.170_` | P09_Arena1 |
+| group 1 | `Arena_2.180A_` | P14_Arena2 |
+| group 1 | `Ewan.NOTEBOOKPAGE_INTRO_` | Ewan |
+| group 1 | `Fountain.250D_` | P44_Fountain_Closeup |
+| group 1 | `Magic_Mirror_Room.310_` | P08_Magic_Mirror_Room |
+| group 1 | `Mermaids_Cavern.340_` | P21_Mermaids_Cavern |
+| group 1 | `Room_Of_Doors.140_` | P11_Room_Of_Doors |
+| group 1 | `Royal_Gallery.210_` | P07_Royal_Gallery |
+| group 1 | `Secret_Passage_2.380_` | P19_Secret_Passage2 |
+| group 1 | `Storage_Room.370_` | P18_Storage |
+| group 1 | `Throne_Room.160_` | P10_Throne_Room |
+| group 1 | `Wizards_Library.300_` | P25_Wizards_Library |
+| group 1 | — | P12_Dining_Room, P13_Kitchen, P03_Souvenir_Shop, P05_Gardeners_House, P06_Garden, P15_Secret_Passage1, P16_Treasury, P17_Kitchen_Storage, P20_Kings_Armory, P20_Kings_Armory_Slide, P22_Well_In_Maze, P23_Maze_Center, P24_Wizards_Bedroom, P27_Below_Balcony, Sign_In, Difficulty, Brad_SPOOKY, Brad_SPOOKIER, Brad_SPOOKTACULAR, Maria, Maze_Map |
+| group 6 | — | Cheat |
+| — | `Gardeners_House.130A_` | Garden_Plaque |
+| — | — | P30_WFR, Big_Head |
+
+The Credits room's opening comes from its factory call, which passes
+`Credits.1100A2_` and `Credits.1100D3_`; which one the constructor keeps
+isn't traced.
+
+**Town Center** (`0x42CFD0`, vtable `0x45F300`). Its fields follow the base
+room's:
+
+| Address | Slot | What it does |
+|---|---|---|
+| `0x42D030` | `+0x08` reset | One snack needed (`+0x24`). The moan timer (`+0xBC`) at 36 ticks; the exit scene (`+0xB8`) and `SignClicked` (`+0xC0`) at 0 |
+| `0x42D270` | `+0x0C` entry | From Street 1, Fred walks in `UL` (`0x405EE0`); from Street 2, Velma `U` (`0x405FE0`); from Street 3, Shaggy `UR` (`0x405E60`). Each keeps its depth (`+0x9C`), goes 50 behind it and starts state 1 |
+| `0x42D800` | `+0x18` placements | `OBJ_INV_SIGN`: not built if the sign was ever taken (`0x407060`); else a requires object (`0x408C80`) under layer 1, depth 1 (`0x430EE0`), hidden until `SignClicked`. `OBJ_P01_TC_HOTSPOT4`: a clickable under layer 1, depth 1, hidden once `SignClicked`. `OBJ_P01_TC_HOTSPOT2`: a clickable under its `layer=`, kept |
+| `0x42D7B0` | `+0x14` event | `OBJ_P01_TC_HOTSPOT4`: `SignClicked`. `OBJ_INV_SIGN`: take the sign (`+0xD0`) |
+| `0x42D3F0` | `+0x04` tick | Below |
+| `0x42D060` | `+0x24` exit | With no snack eaten here (`+0x88` = 0): `Town_Center.100A_`, `…100A2_`, `…100A3_` in turn, blocking, and the snack box flashes (`0x40D4D0`). Else the base exit |
+| `0x42D340` | `+0x34` idle chatter | `rand() & 3`: `Town_Center.100B_`, `…100B2_`, `…100B3_` with `MoaningActive`, or `…1100D_`; none blocks |
+| `0x42D970` / `0x42D9B0` | `+0x1C` / `+0x20` | The base keys, then `SignClicked` |
+
+The tick, after the base tick:
+
+- **Moans.** The timer counts down every tick. When it has run out and the
+  story's `MoaningActive` (game `+0x254`, set by `0x42DBC0`, cleared by the
+  Saloon at `0x414E95`) is on, `Town_Center.Moan.<1–4>` plays, and the next
+  is 5–14 seconds away.
+- **The hanging sign.** Clicked, it plays its state once. When that's over,
+  the sign shows, the hanging sign hides, and `Town_Center.307_` plays,
+  blocking.
+- **The second hotspot.** On step 7 of `ANIM_P01_TC_HOTSPOT2C`, Daphne,
+  Scooby and Shaggy go to state `0x11`: `ANIM_<NAME><set>SCARED` once, the
+  line they were saying stopped, and `Global.Scared.<NAME>`. State `0x11`
+  again in its first two steps changes nothing.
+- **Scooby takes the sign.** From the sign's event until he has it, input
+  is held and the cursor is faded. Once Scooby is idle (state 6), no scene
+  plays and the opening is done: Scooby hides, and
+  `OBJ_SCOOBY_P01_TAKES_SIGN` plays `ANIM_SCOOBY_P01_TAKES_SIGN1` once
+  where he stands, under layer 1 at depth 10, with `Scooby.Takes.Sign`.
+  The sign hides, and the game's idle time restarts (`0x436810`). When the
+  sequence is over, Scooby shows. If the sign isn't in the history, it goes
+  in the toolbar as `ANIM_TOOLBARPOP_SIGN` / `ANIM_CURSORPOP_SIGN`. Input
+  comes back, and `Town_Center.360C_` plays, blocking.
+
+**The snack box's flash** (`0x40D4D0` sets `+0x70`; the box's update
+`0x40D130` acts on it). It waits for no scene and the opening done. With
+the toolbar open, the box plays `ANIM_TOOLBARSNACK_BOX_ANIM` once with
+`Global.Snack_Box`, the digits move away (x −5000.0) until it's over, and
+the flag clears. Otherwise the toolbar opens first (`0x407C00`).
 
 ##### The accusation: suspects and clues, and Big Head (WP-031)
 
