@@ -2639,8 +2639,8 @@ nine ROOM_Artifact_<Bowl|Deer|Vase>_<09|12|15> rooms (`0x40D8A0`, vtable
 Each is a jigsaw of 9, 12 or 15 bones, by its level. Each room's
 placements are:
 - the exit back to the close-up;
-- the artifact, OBJ_ARTIFACT_<TYPE>, which morphs when built;
-- the pieces, one object (OBJ_ARTIFACT_<size>_<TYPE>) with one sequence
+- the artifact, `OBJ_ARTIFACT_<TYPE>`, which morphs when built;
+- the pieces, one object (`OBJ_ARTIFACT_<size>_<TYPE>`) with one sequence
   per piece;
 - the outline, that object's COMPLETE sequence.
 
@@ -2779,7 +2779,7 @@ An item **used** below is one taken (`0x407060`) and no longer in a slot
    Then both flags clear.
 
 **ROOM_Open_Safe** has no music. Its placements are the gang in the vault,
-OBJ_GANG_VAULT_<NAME>, each a talking mouth.
+`OBJ_GANG_VAULT_<NAME>`, each a talking mouth.
 
 | Address | What it does |
 |---|---|
@@ -2805,6 +2805,124 @@ OBJ_GANG_VAULT_<NAME>, each a talking mouth.
 3. **A line over** (its position −1) frees the next.
 4. **The scene over:** the opening counts as played, and ROOM_P19_Back_Alley
    loads.
+
+##### The bank and the vault clock (WP-039)
+
+Traced 2026-11-15 for [WP-039](../work-packets/WP-039-bank.md). These are
+the other two of the [bank's five classes](#the-bank-vault-and-the-open-safe-wp-038).
+
+**The mouse flags** that room classes read, game `+0x20`, are set each
+frame from the mouse (`0x4359C0`):
+
+| Bit | Meaning |
+|---|---|
+| 1 | The button is held |
+| 2 | The button went down this frame |
+| 4 | The button came up this frame |
+
+A sprite under the mouse has its `+0x08` set.
+
+**ROOM_P13_Bank**'s placements:
+- the gang;
+- the exits to Street 3 and, through the vault door, to the vault (scene
+  `Bank.330D1_`);
+- the vault door, OBJ_P13_DOOR, a requires object for
+  ANIM_CURSORBROKEN_CLOCK;
+- four clickables.
+
+The broken clock is OBJ_INV_CLOCK in the toolbar, added with
+ANIM_TOOLBARBROKEN_CLOCK and ANIM_CURSORBROKEN_CLOCK (`0x40FB70`).
+
+**Its fields:**
+- `+0xB8`: the door.
+- `+0xBC`: the countdown to the door opening.
+- `+0xC0`: the countdown to the next moan.
+- `+0xC4`: which line the door clicked with the arrow gets.
+
+| Address | What it does |
+|---|---|
+| `0x4286E0` (+0x30) | The opening: `Bank.330A_`, unplayed, on every visit while `MoaningActive` (game `+0x254`); none otherwise |
+| `0x428EC0` (+0x18) | The door, a requires object (`0x408C80` with -1: layer 0) at depth 1. With `VaultOpen` (game `+0x276`), ANIM_P13_DOOROPEN on its last step (start 5); else, with the clock used, its step 0 (start 0) |
+| `0x428FE0` (+0x0C) | Entry, after the base entry. With `VaultOpen` and from the dial: input held, the countdown at 36, the door on DOOROPEN step 0. The door's line back to the first. Fred walks in down-left (`0x405F20`) from Street 3, Daphne up-right (`0x405E60`) from the vault |
+| `0x428710` (+0x14) | The door. See below |
+| `0x4290D0` (+0x04) | The tick, after the base tick. See below |
+| `0x4286C0` (+0x08) | Reset: the moan countdown at 36 |
+
+**The door** (`0x428710`):
+- **With the arrow and the clock used** (taken, not in a slot): the room's
+  exit handler to ROOM_Vault_Clock, with no scene.
+- **With the arrow otherwise:** `Bank.330B_`, `Bank.330B2_`, then
+  `Bank.330C_` with the clock in a slot or `Bank.330B3_`, in turn, holding
+  input.
+- **With the clock:**
+  - it is used and the cursor goes back to the default;
+  - a time is drawn, `rand() % 10` from the level's table (game `+0x160`),
+    and kept as `ClockHour` and `ClockMinute` (game `+0x284`, `+0x288`);
+  - the room's exit handler takes the gang to ROOM_Vault_Clock with the
+    scene `Bank_Vault.Clock_<level>_<%.2d%.2d>_`, which names the time.
+
+| Draw | Spooky (09) | Spookier (12) | Spooktacular (15) |
+|---|---|---|---|
+| 0 | 2:00 | 1:40 | 1:14 |
+| 1 | 3:00 | 2:50 | 2:26 |
+| 2 | 4:00 | 3:10 | 3:18 |
+| 3 | 5:00 | 4:20 | 4:08 |
+| 4 | 6:00 | 5:30 | 5:16 |
+| 5 | 7:00 | 6:40 | 7:49 |
+| 6 | 8:00 | 7:50 | 8:02 |
+| 7 | 9:00 | 10:10 | 10:23 |
+| 8 | 10:00 | 11:20 | 11:57 |
+| 9 | 11:00 | 12:30 | 12:31 |
+
+Each of the 30 times has its own `ANIM_VAULT_CLOCK_TIME<hh>_<mm>` on the disc,
+and no others do.
+
+**The tick** (`0x4290D0`):
+1. **The door's countdown** reaching 0: `Bank.330D_`, holding input, with
+   `Bank.Vault_Opens`; the door plays DOOROPEN once (3, 3, −1); input is
+   freed.
+2. **The moans:** while the countdown's old value is above 0, nothing.
+   Then, with `MoaningActive`, `Town_Center.Moan.1` to `4` (`rand() & 3`),
+   and the countdown at (`rand() % 10` + 5) × 36.
+
+**ROOM_Vault_Clock**'s placements:
+- the exit back to the bank;
+- the hour hand, 12 steps, and the minute hand, 60, both at (319, 289);
+- the time to set, OBJ_VAULT_CLOCK_TIME.
+
+**Its fields:**
+- `+0xB8`: the hour hand.
+- `+0xBC`: the minute hand.
+- `+0xC0`: what is dragged (0 none, 1 the hour hand, 2 the minute hand).
+- `+0xC4`: `Vault_Clock.Dial.Click`'s id.
+- `+0xC8` and `+0xCC`: the hands' last steps.
+
+| Address | What it does |
+|---|---|
+| `0x42A830` (+0x18) | The hands and the time, sprites at depth 0, stopped on step 0. The time starts `ANIM_VAULT_CLOCK_TIME%002i_%002i` of `ClockHour` and `ClockMinute`; an unknown name shows nothing |
+| `0x42AA70` (+0x0C) | Entry: the toolbar slides off (`0x407CC0`), nothing dragged |
+| `0x42AAA0` (+0x04) | The tick, after the base tick. See below |
+
+**The tick** (`0x42AAA0`):
+1. **Catching a hand:** with nothing dragged, the button going down (bit 2)
+   on the hour hand drags it, else on the minute hand.
+2. **Turning it:** dragged, the hand turns toward the mouse (game `+0x1C`,
+   `+0x1E`), unless the mouse is at the dial's center (319, 285).
+   - **The target:** `atan2(x − 319, −(y − 285))` ÷ 2π, plus 1 if it is
+     negative, times the hand's steps, plus 0.5, truncated, modulo the
+     steps.
+   - **The step:** the hand is restarted every tick: stopped on the
+     target; else one step forward (mode 1) or back (mode 2), the shorter
+     way.
+
+   So it turns a step a tick.
+3. **Letting go:** the button coming up (bit 4) stops both hands.
+4. **The vault opens:** with nothing dragged, the minute hand on
+   `ClockMinute` and the hour hand on `ClockHour` mod 12, `VaultOpen` is
+   set and the room's exit handler takes the gang back to the bank. It is
+   called again every tick until the room changes; the fork calls it once.
+5. **The click:** a hand on a new step plays `Vault_Clock.Dial.Click`
+   again from its start.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
