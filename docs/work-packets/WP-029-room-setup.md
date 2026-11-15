@@ -26,6 +26,7 @@ title: "WP-029: Room Setup and Town Center"
 **Deviations and gaps:**
 
 - **The music never rotates on its own.** Every music clip has the loop flag, so `0x409CB3`'s "clip over" never comes. The rotation runs as traced; the check forces it by stopping the clip.
+- **Follow-up fork commit [`1f002172c4`](https://github.com/barefootbetters/scummvm/commit/1f002172c4)** makes the Town Center check identical from run to run. The idle chatter and the snack-given line come from `rand()`, so the check now reports what the trace fixes, not which line was drawn. The WP-001 session spotted it.
 - **Not done:** the game's idle time restarting when Scooby takes the sign (`0x436810`, game `+0x34`/`+0x3C`, not modelled).
 - **Not traced: the music during scenes.** Every scene start calls `0x434F10(90, 2)` (`0x40B400`). Every scene end calls `0x434F30(100, 4)` (`0x40C810`), and the room load calls `0x434F30(100, 3)`. These are probably the music fading down and back. The fork's music stays level.
 - **Not traced:** the idle line's name (`+0x28`, `0x40CB50`), and which of its two factory scenes the Credits room keeps as its opening.
