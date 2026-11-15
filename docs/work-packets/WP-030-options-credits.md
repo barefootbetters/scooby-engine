@@ -26,11 +26,11 @@ The reference is `wp030_ref.py`, written from the trace. It reads the art and th
 
 **Deviations and gaps:**
 
-- **Room music** came after this packet, with WP-029 (fork `2de5b85eea`). Options' music slider changes ScummVM's music volume, which applies to the playing music at once; the original calls `0x40AA10` with the room's group there. Credits' parts don't fade the music before their scenes (`0x434F10`, 90 ticks): the fork's music has no fade yet.
+- **Room music** came after this packet, with WP-029 (fork `2de5b85eea`). Options' music slider changes ScummVM's music volume, which applies to the playing music at once; the original calls `0x40AA10` with the room's group there. Credits' scenes turn the music down as every scene does, since WP-032.
 - **Volumes are ScummVM's**, set to the original's gain × 256 and saved as each knob is let go. The original writes `Scooby.ini` when the room is left. A ScummVM volume under 179 puts the knob at its line's start; dragging can't go below 179, as the original can't go below 0.7.
 - **Grabbing a knob** happens on the click that lands on it, through the hit walk. The original reads the sprite's `+0x08` flag on its update.
 - **Credits' end of game** runs just before the exit to Sign In, not as the room is left.
-- **Credits' entry scene** is started by the class. WP-029's setup table gives every other room its opening, and leaves Credits' to its factory call, so it plays once.
+- **Credits' first scene** was started by the class at entry. Since WP-032 it is the room's opening in WP-029's setup table, played 100 ticks in, as the original does.
 - **The skip** is Escape, Space or a click, standing in for input slots 5 and 4.
 
 ---
