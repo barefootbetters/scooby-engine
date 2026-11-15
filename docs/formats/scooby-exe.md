@@ -3122,6 +3122,122 @@ scene is cleared. Then the default handler runs.
 3. **Hotspot 4** on step 11: `Hotel_Room.HOTSPOT4_`.
 4. **Hotspot 2** on step 18 of its C or D: Daphne scared.
 
+##### The stage (WP-043)
+
+Traced 2026-11-15 for [WP-043](../work-packets/WP-043-stage.md).
+
+**A clickable's callback.** `0x401740` stores a function at a clickable's
+`+0x78` and its context at `+0x74`. When the clickable is clicked
+(`0x401440`), it starts its state's sequence and sound, moves to its next
+state, sends the room event, and then calls the callback with the
+clickable. A sprite's `+4` is its hit type (0 never hit, 1 its cels, 2 its
+step polygon); the trapdoor sets it to switch its levers and its way out
+off and on.
+
+**The sandbags' story values.** Game `+0x256` is `BagsRandomized`, and
+`+0x257`–`+0x25A` are `BagDown0`–`3`: 1 when that sandbag is down on the
+trapdoor. `+0x25C`–`+0x268` are `LeverAlias0`–`3`, drawn by the new game.
+
+**ROOM_P05_Stage** (`0x417C50`, vtable `0x45EA54`; music `4`):
+- **Its placements:** Scooby, Shaggy and Velma; a way down to the
+  trapdoor, OBJ_P05_T0_P06, and a way out to the saloon; four sandbags,
+  all OBJ_P05_STAGE_SANDBAG, told apart by their sequence's digit; Jenny;
+  and two clickables.
+- **Its fields:** `+0xB8` Jenny gives when idle; `+0xB9` then the thanks;
+  `+0xBC`–`+0xC8` the sandbags.
+
+| Address | What it does |
+|---|---|
+| `0x417CB0` (+0x08) | Reset, after the base reset: `+0xB8` and `+0xB9` cleared |
+| `0x4181B0` (+0x18) | Jenny, and OBJ_P05_STAGE_TRAPDOOR, not built until Jenny has been met (`0x40A930`). The way down not built once she has. Each sandbag a sprite under layer 0 at depth -1001, kept by its digit |
+| `0x417F10` (+0x0C) | Entry. See below |
+| `0x417CD0` (+0x04) | The tick, after the base tick. See below |
+
+**Entry** (`0x417F10`), after the base entry:
+1. **Jenny met:**
+   - Without the hammer, she hands it over: OBJ_INV_HAMMER, with
+     ANIM_TOOLBARRUSTY_HAMMER and cursor ANIM_CURSORRUSTY_HAMMER.
+   - Before her clue: the scene `Stage.380D2_`, blocking; her clue (game
+     vtable `+0x44`); and `+0xB8`.
+2. **The sandbags hung,** once, without `BagsRandomized`. Below level 2 the
+   first is up and the others down; at level 2 the first is down and the
+   others up. Then `BagsRandomized` is set.
+3. **Each sandbag shown** only while it is down (`0x4313F0`, sprite
+   `+0x14`).
+4. **Shaggy walks in:** from the saloon down and left (`0x405F20`), from
+   the trapdoor up and right (`0x405E60`).
+
+**The tick** (`0x417CD0`), with Jenny there:
+1. **Jenny clicked** with the arrow (released this frame, her clicked flag
+   at `+8`): `Stage.1801_`, `1802_` or `1803_` (`rand() % 3`), without
+   holding input.
+2. **Jenny idle with `+0xB8`:** she plays GIVES (`0x4061F0`). `+0xB8` is
+   cleared, `+0xB9` set, the cursor fades and input is held.
+3. **Jenny idle again**, or no Jenny, with `+0xB9`: the room's exit
+   handler takes the gang to ROOM_Suspect_Chooser with
+   `Global.Thank_You_`.
+
+**ROOM_P06_Stage_Trapdoor** (`0x418430`, vtable `0x45EA94`; music `4`):
+- **Its placements:**
+  - four levers, all OBJ_TRAPDOOR_LEVER (ANIM_TRAPDOOR_LEVER1–4);
+  - four sandbags, all OBJ_TRAPDOOR_SANDBAG (ANIM_TRAPDOOR_SANDBAG1–4_DROP);
+  - the way out, OBJ_TRAPDOOR_EXIT, to the stage;
+  - the trapdoor, OBJ_TRAPDOOR_DOOR;
+  - two clickables.
+
+  It has no gang placements.
+- **Its fields:**
+  - `+0xB8`–`+0xC4`: the levers.
+  - `+0xC8`–`+0xD4`: the sandbags.
+  - `+0xD8`: the trapdoor.
+  - `+0xDC`: the trapdoor opening.
+  - `+0xE0`: the knock countdown.
+  - `+0xE4`: the visits, for the opening.
+  - `+0xE8`: the way out.
+
+| Address | What it does |
+|---|---|
+| `0x418510` (+0x08) | Reset, after the base reset: the countdown -10, `+0xDC` and `+0xE4` cleared |
+| `0x418490` (+0x30) | The opening, unplayed on every visit. Level 0: `Stage_Trapdoor.370BS_`. Levels 1 and 2: `370B_` on the first visit, `370B2_` on the second, `370B3_` after that |
+| `0x418A10` (+0x18) | Each lever a clickable at depth -500, with `0x418F50` as its callback, kept by its digit. Each sandbag a sprite under layer 0 at depth y - 240, started on its last step (mode 5), on ANIM_TRAPDOOR_SANDBAG%d_RAISE if it is up. The trapdoor a sprite under layer 0 at depth -100. The way out an exit object (`0x408D20`) at depth -1000 |
+| `0x418870` (+0x0C) | Entry, after the base entry: the toolbar slides off (`0x407CC0`), the room's sounds are preloaded, and the countdown is -5 |
+| `0x418F50` | A lever's callback. See below |
+| `0x418D50` | Move sandbag i: up and to drop, it plays ANIM_TRAPDOOR_SANDBAG%d_DROP once, `BagDown` set, `Stage_Trapdoor.TRAPDOOR_SANDBAG1_DROP`; down and to raise, its RAISE, `BagDown` cleared, `TRAPDOOR_SANDBAG1_RAISE`. The sequence changes only if the current one ends the other way |
+| `0x418540` (+0x04) | The tick. See below |
+| `0x4188B0` (+0x24) | A way out: with the trapdoor open and stopped, movie 4. Then the default handler |
+
+**A lever** (`0x418F50`), unless the trapdoor is opening:
+1. **The bags it moves.** The digit at the end of the lever's sequence
+   picks its alias (`LeverAlias`, game `+0x25C`). The alias and the level
+   pick which sandbags it moves, each the other way:
+
+   | Alias | Level 0 | Level 1 | Level 2 |
+   |---|---|---|---|
+   | 0 | 1 | 1, 2 | 1, 2, 3 |
+   | 1 | 2 | 2 | 2, 3, 4 |
+   | 2 | 3 | 3, 4 | 3, 4, 1 |
+   | 3 | 4 | 4 | 4, 1, 2 |
+
+2. **All four up:** the trapdoor plays ANIM_TRAPDOOR_DOOROPEN once and
+   `+0xDC` is set. Jenny is met (`0x40A8B0`),
+   `Stage_Trapdoor.TRAPDOOR_DOOR_OPEN` plays, and the way out's hit type
+   goes to 0.
+3. **The levers' hit types** go to 0.
+
+**The tick** (`0x418540`):
+1. **The trapdoor open and stopped:** the room's exit handler takes the
+   gang to the stage with no scene. The handler makes it movie 4, 785
+   frames long.
+2. **The base tick.**
+3. **The knocks.**
+   - Below -5, the countdown plays `Stage_Trapdoor.Knock1` and goes to 72.
+   - Each tick it then counts down. Below 0 it goes back to 72, and one of
+     `Knock1`–`5` or `Yell1`–`4` plays (`rand() % 9`).
+   - So the first comes on the first tick after entry, then one every 74
+     ticks.
+4. **Every sandbag stopped** and the trapdoor shut: the levers' hit types
+   go back to 2, and the levers can be clicked again.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
