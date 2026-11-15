@@ -5,12 +5,29 @@ title: "WP-040: Showdown's Boot Hill"
 
 # WP-040: Showdown's Boot Hill: the grave with the brick (Gen 1)
 
-**Status:** 🔄 In progress
+**Status:** ✅ Done (2026-11-15)
 **Phase:** 4 (game logic)
 **Depends on:** WP-034 ✅ (the brick's use on Street 1), WP-029 ✅ (room classes and openings), WP-020 ✅ (exits)
 **Companion EC:** none (inline checklist under Exit criteria)
 **Estimated effort:** Half a day
 **Pre-flight:** [pre-flight-WP-040-2026-11-15](../reference/pre-flight-WP-040-2026-11-15.md)
+
+---
+
+## Result (2026-11-15)
+
+The reference is `wp040_ref.py`: WP-039's, plus Boot Hill, written from the trace before the engine ran. It reads the rooms' graves from the art and which openings someone in the room has a first line of from the sound archives' indexes, and never runs the engine. At `script` level 3 the chase check now logs 103 lines on Showdown, the earlier 95 and 8 for Boot Hill; the reference prints the same 103, none different. On Phantom both print the one line saying there is no chase.
+
+| Exit criterion | Result |
+|---|---|
+| 1. Against the reference | ✅ Showdown:<br>**The rooms.** All three get the class; `GraveLocation` 0-8 names Boot Hill 1's graves, then 2's, then 3's. Each room's three graves are clickables; Boot Hill 2's opening is `340E2_`, the others none; each needs the level's snacks plus two (2, 3, 4).<br>**The graves,** for locations 0, 4 and 8. A wrong grave brings the ghost, input held. The brick's grave gives all three dig scenes over 40 tries, held; the room comes back through movie 3 on tick 1. There, `210B_` unplayed, the brick in the toolbar, no graves, `DigScenePlayed`. Next visit, no `210B_`; the grave does nothing.<br>**The snacks.** Boot Hill 2's way back keeps the gang at each level with `190A_`, `190A2_`, `190A3_`, and the toolbar opens for the snack box. The tunnel's way isn't kept, nor the way back with two snacks.<br>**Walking in.** Velma, Fred, Daphne, Shaggy and Fred, as the trace has them. The keys read back, and a reset clears them. |
+| 2. Live, Showdown | ✅ Through `test_script`, minimized, from profiles in the original's form (`GraveLocation` 1):<br>**The dig.** Boot Hill 1's second grave: `190B2_`, then movie 3. Back, the graves weren't built, `210B_` played, and the brick was in the toolbar.<br>**The ghost.** The first grave: the ghost appeared, the gang scared, and the ghost spot loaded.<br>**The snacks.** Boot Hill 2's exit to Boot Hill 1: the gang stayed with `190A_`, and the snack box flashed when it ended. |
+| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings, on `bc705989f7`. Phantom's earlier checks are identical to WP-039's run. Showdown's differ in three ways: the setup check's Boot Hill 2 now has its opening `340E2_` (the class sets it); the profile check writes and imports the three rooms' `DigScenePlayed`, three keys more each way; and the Street 1 check's random clue. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`783919255e`](https://github.com/barefootbetters/scummvm/commit/783919255e) stages its 6 files by name and is pushed. |
+
+**Deviations and gaps:**
+
+- **The strong-box rooms are not ported.** ROOM_SB1 to SB5 are unreachable in the shipped game; they keep the base class.
+- **The snacks needed are set after the base entry.** The base room's setup logs 0 for these rooms; the class then sets the level's plus two, as `0x40EE10` does after `0x40B920`.
 
 ---
 
@@ -54,7 +71,7 @@ that and move on ([scooby-exe](../formats/scooby-exe.md#the-bank-vault-and-the-o
 
 ## Exit criteria
 
-1. [ ] Showdown matches an independent reference line for line:
+1. [x] Showdown matches an independent reference line for line:
    - the classes and the grave each `GraveLocation` names;
    - each room's graves, opening, and snacks needed by level;
    - for three locations: a wrong grave's ghost, the dig scenes, movie 3,
@@ -64,11 +81,11 @@ that and move on ([scooby-exe](../formats/scooby-exe.md#the-bank-vault-and-the-o
    - the gang walking in, and the keys.
 
    Phantom prints that it has no chase, as its reference does.
-2. [ ] Live, in Showdown, from profiles in the original's form:
+2. [x] Live, in Showdown, from profiles in the original's form:
    - the brick's grave dug, movie 3, and the brick in the toolbar;
    - a wrong grave and the ghost;
    - Boot Hill 2's way back refused and the snack box flashing.
-3. [ ] Scooby-only build: 0 errors and 0 warnings. The earlier checks and
+3. [x] Scooby-only build: 0 errors and 0 warnings. The earlier checks and
    the room check are unchanged. The fork diff stays inside
    `engines/scooby/`, staged by name.
 
