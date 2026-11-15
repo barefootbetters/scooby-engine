@@ -1644,8 +1644,8 @@ The front end's classes:
 | Difficulty | `0x422680` (`0x45EEEC`) | entry, placements |
 | Quit | `0x423DB0` (`0x45EFB8`) | tick, entry |
 | Sign In | `0x424770` (`0x45F024`) | tick, entry, `+0x10`, placements, exit ([WP-028](#sign-in-and-the-new-game-wp-028)) |
-| Options | `0x4235D0` (`0x45EF6C`) | `+0x08`, entry, `+0x10`, placements (not traced) |
-| Credits | `0x421740` (`0x45EE68`) | tick, `+0x08`, entry, `+0x10` (not traced) |
+| Options | `0x4235D0` (`0x45EF6C`) | `+0x08`, entry, `+0x10`, placements ([WP-030](#options-and-credits-wp-030)) |
+| Credits | `0x421740` (`0x45EE68`) | tick, `+0x08`, entry, `+0x10` ([WP-030](#options-and-credits-wp-030)) |
 
 **The button** (`0x436C50`, vtable `0x45F4DC`).
 - **What it is.** A sprite built stopped on step 0, with a sound (`+0x60`)
@@ -1885,6 +1885,126 @@ and the byte `+0x290`.
 | `0x426630` | Read the players (`%s%s*.sav`) |
 | `0x4087B0` / `0x42DBC0` | New game: shared / Showdown's story values |
 | `0x435780` | Reset every room object (vtable `+0x08`) |
+
+##### Options and Credits (WP-030)
+
+Traced 2026-11-14 for [WP-030](../work-packets/WP-030-options-credits.md),
+in Showdown, and compared with Phantom byte for byte once addresses are
+masked.
+- **Credits.** Every function matches, and so do its strings; only the
+  factory's scenes differ.
+- **Options** works the same way, with three differences:
+  - its fields sit 4 bytes lower;
+  - its markers are `OBJ_OPTIONS_SWORDS`;
+  - its music callback replays a stored clip rather than music group 1.
+
+**The base room's constructor** (`0x40B0F0`) takes the room's music
+(`+0x68`) and its entry scene (`+0x78`). The factory gives most rooms the
+music `"1"` (`0x46A108`). The base entry (`0x40B920`) reads the music:
+- a number of 1 or more plays that music group (`0x40AA10`:
+  `Group%i_%i.Music`, the second number counting up through the group's
+  tracks);
+- anything else stops the group and plays the clip of that name.
+
+The fork has no room music yet.
+
+**Options** (`0x4235D0`, vtable `0x45EF6C`): reset `0x423630`, entry
+`0x423650`, `+0x10` `0x423A90`, placements `0x423B80`.
+- **The markers.** The placements claim the six `OBJ_OPTIONS_NAIL`
+  (Phantom `OBJ_OPTIONS_SWORDS`) for their places only; they aren't drawn.
+  `0x423C20` keeps them sorted by y: a new marker goes before the first
+  one lower down. More than six asserts.
+- **Entry** asserts six markers and orders each pair left to right. The
+  pairs from the top make three sliders (`0x4080F0`, class `0x45E568`):
+
+| Pair | Slider | Volume (sound file) | Moving (`+0x64`) | Let go (`+0x5C`) |
+|---|---|---|---|---|
+| Top | `+0xF4` | Music (`+0x0C`) | `0x423CB0`: set it, replay the room's music | the same |
+| Middle | `+0xF0` | Sound effects (`+0x04`) | — | `0x423CF0`: set it, play `Pie_Noon.Splat.0` (Phantom `Knights.Glass_Breaks.3`) |
+| Bottom | `+0xF8` | Voices (`+0x08`) | — | `0x423D50`: set it, play `Level_Select.SHAGGY.Spooky` |
+
+- **Leaving** (`+0x10`) clears the marker count and writes the three
+  volumes to `Scooby.ini`'s `Scooby` section as `Sfx`, `Voice` and
+  `Music` (`%f`).
+
+**The slider** (`0x4080F0`, from `C:\Scooby\Common\OptionsSlider.cpp`).
+- **What it is.** The marker's own OBJ and ANIM as a knob under the second
+  layer (game `+0x5C`), at depth 5000, looping at 3 ticks a step.
+- **Building it.** It keeps:
+  - the ends (`+0x70`–`+0x7C`);
+  - the unit normal (y1 − y2, x2 − x1) / length (`+0x80`, `+0x84`).
+  A zero-length slider asserts.
+- **Value and volume.** The knob sits at start + (end − start) × t, where
+  t = (gain − 0.7) × 3.3333333. A volume is a gain from 0.7 to 1.0, set as
+  0.7 + 0.3 t (`0x45EFB0`, `0x45EFB4`, `0x45EFAC`).
+- **Its update** (vtable `+0x0C`, `0x4082A0`):
+  - **Grabbing.** With the sprite's `+0x08` set (the fork reads it as the
+    knob under the mouse) and the button just down (input `+0x20` flag 2),
+    the knob is grabbed. The grab
+    (`+0x88`, `+0x8C`) is the mouse less the knob.
+  - **While dragging:**
+    - p = mouse − grab, and d = (p − knob) · n;
+    - q = p − d n is p brought onto the line;
+    - t is q's distance along the line over the line's length, read along
+      x or y, whichever the line spans more, and held in 0–1;
+    - the knob moves to its new place, and the moving callback runs.
+  - **Letting go.** With the button up (flag 1 clear), dragging stops and
+    the let-go callback runs.
+
+**Credits** (`0x421740`, vtable `0x45EE68`): reset `0x4218A0`, entry
+`0x4218C0`, tick `0x421C60`, `+0x10` `0x422230`.
+- **The factory** (Showdown `0x42EF50`, Phantom `0x42FE49`) gives it its
+  entry scene and two more:
+
+| | Entry scene (`+0x78`) | WB's (`+0xC8`) | TGI's (`+0xD0`) |
+|---|---|---|---|
+| Showdown | `Credits.1100A2_` | `Credits.1100D3_` | `Credits.1100D4_` |
+| Phantom | `Credits.10002_` | `Credits.1000A_` | `Credits.1000B_` |
+
+- **Entry.** The first two cases skip the base entry and ask for a movie
+  and this room again (game vtable `+0x08`).
+  - **From `ROOM_Big_Head`**, after the accusation, it asks for the
+    villain's movie (`Whodunit`, game `+0x100`): `ARTIE` `0x21`, `GUMMY`
+    `0x22`, `ICDOUBLE` `0x23`, `JENNY` `0x24`, `SHERIFF` `0x25`, `BRAD`
+    `0x2D`, `JESTER` `0x2E`, `EWAN` `0x2F`, `MARIA` `0x30`, `WIZARD` `0x31`.
+    Both titles' villains are in the one table; another name gets no movie.
+  - **From `ROOM_Credits`** the first time (`+0xD8`, cleared by the reset)
+    it asks for movie 58 (`0x3A`).
+  - **Otherwise the roll:**
+    - the base entry;
+    - the cursor hidden, input held, the toolbar hidden;
+    - the TLC logo (`OBJ_CREDITS_TLC`, `ANIM_CREDITS_TLCLOGO`) at (0, 0)
+      under the second layer, depth 1;
+    - its text (`…TLCTEXT`) under the first layer, depth 0, at y 480.
+  - **The text** scrolls for its first cel's height + 350 (`+0xC0`; stage
+    `+0xC4` = 0).
+- **Each tick:**
+  - the base tick, then the cursor hidden and input held;
+  - **scrolling:** every third tick (a global counter, `0x475F0C`) the text
+    rises 6 pixels (`0x45EEA8`), and so much less is left;
+  - **skipping:** input slot 5 or 4 leaves for `ROOM_Sign_In`;
+  - **the parts:** with nothing left to scroll, the stage moves on.
+    - From 0: the TLC sprites go, `OBJ_CREDITS_WB` with its logo and text
+      comes, and the WB's scene starts (`0x40B400`).
+    - From 1: the TGI's, the same way.
+    - From 2: leave for `ROOM_Sign_In`.
+- **Starting a scene** (`0x40B400`) needs no scene playing and no exit
+  under way. It fades the music over 90 ticks (`0x434F10`).
+- **Leaving** (`+0x10`). If the last movie played (game `+0x90`, set by
+  the main loop `0x4362E0`) is 58, the game is over:
+  - the player's `.sav` is deleted (`0x409740` names it);
+  - a new game starts (game vtable `+0x4C`, `0x435780`, `+0x50`);
+  - every movie in the history counts as seen (`0x40B0D0`).
+
+| Address | What it does |
+|---|---|
+| `0x4080F0` / `0x4082A0` | Slider: constructor / update |
+| `0x408260` / `0x408280` | Slider: set the let-go / moving callback |
+| `0x423C20` | Options: add a marker, sorted by y |
+| `0x40AA10` | Play music group n (`Group%i_%i.Music`), or stop it (−1) |
+| `0x40B400` | Start a scene, fading the music |
+| `0x40B0D0` | Every movie seen |
+| `0x409740` | The player's `.sav` path |
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
