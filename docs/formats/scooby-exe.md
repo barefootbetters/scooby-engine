@@ -1389,7 +1389,8 @@ Clickables act only while the cursor shows their own rollover
   - open at 635 − the van's width;
   - driving in, between the two;
   - driving out, beyond either;
-  - hidden (`0x407CC0`, x −(width + 30)), which story rooms use.
+  - hidden (`0x407CC0`, x −(width + 30)), which many room classes set on
+    entry ([Rooms that hide the toolbar](#rooms-that-hide-the-toolbar-wp-025)).
 
 **Driving** (`0x407120`, the van's update after its click handler
 `0x408060`).
@@ -1478,6 +1479,30 @@ tick).
 | `0x430C00` | A sprite's size: widest and tallest cel over its sequence |
 | `0x40CD30` / `0x40D020` | Scrappy / the snack box |
 | `0x407430` / `0x407780` | Read / write the save's `Inventory` section (`Slot%i`, `Anim%i`, `Cursor%i`, `History%i`, `Snacks`) |
+
+##### Rooms that hide the toolbar (WP-025)
+
+Traced 2026-11-14 for [WP-025](../work-packets/WP-025-toolbar-rooms.md).
+The base room's entry (vtable `+0x0C`, `0x40B920`) builds the toolbar
+parked. These rooms' classes then hide it (`0x407CC0`), or never call the
+base entry, so it isn't built (¹).
+
+The list comes from each title's room factory. Showdown's is `0x42E0E0`;
+Phantom's room-name compares start at `0x42ED7F`. Each room name maps to
+its class constructor, that constructor's vtable, and the calls in the
+vtable's `+0x0C`. A room the factory doesn't name gets the base class
+(`0x40B0F0`), which shows the toolbar. Names are compared exactly.
+
+| Title | Rooms |
+|---|---|
+| Both | `Sign_In`, `Difficulty`, `Suspect_Chooser`¹, `Options`, `Main_Menu`, `Quit`¹, `Title_Screen`, `Big_Head`, `Credits`, `Cheat`¹, `Ghost_Spot` |
+| Showdown | `P32_Pie_Noon`, `P06_Stage_Trapdoor`, `P24`–`P29_Chase_B1`–`B6`, `P30_Horseshoe_Corral`, `P33_Chase_C1`, `P37_Chase_C2`, `P38_Chase_C3`, `P39_Chase_C4`, `P34_Chase_C5`, `P35_Chase_C6`, `Artie`, the nine `Artifact_*`, `Sheriff`, `Gummy`, `Vault_Clock`, `Open_Safe`, `SB1`–`SB5`, `Test_Scroll` |
+| Phantom | `P31_KST`¹, `P30_WFR`, `Ewan`, `Wizards_Skull`, `Brad_SPOOKY`, `Brad_SPOOKIER`, `Brad_SPOOKTACULAR`, `Maria`, `Hedge_Maze`, `Maze_Map`, `Garden_Plaque` |
+
+That is 24 of Showdown's 47 classes (45 of its 69 rooms) and 20 of
+Phantom's 51 (22 of 53). Adding an item (`0x406DD0`) or opening the toolbar
+(`0x407C00`) clears the hidden flag. The van then comes in from the left
+and parks.
 
 ##### Scrappy's hints and Scooby Snacks (WP-024)
 
