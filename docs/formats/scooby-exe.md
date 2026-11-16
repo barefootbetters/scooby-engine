@@ -1373,6 +1373,137 @@ the gang.
 | `0x422490` (+0x18) | Placements: Scooby and Daphne |
 | `0x4303B0` | Game vtable `+0x64` (Showdown): `ROOM_P01_Town_Center` |
 
+##### Phantom's drawbridge and town (WP-057)
+
+Traced 2026-11-16 for [WP-057](../work-packets/WP-057-drawbridge.md), in
+Phantom's `Scooby.exe`, from an import of it in a scratch Ghidra project.
+The addresses in this section are Phantom's.
+
+**Phantom's functions against Showdown's.** Most of the engine is the same
+code at other addresses. Matching each function's instruction sequence, with
+addresses masked, pairs 980 of Phantom's 2756 functions with Showdown's. The
+base room's functions keep their addresses, and so do the walk-ins this WP
+calls (`0x405E60` `UR`, `0x405FE0` `U`, `0x406020` `D`, by their direction
+strings). Among those that move:
+
+| Phantom | Showdown | What it is |
+|---|---|---|
+| `0x4314C0` | `0x430790` | `graphics_AnimSprite_ctor` |
+| `0x4317D0` | `0x430AA0` | Start (mode, ticks, start) |
+| `0x431730` | `0x430A00` | Play an ANIM by name (vtable `+0x24`) |
+| `0x435760` | `0x434A30` | The sound manager |
+| `0x435AF0` / `0x4359A0` / `0x4359E0` / `0x435A10` | `0x434DC0` / `0x434C70` / `0x434CB0` / `0x434CE0` | Name → id; play, stop, is it over |
+| `0x435B60` | `0x434E30` | `audio_GameSound_PreloadSection` |
+| `0x437540` | `0x436810` | Restart the game's tick clock |
+
+`0x406020` is the walk-in from `D`: the depth 50 in front, then state 1.
+
+**A new game's story values** (game vtable `+0x4C`, `0x42E880`; the profile
+writer `0x42FFE0` names them):
+- `EwanPuzzle`, `MariaPuzzle`, `BradPuzzle`, `SkullPuzzle`, `SkullMovie`,
+  `SkullPuzzleAttempted`, `CrestPuzzle`, `RedBallFound`, `BlueBallFound`,
+  `BlueBallSeen`, `YellowBallFound`, `RedBallTaken`, `BlueBallTaken`,
+  `YellowBallTaken`, `WellVisited`, `MazeEntered` and `PlaqueSeen` off;
+- `Screaming` (`+0x288`) on;
+- `Whodunit`: `MARIA`, `BRAD`, `EWAN`, `WIZARD` or `JESTER` (`rand() % 5`);
+- `CrestSequence0`–`3`: 1–4, shuffled by five swaps of two `rand() & 3`
+  places;
+- `SkullCombo0`–`3`: `rand() & 3` each.
+
+The Throne Room's entry clears `Screaming`.
+
+**The drawbridge** (`ROOM_P01_Drawbridge`, `0x426730`, vtable `0x45F214`;
+music `Drawbridge.Music`, opening `Drawbridge.100A_`). Four flags (P1–P4)
+must wave their banners' colours (SP1–SP4).
+- **Reset** (`0x426790`): the puzzle not done, the sign's first line next.
+  Each banner's colour is `rand() & 3` + 1. Its flag starts one to three
+  colours on: `((rand() % 3 + banner) & 3) + 1`.
+- **Placements** (`0x426A80`), each under the first layer (game `+0x58`):
+  - each flag at depth 0, a flag object (`0x427380`) set to its saved
+    colour;
+  - each banner at depth 0, waving `ANIM_P01_DRAWBRIDGE_SP<n>F<colour>`
+    (mode 1, 4 ticks a step, from step `rand() & 3`);
+  - the door at depth −1, stopped on its first step, or its last once the
+    puzzle is done (mode 5);
+  - the overlay at depth 0;
+  - the way to the town (`OBJ_P01_TO_P04`) isn't built until the puzzle is
+    done.
+- **A flag** (`0x427380`, vtable `0x45F254`, 0x70 bytes): its colour
+  `+0x5C`, next state `+0x60`, banner's colour `+0x64`, clickable `+0x68`,
+  number `+0x6C`.
+  - **States 1–4** (`0x427490`) wave that colour: `ANIM_P01_DRAWBRIDGE_P<n>F<colour>`,
+    mode 1, 4 ticks a step, from step `rand() & 3`. A click goes on to 6, 8,
+    10 or 12. On its banner's colour, `Drawbridge.Flag_Fanfare.1` plays,
+    stopped and played again.
+  - **States 5–12** play `Drawbridge.Flag_Raise` and move the pennant at 3
+    ticks a step. The even states lower the colour (`…F<colour>_RISE`
+    backwards, mode 4); the odd ones raise the next (mode 3). The cycle:
+    6 → 7 → 2, 8 → 9 → 3, 10 → 11 → 4, 12 → 5 → 1.
+  - **Moved off its banner's colour,** with Velma idle (state 6), she says
+    `Drawbridge.100A_3_VELMA`.
+  - **Its update** (`0x427430`, after its player): clicked with the arrow
+    while clickable (game `+0x20` bit 4, its `+0x08`), or its sequence
+    over, it goes on to its next state. A click during a move skips to the
+    next.
+  - **Its rollover** (`0x4273D0`) is `ANIM_CURSOROPEN` while clickable with
+    the arrow.
+- **Entry** (`0x426840`, after the base entry):
+  - the `Drawbridge` sound section is preloaded (`0x435B60`);
+  - `Drawbridge.Flag_Loop` plays;
+  - one snack is needed (`+0x24`);
+  - from the town, Velma walks in (`U`).
+- **Each tick** (`0x4268D0`, after the base tick):
+  - **The second fanfare over:** the door plays once (mode 3), `Drawbridge.Down`
+    plays, the tick clock restarts (`0x437540`), and `Drawbridge.Enter_`
+    starts, blocking.
+  - **Until the puzzle is done,** each flag's colour is kept (`+0xEC`) while
+    it matches its banner's. With all four right:
+    - the puzzle is done (`+0xFC`);
+    - the flags are no longer clickable;
+    - the way to the town is built (`0x401850` under the first layer at
+      depth −1, hit by its polygon);
+    - `Drawbridge.Flag_Fanfare.2` plays, and its id is kept (`+0x104`).
+- **The sign** (`0x427270`, room vtable `+0x14`, `OBJ_INV_1428_SIGN`):
+  `Drawbridge.100X1_` and `…100X2_` in turn, not blocking.
+- **Leaving** (`0x426EA0`): with no snack eaten here, `Drawbridge.110A_`
+  plays, blocking, and the snack box flashes.
+- **The profile** (`0x427010`, `0x427140`): `FlagState0`–`3` (`+0xEC`),
+  `BannerState0`–`3` (`+0xDC`), then `PuzzleDone`.
+- **The idle line** (`+0x28`, `0x4272D0`): Velma's
+  `P01_Drawbridge.Idle.VELMA` becomes `Global.Idle.VELMA` once the puzzle is
+  done.
+
+**Who asks for the idle line** (room vtable `+0x28`). A character's state 4
+(`0x405190`, Showdown) asks the room for its line, and plays it if the line
+exists, else goes idle. The fork doesn't have state 4.
+
+**The town** (`ROOM_P04_Town`, `0x4180F0`, vtable `0x45EC5C`; music
+`Bagpipes.Music`, opening `Town.110_`). Entry (`0x418150`, after the base
+entry):
+- **Walk-ins:**
+  - from the drawbridge, Velma (`D`);
+  - from the souvenir shop, Shaggy (`UR`);
+  - from the gardener's house, Fred (`UR`);
+  - from the room of doors, Velma (`U`).
+- **Screaming:** while `Screaming` is on, one of Jane's screams:
+  `Town.Jane_Screaming1`, `…2`, `…3`, or `…5` for both 3 and 4
+  (`rand() % 5`).
+
+| Address | What it does |
+|---|---|
+| `0x426730` | Drawbridge constructor |
+| `0x426790` (+0x08) | Reset: the colours |
+| `0x426840` (+0x0C) | Entry |
+| `0x4268D0` (+0x04) | Tick: the puzzle, the fanfare, the drawbridge down |
+| `0x426A80` (+0x18) | Placements |
+| `0x426EA0` (+0x24) | Leaving: a snack first |
+| `0x427010` / `0x427140` (+0x1C / +0x20) | Save / load |
+| `0x427270` (+0x14) | The sign |
+| `0x4272D0` (+0x28) | Velma's idle line |
+| `0x427380` / `0x427430` / `0x427490` | A flag: constructor, update, state |
+| `0x4180F0` / `0x418150` (+0x0C) | Town: constructor, entry |
+| `0x42E880` | Game vtable `+0x4C`: a new game's story values |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
@@ -2123,7 +2254,7 @@ The rest of the room vtable:
 | Slot | Base | What it is |
 |---|---|---|
 | `+0x10` | `0x40BB70` | Leave: the scene, the parked exit and the delay are reset; the speech lock is let go |
-| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. Not traced further |
+| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. A character's state 4 asks for it ([WP-057](#phantoms-drawbridge-and-town-wp-057)) |
 | `+0x2C` | `0x404460` | On entry, with the room left: nothing |
 | `+0x30` | `0x404810` | On entry, first: nothing |
 | `+0x34` | `0x404470` | Idle chatter: nothing |
