@@ -3719,6 +3719,177 @@ Otherwise the bell plays `Gummy.Bell<its note>`:
   The bells free up in the same frame, before the room's tick, so Gummy
   whistles again at once.
 
+##### The saloon and Artie (WP-051)
+
+Traced 2026-11-15 for [WP-051](../work-packets/WP-051-saloon.md).
+
+**ROOM_P12_Saloon** (`0x414430`, vtable `0x45E990`; music group 3; opening
+`Saloon.360A_`). Artie is gagged and in three chains. Three keys hide
+behind three of six hotspots; each one used takes a chain off in
+ROOM_Artie.
+
+**Its fields:**
+- **`+0xB8`:** the piano (hotspot 1).
+- **`+0xBC`:** the ticks to the next moan.
+- **`+0xC0`:** music group 3 again once the piano stops.
+- **Artie and the piano:**
+
+  | Field | Key | Reset |
+  |---|---|---|
+  | `+0xC1` | `ArtieMasked` | 1 |
+  | `+0xC4` | `ArtieChained` | 3 |
+  | `+0xC8` | `ShaggyPiano` | 0 |
+
+- **`+0xCC` + 16k, for hotspots 3–8 (k 0–5):**
+
+  | Offset | What it holds | Key |
+  |---|---|---|
+  | `+0xCC` | the key shows | `KeyVisible%i` |
+  | `+0xCD` | a key hides behind the hotspot | `KeyHidden%i` |
+  | `+0xD0` | the hotspot | — |
+  | `+0xD4` | its key | — |
+  | `+0xD8` | the key shows once the hotspot stops | — |
+
+- **`+0x12C`–`+0x131`:** `ClickableOpen%i`.
+- **The thanks:** `+0x132` (Artie gives his clue when idle), then `+0x133`
+  (the thanks).
+- **`+0x134`:** the buffer sprite.
+- **`+0x138`:** `BullRidden`.
+- **`+0x13C`:** the bull's line.
+- **`+0x140`–`+0x142`:** the gag coming off.
+
+| Address | What it does |
+|---|---|
+| `0x414490` (+0x08) | Reset, after the base reset: the table above, the moan at 36, and three keys hidden by `rand() % 6` |
+| `0x414FC0` (+0x18) | Placements. See below |
+| `0x414540` (+0x0C) | Entry, after the base entry. See below |
+| `0x414910` (+0x04) | The tick, after the base tick. See below |
+| `0x415660` (+0x14) | The room's event. See below |
+| `0x415C30` (+0x24) | The exit handler. See below |
+| `0x4148D0` (+0x34) | Idle chatter: with Artie free (`+0xC4` = 0), `Saloon.1100C_` (its `rand() & 1` always passes) |
+| `0x414820` (+0x10) | Leave, after the base leave: `ClickableOpen` is whether each hotspot's state ends in `B` |
+| `0x416000` / `0x4161D0` (+0x1C / +0x20) | The keys: `ArtieMasked`, `ArtieChained` (`%i`, `0x40C5E0` / `0x40C670`), `ShaggyPiano`, `BullRidden`, `ClickableOpen0`–`5`; once ungagged, `KeyHidden%i` and `KeyVisible%i` for each hotspot |
+
+**Placements** (`0x414FC0`). The first claim builds a `RENDER_ENTITY`: a
+640 × 480 buffer sprite (`0x4370D0`) under the first layer (game `+0x58`)
+at depth −1001. Everything below goes under it, but the bull:
+- **The piano,** hotspot 1: a clickable (`0x408DC0` with 1) at depth −11,
+  on its `B` (`0x401780`) once played.
+- **Hotspots 2–8 and the keys:** clickables at `0x408DC0`'s depth
+  (`priority=`, −1 without one). The keys are hidden (`0x4313F0`).
+- **Hotspots 3–8:**
+  - while Artie is gagged, without the open hand (`0x401770` clears the
+    clickable's `+0x7C`);
+  - one left open, on its `B`;
+  - one with a key behind it, on its `K`.
+
+  Each is stopped on step 0.
+- **The open door:** a sprite (`0x430790`) at depth 0, looping, once the
+  hotel hall's door is open (`HotelHallDoor`, game `+0x255`); else not
+  built.
+- **The chandelier:** a sprite at depth −1, looping, until the nickel is
+  used. Used means had (`0x407060`) and in no slot (`0x4070C0`). Once used,
+  it is not built.
+- **The bull:** a requires object (`0x408C80` with −1: layer 0), looping
+  `MECHBULLA`, or `MECHBULLB` once the nickel is used.
+- **The way to Pie Noon:** not built while Artie is chained.
+
+**Entry** (`0x414540`):
+1. **Walk-ins:** from the hotel hall, Fred walks in `UR`; from Street 3,
+   Daphne `UL`; from the stage, Velma `U`.
+2. **Artie:**
+   - chained, he is in his chains: the set `_<n>` (`0x406230`, the
+     character's `+0x60`) and idle, `OBJ_ARTIE_<n>`;
+   - gagged, `OBJ_ARTIE_MASKED` (`0x406190`: the object in `+0x8C`, state
+     `0xE`, `ANIM_ARTIE_MASKED1` looping);
+   - ungagged, at depth −1.
+3. **Free, and not yet a clue owner:**
+   - `Saloon.360C_` (`rand() % 3` = 0) or `360C3_`, held;
+   - his clue (game vtable `+0x44`), and Artie met (`0x40A8B0`);
+   - `+0x132`.
+4. **The rest:**
+   - the keys showing are shown at depth 1;
+   - the nickel used and the pump handle never had, the pump handle goes
+     in a slot;
+   - the snacks needed (`+0x24`) are the level + 2.
+
+**The tick** (`0x414910`):
+1. **The moans:** `+0xBC` counts down every tick. Below 1 with
+   `MoaningActive`, `Saloon.Moan.1`–`4` (`rand() & 3`), and the next in
+   `(rand() % 10 + 5) × 36`.
+2. **The piano** stopped with `+0xC0`: music group 3 (`0x40AA10`).
+3. **Artie clicked** (game `+0x20` & 4 and his `+8`) with the arrow:
+   - gagged, `+0x140`;
+   - chained, `Saloon.360D2_`, held;
+   - free, `Saloon.1601_`, `1701_` or `1801_`.
+4. **Artie idle:**
+   - with `+0x132`, he plays `GIVES` (`0x4061F0`) and input is held
+     (`+0x133`);
+   - idle again, `Global.Thank_You_` and `ROOM_Suspect_Chooser`, through
+     the room's own exit handler.
+5. **A key found:** shown at depth 1 once its hotspot stops, with
+   `Saloon.360G_`, `360G2_` or `360G3_`.
+6. **The gag** (`+0x140`), input held. With Velma idle, no scene and the
+   opening done, she plays `OBJ_VELMA_P12_UNGAG_ARTIE` (`0x406130`) and
+   `+0x141` is set. Then:
+   - **her step 6:** `Saloon.360D_1_VELMA` plays once (`+0x142`), and the
+     idle timer starts again;
+   - **her step 33:** Artie is idle (ungagged), and `MoaningActive` is off;
+   - **Velma idle:** Artie is ungagged (`+0xC1`), hotspots 3–8 get the
+     open hand (`0x401760`), and `Saloon.GAG_GONE_` plays, held.
+7. **Shaggy clicked with the nickel:** the bull's event with success, and
+   the arrow.
+
+**The room's event** (`0x415660`):
+- **The piano:**
+  - the first time, `Saloon.Piano_`;
+  - moved on to anything but its `B` (it plays its tune), music group −1
+    and `+0xC0`;
+  - on its `A`, it goes to its `B`.
+- **Hotspots 3–8,** once ungagged: a key behind one is found (`+0xD8`), and
+  the hotspot goes to its state with `B`.
+- **A key:**
+  - hidden, and no longer showing;
+  - a chain fewer (`+0xC4`);
+  - the room's own exit to ROOM_Artie, with no scene.
+- **The bull with the nickel:**
+  - movie 5 and the saloon again (game vtable `+0x08`);
+  - the nickel out of its slot (`0x406C80`), and the arrow;
+  - `BullRidden`.
+- **The bull without the nickel:** `Saloon.390A_`, `390A2_`, `390A3_` in
+  turn; once it is used, `Saloon.120E2_`. Held.
+
+**The exit handler** (`0x415C30`). Anywhere but ROOM_Artie:
+- **Gagged, or chained with no key showing:** `Saloon.360A1_`, `360A2_`,
+  `360A3_` or `Must_Free_Artie_` (`rand() & 3`), held. The gang stays.
+- **Chained, with keys showing:** `Saloon.340A2_`, `G3_` or `360D3_`. It is
+  `rand() & 1` with one key, `rand() % 3` with more. Held, and the gang
+  stays.
+- **To the stage without the level's snacks** (`+0x88` against level + 2):
+  `Saloon.380A_`, `380A2_`, `380A3_` by level, held, and the snack box
+  flashes (`0x40D4D0`).
+
+Otherwise the default handler.
+
+**ROOM_Artie** (`0x40D4E0`, vtable `0x45E68C`; music group 3; no opening).
+Field `+0xB8` is `ChainsLocked`, 3 at reset (`0x40D540`); `+0xBC` the
+chains; `+0xC0` a countdown.
+- **Placements** (`0x40D6D0`): `OBJ_CHAINS` a sprite under the first layer
+  at depth 0, on `ANIM_CHAINSA`, `B` or `C` by `ChainsLocked` 3, 2, 1,
+  stopped on step 0.
+- **Entry** (`0x40D680`):
+  - input is held;
+  - the cursor fades (`0x435150`, `0x12`);
+  - the toolbar is hidden (`0x407CC0`);
+  - the countdown is 36.
+- **The tick** (`0x40D560`). Input is held. With the chains stopped, the
+  countdown runs down:
+  - **on step 0,** they play once (`graphics_AnimSprite_Start` 3, 3, −1)
+    with `Artie.Chains_A`, `B` or `C`, and 36 more;
+  - **played,** a chain fewer, and the saloon (game vtable `+0x04`); once
+    none is left, through movie 6 (`+0x08`).
+- **Keys** (`0x40D820` / `0x40D860`): `ChainsLocked` (`%i`).
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
