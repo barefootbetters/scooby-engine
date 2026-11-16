@@ -3327,6 +3327,115 @@ It then sets `+0xBC`, and Shaggy plays OBJ_SHAGGY_P07_LEAVE_JAIL. The jail
 has no exit object, so on this disc the handler runs only when something
 else asks for it.
 
+##### The General Store (WP-045)
+
+Traced 2026-11-15 for [WP-045](../work-packets/WP-045-general-store.md).
+
+**A file's volume.** `0x434B60` sets the volume of the sound file that
+holds a clip (the file's `+0x18`, through `0x43C940`), as a percent of
+each clip's own. It applies to that clip if it is playing, and to every
+clip the file plays after. `0x434BA0` gives the seconds a clip has
+played: the play cursor over the bytes per second (`0x4451F0`).
+`0x434CE0` is true when it isn't playing.
+
+**ROOM_P10_Front_Of_General_Store** (`0x40F6E0`, vtable `0x45E78C`;
+music `2`):
+- **Its placements:**
+  - the gang;
+  - the clock over the door, OBJ_INV_CLOCK, a requires object that
+    answers the rusty hammer;
+  - the clock without its face, OBJ_P10_FRONT_OF_GS_CLOCK_NOFACE;
+  - hotspot 1, right of the door;
+  - hotspot 2, the door;
+  - hotspot 3, the sign.
+- **Its fields:**
+  - `+0xB8`, `+0xBC`: the clock and the faceless clock.
+  - `+0xC0`: the clock broken; movie 2 when free.
+  - `+0xC4`: the clock's next line.
+  - `+0xC8`: hotspot 1 clicked.
+
+| Address | What it does |
+|---|---|
+| `0x40F740` (+0x08) | Reset, after the base reset: `+0xC0` and `+0xC4` cleared |
+| `0x40F890` (+0x30) | The opening. While `MoaningActive` it is `Front_of_General_Store.110A_`, unplayed. Otherwise there is none, and its played flag stays as it was (`0x40C6B0`) |
+| `0x40FA40` (+0x18) | The clock a requires object (`0x408C80` with -1, as the default path builds one). The faceless clock a sprite under layer 1 (game `+0x5C`) at depth 1 |
+| `0x40FB70` (+0x0C) | Entry, after the base entry. With the hammer used, OBJ_INV_CLOCK goes in the toolbar (ANIM_TOOLBARBROKEN_CLOCK, ANIM_CURSORBROKEN_CLOCK) and the clock is hidden. Otherwise the faceless clock is hidden. From Street 2, Fred walks in down and left. `+0xC8` is cleared |
+| `0x40F8D0` (+0x14) | The room's event. See below |
+| `0x40F760` (+0x04) | The tick, after the base tick. See below |
+
+**The event** (`0x40F8D0`). Every scene here holds input.
+- **The clock with the hammer:** `Front_of_General_Store.Take_Clock_`.
+  `+0xC0` is set, the hammer is used up (`0x406C80`), and the cursor is
+  the arrow again.
+- **The clock otherwise:** `A_Clock_`, `A_Clockb_` and `A_Clockb3_` in turn.
+- **The door:** `Door_Locked_` or `Door_Lockedb_`, by `rand() & 1`.
+- **Hotspot 3:** `110X_`.
+- **Hotspot 1:** `+0xC8`.
+
+**The tick** (`0x40F760`):
+1. **`+0xC0`, no scene and the opening done:** the gang comes back to the
+   same room through movie 2 (game vtable `+0x08`). Movie 2 breaks the clock.
+2. **`+0xC8`:** Scooby is scared (state `0x11`) as soon as neither of hotspot
+   1's sounds, `SFX_P10_FRONT_OF_GS_HOTSPOT1A` and `1B`, is playing in its
+   first half second.
+
+**ROOM_P15_General_Store_Interior** (`0x4125D0`, vtable `0x45E8D0`;
+music `5`, no opening):
+- **Its placements:**
+  - the gang;
+  - the rattlesnakes, OBJ_P15_GSI_SNAKE, a requires object that answers the
+    blanket;
+  - the lantern, OBJ_INV_LANTERN, on the window ledge;
+  - hotspots 1 to 5.
+- **Its fields:**
+  - `+0xB8`, `+0xBC`: the snake and the lantern.
+  - `+0xC4`: hotspot 1's count.
+  - `+0xC8`: the snake's next line.
+  - `+0xCC`: a strike waiting.
+  - `+0xCD`: `Click_Blanket_On_Snake_`'s done flag (`0x40B400`'s third
+    argument).
+  - `+0xCE`: Fred tossing the blanket.
+  - `+0xCF`: the lantern clicked.
+  - `+0xD0`: Fred taking the lantern.
+
+| Address | What it does |
+|---|---|
+| `0x412630` (+0x08) | Reset, after the base reset: `+0xC4` cleared |
+| `0x412BD0` (+0x18) | The snake a requires object, as the default path builds it. With the blanket used, `Snake_Idle` plays at 93% of its file (`0x434B60`), and the snake is on ANIM_P15_GSI_SNAKEBLANKET, looping, at depth 500. Otherwise it waits on ANIM_P15_GSI_SNAKEIDLE, stopped. The lantern a requires object under layer 0 until it has been taken |
+| `0x412DF0` (+0x0C) | Entry, after the base entry: `+0xC8` to `+0xD0` cleared. From the back alley, Shaggy walks in down and left |
+| `0x4129B0` (+0x10) | Leave, after the base leave: a lantern clicked goes in the toolbar |
+| `0x412A00` (+0x14) | The room's event. See below |
+| `0x412650` (+0x04) | The tick, after the base tick. See below |
+
+**The event** (`0x412A00`). Every scene here holds input.
+- **The snake with the blanket:** the blanket is used up and the arrow is
+  back. `General_Store_Interior.Click_Blanket_On_Snake_` plays, with
+  `+0xCD` as its done flag.
+- **The snake otherwise,** or **the lantern with the arrow before the
+  blanket is used:** `Click_On_Snake_`, `Click_On_Snakeb_` and
+  `Click_On_Snakec_` in turn, and `+0xCC`.
+- **The lantern with the arrow, the blanket used:** `+0xCF`.
+- **Hotspot 1:** `120X_`. Its count goes back to 0 each time, so it is
+  always this line.
+- **Hotspot 2:** `120X2_`.
+
+**The tick** (`0x412650`):
+1. **The snake stopped:** `Snake_Idle`, and ANIM_P15_GSI_SNAKEIDLE looping.
+2. **`+0xCD`:** Fred waits until he is idle, no scene plays and the opening
+   is done. Then he plays OBJ_FRED_P15_TOSS_BLANKET. Idle again, he leaves
+   the snake under the blanket at depth 500, and `Snake_Idle`'s file goes
+   to 93%. Input is held until then, and freed after.
+3. **`+0xCF`:** Fred waits as in step 2. Then the lantern is hidden,
+   `Fred_Takes_Lantern` is asked for, and he plays
+   OBJ_FRED_P15_GRAB_LANTERN. On his step 62 the lantern goes in the
+   toolbar (ANIM_TOOLBARLANTERN, ANIM_CURSORLANTERN). Idle again, he says
+   `Click_On_Lantern_`. Input is held until then.
+4. **`+0xCC` on the snake's step 0:** `Snake_Idle` stops, `Snake_Attack`
+   plays, and the snake strikes once (ANIM_P15_GSI_SNAKEANIM).
+
+**`Fred_Takes_Lantern` isn't on the disc** under that name: Sfx.dat has
+`Fred.Takes.Lantern`. Like the jail's two, it plays nothing.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
