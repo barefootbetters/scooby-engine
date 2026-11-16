@@ -2719,10 +2719,18 @@ are [below](#the-bank-and-the-vault-clock-wp-039).
 [WP-040](../work-packets/WP-040-boot-hill.md)):
 - Only the factory names them; nothing in the art, `object.ini` or the
   executable sends the gang there, and no code builds the names.
-- Their class shows a strong box's lid opening, with `Strongbox.opens` and
-  `Bank_Vault.340D_`, then the vault again. In play, the right strong box
-  plays movie 38–41 instead (`0x429350`).
-- The fork leaves them the base class.
+- In play, the right strong box plays movie 38–41 instead (`0x429350`).
+- Their class (`0x42A340`, vtable `0x45F1A8`; no music, no opening) shows a
+  strong box's lid opening, then the vault again. The fork has it since
+  [WP-053](../work-packets/WP-053-strong-boxes.md#result-2026-11-15).
+
+| Address | What it does |
+|---|---|
+| `0x42A3A0` (+0x08) | Reset, after the base reset: `+0xB8` (the scene's done flag) and `+0xB9` (the lid opening) clear |
+| `0x42A600` (+0x18) | Placements. `OBJ_SB1_LID` to `OBJ_SB5_LID` a sprite under the first layer at depth 0, stopped on step 0 (`graphics_AnimSprite_Start` 0, 3, −1), kept in `+0xBC`. The layer is the engine's `+0x58` through `0x475F4C`, which the engine's constructor sets to itself: the same object as `0x475F14` |
+| `0x42A5B0` (+0x0C) | Entry, after the base entry: the toolbar hidden (`0x407CC0`), the cursor faded (`0x435150`, `0x12`), input held (game `+0x24`), and `+0xC0` 36 |
+| `0x42A3C0` (+0x04) | The tick, after the base tick. `+0xC0` counts down; at 0, `Strongbox.opens` plays and the lid plays once at 5 ticks a step (`Start` 3, 5, −1), and `+0xB9` is set. The lid stopped with `+0xB9`: `Bank_Vault.340D_` (the narrator's), held, with `+0xB8` as its done flag. Set, the room's exit handler (the base's) to `ROOM_P16_Bank_Vault`, with no scene and movie −1 |
+| `0x42A770` (+0x10) | Leave: the base leave only |
 
 **ROOM_P16_Bank_Vault**'s placements:
 - the gang;
