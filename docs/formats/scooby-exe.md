@@ -3489,6 +3489,38 @@ plays and the opening is done.
      `Shaggy.Shakes.Bars`. Idle again, `150A1_`, `150A12_` and `150A13_`
      play in turn, not held.
 
+##### The back alley (WP-047)
+
+Traced 2026-11-15 for [WP-047](../work-packets/WP-047-back-alley.md).
+
+**ROOM_P19_Back_Alley** (`0x40E7A0`, vtable `0x45E70C`; music `5`,
+opening `Back_Alley.350A_`):
+- **Its placements:**
+  - the gang;
+  - the way into the General Store;
+  - the way to the bank vault;
+  - hotspots 1 to 5. Hotspot 1 is under layer 1, at `priority=1`.
+- **Its fields:** `+0xB8` and `+0xBC`, hotspots 3 and 1.
+
+| Address | What it does |
+|---|---|
+| `0x40EAC0` (+0x18) | Hotspots 3 and 1, as the default path builds them (`0x408DC0` with 1, -1) |
+| `0x40E800` (+0x0C) | Entry, after the base entry. `Back_Alley.Snakes_Distant` plays, and the snacks needed (`+0x24`) are level + 2. From the General Store, Fred walks in up and left (`0x405EE0`). From the bank vault or the open safe, Shaggy walks in up and right (`0x405E60`) |
+| `0x40EBC0` (+0x04) | The tick, after the base tick. See below |
+| `0x40E8B0` (+0x24) | The exit handler. Into the store with fewer snacks given here (`+0x88`) than level + 2, it plays `350B_`, `350B2_` or `350B3_` by level, held, and the snack box flashes. Otherwise, and for the way to the vault, it calls the default handler |
+
+**The tick** (`0x40EBC0`):
+1. **Hotspot 3 playing, on step 0, with a sequence ending in B:**
+   `Back_Alley.HOTSPOT3B_` or `HOTSPOT3B2_`, by `rand() & 1`, not held.
+   The B has one step, so this comes on each of its three ticks. The
+   first starts the line; the scene playing stops the other two.
+2. **Hotspot 1 on its step 8:** Daphne and Scooby are scared (state
+   `0x11`).
+
+**The ways in** use the walk-in entry points by direction: `0x405E60` UR,
+`0x405EA0` DR, `0x405EE0` UL, `0x405F20` DL. Each keeps the character's
+depth (`+0x9C`) and puts it 50 behind or in front.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
