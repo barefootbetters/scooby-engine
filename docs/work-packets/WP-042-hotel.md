@@ -28,6 +28,7 @@ The first run differed on two lines, both the check's own doing. The door was cl
 
 **Deviations and gaps:**
 
+- **Hotspots 2 and 4's depth, fixed 2026-11-15 after WP-044.** The class claimed them as clickables, which forced their depth to 0. The original builds them as the default path does, at their `priority=`: -1 for hotspot 2, which has none, and -102 for hotspot 4. Fork commit [`4c7b094742`](https://github.com/barefootbetters/scummvm/commit/4c7b094742) leaves them to the default path, and the hotel check now prints both depths, which match the reference.
 - **Walk-ins from the left or right now keep the character's depth,** as `0x405F60` and `0x405FA0` do. The fork had them going 50 behind, like a walk from U. No earlier room's check walked anyone in from the side, so nothing else changed.
 
 ---
