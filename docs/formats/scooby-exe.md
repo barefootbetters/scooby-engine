@@ -3521,6 +3521,55 @@ opening `Back_Alley.350A_`):
 `0x405EA0` DR, `0x405EE0` UL, `0x405F20` DL. Each keeps the character's
 depth (`+0x9C`) and puts it 50 behind or in front.
 
+##### The post office (WP-048)
+
+Traced 2026-11-15 for [WP-048](../work-packets/WP-048-post-office.md).
+
+**ROOM_P08_Post_Office** (`0x413930`, vtable `0x45E950`; music `2`):
+- **Its placements:**
+  - the gang, set B;
+  - the way out to Street 1;
+  - two holes in the floor down to the lit tunnel, OBJ_P08_POST_OFFICE_HOLE
+    and `_HOLE_LIT`;
+  - hotspots 1 to 3.
+- **Its fields:**
+  - `+0xB8`: the dark hole's next line.
+  - `+0xBC`: hotspot 3's next line.
+  - `+0xC0`: `OldRoomName`, saved in the room's section.
+  - `+0xC8`, `+0xCC`: hotspots 3 and 2.
+  - `+0xD0`: `160C_`'s done flag.
+  - `+0xD1`: Fred tossing the lantern.
+  - `+0xD4`, `+0xD8`: the lit hole and the dark one.
+
+| Address | What it does |
+|---|---|
+| `0x413A00` (+0x08) | Reset, after the base reset: `+0xB8` and `+0xBC` cleared, and `OldRoomName` set to ROOM_P03_Street1 |
+| `0x413F40` (+0x18) | The holes are exits at depth -1000 (`0x408D20`). The dark one is hidden with `TunnelLit` (game `+0x275`), the lit one without it. Hotspot 2 is a clickable under layer 1 (game `+0x5C`), and hotspot 3 is one as the default path builds it |
+| `0x413EE0` (+0x2C) | The opening, unplayed: `Post_Office.160A_` while `MoaningActive`, `160D_` up from the dark tunnel. Otherwise there is none, and its played flag stays as it was |
+| `0x413A30` (+0x0C) | Entry, after the base entry. The room come from is `OldRoomName`, unless it is the dark tunnel or Street 1. From the dark tunnel, Fred, Daphne and Velma are hidden, and hotspots 2 and 3 lose their open hand. Otherwise, before the lantern has been had, Scooby, Shaggy and Velma are hidden. `OldRoomName` is then the room come from |
+| `0x4140F0` (+0x14) | The room's event. Hotspot 3 gives `P08_POST_OFFICE_HOTSPOT3A_`, `3B_` and `3C_` in turn. Hotspot 2, moved on to its C, gives `Post_Office.160X4_`. Both are held |
+| `0x413BC0` (+0x24) | The exit handler. See below |
+| `0x414270` (+0x04) | The tick, after the base tick. See below |
+| `0x4141D0`, `0x414210` (+0x1C, +0x20) | `OldRoomName` saved and read, after the base keys |
+
+**The exit handler** (`0x413BC0`). Down to the lit tunnel without the
+lantern used, the gang stays, and a line plays, held:
+- **With Daphne shown:** `160AA_` (or `160B_` once Artie has been met),
+  `160B2_` and `160B3_` in turn.
+- **With only Shaggy and Scooby:** `380A_` or `380A1_` (`rand() & 1`).
+
+Otherwise, and for the way to Street 1, it calls the default handler.
+
+**The tick** (`0x414270`):
+1. **`160C_` over:** Fred waits until he is idle, no scene plays and the
+   opening is done. Then he plays OBJ_FRED_P08_HOLD_LANTERN, with
+   `Fred.Tosses.Lantern`. Input is held from the scene's end. On his step
+   15 the dark hole is hidden and the lit one shown, and the room goes to
+   the lit tunnel (game vtable `+0x04`).
+2. **The dark hole clicked** (its `+8`) with ANIM_CURSORLANTERN as the
+   cursor: the lantern is used up and the arrow is back. `TunnelLit` is
+   set, and `160C_` plays, held, with `+0xD0` as its done flag.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
