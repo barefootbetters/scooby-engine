@@ -31,6 +31,7 @@ The first run matched 195. The odd line was the reference's. It had Rascal toss 
 - **`rand()`:** Rascal's strength and waits and Scooby's arc digits come from the engine's own random source.
 - **The button held** (game `+0x20` bit 1) is the engine's mouse-down state.
 - **The sound section's preload** (`audio_GameSound_PreloadSection`) has no counterpart; the fork reads clips as they play.
+- **Corrected in [WP-055](WP-055-pie-noon.md):** a horseshoe "paused" at the end is marked done (`+0x30`), and the sweep after the walk (`0x431190`) deletes it. The fork kept it in view until WP-055. The check's lines are unchanged.
 
 **Found on the way:**
 

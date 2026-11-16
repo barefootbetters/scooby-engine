@@ -995,7 +995,8 @@ These are the format facts that came out of the trace, each written up in
 | `0x430790` | `graphics_AnimSprite_ctor` | `(obj name, ANIM name, parent, depth, mode, ticks per step, start step)` |
 | `0x430A00` | `graphics_AnimSprite_SetAnim` | ANIM name → id (`GetId`) → `sequences[id & 0x3FFFF]` of the held object |
 | `0x430AA0` / `0x430890` | `graphics_AnimSprite_Start` / `_Tick` | Modes 1–5 (loop fwd/back, once fwd/back, jump to end); countdown of ticks per step. `_Tick` is sprite vtable slot `+8` |
-| `0x431130` | (sprite tree tick) | Walks the tree front to back and calls each sprite's `+8` (tick) and `+0xC`, unless the subtree is paused (`+0x30`). WP-017 |
+| `0x431130` | (sprite tree tick) | Walks the tree front to back and calls each sprite's `+8` (tick) and `+0xC`, unless the subtree is marked done (`+0x30`). Each child's next sibling is read before the child is walked. WP-017, WP-055 |
+| `0x431190` | (sprite tree sweep) | Right after `0x431130`, front to back: each sprite's `+0x10` (`0x4309C0`), or, marked done (`+0x30`), its deleting destructor. WP-055 |
 | `0x435BC0` | (game tick loop) | `ticks = elapsed_ms × 36 / 1000 − done`. Runs each owed tick (tree tick, room update) and then draws once: **36 ticks per second**. Phantom: `0x4368F0`, byte-identical. WP-017 |
 | `0x4309C0` | `graphics_AnimSprite_SelectFrame` | Current step's frame ref → frame record |
 | `0x430D10`, `0x431350`, `0x4312A0` | `input_AnimSprite_HitTest`, `input_PolygonHitTest`, `input_PointInPolygon` | Step polygon: bounding box, then even-odd test |
@@ -2359,7 +2360,7 @@ fade for the music file:
 | `0x434F50` | Stop either fade, and set every music clip to 100% (`0x43C940` with `0xFFFFFFF`) |
 | `0x434C00` | Once a game tick (`0x435BC0`, after the room's tick): the countdown goes down by one; at 0 it starts again from the interval, and a fade moves the percent one step |
 | `0x43C940` (clip, percent) | Store the music file's percent, and set each playing clip's volume to percent × the file's gain (`+0x14`, the Options slider's 0.7–1.0) |
-| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there |
+| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there. Each clip has a buffer of its own (`+0x10` of its 0x14-byte entry). By the file's type (`+0x10`, set by `0x43C5A0`): `Sfx.dat` (0) keeps a clip's buffer and starts it again, and other clips play on; `Voice.dat` (1) makes a stream each time; `Music.dat` (2) plays nothing if the clip has a buffer, and frees every other clip's not kept (`+0x0C`) first. WP-055 |
 
 **A step** (`0x434C00`):
 - **Fading up,** percent + 1. Reaching the target stops the fade and sets
@@ -4059,11 +4060,219 @@ Its update (`0x41D5B0`):
 2. **Stopped, with the countdown run out:**
    - Scooby and Rascal are told (`0x41E630`, `0x41DA00`);
    - a ringer of Scooby's is a snack (`0x41E1A0`);
-   - the sprite is paused (`+0x30`) where it is, so every horseshoe stays
-     in view.
+   - the sprite is marked done (`+0x30`), and the sweep after the walk
+     (`0x431190`) deletes it. Corrected in
+     [WP-055](../work-packets/WP-055-pie-noon.md): until then the fork kept
+     each horseshoe in view.
 
 Created during the tree walk, a horseshoe behind its thrower is reached in
 the same walk: its player runs that tick.
+
+##### Pie Noon (WP-055)
+
+Traced 2026-11-16 for [WP-055](../work-packets/WP-055-pie-noon.md).
+
+**ROOM_P32_Pie_Noon** (`0x41B840`, vtable `0x45EC3C`) is a pie fight on the
+saloon's stage, until the clock chimes:
+- **Scooby** walks along the front after the mouse and throws a pie at each
+  press.
+- **The ghost** walks along the back, throws pies back, and hides in smoke.
+  A pie that reaches it is a snack.
+- **The rest of the gang** run across three lanes in between, and a pie
+  splats on them.
+- **The chime over:** back to the saloon.
+
+The audit's 602 instructions are only the room's own functions. Scooby, the
+ghost and each runner are sprites with updates of their own (vtable `+0x0C`),
+called in the tree walk. Each pie is a sprite the room's tick moves.
+
+**The stage.** The placements give it:
+- **Scooby's row,** and the ends of his walk.
+- **The ghost's row,** and its four places, sorted by x.
+- **Five start places,** sorted by y.
+
+On entry, four edges run from the ghost's row to Scooby's. With `gy` the
+ghost's row, the slopes are:
+- `+0xB8` = (Scooby's left end − ghost x₁) / (Scooby's row − `gy`)
+- `+0xBC` = (Scooby's right end − ghost x₂) / (Scooby's row − `gy`)
+- `+0xC0` = (left end − x₀) / (Scooby's row − `gy`)
+- `+0xC4` = (right end − x₃) / (Scooby's row − `gy`)
+
+At a depth `z`, measured as a row, the edges are (`0x41C980`–`0x41C9E0`):
+
+| Edge | At depth `z` |
+|---|---|
+| Left inner | (`z` − `gy`) × `+0xB8` + x₁ |
+| Right inner | (`z` − `gy`) × `+0xBC` + x₂ |
+| Left outer | (`z` − `gy`) × `+0xC0` + x₀ |
+| Right outer | (`z` − `gy`) × `+0xC4` + x₃ |
+
+The stage's width at a depth is the inner edges' gap.
+
+**The lanes** (left end `+0x124`, right end `+0x118`, row `+0x130`):
+
+| Lane | Ends | Row |
+|---|---|---|
+| 2, the back | The first two start places | The first's |
+| 1, the middle | The next two | The third's |
+| 0, the front | The other two lanes' ends, carried on | The fifth's |
+
+On Showdown the front lane runs from −553 to 1017, well off the screen.
+
+| Address | What it does |
+|---|---|
+| `0x41C190` (+0x18) | Placements, none of them built:<br>- **Scooby's** give his row (`+0xD0`) and the ends of his walk (`+0xCC`, `+0xC8`).<br>- **The ghost's** give its row (`+0xE4`) and four places (`+0xD4`), sorted.<br>- **The gang's** give five start places (`+0xEC`, `+0x100`), by y (`0x41C880`).<br>Built:<br>- **`OBJ_PIE_NOON_OVERLAY`s** ending `FR`, `FL`, `BR`, `BL` are sprites under the first layer, looping.<br>- **`OBJ_PIE_NOON_CLOCK`** is a sprite under the first layer, stopped on step level × 15.<br>- **`ANIM_PIE_NOON_COUNTERNUMBERS`** is two sprites under no layer at depth 9999, looping, the left one the tens. A third is an error |
+| `0x41B8E0` (+0x0C) | Entry, after the base entry. See below |
+| `0x41C130` (+0x10) | Leave, after the base leave: the places, the gang, Scooby and the counter forgotten |
+| `0x41BF10` (+0x04) | The tick, after the base tick. See below |
+| `0x41CC40` | One of the gang on: a lane drawn (`rand() % 3`). If it has been free over 10 ticks, a runner, running as the lane says (0 left, 1 right, 2 either, `rand()` even for right). The lane's time goes to 0 and its way to the runner's |
+| `0x41CA00` | A pie in the first of ten free slots (`+0x154`) |
+| `0x41CA90` | Tests a pie against the runners: Shaggy, Fred, Daphne, Velma |
+| `0x41CB50` | A snack (`0x407E00`), and the counter |
+| `0x41CD20` | Scooby may throw: lane 0's time is not below 0, and there is no chime |
+
+**Entry** (`0x41B8E0`):
+1. **The slopes and the lanes** as above.
+2. **The ghost and Scooby.**
+3. **The lanes:** each either way (2), with a time of −216.
+4. **The counter** on the snacks.
+5. **Sound:** `Pie_Noon.Music`, then `Pie_Noon.Intro`.
+6. **The overlays:** `FR` and `FL` one in front of the middle lane's row; `BR`
+   and `BL` one in front of the back lane's.
+7. **The clock:** the intro set (`+0x1AC`) and the clock's step kept
+   (`+0x1C4`). The next sound is a tick (`+0x1B8`).
+
+**The tick** (`0x41BF10`), after the walk and its sweep:
+1. **The cursor fades.**
+2. **The gang:** each of Velma, Fred, Daphne and Shaggy not on may run on
+   (`0x41CC40`).
+3. **Hit countdowns:** each runner's (`0x41A4B0`), Shaggy, Daphne, Fred,
+   Velma.
+4. **The pies:** each updated (`0x41B2C0`); those done deleted. A kept one
+   selects its frame (`0x4309C0`).
+5. **Lane times:** each goes up 1; past 100 a lane is either way again.
+6. **The clock:**
+   - In the intro, once lane 0's time reaches 0, the clock runs from step 1
+     at 36 ticks a step.
+   - After it, back on step 0, it stops and `Pie_Noon.Clock_Chime` plays.
+   - Each step it changes plays `Clock_Tick` or `Clock_Tock`, in turn.
+7. **The chime over** (`0x434CE0`): `ROOM_P12_Saloon`.
+
+On Showdown the clock has 60 steps. The intro is 216 ticks, and the chime
+comes at tick 216 + 36 × 59 = 2340. The level changes only the step the
+clock shows during the intro.
+
+**A runner** (`0x419C50`, vtable `0x45EBA0`; `+0x5C` its state, `+0x68` its
+name, `+0x70` running right, `+0x74` its lane, `+0x78` its speed, `+0x7C` its
+target, `+0x80` its hit countdown, `+0x84` its hit ticks, `+0x88` its `Hit.X`
+played) is a sprite under the first layer:
+- **Its sequence:** `OBJ_PIE_NOON_<NAME>` on
+  `ANIM_PIE_NOON_<NAME>RUN_<RIGHT|LEFT><lane + 1>`, looping (`0x41A310`).
+- **Its course:** from one end of its lane to the other, at a hundredth of
+  the lane a tick, at the lane's row and depth.
+- **Its update** (`0x419DE0`):
+  - **Running:** it moves on. Past the target, its slot is freed and it is
+    marked done.
+  - **Hit:** while its countdown runs, it counts hit ticks. Then it runs
+    again, its `_Hit.X` stopped.
+
+Its hit test (`0x419EB0`) passes three tests in turn:
+1. The pie is within a tenth of the stage's width (at the lane's row) of
+   that row.
+2. The pie is inside its frame's first cel.
+3. The pie is on its pixels: a hit.
+
+Inside the cel but off the pixels, while it hasn't been hit, it plays
+`Pie_Noon.<NAME>_Miss`.
+
+A hit (`0x41A110`):
+- **The sequence:** its `HIT`, looping.
+- **The countdown:** 12.
+- **The sound:** `Pie_Noon.<NAME>_Hit.<1|2>`, or once it has been hit over
+  72 ticks, `_Hit.X` once.
+
+**The ghost** (`0x41A550`, vtable `0x45EBDC`; `+0x5C` its speed, `+0x60` a
+countdown, `+0x68` its state, `+0x6C` facing right, `+0x70` hidden, `+0x74`
+its smoke, `+0x78` and `+0x7C` the throws and hits to its next line):
+- **Where it starts:** a sprite under the first layer, half way along its
+  row, facing right.
+- **Its speed:** 0.005 of its row a tick.
+- **Its draw** (`0x41B0D0`) skips it while it is hidden.
+
+In each state, "side" is the way it faces:
+
+| State | Entered (`0x41AA40`) | Its update (`0x41A650`), after deleting a stopped smoke |
+|---|---|---|
+| 0 | Shown; `IDLE_<side>`, looping; 25 ticks | Run out: `rand() % 7`. 0 → 5; 1–2 → 4; 3 → 6 (if no smoke is up, else 2); 4–6 → 2 |
+| 1 | `HIT_<side>`, looping; 15 ticks. `Ghost_Hit` restarted. A `Good_Job.<1-8>` line every hit | Run out: `rand()` odd 4, else 2 |
+| 2 | Scooby walking (state not 0 or 1) and the intro over: `THROW_<side>_TO_<other>` once, turned. Otherwise as 5 | Its step 2: a pie from its place, state 3, `Ghost_Throw`, and every 5–9 throws (the first at once) a `Lookout.<1-3>` line. Then as 3 |
+| 3 | — | Stopped: 0 |
+| 4 | `RUN_<other>_TO_<side>`, looping | Along its row. Past its end: `rand()` even 2, else 5. Otherwise 1 in 90: 0 |
+| 5 | `TRANS_<side>_TO_<other>` once, turned | Stopped: `rand()` odd 0, else 4 |
+| 6 | Smoke (`OBJ_PIE_NOON_SMOKE` on `SMOKECYCLE` once, under the first layer, a row in front) at its place; `Smoke_Cycle` | The smoke's step 5: 8 |
+| 7 | Somewhere along its row (`rand()` / 32767), then as 6 | The smoke's step 5: 0 |
+| 8 | Hidden; 20 ticks | Run out, and no smoke: 7 |
+
+Its hit test (`0x41A9D0`): shown, and on its pixels.
+
+**A pie** (`0x41B0F0`, vtable `0x45EC0C`; `+0x60` its state, `+0x64` across,
+`+0x68` its depth as a row, `+0x6C` its size, `+0x70` thrown by the ghost,
+`+0x74` the runner slot it hit):
+- **Its sprite:** under the first layer, stopped, `OBJ_PIE_NOON_PIE`.
+- **Thrown from the back half** (the ghost's): it shows `PIEG_THROW`, and
+  "across" is its x along the ghost's places.
+- **Thrown from the front:** it shows `PIETHROW`, and "across" is its x
+  along Scooby's walk.
+- **Its place:** x is "across" between the outer edges at its depth. y is
+  its depth less 0.6 of the stage's width there.
+- **Its size:** its step's first cel's width.
+
+Its update (`0x41B2C0`):
+1. **Landed:** once its sequence stops, it is done. Until then, a runner it
+   splatted on keeps a countdown of 12 (`0x41A4D0`).
+2. **Flying:**
+   - **It moves** a tenth of the stage's width at its depth: back if it is
+     Scooby's, forward if it is the ghost's.
+   - **Its step grows** while a fifth of the width is under its size
+     (Scooby's) or over it (the ghost's), up to 9.
+   - **Its depth** is its row.
+3. **In front of Scooby's row:** it is tested on Scooby's pixels (`0x41D160`)
+   at its x, and a quarter and a half of its size either side.
+   - **A hit** (`0x41D1B0`): his `HIT_<L|R>` once and `Scooby_Hit`; the pie
+     shows `PIEG_HIT` once, one behind him.
+   - **Otherwise:** done.
+4. **Behind the ghost's row:** on the ghost, the ghost is hit, a snack (`0x41CB50`), and
+   `PIEHIT3` once, one in front of the ghost. Otherwise it is done.
+5. **Between the two:** the runners in turn. A hit splats:
+   - **The sound:** `Pie_Noon.Splat.<n>`, from a global (`0x475F08`) that
+     goes 0 to 4 in turn. The old value is pushed before the increment.
+   - **The sequence:** `PIEHIT<lane + 1>` once.
+   - **Its depth:** two in front of the runner, or two behind for a ghost's pie.
+
+**Scooby** (`0x41CD50`, vtable `0x45EC7C`; `+0x60` a press used, `+0x64` his
+state, `+0x68` facing right, `+0x6C` his throw's number):
+- **Where he starts:** a sprite under no layer, at his row's depth, at his
+  walk's left end, on `WALK_LEFT_ARM` stopped, walking (3).
+- **Each update** (`0x41CE30`):
+  - **The press:** let go, it can be used again.
+  - **The target:** the mouse's x, kept to his walk.
+
+| State | His update |
+|---|---|
+| 0 (hit) | Stopped: `LICK_<L\|R>` once and `Scooby_Lick`, state 1 |
+| 1 | Stopped: his walk for his side, stopped, state 3 |
+| 2 (thrown) | Stopped: turned, his walk for the new side, state 3 |
+| 3 | There: stopped. Else 15 a tick at most, his walk restarted when stopped, from its step, a step a tick (left forward, right back). Then, a press not used and allowed (`0x41CD20`): a pie from his place, the press used, `THROW_L_TO_R` (or `R_TO_L`) once, state 2, the next of throws 1–3 and `Scooby_Throw.<n>` |
+
+**The tree's sweep** (`0x431190`) runs after the walk each tick, front to
+back. It selects each sprite's frame (`0x4309C0`) and deletes each sprite
+marked done (`+0x30`) with its subtree. So "paused" in the walk's row above
+means done: a runner past its lane's end is gone before the draw.
+
+**A step past the last.** A pie's step can go one past its sequence's last
+(`PIETHROW` and `PIEG_THROW` have 9). `0x4309C0` and `0x41B2C0` read it as
+any other: the frame reference is the next sequence's step count. On
+Showdown, Scooby's pie shows frame 9, a 3 × 5 speck, for its last few ticks.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
