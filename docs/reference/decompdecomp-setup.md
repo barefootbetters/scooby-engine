@@ -41,16 +41,29 @@ decompdecomp is young and self-updates, and its docs leave some screens undescri
 
 *decompdecomp:* the GUIDE's platform table lists, for Windows PC, "Visual C++ 6.0 · 7.0 · 7.1 · 2005 · 2008 · 2010 · 2017", plus any other version "from your own copy" for 32-bit games. The GUIDE says proprietary compilers install after you accept their licenses in a **Setup** screen, but `v1.0.10-alpha.1` has no Setup entry in its sidebar. The compilers install from **Compilers & tools** instead (observed 2026-11-11).
 
-*Case File #1 project:* the game is matched with **Visual C++ 6.0** by default, with one file on 7.1. Those two are the ones you need. *Changed 2026-11-15:* Mony made decomp.me's `msvc6.5pp`, the VC6 Processor Pack, the project's default, added as a custom compiler ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md#library-matching-the-processor-pack-default-and-outmatch-2026-11-15)). Members' agents build their attempts on their own machines, so a member most likely needs the same compiler installed (Inferred; confirm with Mony before the trial). It isn't on decompdecomp's card: it comes from decomp.me's `msvc6.5pp.tar.gz` (release `msvcwin9x` of `OmniBlade/decomp.me`) and is added through **Microsoft Visual C++ (your own copy)**.
+*Case File #1 project:* the game is matched with **Visual C++ 6.0** by default, with one file on 7.1. Those two are the ones you need. *Changed 2026-11-15:* Mony made decomp.me's `msvc6.5pp`, the VC6 Processor Pack, the project's default, added as a custom compiler ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md#library-matching-the-processor-pack-default-and-outmatch-2026-11-15)). **Every member needs it installed too** (Mony, 2026-11-16). It isn't on decompdecomp's card; step 5 below adds it.
 
 You don't need to install Visual Studio, old or new. decompdecomp's docs don't mention it. What matters is the period compiler that decompdecomp supplies, because every attempt is rebuilt with that compiler and compared byte for byte.
 
 ![decompdecomp's start screen. Compilers & tools is in the sidebar, bottom left.](images/decompdecomp-start-screen.png)
 
 1. Open **Compilers & tools** from the sidebar.
-2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards. Use **Microsoft Visual C++ (your own copy)** only for `msvc6.5pp`, as described above.
+2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards. Use **Microsoft Visual C++ (your own copy)** only for `msvc6.5pp`, in item 5.
 3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 6 uses that folder.
-4. *WP-011:* the `6.0` folder holds VC6 **RTM**, build 8168 (its `CL.EXE`, `C1XX.DLL` and `C2.DLL` all report 12.00.8168, observed 2026-11-14). Case File #1's own C++ was built with the later Processor Pack, build 8943. Mony is testing which build comes closest, to make it the project default. If the project moves to a compiler outside this card, this step changes. See [WP-011 §Progress, libexpat and the compiler build](../work-packets/WP-011-casefile-decompdecomp.md#progress-libexpat-and-the-compiler-build-2026-11-14-to-11-15).
+4. *WP-011:* the `6.0` folder holds VC6 **RTM**, build 8168 (its `CL.EXE`, `C1XX.DLL` and `C2.DLL` all report 12.00.8168, observed 2026-11-14). Case File #1's own C++ was built with the later Processor Pack, build 8943. The project's default is now the Processor Pack compiler in step 5. See [WP-011 §decomp.me's VC6 builds](../work-packets/WP-011-casefile-decompdecomp.md#decompmes-vc6-builds-2026-11-15).
+5. *Case File #1 project:* add the Processor Pack compiler, decomp.me's `msvc6.5pp`.
+   1. Download `msvc6.5pp.tar.gz` from the `msvcwin9x` release of [OmniBlade/decomp.me](https://github.com/OmniBlade/decomp.me/releases/tag/msvcwin9x). It's about 6.7 MB, and the copy used here had SHA-256 `0DE4C5DC848D59B8AF842EB157FFE8B1D24FBA6621B18BE67EA9932E219CE14E`.
+   2. Extract it to a folder of its own beside decompdecomp's projects, for example `%USERPROFILE%\Decomp\compilers\msvc6.5pp`. Keep it out of `%LOCALAPPDATA%\decompnet\toolchains`, which decompdecomp manages itself. The folder holds `Bin`, `Include`, `MFC` and `ATL`.
+
+      ```powershell
+      $dst = "$env:USERPROFILE\Decomp\compilers\msvc6.5pp"
+      New-Item -ItemType Directory -Force $dst | Out-Null
+      tar -xzf "$env:USERPROFILE\Downloads\msvc6.5pp.tar.gz" -C $dst
+      ```
+
+   3. In **Compilers & tools**, give that folder to the **Microsoft Visual C++ (your own copy)** card. It should read the version as **13.00.9044**: the copy's `C2.DLL`, the Processor Pack's code generator. `CL.EXE` is 12.00.8804 and `C1XX.DLL` 12.00.8964 (observed 2026-11-16).
+
+   *decompdecomp:* a copy's name in a project is `MSVC/own-<C2.DLL version>` (`kits/visualcpp.py`, `consoles/pc/__init__.py`, `v1.0.10-alpha.2`). So a member's copy has to be the same build as the host's for the room's project to find it. The same archive guarantees that (Inferred from the source).
 
 ![The Compilers & tools screen. The Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC) card is at the right of the second row, and Ghidra is at the top left.](images/decompdecomp-compilers-and-tools.png)
 
@@ -112,11 +125,11 @@ decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-0
 
 ## 5. Set up an agent provider and a spend limit
 
-*decompdecomp:* the tool has **no budget cap** of its own. When a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
+*decompdecomp:* its GUIDE describes no budget cap, but `v1.0.10-alpha.2` has one (observed 2026-11-16). Under **Settings → Agents**, **Budget** stops helper agents once a project's agents have spent that much in US dollars, "as the agents report it". 0 means no limit, which is the default. Its dollars are the same app-priced figure as the **spent** figure below, so for a subscription such as a Claude plan the budget is an API-equivalent stop, not your bill. The same panel's **Functions per agent session** (default 8) starts a fresh agent session after that many functions, which keeps each session's context small. Otherwise, when a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
 
 Don't take the trial's cost from decompdecomp's own **spent** figure. The collaborator reports (2026-11-12) that it prices subscription usage, such as a Claude plan, as if it were API usage. Take the cost from the provider's billing page.
 
-*WP-011:* the spend limit therefore has to come from the provider.
+*WP-011:* set both stops. The provider's own limit caps the real spend, and decompdecomp's **Budget** stops the agents at the trial's app-priced cap.
 
 1. Pick a provider.
    - **API key:** DeepSeek, OpenRouter, OpenAI, or any OpenAI-compatible API, including a local model. decompdecomp recommends this route.
@@ -196,7 +209,7 @@ Record these in the WP-011 decision log and trial metrics.
 
 **Setup (once):**
 - decompdecomp version
-- Compiler versions and the toolchain path, including the custom `msvc6.5pp` if the room needs it
+- Compiler versions and the toolchain path, including the `msvc6.5pp` copy's folder and the version decompdecomp reads from it
 - That **App instructions** carries the [matching-notes instruction](#give-the-agents-monys-matching-notes), and the outmatch commit the notes came from
 - decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
