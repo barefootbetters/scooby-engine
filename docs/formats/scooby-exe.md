@@ -3970,6 +3970,101 @@ Each line's digit comes from `0x417B70`. It draws `rand() % 9`, then
 `rand()` modulo the last draw, and takes the first digit (draw + 1) the
 disc has, or none. The SFX and speech files are stopped before the line.
 
+##### The horseshoe corral (WP-054)
+
+Traced 2026-11-16 for [WP-054](../work-packets/WP-054-horseshoe-corral.md).
+
+**ROOM_P30_Horseshoe_Corral** (`0x41DA10`, vtable `0x45ED00`; music
+`Horseshoe_Corral.Music`; no opening) is a game of horseshoes: Scooby and
+Rascal pitch ten each at three pegs. The room's class has no tick (its
+`+0x04` is the base's). The game is three sprite classes with updates of
+their own (their vtable `+0x0C`). The tree tick (`0x431130`) calls each
+right after the sprite's player, front to back.
+
+**The room's fields:**
+- **`+0xB8`:** whose turn: 0 Scooby, 1 Rascal.
+- **`+0xBC`, `+0xC0`:** Scooby and Rascal.
+- **`+0xC4`, `+0xC8`:** their piles.
+- **`+0xCC`–`+0xD4`:** the pegs.
+- **`+0xD8`–`+0xE4`:** the meter's placements' places.
+- **`+0xE8`, `+0xEC`:** the counter's tens and ones.
+
+| Address | What it does |
+|---|---|
+| `0x41DD00` (+0x18) | Placements. `OBJ_HC_SCOOBYPILE` and `OBJ_HC_RASCALPILE` sprites under the first layer, stopped, at depth 3 and 0. By their sequence: `ANIM_HC_METERA` and `ANIM_HC_METERARROW` are not built, only their places kept; `ANIM_HC_COUNTERBOX` a sprite at depth −10000, looping; `ANIM_HC_COUNTERNUMBERS` two sprites under the second layer (game `+0x5C`) at depth −9999, the left one the tens (a third is an error, not claimed). The exit back to Chase B5 is the default path's |
+| `0x41DA80` (+0x0C) | Entry, after the base entry. See below |
+| `0x41DCE0` (+0x10) | Leave, after the base leave: the counter's numbers forgotten |
+| `0x41E140` | A throw over. Scooby's: Rascal's turn. Rascal's: Scooby's, or, with Scooby's pile on its step 10, `ROOM_P28_Chase_B5` (game vtable `+0x04`) |
+| `0x41E1A0` | A snack (`0x407E00`: the inventory's `+0x30` plus 1, at most 99, and the snack box), and the counter on the snacks' tens and ones |
+
+**Entry** (`0x41DA80`):
+1. **Set-up:** the toolbar is hidden (`0x407CC0`).
+2. **The actors:**
+   - **Scooby** (`0x41E290`, 0x78 bytes): `OBJ_HC_SCOOBY` idle, looping,
+     at depth 2, with the meter (`OBJ_HC_METER` on `ANIM_HC_METERARROW`,
+     stopped, at depth −10, at the arrow's place).
+   - **Rascal** (`0x41D770`, 0x74 bytes): `OBJ_HC_RASCAL`, his head
+     (`RASCALHEAD_IDLE`, once) at depth −1 and his body (`RASCALBODY`,
+     looping) one behind it.
+   - **The pegs:** `OBJ_HC_PEG1`–`3`, idle, at depth −100.
+3. **Sound:** the `Horseshoe_Corral` sound section is preloaded.
+4. **The counter** shows the snacks.
+5. **Scooby's turn,** unless his pile is on its step 10; then Chase B5.
+
+**Scooby** (vtable `0x45ED40`; `+0x5C` his state, `+0x68` the meter, `+0x6C`
+the strength, `+0x70` his horseshoe landed, `+0x74` the meter's way):
+
+| State | Entered (`0x41E540`) | His update (`0x41E3A0`) |
+|---|---|---|
+| 0 | Idle, looping | — |
+| 1 | The meter once forward from its step, at 9 − 3 × level ticks a step | The meter stopped: once back (mode 4), then once forward, at that speed. The button held (game `+0x20` bit 1): the meter stopped, its step the strength, state 2 |
+| 2 | `+0x70` clear, `SCOOBYTHROW` once | His step 2: state 3. Then as state 3 |
+| 3 | His pile one step on | His step 15: a horseshoe at his strength, state 4 |
+| 4 | — | Stopped: state 5 |
+| 5 | The meter stopped, `SCOOBYWATCH` once | Stopped, with `+0x70`: state 0, and the throw over |
+
+**Rascal** (vtable `0x45ECD8`; `+0x5C` his state, `+0x68` a countdown, `+0x6C`
+his horseshoe landed):
+
+| State | Entered (`0x41D920`) | His update (`0x41D860`) |
+|---|---|---|
+| 0 | — | His head stopped: a countdown of `rand() % 60 + 48`; run out, his idle once again |
+| 1 | — | His head stopped: state 2 |
+| 2 | `+0x6C` clear, `RASCALHEAD_TOSS` once | His head's step 7: state 3 |
+| 3 | A horseshoe at `rand() % 9 + 1`, his pile one step on | His head stopped: state 4 |
+| 4 | `RASCALHEAD_IDLE` once | His head stopped, with `+0x6C`: state 0, and the throw over |
+
+**A horseshoe** (`0x41D210`, vtable `0x45ECB0`) is a sprite under the first
+layer at depth −2, playing once:
+- **Scooby's** is `OBJ_HC_ARCS` on `ANIM_HC_ARCS<strength>x<nn>`:
+  - **The digits:** `nn` is drawn from `rand() % 20`, then `rand()` modulo
+    the draw before, until that name, or it with `H`, is in the art, or the
+    draw is 0.
+  - **A ringer:** the `H` arcs are ringers. With strength 1–3 one rings
+    that peg (`+0x6C`).
+  - **Depth:** `4x02` is drawn at depth 10000.
+  - **Sound:** `Horseshoe_Corral.Arc_0<strength>x<nn>`, with `H` when that
+    one isn't on the disc.
+- **Rascal's** is `OBJ_HC_RASCAL_ARCS` on `ANIM_HC_RASCAL_ARCS<n>`:
+  - **Strength:** an 8 is taken as 9.
+  - **A ringer:** 1–3 rings that peg.
+  - **Sound:** `Horseshoe_Corral.Rascal.Arc<n>`.
+
+Its update (`0x41D5B0`):
+1. **Landed** (stopped), on a peg: it becomes the peg with the horseshoe on
+   it (`OBJ_HC_PEG<n>`, its `HORSESHOE_HIT` or `RASCAL_HIT` once), and
+   `Horseshoe_Corral.Rascal.Peg<n>.Hit` plays, Scooby's ringer too (the
+   disc's `Scooby.Peg<n>.Hit` sounds are never used). Then a countdown of
+   36.
+2. **Stopped, with the countdown run out:**
+   - Scooby and Rascal are told (`0x41E630`, `0x41DA00`);
+   - a ringer of Scooby's is a snack (`0x41E1A0`);
+   - the sprite is paused (`+0x30`) where it is, so every horseshoe stays
+     in view.
+
+Created during the tree walk, a horseshoe behind its thrower is reached in
+the same walk: its player runs that tick.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
