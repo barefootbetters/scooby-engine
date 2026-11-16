@@ -3570,6 +3570,61 @@ Otherwise, and for the way to Street 1, it calls the default handler.
    cursor: the lantern is used up and the arrow is back. `TunnelLit` is
    set, and `160C_` plays, held, with `+0xD0` as its done flag.
 
+##### The railroad station (WP-049)
+
+Traced 2026-11-15 for [WP-049](../work-packets/WP-049-railroad-station.md).
+
+**ROOM_P09_Railroad_Station** (`0x4207C0`, vtable `0x45EE28`; music `2`):
+- **Its placements:**
+  - the gang;
+  - Gummy and his donkey, the characters GUMMY and DONKEY;
+  - the way back to Street 2;
+  - the way to the chase, OBJ_P09_TO_P40 (movie 32);
+  - hotspots 1 to 3. Hotspot 2 is at `priority=100000`, hotspot 3 at 200.
+- **Its fields:**
+  - `+0xB8`, `+0xBC`: hotspots 2 and 3.
+  - `+0xC0`: Gummy gives his clue when idle.
+  - `+0xC1`: then the thanks.
+  - `+0xC8`: Gummy's next hint.
+
+| Address | What it does |
+|---|---|
+| `0x420820` (+0x08) | Reset: `+0xC0`, `+0xC1`, `+0xC4` and `+0xC8` cleared. It doesn't call the base reset (`0x40CD20`) |
+| `0x4213C0` (+0x18) | OBJ_GUMMY* and OBJ_DONKEY* aren't built until Artie has been met, and the way to the chase isn't built until Gummy's clue has been given. Hotspots 2 and 3 are clickables, as the default path builds them |
+| `0x4212C0` (+0x2C) | The opening, unplayed: `Railroad_Station.Intro_`, or `110A_` while `MoaningActive`. With the whistle puzzle solved (`GummyPuzzle`, game `+0x274`) and his clue not yet given, Gummy's next hint instead. Back from the station itself, `220DP_` |
+| `0x4210F0` (+0x0C) | Entry, after the base entry. See below |
+| `0x421070` (+0x14) | The room's event: hotspot 2, moved on to its B, `HOTSPOT2A_`; to its C, `HOTSPOT2B_`. Held |
+| `0x420840` (+0x04) | The tick, after the base tick. See below |
+| `0x421680` | Gummy's next hint: `220C_`, `220C2_`, `220C3_` in turn (`+0xC8`). With the dentures had, it goes back to `220C_` after `220C2_` |
+| `0x4119E0` | The room's own name (`+8`) |
+
+**Entry** (`0x4210F0`):
+1. **Before the puzzle, with Artie met,** Gummy SLEEPS, looping
+   (`0x406210`).
+2. **After it,** the donkey's hit type is 0.
+3. **With his clue given,** Gummy and the donkey stand 100 further right
+   (their `+0xC`).
+4. **Back from the station itself,** Gummy's clue is given (game vtable
+   `+0x44`) and `+0xC0` is set.
+5. **From Street 2,** Shaggy walks in down and right (`0x405EA0`).
+
+**The tick** (`0x420840`):
+1. **Gummy clicked** (its `+8`, on the release):
+   - **With the dentures, the puzzle solved:** the dentures are used up and
+     the arrow is back. The room's exit handler takes the gang to the
+     station itself, with `220D_` and movie 30.
+   - **With the arrow, before the puzzle:** the exit handler takes the gang
+     to ROOM_Gummy.
+   - **With the arrow, after the puzzle:** his next hint, held, until his
+     clue has been given. After that, `Global.1000GA_`, `GB_` or `GC_`
+     (`rand() % 3`), not held.
+2. **No scene, the opening done, Gummy idle, and `+0xC0`:** Gummy plays
+   GIVES. `+0xC1` is set, and input is held.
+3. **`+0xC1`, with Gummy idle, looping, or not here:** the thanks
+   (`Global.Thank_You_`) take the gang to ROOM_Suspect_Chooser.
+4. **The donkey clicked with the arrow:** to ROOM_Gummy.
+5. **Hotspot 3 on step 8 of its C:** Scooby is scared.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
