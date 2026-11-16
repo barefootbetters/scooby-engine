@@ -125,11 +125,11 @@ decompdecomp keeps its own Ghidra for the app. For [WP-001](../work-packets/WP-0
 
 ## 5. Set up an agent provider and a spend limit
 
-*decompdecomp:* the tool has **no budget cap** of its own. When a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
+*decompdecomp:* its GUIDE describes no budget cap, but `v1.0.10-alpha.2` has one (observed 2026-11-16). Under **Settings → Agents**, **Budget** stops helper agents once a project's agents have spent that much in US dollars, "as the agents report it". 0 means no limit, which is the default. Its dollars are the same app-priced figure as the **spent** figure below, so for a subscription such as a Claude plan the budget is an API-equivalent stop, not your bill. The same panel's **Functions per agent session** (default 8) starts a fresh agent session after that many functions, which keeps each session's context small. Otherwise, when a provider limit is hit, it waits for the limit to reset and then carries on. It pauses only after five fast failures in a row. The guide reports that a small function cost about 8 cents with Claude Code; that figure is the tool's, not ours.
 
 Don't take the trial's cost from decompdecomp's own **spent** figure. The collaborator reports (2026-11-12) that it prices subscription usage, such as a Claude plan, as if it were API usage. Take the cost from the provider's billing page.
 
-*WP-011:* the spend limit therefore has to come from the provider.
+*WP-011:* set both stops. The provider's own limit caps the real spend, and decompdecomp's **Budget** stops the agents at the trial's app-priced cap.
 
 1. Pick a provider.
    - **API key:** DeepSeek, OpenRouter, OpenAI, or any OpenAI-compatible API, including a local model. decompdecomp recommends this route.
