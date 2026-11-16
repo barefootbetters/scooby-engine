@@ -1382,7 +1382,9 @@ A clickable keeps a **state**, an ANIM name (`+0x60`), and a **sound**,
 `SFX_` plus the state without `ANIM_` (`+0x68`). The state starts as the
 placement's ANIM, or as the save file's `Clickables` entry for the object.
 A click plays the state once (mode 3, 3 ticks per step) with its sound,
-advances the state, and tells the room. When the sequence ends, the object
+advances the state, and tells the room (game `+0x40` with 0, as the arrow
+on a requires object does; corrected in [WP-062](../work-packets/WP-062-throne-room.md),
+where the fork had passed 1). When the sequence ends, the object
 rests stopped on step 0 of its new state. The state advances by its last
 character + 1, unless that gives a digit 1–9; a name the art file doesn't
 have goes back to `A`. So `…HOTSPOT1A` → `…1B` → `…1C`, and a state with
@@ -1863,6 +1865,70 @@ A red herring is of a suspect neither the villain nor the giver
 | `0x416140` / `0x4161C0` (+0x1C / +0x20) | Save / load |
 | `0x4122D0` / `0x412B80` / `0x4122E0` | The Jester: constructor, entry, tick |
 | `0x4305C0` / `0x430F00` | Phantom's clue giver and red herring |
+
+##### Phantom's throne room (WP-062)
+
+Traced 2026-11-16 for [WP-062](../work-packets/WP-062-throne-room.md), in
+Phantom's `Scooby.exe`.
+
+**The throne room** (`ROOM_P10_Throne_Room`, `0x417A90`, vtable
+`0x45EC1C`; music group 1, opening `Throne_Room.160_`):
+- **Reset** (`0x417AF0`): Jane's movie not played (`+0xBC`, saved as
+  `JaneMoviePlayed`), and `+0xC0` 0 (saved as `Entrances`; nothing else
+  touches it). Its `+0x30` (`0x417B10`) does nothing.
+- **Placements** (`0x417C10`):
+  - **The way to the secret passage** (`OBJ_P10_TO_P19`) is an exit as the
+    default path builds it, then at depth −1 (`0x431C10`) where the other
+    exits are at −1000. It is the doorway behind the throne, and takes its
+    clicks once the throne is hidden.
+  - **The throne** (`OBJ_P10_THRONE_ROOM_THRONE`, placed as a requires
+    object for `ANIM_CURSORRUBY`):
+    - until the red, blue and yellow balls are all found (game `+0x25B`,
+      `+0x25C`, `+0x25D`), a clickable without the ghost (`0x408DC0` with
+      0, −1): it has no `layer=` or `priority=`, so the first layer and
+      depth −1;
+    - after, the requires object (`0x408C80` with −1: the first layer,
+      depth 0);
+    - hidden once the ruby is used: ever taken (`0x407060`) and in no slot
+      (`0x4070C0`).
+  - **The Jester** (`OBJ_JESTER*`) isn't built if the ruby was never
+    taken, or once the three balls are found. The room places him without
+    his logic ([the Jester](#phantoms-room-of-doors-its-jester-and-phantoms-clues-wp-061)).
+  - **The third hotspot** is a clickable as the default path builds it.
+- **Entry** (`0x417B20`):
+  - **The first time,** Jane's movie: `JaneMoviePlayed` is set and movie
+    18 plays, back to this room (game vtable `+0x08`). That visit skips the
+    base entry (`0x40B920`); later ones run it.
+  - **Walk-ins:** from the room of doors, Velma (`D`, `0x406020`); from the
+    first arena, Daphne (`UL`, `0x405EE0`); from the second, Shaggy (`UR`,
+    `0x405E60`).
+  - Jane's screaming stops (game `+0x288`, `Screaming`).
+- **Each tick** (`0x417E80`, after the base tick):
+  - **Jane and the duster.** Jane (`0x40A800`, `JANE`) under the mouse
+    (`+0x08`), the button up (game `+0x20` bit 4), and the cursor
+    `ANIM_CURSORDUSTER`: the duster leaves its slot (`0x406C80`), the
+    cursor is the arrow again, and `Throne_Room.160E_` plays, blocking.
+    The duster is then used, which unlocks the room of doors' dining room.
+  - **The third hotspot.** While it shows step 1 (`+0x4C`) of
+    `ANIM_P10_THRONE_ROOM_HOTSPOT3A` (`+0x54`), Daphne, Scooby, Shaggy,
+    Velma and Fred are scared (`0x405190`, state `0x11`), each tick.
+- **The throne's event** (`0x417FB0`, room vtable `+0x14`):
+  - **With the ruby:** movie 9, back to this room (game vtable `+0x08`);
+    the ruby leaves its slot and the cursor is the arrow again. Back in the
+    room the throne is hidden.
+  - **Otherwise** (the arrow on the requires object, or a click on the
+    clickable): `Throne_Room.160X_`, blocking.
+- **The profile** (`0x418030`, `0x418090`): `JaneMoviePlayed`, `Entrances`.
+
+| Address | What it does |
+|---|---|
+| `0x417A90` | Throne room constructor |
+| `0x417AF0` (+0x08) | Reset |
+| `0x417B20` (+0x0C) | Entry: Jane's movie, the walk-ins |
+| `0x417C10` (+0x18) | Placements |
+| `0x417E80` (+0x04) | Tick: the duster, the third hotspot |
+| `0x417FB0` (+0x14) | The throne's event |
+| `0x418030` / `0x418090` (+0x1C / +0x20) | Save / load |
 
 ##### Movies (WP-022)
 
