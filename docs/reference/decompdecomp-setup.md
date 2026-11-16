@@ -134,13 +134,13 @@ Don't take the trial's cost from decompdecomp's own **spent** figure. The collab
    git clone https://github.com/monyarm/outmatch "$env:USERPROFILE\Decomp\outmatch"
    ```
 
-2. In the decompdecomp app, not a terminal, open the prompt settings and find **App instructions**. Add this line at the end of the text that's already there, with your own full path. Don't replace the text: it's decompdecomp's own instructions to its agents, and an override takes their place.
+2. In the decompdecomp app, not a terminal, go to **Agents & models**, open **Agent prompts**, then open **App instructions**. Tick **Use a custom override**. The box then becomes editable, with decompdecomp's built-in text still in it. Add this line at the end, with your own full path, and choose **Save prompts**. Don't clear the text that's there: an override replaces decompdecomp's own instructions rather than adding to them.
 
    ```text
    Read C:\Users\<you>\Decomp\outmatch\skills\msvc-matching\references for more info on how to match functions.
    ```
 
-   Point it at the `references` folder, not the skill. Mony reports that decompdecomp doesn't load skills well. *decompdecomp:* **App instructions** is one of four prompt fields. The others are the three initial prompts, for ROM work, imported projects and polishing. It can be set for all helpers or for one helper, and it's literal text, not a template (`src/decompnet/app/prompt_settings.py`, `v1.0.10-alpha.2`). Which screen holds it isn't recorded yet; note that in the [trial record](#trial-record-for-wp-011) the first time.
+   Point it at the `references` folder, not the skill. Mony reports that decompdecomp doesn't load skills well. *decompdecomp:* **App instructions** is one of four prompt fields. The others are the three initial prompts, for ROM work, imported projects and polishing. It can be set for all helpers or for one helper, and it's literal text, not a template (`src/decompnet/app/prompt_settings.py` and `static/js/prompt-settings.js`, `v1.0.10-alpha.2`). The **Agent prompts** panel sets it for all helpers. Each running helper's **Prompts** link sets it for that helper only.
 3. Pull the clone before each session. Mony updates the notes.
 
 *WP-011:* the notes are large. One file, `brickpark-levers.md`, is about 335 KB (observed 2026-11-16). If an agent reads the whole folder for every function, that's a lot of tokens per attempt. Watch the first few attempts' cost against the cap. If reading the notes eats the budget, name the smaller files in the instruction instead.
@@ -197,7 +197,7 @@ Record these in the WP-011 decision log and trial metrics.
 **Setup (once):**
 - decompdecomp version
 - Compiler versions and the toolchain path, including the custom `msvc6.5pp` if the room needs it
-- Where **App instructions** is in the app, with the [matching-notes instruction](#give-the-agents-monys-matching-notes) added, and the outmatch commit the notes came from
+- That **App instructions** carries the [matching-notes instruction](#give-the-agents-monys-matching-notes), and the outmatch commit the notes came from
 - decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
 
