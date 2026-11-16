@@ -2360,7 +2360,7 @@ fade for the music file:
 | `0x434F50` | Stop either fade, and set every music clip to 100% (`0x43C940` with `0xFFFFFFF`) |
 | `0x434C00` | Once a game tick (`0x435BC0`, after the room's tick): the countdown goes down by one; at 0 it starts again from the interval, and a fade moves the percent one step |
 | `0x43C940` (clip, percent) | Store the music file's percent, and set each playing clip's volume to percent × the file's gain (`+0x14`, the Options slider's 0.7–1.0) |
-| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there. Each clip has a buffer of its own (`+0x10` of its 0x14-byte entry). By the file's type (`+0x10`, set by `0x43C5A0`): `Sfx.dat` (0) keeps a clip's buffer and starts it again, and other clips play on; `Voice.dat` (1) makes a stream each time; `Music.dat` (2) plays nothing if the clip has a buffer, and frees every other clip's not kept (`+0x0C`) first. WP-055 |
+| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there. Each clip has a buffer of its own (`+0x10` of its 0x14-byte entry). By the file's type (`+0x10`, set by `0x43C5A0`): `Sfx.dat` (0) keeps a clip's buffer and starts it again, and other clips play on; `Voice.dat` (1) makes a stream each time; `Music.dat` (2) plays nothing if the clip has a buffer, and frees every other clip's not kept (`+0x0C`) first. WP-055. A `Voice.dat` stream goes in the clip's own entry and frees no other clip's, so voice lines overlap, up to the driver's four streams ([voice lines overlap](#voice-lines-overlap-2026-11-16)) |
 
 **A step** (`0x434C00`):
 - **Fading up,** percent + 1. Reaching the target stops the fade and sets
@@ -2389,6 +2389,43 @@ first scenes are their openings (`+0x78`). The base room starts an opening
 100 ticks after entry (`+0x74`), holding input meanwhile (`0x40C7B0`), and
 only then does `0x40B400` turn the music down. Credits' opening is the
 factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
+
+##### Voice lines overlap (2026-11-16)
+
+Traced 2026-11-16 in Showdown, for the gap WP-055 left. `0x43CC20` reaches
+the sound driver through the base factory (`0x433C70`, vtable `0x45F570`):
+its `+0x1C` (`0x43C020`) builds the driver once (`0x442510`, vtable
+`0x45F744`).
+
+| Address | What it does |
+|---|---|
+| `0x4428A0` (driver `+0x04`) | Create a stream in the first of the driver's four stream slots (`+0x3C`, 0x108 bytes each) not in use (slot `+0x68` bit 31). `0x445780` opens it and counts the slot's generation (`+0x104`, 1 to 512). The handle is `0x80000000` \| (generation × 4 + slot + 1). With all four in use the handle is 0, and `0x43CC20` logs `Failed to create stream` |
+| `0x442910` (`+0x08`) | Create an effect buffer, the first free of 128 (`+0x40`, 0x1C bytes each); the handle is its index + 1 |
+| `0x442970` / `0x442A60` (`+0x0C` / `+0x14`) | Free / stop a handle. A stream is destroyed either way, and only if the handle's generation is the slot's |
+| `0x442C50` (`+0x20`) | Is a handle playing; a stream handle of an older generation is not |
+| `0x442DD0` (`+0x28`) | A handle's lip sync: the shape, and the clue in the high nibble |
+| `0x442D40` (`+0x30`) | A handle's seconds played |
+| `0x445B30` | A stream slot's thread. When the clip ends, or the stream is freed, it destroys the stream and clears `+0x68`: the slot is free again |
+
+**`Voice.dat`** (type 1): `0x43CC20` passes `0x4428A0` the clip's own entry
+(`+0x10`) for the handle, and frees nothing else.
+- **Lines from different clips overlap,** up to four streams at once. The
+  music (`Music.dat`, type 2) is a stream too, so with a track playing three
+  lines can.
+- **A line played again** gets a new stream, and its entry's handle is
+  overwritten. The old stream plays to its end out of reach: stop
+  (`0x434CB0` → `0x43CB90`), stop effects (`0x434E10` → `0x43C850`) and the
+  readers all find the new one.
+- **With four streams playing** the entry's handle becomes 0. Nothing plays,
+  and an older stream of the same clip is out of reach too.
+
+**Every reader goes by clip id,** to the stream in its entry:
+- over (`0x434CE0` → `0x43CE10` → `+0x20`);
+- lip sync (`0x434D40` → `0x43CAF0` → `+0x28`);
+- seconds (`0x434BA0` → `0x43CA60` → `+0x30`).
+
+With two lines playing, each reader reads its own clip. Nothing in the
+original reads a "clip played last".
 
 ##### Street 2 and Street 3 (WP-033)
 

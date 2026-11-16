@@ -211,6 +211,22 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 - At most 16 earlier effects play at once; past that the oldest stops. ScummVM's mixer has 32 slots, and the checks play hundreds of effects in seconds.
 - Speech and music keep one handle each. The original makes a stream for each voice clip too, so voice lines may overlap there; that is not done here.
 
+**Voice streams (2026-11-16): a handle per voice line.** Traced in [scooby-exe](formats/scooby-exe.md#voice-lines-overlap-2026-11-16).
+
+- `Voice.dat`'s lines each play on a handle of their own, as `0x43CC20` makes each a stream and frees no other: an earlier line plays on to its end. WP-021's ghost scare now plays the gang's `Global.Scared` lines together, not only the last.
+- A line played again starts on a new handle. The old one plays on, but the clip's name no longer finds it: `stopClip`, `stopEffects` and the readers see the new one, as the original's clip entry holds only its newest stream.
+- The driver has four streams, shared by voice and music. With four playing, a line or track plays nothing; the original logs `Failed to create stream`, and the fork logs it on the `audio` channel. So the mixer holds at most 21 of its 32 slots: four streams, the effect played last and 16 earlier effects.
+- `isPlaying()`, `getPlayingName()` and `getElapsedMillis()` still read the clip played last, which is now the newest line. Only the engine's audio log and the menu check read them. The original's readers (over, lip sync, seconds, stop) all go by clip, as the fork's by-name calls do.
+- Two places relied on the single voice handle:
+  - **The ghost's scare** (state `0x12`) now stops the line the character was saying before its `Global.Scared` line, as `0x405190` does (`0x434CB0` on `+0x7C`).
+  - **A room's unload** now stops the effects and voice lines, not the music, as `0x435CD0` does (`0x434E10`). Without it, earlier rooms' lines filled the four streams during the checks, which run faster than real time, and the open safe's scene played nothing.
+- Live, in Phantom's Souvenir Shop with `ghost_chance=1`, the room's music playing: `Ghost_Appears`, then Daphne's, Fred's and Velma's scared lines together. Shaggy's found no stream, as in the original. There is no Scooby line on that disc.
+- **Checks** (Scooby-only build, 0 warnings in `engines/scooby/`), against WP-056's run:
+  - the chase check matches its reference (Showdown 214 lines, Phantom 7);
+  - the room check is identical (69 and 53 rooms);
+  - the other script checks are identical but for the clue the profile check imports, which comes from the clock-seeded random source.
+  - Fork commit [`c20eefa4ad`](https://github.com/barefootbetters/scummvm/commit/c20eefa4ad).
+
 Which sounds play when, beyond the exit scenes (room music, ambience), is room code.
 
 ---
