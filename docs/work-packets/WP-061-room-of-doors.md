@@ -29,7 +29,7 @@ The first run differed on two lines, both the check's own: it called the code un
 **Deviations and gaps:**
 
 - **The tick clock's restart** (`0x437540`) when Velma tries the door isn't kept, as in WP-057.
-- **The Jester in the other four rooms** waits for their classes; his logic is ready for them.
+- **The Jester in the other three rooms that carry him** (the royal gallery, the well, the balcony's door) waits for their classes; his logic is ready for them.
 
 **Found on the way:**
 
@@ -54,8 +54,8 @@ The room of doors ([scooby-exe](../formats/scooby-exe.md#phantoms-room-of-doors-
 - **The dining room's door** is locked until the duster has been used;
   Velma tries it.
 - **Jane cries** until the gang goes to the throne room.
-- **The Jester's logic** is a member of the room's class, and other rooms
-  that place him carry it too:
+- **The Jester's logic** is a member of the room's class, and three
+  other rooms' classes carry it too:
   - he takes each ball the gang finds;
   - he talks them through the crest's order;
   - he introduces himself once;

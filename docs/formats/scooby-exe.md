@@ -1710,9 +1710,10 @@ castle's ground floor:
   `JesterIntro`.
 
 **The Jester** (a member of the room's class at `+0xBC`: `0x4122D0`
-constructs it, `0x412B80` runs on entry, `0x4122E0` each tick). The room of
-doors, the royal gallery, the throne room, the well and the balcony's door
-place him.
+constructs it, `0x412B80` runs on entry, `0x4122E0` each tick). Four
+classes call his tick: the room of doors, the royal gallery (`0x416610`),
+the well (`0x42C7F0`) and the balcony's door (`0x4107D0`). The throne room
+places him without it.
 - **Entry** (`0x412B80`): the room's Jester (`0x40A800`, `JESTER`), nothing
   pending. Each ball found and not yet taken he takes, once:
   - `TAKES_RED`, `TAKES_BLUE`, `TAKES_YELLOW` (state `0xF`);

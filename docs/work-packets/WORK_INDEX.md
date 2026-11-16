@@ -25,7 +25,7 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 ### Phase 1 findings landed (2026-06)
 
 - **WP-061 Phantom's room of doors and its Jester (2026-11-16).**
-  - The locked dining room's door, Jane's crying, the ways out's lines; the Jester's balls, talk, introduction and clue, shared by five rooms.
+  - The locked dining room's door, Jane's crying, the ways out's lines; the Jester's balls, talk, introduction and clue, shared by four rooms' classes.
   - Phantom's clue tables: the same rule as Showdown's, two red herrings a suspect.
   - [Evidence](WP-061-room-of-doors.md#result-2026-11-16).
 - **WP-060 Phantom's gardener's house, garden and plaque (2026-11-16).**
