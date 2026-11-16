@@ -3625,6 +3625,100 @@ Traced 2026-11-15 for [WP-049](../work-packets/WP-049-railroad-station.md).
 4. **The donkey clicked with the arrow:** to ROOM_Gummy.
 5. **Hotspot 3 on step 8 of its C:** Scooby is scared.
 
+##### Gummy's whistle puzzle (WP-050)
+
+Traced 2026-11-15 for [WP-050](../work-packets/WP-050-gummy.md).
+
+**ROOM_Gummy** (`0x40FC40`, vtable `0x45E7D0`; music `Gummy.Music`, which
+isn't on the disc; opening `Gummy_Puzzle.220B_`):
+- **Its placements:**
+  - Gummy asleep, OBJ_GUMMYSLEEP_GUMMY;
+  - his donkey;
+  - five bells, all OBJ_GUMMYSLEEP_BELLS, told apart by their sequence's
+    digit;
+  - the way back to the station.
+- **Its fields:**
+  - `+0xB8`–`+0xC8`: the bells.
+  - `+0xCC`, `+0xD0`: the donkey and Gummy.
+  - `+0xD4`: the whistle.
+  - `+0xD8`: Gummy whistles again.
+  - `+0xD9`: the bells play the tune back.
+  - `+0xDC`: the sound waited for.
+  - `+0xE0`: the tune's length.
+  - `+0xE4`: its notes, as digits.
+  - `+0xEC`: the next note.
+  - `+0xF0`: the notes played back.
+  - `+0xF4`–`+0x104`: each bell's note.
+  - `+0x108`: the ticks to the station once the tune is rung.
+  - `+0x10C`, `+0x110`: the donkey's blink and Gummy's snore.
+  - `+0x114`: `220B2_`'s done flag.
+  - `+0x118`: the state.
+
+| Address | What it does |
+|---|---|
+| `0x410760` (+0x18) | The bells are clickables without the ghost (`0x408DC0` with 0, -1): bell 1 at depth 4, the others at 10, each with `0x410A00` as its callback. Gummy is a requires object on his snore, stopped, hit by his cels. The donkey is a sprite at depth 5, playing its idle once |
+| `0x4102C0` (+0x0C) | Entry, after the base entry. See below |
+| `0x4109B0` (+0x14) | The room's event: Gummy clicked, with the bells free in state 3, sets `+0xEC` to 0 and `+0xD8` |
+| `0x410A00` | A bell's callback. See below |
+| `0x40FD10` (+0x04) | The tick, after the base tick. See below |
+
+**Entry** (`0x4102C0`):
+1. **Set-up:** the toolbar slides off, the music file stops, and `rand()`
+   is reseeded from the clock.
+2. **The tune,** unless the gang is back from the quit screen: one of the
+   level's three, by `rand() % 3`.
+
+   | Level | Whistle | Tune | Bells' notes |
+   |---|---|---|---|
+   | 0 | `Gummy.Whistle1a`, `2a`, `3a` | `87656`, `77456`, `88645` | 4 5 6 7 8 |
+   | 1 | `Gummy.Whistle1b`, `2b`, `3b` | `7844345`, `6665565`, `4566554` | 3 4 5 7 8; then 4 5 6 7 8 for `2b` and `3b` |
+   | 2 | `Gummy.Whistle1c`, `2c`, `3c` | `76543454`, `41414564`, `456889864` | 3 4 5 6 7; 1 2 4 5 6; 4 5 6 8 9 |
+
+3. **The rest:**
+   - `+0xD8` is set, and `+0x108` is 1000000 (never).
+   - The whole tune will be played back.
+   - The snore comes in 108 ticks, and the blink in `(rand() & 7 + 3) * 36`.
+   - The state is 3 if the opening has played, 0 otherwise.
+
+**The tick** (`0x40FD10`). A sound is over when it isn't playing
+(`0x434CE0`).
+- **State 0,** the opening played: Gummy whistles, input is held, and it
+  goes to state 1.
+- **State 1,** the whistle over: `Gummy_Puzzle.220B2_` plays, held, with
+  `+0x114` as its done flag. Then state 2.
+- **State 2,** `220B2_` over: state 3.
+- **State 3:**
+  1. **Input** is held while `+0xD8` or `+0xD9` is set.
+  2. **The sound waited for, over:**
+     - **With `+0xD8`,** Gummy whistles again, and `+0xD9` is set.
+     - **With `+0xD9`,** each note of the tune in turn plays
+       `Gummy.Bell<digit>`, and every bell with that note rings. A ring
+       (`0x401840`, the clickable's `+0x80`) waits until the bell is free.
+     - **After the last note,** `+0xD9` is cleared and input is freed.
+  3. **The station:** once the tune is rung, `+0x108` counts down, and
+     below 0 the room's exit handler takes the gang to the station.
+  4. **Gummy snores** every 108 ticks: `Gummy.Snore`, and his snore plays
+     once.
+  5. **The donkey** blinks or idles once (`rand() & 1`) every 3 to 10
+     seconds, and is back on its idle, stopped, after a blink.
+- **In every state,** while Gummy whistles, his step follows the whistle's
+  lip sync (`0x434D40`).
+
+**A bell's callback** (`0x410A00`). While `+0xD9` is set it does nothing.
+Otherwise the bell plays `Gummy.Bell<its note>`:
+- **The tune's next note:** it moves on. On the last note:
+  - the cursor fades;
+  - `GummyPuzzle` (game `+0x274`) is set;
+  - Gummy is met (`0x40A8B0`);
+  - the station comes 72 ticks later.
+- **A wrong note:**
+  - the notes played back become at least the notes reached + 1;
+  - the tune starts over;
+  - `+0xD8` is set.
+
+  The bells free up in the same frame, before the room's tick, so Gummy
+  whistles again at once.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
