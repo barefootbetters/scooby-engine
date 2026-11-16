@@ -41,14 +41,14 @@ decompdecomp is young and self-updates, and its docs leave some screens undescri
 
 *decompdecomp:* the GUIDE's platform table lists, for Windows PC, "Visual C++ 6.0 · 7.0 · 7.1 · 2005 · 2008 · 2010 · 2017", plus any other version "from your own copy" for 32-bit games. The GUIDE says proprietary compilers install after you accept their licenses in a **Setup** screen, but `v1.0.10-alpha.1` has no Setup entry in its sidebar. The compilers install from **Compilers & tools** instead (observed 2026-11-11).
 
-*Case File #1 project:* the game is matched with **Visual C++ 6.0** by default, with one file on 7.1. Those two are the ones you need.
+*Case File #1 project:* the game is matched with **Visual C++ 6.0** by default, with one file on 7.1. Those two are the ones you need. *Changed 2026-11-15:* Mony made decomp.me's `msvc6.5pp`, the VC6 Processor Pack, the project's default, added as a custom compiler ([WP-011](../work-packets/WP-011-casefile-decompdecomp.md#library-matching-the-processor-pack-default-and-outmatch-2026-11-15)). Members' agents build their attempts on their own machines, so a member most likely needs the same compiler installed (Inferred; confirm with Mony before the trial). It isn't on decompdecomp's card: it comes from decomp.me's `msvc6.5pp.tar.gz` (release `msvcwin9x` of `OmniBlade/decomp.me`) and is added through **Microsoft Visual C++ (your own copy)**.
 
 You don't need to install Visual Studio, old or new. decompdecomp's docs don't mention it. What matters is the period compiler that decompdecomp supplies, because every attempt is rebuilt with that compiler and compared byte for byte.
 
 ![decompdecomp's start screen. Compilers & tools is in the sidebar, bottom left.](images/decompdecomp-start-screen.png)
 
 1. Open **Compilers & tools** from the sidebar.
-2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards, and **Microsoft Visual C++ (your own copy)**.
+2. On the **Microsoft Visual C++ 6.0, 7.0 and 7.1 (PC)** card, choose **Install**, and accept the license if it asks. That one card covers both versions this game needs. Skip the 2005–2010 and 2017 cards. Use **Microsoft Visual C++ (your own copy)** only for `msvc6.5pp`, as described above.
 3. The install downloads the three compilers from the decomp.me community's archives (GitHub releases and `files.decomp.dev`) and prints where it put them: `%LOCALAPPDATA%\decompnet\toolchains\msvc`, with a `6.0`, `7.0` and `7.1` folder, each holding `Bin\CL.EXE` (observed 2026-11-11). Step 6 uses that folder.
 4. *WP-011:* the `6.0` folder holds VC6 **RTM**, build 8168 (its `CL.EXE`, `C1XX.DLL` and `C2.DLL` all report 12.00.8168, observed 2026-11-14). Case File #1's own C++ was built with the later Processor Pack, build 8943. Mony is testing which build comes closest, to make it the project default. If the project moves to a compiler outside this card, this step changes. See [WP-011 §Progress, libexpat and the compiler build](../work-packets/WP-011-casefile-decompdecomp.md#progress-libexpat-and-the-compiler-build-2026-11-14-to-11-15).
 
@@ -124,6 +124,27 @@ Don't take the trial's cost from decompdecomp's own **spent** figure. The collab
 2. In the provider's console, set the strongest spending limit it offers before creating the key. Providers differ: some have a hard cap, others only prepaid credit or budget alerts. Prepaid credit equal to the trial's dollar cap works as a hard stop.
 3. In decompdecomp, open **Agents & models → API key** and paste the key. Don't put it in any file in any repository.
 
+### Give the agents Mony's matching notes
+
+*Case File #1 project:* Mony reports (2026-11-16) that one standing instruction "greatly improves the rate of matches": point the agents at the MSVC matching notes in his [outmatch](https://github.com/monyarm/outmatch) repository. You don't need outmatch's tools for this, only its notes.
+
+1. Clone outmatch into decompdecomp's own folder, beside its projects:
+
+   ```powershell
+   git clone https://github.com/monyarm/outmatch "$env:USERPROFILE\Decomp\outmatch"
+   ```
+
+2. In the decompdecomp app, not a terminal, open the prompt settings and find **App instructions**. Add this line at the end of the text that's already there, with your own full path. Don't replace the text: it's decompdecomp's own instructions to its agents, and an override takes their place.
+
+   ```text
+   Read C:\Users\<you>\Decomp\outmatch\skills\msvc-matching\references for more info on how to match functions.
+   ```
+
+   Point it at the `references` folder, not the skill. Mony reports that decompdecomp doesn't load skills well. *decompdecomp:* **App instructions** is one of four prompt fields. The others are the three initial prompts, for ROM work, imported projects and polishing. It can be set for all helpers or for one helper, and it's literal text, not a template (`src/decompnet/app/prompt_settings.py`, `v1.0.10-alpha.2`). Which screen holds it isn't recorded yet; note that in the [trial record](#trial-record-for-wp-011) the first time.
+3. Pull the clone before each session. Mony updates the notes.
+
+*WP-011:* the notes are large. One file, `brickpark-levers.md`, is about 335 KB (observed 2026-11-16). If an agent reads the whole folder for every function, that's a lot of tokens per attempt. Watch the first few attempts' cost against the cap. If reading the notes eats the budget, name the smaller files in the instruction instead.
+
 **Which model.** From the collaborator's own use on this game (**Reported**, 2026-11-13): DeepSeek V4.1 Flash through opencode made most of the cheap early matches, and Claude Opus is very good at this, especially as several instances. Claude Fable used up usage too fast for him to measure it. The functions left are the larger ones, so expect a higher cost per match than his early figures. Details are in [WP-011](../work-packets/WP-011-casefile-decompdecomp.md#reply-from-the-collaborator-2026-11-13).
 
 ## 6. Check a build of Mony's repository
@@ -154,7 +175,7 @@ Record, with the commit hash of the clone:
 
 1. Ask Mony for the **current** invite link, privately. The room runs over a temporary tunnel, so the link changes every time he restarts decompdecomp, and an old one won't work.
 2. In decompdecomp, choose **New project → Join a team's room**. Paste the link, type your display name, and pick your copy of the game (`orig/casefile1.exe`). *decompdecomp:* the host credits every match your agents make to `<display name>.<agent>`, for example `jeff.claude-1`, and you keep the same name when you reconnect. Pick one name and keep it: that's how the trial's matches are counted.
-3. *WP-011:* before pressing **Start agents**, set a small helper count: 2 for the trial. *decompdecomp:* one start can launch up to 24; the docs don't say where the count is set.
+3. *WP-011:* before pressing **Start agents**, check that the agents have the [matching-notes instruction](#give-the-agents-monys-matching-notes), and set a small helper count: 2 for the trial. *decompdecomp:* one start can launch up to 24; the docs don't say where the count is set.
 4. *WP-011:* stop when the trial cap is reached (100 functions or your dollar cap, whichever comes first). Then record the matches your agents made, from the "who matched what" list on the project's overview. On the host they show as `<display name>.<agent>`, so Mony's copy can confirm the count.
 
 ## Keep each project's material in its place
@@ -175,7 +196,8 @@ Record these in the WP-011 decision log and trial metrics.
 
 **Setup (once):**
 - decompdecomp version
-- Compiler versions and the toolchain path
+- Compiler versions and the toolchain path, including the custom `msvc6.5pp` if the room needs it
+- Where **App instructions** is in the app, with the [matching-notes instruction](#give-the-agents-monys-matching-notes) added, and the outmatch commit the notes came from
 - decompdecomp's Ghidra: installed (with your own JDK, or its Temurin under WSL 2) or not used. Plus the JDK version, and the version of any standalone Ghidra
 - Provider, model and spending limit
 
