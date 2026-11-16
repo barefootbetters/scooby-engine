@@ -205,6 +205,12 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 - `Sound` keeps one `Audio::SoundHandle` per file, so a voice line no longer stops the music. The original keeps a buffer per clip; two clips from one file can't overlap here, and the transition never needs them to.
 - `SoundArchive::readLipSync()` reads a clip's lip-sync bytes. `Sound::getLipShape()` returns the shape at `trunc(fps × seconds played)`, with the time from `Audio::Mixer::getElapsedTime()`. The original divides DirectSound's play cursor by the bytes per second (`0x442DD0`).
 
+**WP-055 (2026-11-16): a handle per sound effect.**
+
+- `Sfx.dat`'s clips each play on a handle of their own, as `0x43CC20` gives each a buffer: another effect plays on, and the same effect starts again. Pie Noon needs it: the clock's chime and its last tock play in the same tick, and the room waits for the chime.
+- At most 16 earlier effects play at once; past that the oldest stops. ScummVM's mixer has 32 slots, and the checks play hundreds of effects in seconds.
+- Speech and music keep one handle each. The original makes a stream for each voice clip too, so voice lines may overlap there; that is not done here.
+
 Which sounds play when, beyond the exit scenes (room music, ambience), is room code.
 
 ---
