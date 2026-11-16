@@ -1305,7 +1305,7 @@ default path, `rand() % 30 == 0`, and the room placed `OBJ_GHOST`. The
 ghost is shown and plays once, `Ghost_Appears` plays, and every character
 goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 `Global.Scared.<NAME>`. When the ghost's sequence ends, the game loads
-`ROOM_Ghost_Spot`.
+`ROOM_Ghost_Spot` ([the ghost spot](#the-ghost-spot-wp-056)).
 
 | Address | What it does |
 |---|---|
@@ -1319,6 +1319,59 @@ goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 | `0x40A990` | The ghost appears |
 | `0x409BCA` | When the ghost's sequence ends: go to `ROOM_Ghost_Spot` |
 | `0x434CB0` / `0x434C70` | Stop / play a sound by id, in whichever file holds it |
+
+##### The ghost spot (WP-056)
+
+Traced 2026-11-16 for [WP-056](../work-packets/WP-056-ghost-spot.md), in
+Showdown. `ROOM_Ghost_Spot`'s class (`0x4222E0`, vtable `0x45EEAC`) is the
+same code in Phantom (`0x420350`, vtable `0x45EFD4`), compared byte for
+byte apart from addresses. The game comes here once the ghost has scared
+the gang.
+
+- **Entry** (`0x422420`, after the base entry):
+  - the background (layer 0, game `+0x58`) starts at x −1280;
+  - input is held (game `+0x24`) and the cursor fades (`0x435150`, `0x12`);
+  - the toolbar hides (`0x407CC0`);
+  - the countdown (`+0xB8`) is 396 ticks, 11 seconds;
+  - any music fade stops, with the music at full (`0x434F50`).
+- **The placements** (`0x422490`):
+  - `OBJ_TITLE_SCOOBY` and `OBJ_TITLE_DAPHNE` are sprites under the second
+    layer (game `+0x5C`). No room has one, so they hang from the root.
+    They sit at depths 1 and −1, looping, 3 ticks a step, as on the title.
+  - The class's flags `+0xBC` and `+0xBD` would leave the five unbuilt.
+    The constructor sets both and nothing clears them, so Shaggy, Velma and
+    Fred go to the default path.
+- **Each tick** (`0x422350`, after the base tick):
+  1. A global toggle (`0x475F10`) counts 0, 1, 0, …, and lasts across
+     visits.
+  2. The countdown goes down.
+  3. Until it reaches 0, and with no skip key, the background moves 6 pixels
+     right on the ticks the toggle is 0, and back 1280 once past 0. It never
+     gets there: 197 moves end at x −98.
+  4. Then the game goes on (game vtable `+0x04`) to the room game vtable
+     `+0x64` names.
+- **The skip key** is input slot 5, while `0x475F00` is set, as on the
+  title. It goes on at once and clears `0x475F00`.
+- **Where it goes on to** (game vtable `+0x64`, called only from here):
+  - Showdown's (`0x4303B0`) returns `ROOM_P01_Town_Center`.
+  - Phantom's (`0x430DD0`) returns `ROOM_P27_Below_Balcony` when the room
+    loaded (game `+0x04`'s name) is one of `ROOM_P29_Princess_Bedroom`,
+    `ROOM_P28_Veranda`, `ROOM_P25_Wizards_Library`,
+    `ROOM_P24_Wizards_Bedroom` or `ROOM_P26_Castle_Balcony`, and
+    `ROOM_P04_Town` otherwise. From the ghost spot the room loaded is the
+    ghost spot, so Phantom always goes on to its town.
+  - So the gang never goes back to the room the ghost scared them in.
+- **The rooms' size.** Showdown's ghost spot and title are 1920 × 480.
+  Phantom's headers say 1280 × 480, but their backgrounds are 1920 wide,
+  so the pan shows the same span on both.
+
+| Address | What it does |
+|---|---|
+| `0x4222E0` | Constructor: the base room with `Ghost_Spot.Music`, the flags `+0xBC` and `+0xBD` set |
+| `0x422350` (+0x04) | Tick: the toggle, the countdown, the pan, the skip key, then the town |
+| `0x422420` (+0x0C) | Entry, after the base entry |
+| `0x422490` (+0x18) | Placements: Scooby and Daphne |
+| `0x4303B0` | Game vtable `+0x64` (Showdown): `ROOM_P01_Town_Center` |
 
 ##### Movies (WP-022)
 
@@ -2378,7 +2431,8 @@ A fade that starts at its target stops on its first step, with no change.
 | `0x40C810` (`0x40CA85`) | A scene ends, played out or skipped | Up to 100, a step every 4 ticks: 90 → 100 in 40 ticks |
 | `0x435DC0` (`0x4360B0`) | A room has loaded, after its entry | Up to 100, a step every 3 ticks |
 | `0x428380` (`0x42846E`) | The title shows | `0x434F50`: straight to 100 |
-| `0x41936E`, `0x422478` | A story room near P14, and the room whose tick is `0x422350` | `0x434F50` (not modelled yet) |
+| `0x41936E` | A story room near P14 | `0x434F50` (not modelled yet) |
+| `0x422478` | The ghost spot's entry ([WP-056](#the-ghost-spot-wp-056)) | `0x434F50`: straight to 100 |
 
 **Big Head's own player** (`0x403940`) never reaches `0x40C810`'s end. A
 Big Head scene therefore turns the music down when it starts, and it stays
