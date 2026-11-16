@@ -35,7 +35,7 @@ The first run matched 130. The one difference was hotspot 3's depth: 0 in the re
 
 - **Entering again after the drop runs the base entry.** The original's entry (`0x413600`) sends the gang to the dark tunnel before the base entry. The fork's class comes after it, so the jail is set up (its characters and its music) for the one tick before the room changes.
 - **Clicks act on the press,** like every click in the fork.
-- **The hotel room's hotspots 2 and 4** (WP-042) are claimed the way the jail's were. They sit at depth 0, not the -1 the original gives them. That is left for its own fix.
+- **The hotel room's hotspots 2 and 4** (WP-042) were claimed the way the jail's were, which put them at depth 0. The original gives them -1 and -102 (hotspot 4 has `priority=-102`). Fixed after this WP in fork commit [`4c7b094742`](https://github.com/barefootbetters/scummvm/commit/4c7b094742).
 
 ---
 

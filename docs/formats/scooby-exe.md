@@ -3086,7 +3086,7 @@ sprite stopped (`0x430AA0`), so he goes idle on the next tick.
 |---|---|
 | `0x411170` (+0x08) | Reset, after the base reset: the count, `LookedOutAuto` and `+0xC7` cleared |
 | `0x411190` (+0x2C) | Arrival. See below |
-| `0x411280` (+0x18) | Hotspots 2 and 4 clickables; the nickel a requires object (layer 0), hidden once it has been had |
+| `0x411280` (+0x18) | Hotspots 2 and 4 clickables, as the default path builds them (`0x408DC0` with 1, -1: depth `priority=`, -1 and -102); the nickel a requires object (layer 0), hidden once it has been had |
 | `0x411250` (+0x0C) | Entry, after the base entry: the music; `+0xC4` and `+0xC5` cleared |
 | `0x4113B0` (+0x14) | Hotspot 2 while its state (`+0x60`) is ANIM_P20_HOTEL_HOTSPOT2C: `Hotel_Room.410X_`, not held. The nickel with the arrow as the cursor: `+0xC4` |
 | `0x411440` (+0x24) | A way out. See below |
