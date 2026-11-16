@@ -1652,6 +1652,126 @@ Game `+0x287` (the plaque tried) isn't in the profile; a new game
 | `0x411A20` / `0x411A80` (+0x0C) | Garden: constructor, entry |
 | `0x411AD0` (+0x14) / `0x411B50` (+0x18) | Garden: the tracks' lines, their placement |
 
+##### Phantom's room of doors, its Jester, and Phantom's clues (WP-061)
+
+Traced 2026-11-16 for [WP-061](../work-packets/WP-061-room-of-doors.md), in
+Phantom's `Scooby.exe`.
+
+**The room of doors** (`ROOM_P11_Room_Of_Doors`, `0x415720`, vtable
+`0x45EA9C`; music group 1, opening `Room_Of_Doors.140_`), the hub of the
+castle's ground floor:
+- **Reset** (`0x4157B0`): Jane crying (`+0xBA`, saved as `Crying`), the
+  throne room's scene not had (`+0xBB`, `ThroneScene`), the Jester not
+  introduced (`+0xD0`, `JesterIntro`).
+- **Placements** (`0x415F80`):
+  - the dining room's door (`OBJ_P11_ROD_DINING_ROOM_DOOR`), once the
+    duster is used, is a sprite under the first layer at depth −1000; until
+    then it isn't built;
+  - the Jester (`OBJ_JESTER*`) isn't built until the duster is used.
+
+  The duster is used when it was ever taken (`0x407060`) and is no longer
+  in a slot (`0x4070C0`).
+- **Entry** (`0x4157F0`, after the base entry):
+  - **Walk-ins:**
+    - from the dining room, Velma (`U`);
+    - from the kitchen, the king's armory or its slide, Fred (`UL`);
+    - from the throne room, Fred (`UR`);
+    - from the town, Fred (`DR`, `0x405EA0`).
+  - the door untried (`+0xB8`, `+0xB9`);
+  - the Jester's entry (`0x412B80`), with `JesterIntro`;
+  - while Jane cries, one of her screams (`Room_of_Doors.Jane_Screaming1`,
+    `…2`, `…3`, or `…5` for 3 and 4, `rand() % 5`).
+- **Leaving** (`0x4157D0`, after the base leave): `JesterIntro` kept from
+  the Jester.
+- **The ways out** (`0x415C00`, room vtable `+0x24`), each through the
+  default handler with its scene:
+  - **To the king's armory:** `Room_Of_Doors.140A_`, `140A1_` or `140A2_`
+    (`rand() % 3`).
+  - **To the throne room:** Jane stops crying, and her five screams stop
+    (`Jane_Screaming4` among them, which none plays). The first time
+    `Room_of_Doors.160D1_`, and `ThroneScene` is set; after that `140B_`,
+    `140B1_` or `140B2_` (`rand() % 3`).
+  - **To the dining room,** the duster used: `140C_` or `140C1_`
+    (`rand() & 1`). Not used, the gang stays and the door is tried
+    (`+0xB8`).
+- **Each tick** (`0x415AB0`, after the base tick): the Jester's tick
+  (`0x4122E0`). With the door tried:
+  - Velma, once idle with no scene playing and the opening done, plays
+    `OBJ_VELMA_P11_DOOR_LOCKED`, with `Room_Of_Doors.Velma_Door_Locked`;
+  - input is held meanwhile;
+  - Velma idle again: `Room_of_Doors.130B_`, blocking, and input back.
+- **Idle chatter** (`0x4159D0`, `+0x34`): once the opening has played and
+  Jane has stopped crying, by `rand() % 5`:
+  - `Room_Of_Doors.1401_`, `1402_`, `140D_` or `140D2_`;
+  - or, with Velma idle, her `GLASSES` and `Global.1000A2_`.
+
+  None holds input.
+- **The profile** (`0x416140`, `0x4161C0`): `Crying`, `ThroneScene`,
+  `JesterIntro`.
+
+**The Jester** (a member of the room's class at `+0xBC`: `0x4122D0`
+constructs it, `0x412B80` runs on entry, `0x4122E0` each tick). The room of
+doors, the royal gallery, the throne room, the well and the balcony's door
+place him.
+- **Entry** (`0x412B80`): the room's Jester (`0x40A800`, `JESTER`), nothing
+  pending. Each ball found and not yet taken he takes, once:
+  - `TAKES_RED`, `TAKES_BLUE`, `TAKES_YELLOW` (state `0xF`);
+  - `RedBallTaken`, `BlueBallTaken`, `YellowBallTaken` are set.
+
+  Taking a ball when it is the only one found starts his talk.
+- **His clue:** all three balls found and his clue not given:
+  - `Global.Jester.Clue_` plays, holding input;
+  - he gives the clue (game vtable `+0x44`);
+  - once idle he `GIVES`;
+  - idle again, the room's exit handler takes the gang to
+    `ROOM_Suspect_Chooser` with `Global.Thank_You_`.
+- **His talk through the crest,** each scene holding input. The next waits
+  for the last one's done flag, for him idle, and for no room change asked
+  for:
+  - `Souvenir_Shop_Room.220D<n>_` for each `CrestSequence<i>`, its digit
+    `n`;
+  - then, once `PlaqueSeen`: `220E_`, `220E<n>_` for each digit, `220E5_`
+    and `220E6_`.
+- **A click on him** with the arrow (game `+0x20` bit 4, his `+0x08`):
+  - **The first time, in the room of doors:** he is met (`0x40A930`,
+    `0x40A8B0`), and introduces himself on Big Head
+    (`Souvenir_Shop_Room.220B_` on `BIG_HEAD_BG_P11`), back to the room of
+    doors.
+  - **Before `CrestPuzzle`:** with any ball found, his talk again (state 6
+    first); else one of `Global.1010J_`, `1010J1_`, `Jester1_`,
+    `Jester2_`, `Jester3_` (`rand() % 5`).
+  - **After it:** without the full bottle ever, or with it still in a
+    slot, the same room through movie 54 from the royal gallery, else 57
+    (game vtable `+0x08`). Otherwise one of his lines.
+
+**Phantom's clues** (game vtable `+0x44`, `0x4305C0`; `0x430F00`). The rule
+is Showdown's ([the accusation](#the-accusation-suspects-and-clues-and-big-head-wp-031)),
+with Phantom's tables:
+
+| Suspect | Clues (`0x46E88C`, five each) | Red herrings (`0x46E8F0`, two each) |
+|---|---|---|
+| `BRAD` | `BRAD_COUPON`, `BRAD_GLOVE`, `BRAD_OIL`, `BRAD_COAT`, `BRAD_SHEATH` | `RH_BRAD_SCHEDULE`, `RH_BRAD_HELMET` |
+| `EWAN` | `EWAN_COUPON`, `EWAN_BELLOWS`, `EWAN_K`, `EWAN_FILM`, `EWAN_SPOON` | `RH_EWAN_PAN`, `RH_EWAN_SPATULA` |
+| `JESTER` | `JESTER_COUPON`, `JESTER_SIGN`, `JESTER_BOOK`, `JESTER_MAKEUP`, `JESTER_BELL` | `RH_JESTER_CLOTH`, `RH_JESTER_TAP_SHOES` |
+| `MARIA` | `MARIA_LICENSE`, `MARIA_COUPON`, `MARIA_KEYS`, `MARIA_BOOTS`, `MARIA_BOW` | `RH_MARIA_BOOK`, `RH_MARIA_MUFFLER` |
+| `WIZARD` | `WIZARD_SMOKEBOMBS`, `WIZARD_COUPON`, `WIZARD_SCROLL`, `WIZARD_BOOK`, `WIZARD_WAND` | `RH_WIZARD_POTION`, `RH_WIZARD_TESTTUBE` |
+
+A red herring is of a suspect neither the villain nor the giver
+(`rand() % 5` until neither), then one of their two (`rand() & 1`).
+
+| Address | What it does |
+|---|---|
+| `0x415720` | Room of doors constructor |
+| `0x4157B0` (+0x08) / `0x4157D0` (+0x10) | Reset / leave |
+| `0x4157F0` (+0x0C) | Entry |
+| `0x4159D0` (+0x34) | Idle chatter |
+| `0x415AB0` (+0x04) | Tick: the Jester, the locked door |
+| `0x415C00` (+0x24) | The ways out |
+| `0x415F80` (+0x18) | Placements |
+| `0x416140` / `0x4161C0` (+0x1C / +0x20) | Save / load |
+| `0x4122D0` / `0x412B80` / `0x4122E0` | The Jester: constructor, entry, tick |
+| `0x4305C0` / `0x430F00` | Phantom's clue giver and red herring |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
