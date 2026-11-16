@@ -1264,7 +1264,7 @@ when the sequence stops (states other than 6 and 8). While talking, it
 shows step *shape* − 1 from the lip sync (`0x442DD0`). Starting a walk
 (`0x405D90`) moves the character 50 in front for a direction starting
 with `D`, and 50 behind for one starting with `U` (`0x430EE0`). States 2–5
-and 9–17 (random idles, Velma's reactions, fright) are not traced here; 18 (`0x12`) is under [Clickables](#clickables-wp-021).
+are under [Characters' idles](#characters-idles-wp-059); 9–17 (Velma's reactions, fright) are not traced here; 18 (`0x12`) is under [Clickables](#clickables-wp-021).
 
 | Address | What it does |
 |---|---|
@@ -1281,6 +1281,97 @@ and 9–17 (random idles, Velma's reactions, fright) are not traced here; 18 (`0
 | `0x430EE0` | Move a sprite to a new depth among its siblings |
 | `0x442DD0` | Lip-sync shape of a playing clip |
 | `0x42DE10` | Game vtable `+0x08`: movie, then the next room |
+
+##### Characters' idles (WP-059)
+
+Traced 2026-11-16 for [WP-059](../work-packets/WP-059-idle-states.md), in
+Showdown. Phantom's character code is the same at the same addresses: the
+functions below decompile identically, apart from library calls.
+
+**When a character idles.** Each character keeps a countdown (`+0x5C`).
+- Every state change that reaches the end of `0x405190` sets it to
+  (`rand() % 15` + 10) × 36 ticks, at most the cap (`+0x98`). State 7 is
+  not one: it only sets the next state.
+- The cap is 3600 (the constructor, `0x4048E0`). The placement (`0x4091FF`)
+  sets Scooby's cap and countdown to 108 (any set), so he idles every three
+  seconds. The narrator's (`0x409670`) are `0x2F7600`, a day.
+- The update (`0x404B70`) counts it down by one each tick. Below 1 in
+  IDLE_MASTER, the character goes to state 2 and nothing else happens that
+  tick.
+
+**A click on an idle character.** The update reads it after the state
+code: the character under the mouse (`+0x08`), the button up (game `+0x20`
+bit 4), in IDLE_MASTER, with the arrow.
+- `rand() & 1`, forced to 0 while the speech lock is held.
+- 0: state 3 if `ANIM_<NAME><set>IDLE_S1` exists, else 4. 1: state 4.
+- The rollover (`0x4062E0`) shows `ANIM_CURSOROPEN` for the arrow while
+  `+0xB5` is set. The constructor sets it. Phantom's `0x42B8B7`, in a room
+  class, clears it for `UNICYCLE`.
+
+**The states** (`0x405190`):
+
+| State | What plays | Then |
+|---|---|---|
+| 2 | `rand() % 3`: 1 or 2 make it state 5. Else `ANIM_<NAME><set>IDLE_P<n>` once, and `Global.Idle.<NAME>_P<n><set>` if that clip exists and the character isn't hidden (`+0x14`) | 6 |
+| 3 | `ANIM_<NAME><set>IDLE_S<n>` once, with `Global.Idle.<NAME>_S<n><set>` as for 2 | 6 |
+| 4 | The room's idle line (room vtable `+0x28`). Not on the disc: back to 6 (no change if already 6). Else said with the speech lock (`0x404DB0`), which talks (8) | 6 when the line ends |
+| 5 | `ANIM_<NAME><set>BLINK` once. A missing ANIM leaves the sprite stopped (mode 0), so the next tick goes on | 6 |
+
+- **`<n>`** (`0x405CE0`): r = 9, then r = `rand() % r`, trying digit r + 1
+  each time, until one is an ANIM or r is 0.
+- **None found:** state 2 or 3 changes nothing, not even the countdown. A
+  character with no `IDLE_P` tries again each tick; two times in three it
+  blinks instead.
+- **Speech lock.** A line said with the speech lock is dropped if the lock
+  is held. Else the character keeps it (`+0xB4`) and lets it go on the first
+  update that isn't talking. A line said at once also starts the room's idle
+  timer again (room `+0xB4`).
+- **Scooby is busy** (`0x406060`) in his second idle, as he is talking, so
+  a scene waits for him.
+
+**The idle line** (room vtable `+0x28`).
+- **Base** (`0x40CB50`, every room in Showdown): `<room without
+  ROOM_>.Idle.<NAME>` if that clip exists.
+- **Else** r = 9; r = `rand() % r` until r is 0, then `Global.Idle.<NAME>`.
+  For each r above 0 it tries `Global.Idle%d.<NAME>`. `0x431EB0` only joins
+  strings, so the `%d` stays literal and is never found. The `Global.IdleN.`
+  clips on both discs are never played.
+- **Phantom's drawbridge** (`0x4272D0`): the base line, but
+  `P01_Drawbridge.Idle.VELMA` becomes `Global.Idle.VELMA` once the puzzle is
+  done (`+0xFC`).
+- **Phantom's dining room** (`0x410550`, vtable `0x45E810`): MARIA with
+  `MariaPuzzle` (game `+0x255`) gets `rand() & 3`:
+  - 0: `Dining_Room.1010I1_1_MARIA`;
+  - 1 or 2: `…1010I3_1_MARIA`;
+  - 3: `…1010I4_1_MARIA`.
+
+  Others get the base line.
+
+**What the discs have:**
+- **IDLE_S1:** the gang only, on both discs.
+- **No IDLE_P:** Showdown's donkey and ICDouble's second set; Phantom's
+  Brad's `_H` set, the Jester's `_S`, the Princess and the unicycle.
+- **No BLINK:** Showdown's Scooby, Artie, Gummy, the donkey and ICDouble's
+  second set; Phantom's Jester and the unicycle.
+- **Idle lines:** Velma's `P1`, and Shaggy's and Scooby's `S1`, on both
+  discs.
+- **Room lines:**
+  - Showdown: the post office, the dark and lit tunnels, the hotel hall and
+    the hotel room.
+  - Phantom: the drawbridge, the throne room, the kitchen, the kitchen
+    storage, the mermaids' cavern, the veranda and the princess's bedroom.
+
+| Address | What it does |
+|---|---|
+| `0x404B70` | Update: the speech lock let go, the countdown, a click while idle |
+| `0x405190` | State change: 2–5 above, and the countdown at its end |
+| `0x405CE0` | An idle's digit |
+| `0x404DB0` | Say a line, with or without the speech lock |
+| `0x406060` | Busy: talking, a line waiting, or Scooby in state 3 |
+| `0x4062E0` | Rollover: the open hand for the arrow |
+| `0x40CB50` | Room vtable `+0x28`, the base idle line |
+| `0x4272D0` / `0x410550` | Phantom's drawbridge and dining room `+0x28` |
+| `0x431EB0` | `operator+(const char *, CString)`: no formatting |
 
 ##### Clickables (WP-021)
 
@@ -1475,7 +1566,7 @@ must wave their banners' colours (SP1–SP4).
 
 **Who asks for the idle line** (room vtable `+0x28`). A character's state 4
 (`0x405190`, Showdown) asks the room for its line, and plays it if the line
-exists, else goes idle. The fork doesn't have state 4.
+exists, else goes idle ([Characters' idles](#characters-idles-wp-059)).
 
 **The town** (`ROOM_P04_Town`, `0x4180F0`, vtable `0x45EC5C`; music
 `Bagpipes.Music`, opening `Town.110_`). Entry (`0x418150`, after the base
@@ -2402,7 +2493,7 @@ The rest of the room vtable:
 | Slot | Base | What it is |
 |---|---|---|
 | `+0x10` | `0x40BB70` | Leave: the scene, the parked exit and the delay are reset; the speech lock is let go |
-| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. A character's state 4 asks for it ([WP-057](#phantoms-drawbridge-and-town-wp-057)) |
+| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. A character's state 4 asks for it ([Characters' idles](#characters-idles-wp-059)) |
 | `+0x2C` | `0x404460` | On entry, with the room left: nothing |
 | `+0x30` | `0x404810` | On entry, first: nothing |
 | `+0x34` | `0x404470` | Idle chatter: nothing |
