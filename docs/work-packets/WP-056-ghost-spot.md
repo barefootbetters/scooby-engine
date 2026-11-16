@@ -35,6 +35,7 @@ The reference is `wp057_ref.py`: WP-055's, plus the ghost spot, written from the
 - **Phantom's choice of town looks at the room loaded,** which from the ghost spot is the ghost spot, so its castle branch never fires from here. In Showdown's decompile nothing else calls game vtable `+0x64`.
 - **The class's two flags** (`+0xBC`, `+0xBD`) would leave the gang unbuilt, but nothing clears them.
 - **Phantom's title and ghost spot** say 1280 × 480 in their headers, but their backgrounds are 1920 wide.
+- **Corrected in [WP-058](WP-058-souvenir-shop.md):** the profile check's imported clue name (`CluesFound1`) also differs between two runs of the same build, so this WP's change can't be shown to have caused the flip.
 
 ---
 

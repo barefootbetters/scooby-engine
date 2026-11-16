@@ -28,7 +28,7 @@ The first run differed on one line, and the reference was wrong. Entering the dr
 
 **Deviations and gaps:**
 
-- **Velma's idle line** (`+0x28`) isn't ported: the fork has no character state 4, which asks for it.
+- **Velma's idle line** (`+0x28`) isn't ported: the fork has no character state 4, which asks for it. Ported in [WP-059](WP-059-idle-states.md).
 - **The sound section's preload** (`0x435B60`) has no counterpart; the fork reads clips as they play.
 - **The tick clock's restart** (`0x437540`) after the fanfare isn't kept.
 - **A flag's click** is read from the engine's click on it, as the artifact puzzle's is, not from the button coming up.

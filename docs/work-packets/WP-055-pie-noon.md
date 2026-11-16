@@ -47,6 +47,7 @@ The fourth was the engine's. The clock's chime and its last tock play in the sam
 - **The level changes nothing but the clock's face in the intro:** the clock then runs from step 1 at every level.
 - **The splat sound's number is global** (`0x475F08`) and runs 0 to 4; the old value is pushed before the increment.
 - **Every hit and miss line is on the disc but `FRED_Miss`.**
+- **Corrected in [WP-058](WP-058-souvenir-shop.md):** the profile check's imported clue name (`CluesFound1`) also differs between two runs of the same build, so this WP's change can't be shown to have caused the flip.
 
 ---
 

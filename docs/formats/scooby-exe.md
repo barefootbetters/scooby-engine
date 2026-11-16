@@ -1595,6 +1595,154 @@ entry):
 | `0x4180F0` / `0x418150` (+0x0C) | Town: constructor, entry |
 | `0x42E880` | Game vtable `+0x4C`: a new game's story values |
 
+##### Phantom's souvenir shop (WP-058)
+
+Traced 2026-11-16 for [WP-058](../work-packets/WP-058-souvenir-shop.md), in
+Phantom's `Scooby.exe`. `ROOM_P03_Souvenir_Shop` (`0x416FE0`, vtable
+`0x45EB9C`; music group 1, no opening of its own). The gang buys the empty
+bottle with the tokens.
+
+- **Reset** (`0x417040`): `IntroDone` (`+0xC2`) off.
+- **Placements** (`0x417170`):
+  - **The empty bottle**, once ever taken (`0x407060`): a sprite under the
+    first layer at depth 0, showing `ANIM_INV_BOTTLE_EMPTYB`. Until then,
+    a requires object (`0x408C80` with −1), kept (`+0xB8`); its
+    `requiredanim=` is the tokens' cursor.
+  - **Hotspot 1:** a clickable as the default path builds it (`0x408DC0`
+    with 1, −1), kept (`+0xBC`).
+- **Entry** (`0x4172D0`, after the base entry):
+  - nothing bought or being fetched (`+0xC0`, `+0xC1`);
+  - from the town, Fred walks in (`DL`, `0x405F20`);
+  - without `Screaming`, the first time (`IntroDone` off), the opening
+    becomes `Souvenir_Shop.1201_`, and `IntroDone` is set;
+  - while `Screaming`, one of Jane's screams
+    (`Souvenir_Shop.Jane_Screaming1`, `…2`, `…3`, or `…5` for 3 and 4,
+    `rand() % 5`), and the opening becomes `Souvenir_Shop.330A1_`, on every
+    visit;
+  - either opening is unplayed (`+0x10`), and `+0x3C` (`0x40C7B0`) runs
+    again, holding input for it.
+- **Events** (`0x417060`):
+  - **The bottle with the tokens:** they leave the toolbar (`0x406C80`),
+    the cursor is the arrow again, and the bottle is bought (`+0xC0`).
+  - **The bottle with the arrow:** `Souvenir_Shop.120A_`, blocking.
+  - **The hotspot:** playing its B, `Souvenir_Shop.120X_`; else, if its
+    next state is its A, `…120X1_`. Both blocking.
+- **Each tick** (`0x417400`, after the base tick), while bought:
+  1. Once Fred is idle, no scene plays, and the opening is done, he fetches
+     the bottle:
+     - `OBJ_FRED_P03_GET_WATER_BOTTLE`, state `0xD`, with
+       `Souvenir_Shop.Fred_Takes_Bottle`;
+     - the shelf shows `ANIM_INV_BOTTLE_EMPTYB`;
+     - the tick clock restarts (`0x437540`).
+  2. Input is held and the cursor hidden.
+  3. Once Fred is idle again, the bottle goes in the toolbar
+     (`ANIM_TOOLBARSPORTS_BOTTLE_EMPTY`, `ANIM_CURSORSPORTS_BOTTLE_EMPTY`)
+     unless it was ever taken, and `Souvenir_Shop.120B_` plays, blocking.
+- **Leaving** (`0x417580`, after the base leave): left while bought, the
+  bottle goes in the toolbar.
+- **The profile** (`0x4175D0`, `0x417610`): `IntroDone`.
+
+| Address | What it does |
+|---|---|
+| `0x416FE0` | Constructor: music `1`, no opening |
+| `0x417040` (+0x08) | Reset |
+| `0x417060` (+0x14) | The bottle and the hotspot |
+| `0x417170` (+0x18) | Placements |
+| `0x4172D0` (+0x0C) | Entry: the walk-in, the opening, the scream |
+| `0x417400` (+0x04) | Tick: Fred fetches the bottle |
+| `0x417580` (+0x10) | Leave |
+| `0x4175D0` / `0x417610` (+0x1C / +0x20) | Save / load |
+| `0x405F20` | The walk-in from `DL` (Phantom, as Showdown) |
+
+##### Phantom's gardener's house, garden and plaque (WP-060)
+
+Traced 2026-11-16 for [WP-060](../work-packets/WP-060-gardeners-house.md),
+in Phantom's `Scooby.exe`. The house's plaque leads to a puzzle: four
+buttons on a crest, pressed in the order a new game drew
+(`CrestSequence0`–`3`, [WP-057](#phantoms-drawbridge-and-town-wp-057)).
+Solved, the door to the garden opens.
+
+**The gardener's house** (`ROOM_P05_Gardeners_House`, `0x411BF0`, vtable
+`0x45E914`; music group 1, no opening of its own):
+- **Reset** (`0x411C50`): both line counters (`+0xB8`, `+0xBC`) at 0.
+- **Placements** (`0x412110`):
+  - with `CrestPuzzle`, the plaque (`OBJ_P05_GARDENERS_HOUSE_PLACQUE`)
+    isn't built;
+  - without it, the way to the garden (`OBJ_P05_TO_P06`) isn't;
+  - the door is a sprite under the first layer at depth 0, kept (`+0xC0`),
+    stopped on its first step, or its last with `CrestPuzzle` (mode 5).
+- **Arriving** (`0x411C70`, room vtable `+0x2C`, in the base entry):
+  - **From the plaque:**
+    - with `CrestPuzzle`, the opening is `Gardeners_House.130C_`;
+    - with the plaque untried (game `+0x287`), there is none;
+    - tried and wrong, `130B_`, `130B1_`, `130B2_` in turn (`+0xB8`).
+  - **From anywhere else, while `Screaming`:** `Gardeners_House.Intro2_`
+    when `rand()` is even, else `Intro_`.
+  - Each is unplayed, and `+0x3C` (`0x40C7B0`) runs.
+- **Entry** (`0x411D60`, after the base entry):
+  - **Back from the plaque** with `CrestPuzzle`: `Gardeners_House.Puzzle_Right`
+    and `…Door` play, and the door plays once (mode 3). Tried and wrong:
+    `…Puzzle_Wrong`.
+  - **Walk-ins:** from the town, Daphne (`UR`); from the garden, Fred
+    (`UL`, `0x405EE0`).
+  - **While `Screaming`:** one of Jane's screams (`…Jane_Screaming1`,
+    `…2`, `…3`, or `…5` for 3 and 4, `rand() % 5`).
+- **The plaque** (`0x411F10`, room vtable `+0x14`) sets `PlaqueSeen`.
+  - **With no ball found** (`RedBallFound`, `YellowBallFound`,
+    `BlueBallFound`): Big Head says `130A_`, `130A1_`, `130A2_` in turn
+    (`+0xBC`) on `BIG_HEAD_BG_PLAQUE`, and the game comes back here.
+  - **Otherwise:** `ROOM_Garden_Plaque`.
+
+**The garden plaque** (`ROOM_Garden_Plaque`, `0x40F840`, vtable
+`0x45E7D0`; no music of its own, opening `Gardeners_House.130A_`):
+- **Placements** (`0x40F940`): the four buttons are requires objects
+  (`0x402D90`) under the first layer at depth 0, hit by their polygon,
+  stopped on step 0, not pressed (`+0xD0`). Kept in order (`+0xC0`): the
+  lion, the bush, the deer, the dragon. Each answers `ANIM_CURSOROPEN`.
+- **Entry** (`0x40F8A0`, after the base entry): no presses (`+0xB8`), all
+  right so far (`+0xBC`), the toolbar hidden (`0x407CC0`), and the plaque
+  untried (game `+0x287`).
+- **Each tick** (`0x40F8E0`): a button not pressed shows step 1 under the
+  mouse and step 0 otherwise. Clicked without telling the room, it counts
+  as pressed.
+- **A button** (`0x40FB20`, room vtable `+0x14`), not yet pressed:
+  - its place in the crest is lion 3, bush 1, deer 2, dragon 4; one that
+    isn't `CrestSequence<presses>` spoils the try;
+  - it shows step 2 and counts, the plaque is tried, and
+    `Gardeners_House.Button_Click` plays.
+- **After four presses:**
+  - input is held and the cursor faded;
+  - all right, `CrestPuzzle` is set;
+  - the game goes back to the gardener's house.
+
+**The garden** (`ROOM_P06_Garden`, `0x411A20`, vtable `0x45E8D4`; music
+group 1):
+- **Placements** (`0x411B50`): the tracks (`OBJ_P06_GARDEN_TRACKS`) aren't
+  built until `MazeEntered`.
+- **Entry** (`0x411A80`): the tracks' first line next; from the gardener's
+  house, Velma walks in (`U`).
+- **The tracks** (`0x411AD0`): `Garden.230X_`, `230X1_`, `230X2_` in turn,
+  blocking.
+
+Game `+0x287` (the plaque tried) isn't in the profile; a new game
+(`0x42E880`) clears it.
+
+| Address | What it does |
+|---|---|
+| `0x411BF0` | Gardener's house constructor |
+| `0x411C50` (+0x08) | Reset |
+| `0x411C70` (+0x2C) | Arriving: the opening |
+| `0x411D60` (+0x0C) | Entry: the door, walk-ins, a scream |
+| `0x411F10` (+0x14) | The plaque: Big Head, or the puzzle |
+| `0x412110` (+0x18) | Placements |
+| `0x40F840` | Garden plaque constructor |
+| `0x40F8A0` (+0x0C) | Entry |
+| `0x40F8E0` (+0x04) | Tick: the buttons under the mouse |
+| `0x40F940` (+0x18) | Placements: the buttons |
+| `0x40FB20` (+0x14) | A button pressed; four, back to the house |
+| `0x411A20` / `0x411A80` (+0x0C) | Garden: constructor, entry |
+| `0x411AD0` (+0x14) / `0x411B50` (+0x18) | Garden: the tracks' lines, their placement |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
