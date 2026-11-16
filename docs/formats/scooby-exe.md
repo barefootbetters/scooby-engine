@@ -3890,6 +3890,78 @@ chains; `+0xC0` a countdown.
     none is left, through movie 6 (`+0x08`).
 - **Keys** (`0x40D820` / `0x40D860`): `ChainsLocked` (`%i`).
 
+##### The Sheriff's quiz (WP-052)
+
+Traced 2026-11-15 for [WP-052](../work-packets/WP-052-sheriff-quiz.md).
+
+**ROOM_Sheriff** (`0x416E20`, vtable `0x45EA10`; music group 5; no
+opening). Street 1's class sends the gang here when the Sheriff is clicked
+before his puzzle is done. Its fields:
+
+| Field | What it holds |
+|---|---|
+| `+0xB8` | `CurrentQuestion`: the page less 1, −1 for none |
+| `+0xBC` | the notebook |
+| `+0xC0`–`+0xCE` | `Question0`–`14`: answered |
+| `+0xD0`–`+0xDC` | the answers, A to D |
+| `+0xE0`–`+0xEC` | their sounds |
+| `+0xF0` | the page's sound |
+| `+0xF4` | the sound waited for |
+| `+0xF8` | the sound of what the mouse is over |
+| `+0xFC` | its countdown |
+| `+0x100` | the next page once the sound is over |
+| `+0x104` | the state: 0 the page, 1–4 its answers, 5 free |
+| `+0x108` | Street 1 once the sound is over |
+| `+0x109` | a wrong answer |
+
+`graphics_AnimSprite_Play(s, a, b, c)` (`0x430A80`) is
+`graphics_AnimSprite_Start(s, b, c, a)`. Here it is always called with
+mode 0, so it shows step `a`, stopped. The notebook and the answers have
+three such steps: 0 at rest, 1 lit up, 2 pressed.
+
+| Address | What it does |
+|---|---|
+| `0x416E80` (+0x08) | Reset, after the base reset: nothing answered, `+0xB8` −1, the sounds none |
+| `0x417530` (+0x18) | Placements. `OBJ_SHERIFF_NOTEBOOK` a sprite under the first layer (game `+0x58`) at depth 0, looping. Each of the four `OBJ_SHERIFF_ANSWERS1` (kept by its sequence's letter) a requires object (`0x408C80` with −1) at depth 10, stopped on step 0, its callback (`0x402FF0`) the room's vtable `+0x40` through `0x4047F0`. The exit back to Street 1 is the default path's |
+| `0x417220` (+0x0C) | Entry, after the base entry: the toolbar hidden (`0x407CC0`); `+0x108`, `+0x109` clear; with no question, one drawn (`rand() % 15` until it isn't 2, 5 or answered); then the page (`0x417300`) |
+| `0x417300` | The page. With the level's count answered (level + 2), page 3, the last. The notebook on `ANIM_SHERIFF_NOTEBOOKPAGE<page>` (looping), its sound `Sheriff.NOTEBOOKPAGE<page>`. Each answer to the object `OBJ_SHERIFF_ANSWERS<page>` (`0x4313C0`) on `ANIM_SHERIFF_ANSWERS<page><letter>`, stopped on step 0, its sound `Sheriff.NOTEBOOKPAGE<page>_<letter>`. State 0. Page 3 has no such object: its answers show nothing |
+| `0x416ED0` (+0x04) | The tick. See below |
+| `0x4176E0` (+0x40) | An answer clicked. See below |
+| `0x4172C0` (+0x10) | Leave, after the base leave: the level's count answered sets `SheriffPuzzle` (game `+0x26C`) |
+| `0x4179B0` / `0x417A80` (+0x1C / +0x20) | The keys: `CurrentQuestion` (`%i`, atoi), `Question0`–`14` |
+
+**The tick** (`0x416ED0`). Input is held (game `+0x24`) and the cursor
+fades every tick. The rest waits until the sound waited for (`+0xF4`) is
+over (`0x434CE0`):
+1. **`+0x108`:** to `ROOM_P03_Street1` (game vtable `+0x04`).
+2. **`+0x109`:** `Ewan.NOTEBOOKPAGE_ANSWER_WRONG_2`, then `+0x108`. The
+   disc's line is `Sheriff.NOTEBOOK_ANSWER_WRONG_2`, so nothing plays.
+3. **`+0x100`:** the next page (`0x417300`).
+4. **By state:**
+   - **0:** the page's sound, the page on step 1.
+   - **1–4:** the page and the answers on step 0, the answer read on step
+     1, and its sound.
+   - **5:** input free, the cursor shown. What the mouse is over (its `+8`)
+     is on step 1, the rest on step 0. Its sound goes in `+0xF8` and
+     `+0xFC` is 9. While that sound isn't playing, `+0xFC` counts down; at
+     0, the SFX and speech files are stopped (`0x434E10`), the sound
+     plays, and `+0xFC` is 72. Over nothing, it is stopped.
+5. **The level's count answered:** `+0x108`.
+
+**An answer clicked** (`0x4176E0`, through its requires object's click
+`0x402F20` with the arrow). The answer goes to step 2.
+- **Right** (its sequence one of 1C, 2C, 4C, 5D, 6C, 7A, 8B, 9C, 10A, 11D,
+  12B, 13D, 14C, 15A):
+  - the page answered;
+  - a `Sheriff.NOTEBOOK_ANSWER_RIGHT_` line;
+  - a new page drawn as at entry;
+  - `+0x100`.
+- **Wrong:** a `Sheriff.NOTEBOOK_ANSWER_WRONG_1.` line, and `+0x109`.
+
+Each line's digit comes from `0x417B70`. It draws `rand() % 9`, then
+`rand()` modulo the last draw, and takes the first digit (draw + 1) the
+disc has, or none. The SFX and speech files are stopped before the line.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
