@@ -3436,6 +3436,59 @@ music `5`, no opening):
 **`Fred_Takes_Lantern` isn't on the disc** under that name: Sfx.dat has
 `Fred.Takes.Lantern`. Like the jail's two, it plays nothing.
 
+##### The Sheriff's office (WP-046)
+
+Traced 2026-11-15 for [WP-046](../work-packets/WP-046-sheriffs-office.md).
+
+**ROOM_P02_Sheriffs_Office** (`0x4163A0`, vtable `0x45E9D0`; music `5`):
+- **Its placements:**
+  - Shaggy, Scooby and Velma;
+  - the cell door, OBJ_P02_DOOR, a requires object that answers the oil
+    can;
+  - the way into the jail behind it, OBJ_P02_TO_P07 (movie 29);
+  - the way out to Street 1;
+  - hotspot 1, a clickable;
+  - hotspot 4, a clickable over Shaggy.
+- **Its fields:**
+  - `+0xB8`: the stuck door's next line.
+  - `+0xBC`: the door clicked.
+  - `+0xBD`: Shaggy at the door.
+  - `+0xBE`, `+0xBF`: the sandwich, and Shaggy eating it.
+  - `+0xC0`: hotspot 4's C clicked.
+  - `+0xC4`, `+0xC8`, `+0xCC`: the door, hotspot 1, hotspot 4.
+
+| Address | What it does |
+|---|---|
+| `0x416680` (+0x30) | The opening, unplayed: `Sheriffs_Office.140A_` while `MoaningActive`, otherwise none |
+| `0x416C30` (+0x18) | The door a requires object under layer 0 at depth 1. With the oil can used it is on ANIM_P02_DOOROPEN, or ANIM_P02_DOORBED_GONE once the blanket has been taken. The way into the jail isn't built once the blanket has been taken. Hotspots 1 and 4 are clickables, as the default path builds them |
+| `0x416400` (+0x0C) | Entry, after the base entry: `+0xB8` to `+0xBF` cleared, the two Shaggy sounds preloaded, and the snacks needed (`+0x24`) set to level + 2 |
+| `0x416AA0` (+0x14) | The room's event. See below |
+| `0x4166C0` (+0x04) | The tick, after the base tick. See below |
+| `0x416470` (+0x24) | The exit handler. Into the jail with fewer snacks given here (`+0x88`) than level + 2, it plays `150A_`, `150A2_` or `150A3_` by level, held, and the snack box flashes (`0x40D4D0`). Otherwise, and for every other exit, it calls the default handler |
+
+**The event** (`0x416AA0`):
+- **The door:** with the oil can, the oil can is used up and the arrow is
+  back. Either way `+0xBC` is set, input is held and the cursor fades.
+- **Hotspot 1,** moved on to its B: `Sheriffs_Office.140X_`; to its E:
+  `140X3_`. Held.
+- **Hotspot 4,** by the sequence it plays (sprite `+0x54`): A
+  `HOTSPOT4A_`, B `HOTSPOT4A2_`, both held. C sets `+0xC0`.
+
+**The tick** (`0x4166C0`). Shaggy's steps wait until he is idle, no scene
+plays and the opening is done.
+1. **`+0xC0` and hotspot 4 stopped:** the sandwich (`+0xBE`).
+2. **The sandwich:** Shaggy plays OBJ_SHAGGY_P02_SANDWICH, with
+   `Global.Idle.SHAGGY_S1_E`. Idle again, input is free. Input is held
+   until then.
+3. **The door** (`+0xBC`), with input held until Shaggy is idle again.
+   - **With the oil can used, and the blanket not yet taken:** Shaggy plays
+     OBJ_SHAGGY_P02_OIL_DOOR, with `Shaggy.Oils.Door`, and the door is
+     hidden. Idle again, the door shows on ANIM_P02_DOOROPEN, and input is
+     free.
+   - **Otherwise:** Shaggy plays OBJ_SHAGGY_P02_NO_OIL_DOOR, with
+     `Shaggy.Shakes.Bars`. Idle again, `150A1_`, `150A12_` and `150A13_`
+     play in turn, not held.
+
 ##### Deterministic asset-naming rule for WP-002 hand-off
 
 Confirmed: the [WP-008 §Notes naming rule](../work-packets/WP-008-object-ini-catalog.md#notes) — `entry_<index>_<sanitized_name>.png`, sanitization preserving uppercase verbatim and replacing anything outside `[A-Za-z0-9_]` with `_` — applies cleanly because every name observed in the cross-check matched the WP-003 convention already. Three worked examples directly from the catalog:
