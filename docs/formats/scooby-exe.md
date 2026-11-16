@@ -1504,6 +1504,65 @@ entry):
 | `0x4180F0` / `0x418150` (+0x0C) | Town: constructor, entry |
 | `0x42E880` | Game vtable `+0x4C`: a new game's story values |
 
+##### Phantom's souvenir shop (WP-058)
+
+Traced 2026-11-16 for [WP-058](../work-packets/WP-058-souvenir-shop.md), in
+Phantom's `Scooby.exe`. `ROOM_P03_Souvenir_Shop` (`0x416FE0`, vtable
+`0x45EB9C`; music group 1, no opening of its own). The gang buys the empty
+bottle with the tokens.
+
+- **Reset** (`0x417040`): `IntroDone` (`+0xC2`) off.
+- **Placements** (`0x417170`):
+  - **The empty bottle**, once ever taken (`0x407060`): a sprite under the
+    first layer at depth 0, showing `ANIM_INV_BOTTLE_EMPTYB`. Until then,
+    a requires object (`0x408C80` with −1), kept (`+0xB8`); its
+    `requiredanim=` is the tokens' cursor.
+  - **Hotspot 1:** a clickable as the default path builds it (`0x408DC0`
+    with 1, −1), kept (`+0xBC`).
+- **Entry** (`0x4172D0`, after the base entry):
+  - nothing bought or being fetched (`+0xC0`, `+0xC1`);
+  - from the town, Fred walks in (`DL`, `0x405F20`);
+  - without `Screaming`, the first time (`IntroDone` off), the opening
+    becomes `Souvenir_Shop.1201_`, and `IntroDone` is set;
+  - while `Screaming`, one of Jane's screams
+    (`Souvenir_Shop.Jane_Screaming1`, `…2`, `…3`, or `…5` for 3 and 4,
+    `rand() % 5`), and the opening becomes `Souvenir_Shop.330A1_`, on every
+    visit;
+  - either opening is unplayed (`+0x10`), and `+0x3C` (`0x40C7B0`) runs
+    again, holding input for it.
+- **Events** (`0x417060`):
+  - **The bottle with the tokens:** they leave the toolbar (`0x406C80`),
+    the cursor is the arrow again, and the bottle is bought (`+0xC0`).
+  - **The bottle with the arrow:** `Souvenir_Shop.120A_`, blocking.
+  - **The hotspot:** playing its B, `Souvenir_Shop.120X_`; else, if its
+    next state is its A, `…120X1_`. Both blocking.
+- **Each tick** (`0x417400`, after the base tick), while bought:
+  1. Once Fred is idle, no scene plays, and the opening is done, he fetches
+     the bottle:
+     - `OBJ_FRED_P03_GET_WATER_BOTTLE`, state `0xD`, with
+       `Souvenir_Shop.Fred_Takes_Bottle`;
+     - the shelf shows `ANIM_INV_BOTTLE_EMPTYB`;
+     - the tick clock restarts (`0x437540`).
+  2. Input is held and the cursor hidden.
+  3. Once Fred is idle again, the bottle goes in the toolbar
+     (`ANIM_TOOLBARSPORTS_BOTTLE_EMPTY`, `ANIM_CURSORSPORTS_BOTTLE_EMPTY`)
+     unless it was ever taken, and `Souvenir_Shop.120B_` plays, blocking.
+- **Leaving** (`0x417580`, after the base leave): left while bought, the
+  bottle goes in the toolbar.
+- **The profile** (`0x4175D0`, `0x417610`): `IntroDone`.
+
+| Address | What it does |
+|---|---|
+| `0x416FE0` | Constructor: music `1`, no opening |
+| `0x417040` (+0x08) | Reset |
+| `0x417060` (+0x14) | The bottle and the hotspot |
+| `0x417170` (+0x18) | Placements |
+| `0x4172D0` (+0x0C) | Entry: the walk-in, the opening, the scream |
+| `0x417400` (+0x04) | Tick: Fred fetches the bottle |
+| `0x417580` (+0x10) | Leave |
+| `0x4175D0` / `0x417610` (+0x1C / +0x20) | Save / load |
+| `0x405F20` | The walk-in from `DL` (Phantom, as Showdown) |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
