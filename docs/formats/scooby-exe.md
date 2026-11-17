@@ -2077,6 +2077,72 @@ two trays until they balance.
 | `0x429400` | Balance Maria one step |
 | `0x4285B0` | An item knocked off a tray |
 
+##### Phantom's kitchen (WP-065)
+
+Traced 2026-11-16 for [WP-065](../work-packets/WP-065-kitchen.md), in
+Phantom's `Scooby.exe`.
+
+**The kitchen** (`ROOM_P13_Kitchen`, `0x412C90`, vtable `0x45E954`; music
+group 1, no opening), where Ewan cooks:
+- **Reset** (`0x412CF0`): no line playing (`+0xC8`), nothing pending
+  (`+0xBC`, `+0xBD`), his lines from the first (`+0xC0`), and Ewan not
+  introduced (`+0xC7`, saved as `EwanIntro`).
+- **Placements** (`0x413740`):
+  - **the grease** (`OBJ_P13_KITCHEN_HOTSPOT1`, a requires object for the
+    empty bottle) only with the screwdriver ever had and the full bottle
+    never: under the first layer at depth 0, hit by its step polygon;
+    otherwise it isn't built;
+  - **the way to the storage room** (`OBJ_P13_TO_P17`) isn't built until
+    Ewan's quiz is won (`EwanPuzzle`, game `+0x254`).
+- **Entry** (`0x412EA0`, after the base entry):
+  - **Walk-ins:** from the dining room, Daphne (`UR`); from the storage
+    room, Daphne (`UL`) and Fred (`UR`).
+  - **His quiz won, his clue not given:** `Kitchen.190B_`, blocking, his
+    clue (game vtable `+0x44`), and he gives it when idle (`+0xBC`).
+  - **Else, won:** Ewan stirs (`STIRRING`, state `0x10`) without the
+    screwdriver, or once the mirror is used. With the screwdriver until
+    then he sleeps (`SLEEPING`, `+0xC6`, with `Kitchen.Ewan_Sleeping`,
+    which isn't on the disc). Either way at depth −1.
+  - Nothing pending (`+0xC4`, `+0xC5`); Ewan hit by his step polygon
+    (`+0x04` = 2).
+- **The way to the storage room** (`0x412D20`, room vtable `+0x24`): its
+  movie (8) doesn't play once the screwdriver has been had.
+- **Each tick** (`0x4130D0`, after the base tick):
+  - **Ewan clicked** with the arrow:
+    - **before his quiz is won:** the first time he is met (`0x40A8B0`) and
+      introduces himself on Big Head (`Kitchen.190A_` on
+      `BIG_HEAD_BG_P13`), then his quiz, `ROOM_Ewan`; after, straight to
+      it (game vtable `+0x04`);
+    - **won and awake:** with the speech lock free (`0x40A230`), one of
+      `Kitchen.1010G_`, `1010G1_`, `1010G3_` in turn, played as a sound;
+      the lock is freed when it ends;
+    - **asleep:** `Kitchen.190F_`, `190F1_`, `190F2_` in turn, blocking.
+  - **His clue,** as Maria's: idle, he `GIVES`, input held; idle again,
+    the exit handler goes to `ROOM_Suspect_Chooser` with
+    `Global.Thank_You_`.
+  - **The grease** (`+0xC4`), input held: Fred idle, no scene playing and
+    the opening done, he fetches it (`OBJ_FRED_P13_GET_GREASE`, state
+    `0xD`, `Kitchen.Get_Grease`). The grease is hidden, the empty bottle
+    used, the arrow back. Idle again: the full bottle, unless ever had,
+    and `Kitchen.190G_`, blocking.
+- **The event** (`0x4136C0`): the grease with the empty bottle starts the
+  above; with the arrow, `Kitchen.190C_`, blocking. Hotspot 3 scares
+  Daphne (state `0x11`).
+- **Leaving** (`0x4138D0`): left with the bottle at the grease, the full
+  bottle all the same.
+- **The profile** (`0x413920`, `0x413960`): `EwanIntro`.
+
+| Address | What it does |
+|---|---|
+| `0x412C90` | Kitchen constructor |
+| `0x412CF0` (+0x08) / `0x4138D0` (+0x10) | Reset / leave |
+| `0x412EA0` (+0x0C) | Entry: walk-ins, his clue, stirring or sleeping |
+| `0x4130D0` (+0x04) | Tick: Ewan clicked, his clue, the grease |
+| `0x4136C0` (+0x14) | Event: the grease, hotspot 3 |
+| `0x413740` (+0x18) | Placements |
+| `0x412D20` (+0x24) | The way out: no movie to the storage room with the screwdriver |
+| `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
