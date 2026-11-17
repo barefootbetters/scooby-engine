@@ -29,7 +29,7 @@ The first run matched all 57 lines on Phantom and all 220 on Showdown, with no w
 **Deviations and gaps:**
 
 - **The first visit's base entry** (`0x40B920`) runs in the fork before the class asks for Maria's movie; the original skips it. The room is left at once, as in the throne room ([WP-062](WP-062-throne-room.md)).
-- **Maria's game** (`ROOM_Maria`) still has the base class: nothing in it sets `MariaPuzzle` yet. It is WP-064.
+- **Maria's game** (`ROOM_Maria`) still has the base class: nothing in it sets `MariaPuzzle` yet. Ported in [WP-064](WP-064-maria-game.md).
 - **Maria's click** is read from the engine's click on her, as the Jester's is.
 
 **Found on the way:**
