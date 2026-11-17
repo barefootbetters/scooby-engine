@@ -2526,6 +2526,85 @@ off.
 | `0x431C10` / `0x431C70` | A sprite's depth among its siblings |
 | `0x435E80` / `0x435EF0` | A fader (the cursor's, game `+0x18`) out / in over n ticks |
 
+##### Phantom's secret passages, storage room and treasury (WP-071)
+
+Traced 2026-11-17 for [WP-071](../work-packets/WP-071-secret-passages.md),
+in Phantom's `Scooby.exe`. Several of these classes read the game through an
+`int *`: index `+0x42` is byte `+0x108` (`FinalClue`), `+0x58` is `+0x160`
+(the level) and `+0x2B` is `+0xAC` (the toolbar).
+
+**The first secret passage** (`ROOM_P15_Secret_Passage1`, `0x416C40`,
+vtable `0x45EB1C`, no opening) only has its walk-ins (`0x416CA0`, after the
+base entry): from the armory's slide, Velma (`D`, `0x406020`); from the
+storage room, Daphne (`UL`, `0x405EE0`).
+
+**The second secret passage** (`ROOM_P19_Secret_Passage2`, `0x416D10`,
+vtable `0x45EB5C`, opening `Secret_Passage_2.380_`) has the gargoyle's wall
+of fire across the way to the treasury:
+- **Reset** (`0x416D70`): the fire burning (`+0xB8`).
+- **Placements** (`0x416D90`): the fire (`OBJ_P19_SECRET_PASSAGE_GAR_FLAME`)
+  a requires object (`0x408C80` with -1). Burning, it plays `FLAMEA` with
+  `Secret_2.Wall_Of_Fire`; out, `FLAMEB`. Its `requiredanim=`
+  (`ANIM_BRAD_ARMOR_HEADBLINKS_A`) is never a cursor, so only the arrow's
+  event reaches it.
+- **Entry** (`0x416F30`): the level's snacks plus two needed (`+0x24`).
+- **The event** (`0x416E90`): the fire clicked.
+  - Fewer snacks given here (`+0x88`) than the level plus two: a line by
+    level, `Treasury.360A_`, `360A1_` or `360A2_`, blocking, and the snack
+    box flashes (`0x40D4D0`).
+  - Otherwise the fire goes out, and movie 39 plays back into this room
+    (game vtable `+0x08`).
+- **The profile** (`0x416F60`, `0x416FA0`): `GargoyleFlameActive`, in the
+  room's own section.
+
+**The storage room** (`ROOM_P18_Storage`, `0x417650`, vtable `0x45EBDC`,
+opening `Storage_Room.370_`):
+- **Reset** (`0x4176B0`): the hotspots' lines from the first (`+0xB8`).
+- **Placements** (`0x4179C0`): the rope (`OBJ_INV_ROPE`, an inventory
+  object in `object.ini`). Never had, it is a requires object
+  (`0x408C80` with -1, `+0xC0`); had, it isn't built.
+- **The event** (`0x4176D0`):
+  - **hotspot 1 or 2:** `Storage_Room.370X_`, `370X1_`, `370X2_` in turn,
+    not blocking;
+  - **the rope:** before the well is visited (`WellVisited`, game
+    `+0x262`) `Storage_Room.370B_`, after it `370A_`, blocking, with
+    `+0xBC` as the flag the scene sets when it ends (`0x40B400`).
+- **Each tick** (`0x4177C0`, after the base tick), with `+0xBC` set:
+  - Velma, idle with no scene and the opening done, takes the rope
+    (`OBJ_VELMA_P18_TAKE_ROPE`, with `Storage.Velma_Takes_Rope`), and it is
+    hidden (`+0xBD`);
+  - the cursor stays out and input held (`0x435E80`, game `+0x24`);
+  - on her step 34 (`+0x4C` = `0x22`), the rope goes in the toolbar unless
+    had;
+  - once she is idle again, the cursor and input come back.
+- **Leaving** (`0x417970`): left with `+0xBC` set, the rope goes in the
+  toolbar all the same.
+
+**The treasury** (`ROOM_P16_Treasury`, `0x4182E0`, vtable `0x45EC9C`, no
+opening) only has its tick (`0x418340`, after the base tick). The Princess
+clicked with the arrow (her `+0x08`, game `+0x20` bit 4) sets the final clue
+(`FinalClue`, game `+0x108`) and plays movie 55 to `ROOM_Suspect_Chooser`
+(game vtable `+0x08`): the accusation.
+
+| Address | What it does |
+|---|---|
+| `0x416C40` | First passage constructor |
+| `0x416CA0` (+0x0C) | Entry: the walk-ins |
+| `0x416D10` | Second passage constructor |
+| `0x416D70` (+0x08) | Reset: the fire burning |
+| `0x416F30` (+0x0C) | Entry: the snacks needed |
+| `0x416E90` (+0x14) | Event: the fire |
+| `0x416D90` (+0x18) | Placements |
+| `0x416F60` / `0x416FA0` (+0x1C / +0x20) | Save / load |
+| `0x417650` | Storage room constructor |
+| `0x4176B0` (+0x08) / `0x417970` (+0x10) | Reset / leave |
+| `0x417950` (+0x0C) | Entry |
+| `0x4177C0` (+0x04) | Tick: Velma takes the rope |
+| `0x4176D0` (+0x14) | Event: the hotspots, the rope |
+| `0x4179C0` (+0x18) | Placements |
+| `0x4182E0` | Treasury constructor |
+| `0x418340` (+0x04) | Tick: the Princess |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
