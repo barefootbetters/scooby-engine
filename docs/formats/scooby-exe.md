@@ -2142,6 +2142,7 @@ group 1, no opening), where Ewan cooks:
 | `0x4136C0` (+0x14) | Event: the grease, hotspot 3 |
 | `0x413740` (+0x18) | Placements |
 | `0x412D20` (+0x24) | The way out: no movie to the storage room with the screwdriver |
+| `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
 
 ##### Phantom's Ewan's quiz (WP-066)
 
@@ -2204,6 +2205,7 @@ code:
 | `0x411480` (+0x40) | An answer clicked |
 | `0x410FF0` | A page set up |
 | `0x411940` | A line with a random digit the disc has |
+| `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
 
 ##### Phantom's kitchen storage room (WP-067)
 
@@ -2324,8 +2326,105 @@ each, with its own state:
 | `0x40EDD0` (+0x14) | Event: the duster, the scratch, the armour |
 | `0x40EF10` (+0x18) | Placements |
 | `0x40F1A0` / `0x40F1E0` (+0x1C / +0x20) | Save / load |
-| `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
-| `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's two arenas (WP-069)
+
+Traced 2026-11-17 for [WP-069](../work-packets/WP-069-arenas.md), in
+Phantom's `Scooby.exe`.
+
+**The first arena** (`ROOM_P09_Arena1`, class `0x40D4E0`, vtable
+`0x45E68C`, opening `Arena_1.170_`) has the grindstone:
+- **Entry** (`0x40D700`, after the base entry): from the throne room Velma
+  walks in (`U`, `0x405FE0`), from the second arena Velma (`D`,
+  `0x406020`); back in the same room, after the stone's movie, the toolbar
+  opens (`0x407C00`).
+- **The event** (`0x40D560`):
+  - **the rusty shears** on the stone: movie 40 back to this room (game
+    vtable `+0x08`), the shears out of their slot, the arrow back, and
+    `+0xBC` set;
+  - **the arrow** on the stone: `Arena_1.170XB_`, `170A_`, `170A1_`,
+    `170A2_` in turn (`+0xB8`), blocking;
+  - **hotspot 3:** `Arena_1.170X_`, not blocking.
+- **Leaving** (`0x40D6A0`): with `+0xBC` set, the sharp shears
+  (`OBJ_INV_SHARP_SHEARS`) go in the toolbar, unless ever had.
+
+**The second arena** (`ROOM_P14_Arena2`, class `0x40D790`, vtable
+`0x45E6CC`, opening `Arena_2.180A_`) is Brad's. Until his game is won
+(`BradPuzzle`, game `+0x256`) he hides in the armour pile:
+- **Placements** (`0x40E090`):
+  - **the armour pile** (`OBJ_BRAD_ARMOR_PILE`), not won: a clickable as
+    the default path builds it (`0x408DC0` with 1, -1), with a click
+    queued (`0x401840`) and `+0xCA` set, so its first click is the room's
+    own. Won: not built.
+  - **the mirror** (`OBJ_INV_MIRROR`), never had: a sprite at depth -480,
+    not an inventory object; had, not built.
+  - **`OBJ_BRAD`** is built only once his game is won, **`OBJ_BRAD_H`**
+    (Brad in the pile) only until.
+  - **the pole,** won on level 1 or 2, and **the arena's shield,** the
+    shield ever had and in no slot: sprites at depth 0. Else not built.
+- **Entry** (`0x40D830`, after the base entry):
+  - his game won and his clue not given: his clue (game vtable `+0x44`),
+    Brad met (`0x40A8B0`), `Arena_2.180B_`, blocking, and `+0xC4`;
+  - not won with the opening unplayed: Brad hidden;
+  - the shield given him (`+0xC6`) and the mirror never had, or the
+    mirror had: Brad 50 to the left; in the first case `+0xC7` too;
+  - from the throne room Fred walks in (`UL`), from the first arena Velma
+    (`D`). `+0xCB` keeps whether the opening was unplayed.
+- **Before the scene player** (`0x40E440`, vtable `+0x38`, which the base
+  class leaves to the player):
+  - his game not won and the opening played: Brad, still hidden, rises
+    (`RISE`, state `0xF`, shown, `Arena2.Brad_H.Rise`);
+  - else in `Arena_2.180A_` with its fifth line said and its speaker done:
+    Brad, hidden, rises the same way, and while he isn't idle the scene
+    player doesn't run. His own line, the sixth, follows his rise.
+- **Each tick** (`0x40DA80`, after the base tick):
+  - **the opening played on this visit** (`+0xCB`): `+0xCA` cleared and a
+    click queued on the pile, so the party goes straight into Brad's game;
+  - **Brad clicked with the shield** (his clicked flag, read here before
+    the game's update, `0x4098B0`, could call it the wrong item): Big Head,
+    `Arena_2.180E_` on `BIG_HEAD_BG_P14`, back here through movie 29; the
+    shield used, the arrow back, `+0xC6`;
+  - **his clue** (`+0xC4`), no scene playing and the opening done: he
+    `GIVES`, `+0xC5` holds input (game `+0x24`); idle again, the exit
+    handler to `ROOM_Suspect_Chooser` with `Global.Thank_You_`;
+  - **the mirror** (`+0xC6`, `+0xC7`, never had): Velma, idle with no scene
+    playing and the opening done, takes it (`OBJ_VELMA_P14_TAKE_MIRROR`,
+    state `0xD`, `Arena2.Velma_Takes_Mirror`), and it is hidden; idle
+    again, it goes in the toolbar unless had;
+  - **the pile rattles,** `rand() % 500 == 0`: `Brad.Armor.<rand() % 4 +
+    1>`, `+0xCA` set and a click queued.
+- **The event** (`0x40E5A0`): the pile, `+0xCA` clear: the exit handler to
+  `ROOM_Brad_SPOOKY`, `ROOM_Brad_SPOOKIER` or `ROOM_Brad_SPOOKTACULAR` by
+  level; `+0xCA` set, it is cleared. Hotspot 2 moved on to its B:
+  `Arena_2.180X_`, not blocking.
+- **Leaving** (`0x40E030`): left while Velma takes the mirror, it goes in
+  the toolbar all the same.
+- **Brad's idle line** (`0x40EAC0`, `+0x28`), his game won: with the
+  shield used `Arena_2.1010H3_1_BRAD`, else `1010H_` or `1010H2_` (`rand()
+  & 1`); else the base line. **The idle chatter** (`0x40EBA0`, `+0x34`),
+  won: `Arena_2.1010H4_`, not blocking.
+
+**A queued click** (`0x401840`) adds one to a clickable's count (`+0x80`).
+The clickable's tick (`0x401440`) takes one while `+0x70` is clear and
+no click is pending (`+0x7E`), and plays it as if clicked, event and all;
+the fork takes it while the clickable isn't playing. Brad's game (`0x41E9E0`) is the
+next packet's, WP-070.
+
+| Address | What it does |
+|---|---|
+| `0x40D4E0` | First arena constructor |
+| `0x40D540` (+0x08) / `0x40D6A0` (+0x10) | Reset / leave |
+| `0x40D700` (+0x0C) | Entry: Velma, the toolbar |
+| `0x40D560` (+0x14) | Event: the stone, hotspot 3 |
+| `0x40D790` | Second arena constructor |
+| `0x40D7F0` (+0x08) / `0x40E030` (+0x10) | Reset / leave |
+| `0x40D830` (+0x0C) | Entry: his clue, Brad hidden or aside |
+| `0x40DA80` (+0x04) | Tick: into his game, the shield, the thanks, the mirror, the rattle |
+| `0x40E5A0` (+0x14) | Event: the pile, hotspot 2 |
+| `0x40E090` (+0x18) | Placements |
+| `0x40EAC0` (+0x28) / `0x40EBA0` (+0x34) | Brad's idle line / the idle chatter |
+| `0x40E440` (+0x38) | Before the scene player: Brad's rise |
+| `0x401840` | A clickable's click queued |
 
 ##### Movies (WP-022)
 
