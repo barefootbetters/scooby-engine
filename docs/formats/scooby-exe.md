@@ -2272,6 +2272,57 @@ Scooby, Shaggy, Velma (the exit object's `+0xA0`, `+0x80`, `+0x90`,
 | `0x413EA0` (+0x14) | Event: the items, the hotspots, the door |
 | `0x414B30` (+0x18) | Placements |
 | `0x414E40` / `0x414E80` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's king's armory and its slide (WP-068)
+
+Traced 2026-11-17 for [WP-068](../work-packets/WP-068-kings-armory.md), in
+Phantom's `Scooby.exe`.
+
+**The king's armory** (`ROOM_P20_Kings_Armory`) and **its slide**
+(`ROOM_P20_Kings_Armory_Slide`) share one class (`0x40EBC0`, vtable
+`0x45E710`; music group 1, no opening); the factory builds an object for
+each, with its own state:
+- **Reset** (`0x40EC20`): the scratch's lines from the first (`+0xC0`),
+  the intro not had (`+0xC6`, saved as `IntroDone` in each room's own
+  section).
+- **Placements** (`0x40EF10`): the duster (`OBJ_INV_DUSTER`), never had, a
+  requires object the arrow answers (`0x408C80`); had, not built. The
+  armour (`OBJ_P20_KINGS_ARMORY_MAN`) and the scratch are requires objects
+  for the full bottle, as placed.
+- **Entry** (`0x40EC40`):
+  - **In the armory with the full bottle used** (ever had, in no slot):
+    the slide room instead (game vtable `+0x04`), without the base entry.
+  - Else nothing pending, the base entry, and the intro:
+    - without Jane screaming (game `+0x288`), `Kings_Armory.150_` once;
+    - screaming, one of her five screams (`rand() % 5`; the disc has the
+      first four), then `Kings_Armory.Intro2_` or `Intro_` (`rand() & 1`).
+
+    Either opening is unplayed, and `+0x3C` (`0x40C7B0`) runs again.
+- **The event** (`0x40EDD0`):
+  - **the duster** clicked: Scooby takes it;
+  - **the full bottle** on the scratch or the armour: movie 7 to the slide
+    room (game vtable `+0x08`), the bottle used, the arrow back;
+  - **the arrow** on the scratch: `Kings_Armory.150C_`, `150C1_`, `150C2_`
+    in turn, blocking; on the armour, movie 44 back to the same room.
+- **Each tick** (`0x40EFE0`, after the base tick), input held while the
+  duster is taken: Scooby, idle with no scene playing and the opening
+  done, takes it (`OBJ_SCOOBY_P20_TAKES_DUSTER`, state `0xD`, with
+  `Kings_Armory.Scooby_Takes_Duster`), and it is hidden. Idle again, it
+  goes in the toolbar unless ever had, and `Kings_Armory.150B_`,
+  blocking.
+- **Leaving** (`0x40F150`): left while the duster is being taken, it goes
+  in the toolbar all the same.
+- **The profile** (`0x40F1A0`, `0x40F1E0`): `IntroDone`.
+
+| Address | What it does |
+|---|---|
+| `0x40EBC0` | King's armory constructor, for both rooms |
+| `0x40EC20` (+0x08) / `0x40F150` (+0x10) | Reset / leave |
+| `0x40EC40` (+0x0C) | Entry: to the slide, the intro, the screams |
+| `0x40EFE0` (+0x04) | Tick: the duster |
+| `0x40EDD0` (+0x14) | Event: the duster, the scratch, the armour |
+| `0x40EF10` (+0x18) | Placements |
+| `0x40F1A0` / `0x40F1E0` (+0x1C / +0x20) | Save / load |
 | `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
 | `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
 
