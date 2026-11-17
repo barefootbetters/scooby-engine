@@ -2407,8 +2407,8 @@ Phantom's `Scooby.exe`.
 **A queued click** (`0x401840`) adds one to a clickable's count (`+0x80`).
 The clickable's tick (`0x401440`) takes one while `+0x70` is clear and
 no click is pending (`+0x7E`), and plays it as if clicked, event and all;
-the fork takes it while the clickable isn't playing. Brad's game (`0x41E9E0`) is the
-next packet's, WP-070.
+the fork takes it while the clickable isn't playing. Brad's game (`0x41E9E0`) is
+[below](#phantoms-brad-game-wp-070).
 
 | Address | What it does |
 |---|---|
@@ -2425,6 +2425,106 @@ next packet's, WP-070.
 | `0x40EAC0` (+0x28) / `0x40EBA0` (+0x34) | Brad's idle line / the idle chatter |
 | `0x40E440` (+0x38) | Before the scene player: Brad's rise |
 | `0x401840` | A clickable's click queued |
+
+##### Phantom's Brad game (WP-070)
+
+Traced 2026-11-17 for [WP-070](../work-packets/WP-070-brad-game.md), in
+Phantom's `Scooby.exe`.
+
+**Brad's game** (`ROOM_Brad_SPOOKY`, `ROOM_Brad_SPOOKIER` and
+`ROOM_Brad_SPOOKTACULAR`, one class: `0x41E9E0`, vtable `0x45EF50`) buries
+him under a pile of armour. Each piece hangs on a spring from its place and
+pushes on its neighbours. Only the next piece in the level's order comes
+off.
+- **Placements** (`0x41EA60`), for `OBJ_BRADARMOR_<suffix>`; anything else
+  takes the default path:
+  - **`EASY`, `MED`, `HARD`** of another level than the game's (`+0x160`):
+    claimed, not built. Of the game's level: a piece (`0x41DAB0`, vtable
+    `0x45EED8`) under the second layer (game `+0x5C`; no room has one, so
+    the root) at depth 10, looping, counted (`+0xB8`). Several placements
+    share each object name, so a piece is kept by its sequence's last
+    digit less one, `0` being the tenth: 6 pieces on `EASY`, 8 on `MED`,
+    10 on `HARD`.
+  - **`BODY`, `HEADS`** (`+0x120`) **and `MOUTHS`** (`+0x124`): sprites
+    under the root (parent 0) at depths -10, -9 and -8; the mouths
+    stopped.
+- **Entry** (`0x41EE80`, after the base entry):
+  - **the level's order** (`+0xE4`) and **links** (`0x41E460`, both ways,
+    each new neighbour at the head of the other's list, `0x41E760`). The
+    orders, by piece: `EASY` 0, 2, 4, 5, 1, 3; `MED` 2, 1, 6, 4, 3, 7, 0,
+    5; `HARD` 1, 2, 3, 8, 5, 4, 0, 9, 7, 6;
+  - the i-th in the order gets its share, (i + 1) / count (`+0x5C`), and
+    depth count - i (`0x431C10`, the depth move `0x431C70`), so the next
+    piece is always on top;
+  - **each piece's way out** (`0x41F6F0`): the angle from the middle of
+    the pieces still on the pile, where they are now, to where it hangs
+    (`+0x68`, `0x41DD10`);
+  - `Brad.ARMOR_INTRO_1` (`+0x118`), the cursor faded out at once
+    (`0x435E80` with 0 on game `+0x18`), and an hour (`+0x130`, 129600
+    ticks) before the game gives up.
+- **Each tick** (`0x41F3C0`, after the base tick):
+  - the mouths on the line playing's lip shape less one (`0x435A70`), held
+    on a 0, back to the first with no line;
+  - **the introduction over:** the cursor faded back in (`0x435EF0`,
+    `+0x12C`);
+  - the heads' excitement over (`+0x128` down to 0): `HEADSNORM`;
+  - **`+0x130` below 0:** back to `ROOM_P14_Arena2` (game vtable `+0x04`);
+  - **each piece still on the pile** (`0x41E4B0`): not loose and moved
+    more than 4 since the last tick, a rattle,
+    `Brad.Armor.<rand() % 5 + 1>`. The play call (`0x4359A0`) takes a
+    second argument, 500 here, whose use wasn't traced.
+- **A piece's update** (`0x41DD60`, its vtable `+0x0C`, after its player),
+  with d its place less where it hangs:
+  - **taken:** the button going down (input `+0x20` bit 2) on it (`+0x08`);
+  - **its turn, dragged, and d over 60:** loose (`+0x65`). Its way becomes
+    d's angle, and it flies that way at 1.5, faster by 1.5 each tick;
+  - **else a damped spring:** v = (v - k·d) × 0.2, k = (1 + θ/π) × 1.5,
+    θ how far d's angle is off its way;
+  - **not dragged** (or loose): speed held to 1.5 unless loose, then place
+    += v. **Dragged:** with the mouse, speed held to 1.5, and only v × 0.01;
+  - **loose and off the screen** (x past 960 or -320, y past 720 or -240):
+    unlinked from its neighbours, the next piece's turn (`0x41F570`), and
+    deleted (`+0x30`). The last: the game won (`BradPuzzle`, game
+    `+0x256`), the cursor fading out over 18 ticks, input held (game
+    `+0x24`), and back to the arena in 72 ticks (`+0x130`); else every way
+    out again;
+  - **out of turn, past 20 from where it hangs:** held at 20, and the
+    first time over, Brad complains (`0x41F5C0`). **Its turn:** held
+    within 78 - 18·a/s while a is under its share s, else
+    60 - 40·(a - s)/(1 - s), a being θ/π. Pulled its own way it can
+    reach 60; well off it, it can't;
+  - the button up (bit 1) or the mouse off it (its hit test, vtable
+    `+0x14`): no longer dragged;
+  - **on the pile:** each neighbour pushed along the line to it, by
+    (ux + uy) × dx × 0.05. The original reads d's x for both terms:
+    `0x41E2D5` stores it twice.
+- **Brad's complaints** (`0x41F5C0`): a new piece starts the count (`+0x114`)
+  and the lines over, from `Brad.ARMOR_RESPONSE_1` (`+0x11C`). Every fourth
+  time:
+  - the heads go `HEADSEXCITED` for 72 ticks (`+0x128`);
+  - unless a line still plays (`0x435A10`), the next complaint plays: 1,
+    then 2, 3, 2, 3...
+- **Reset and leave** (`0x41EA40`, `0x41F3A0`): no pieces, no piece
+  complained of.
+- **The rollover** on a piece (`0x41E6C0`, its vtable `+0x18`): the open
+  hand.
+
+| Address | What it does |
+|---|---|
+| `0x41E9E0` | Brad's game constructor, for the three rooms |
+| `0x41EA40` (+0x08) / `0x41F3A0` (+0x10) | Reset / leave |
+| `0x41EE80` (+0x0C) | Entry: the order, links, depths and ways; his introduction |
+| `0x41F3C0` (+0x04) | Tick: the mouths, the cursor, the heads, the way back, the rattles |
+| `0x41EA60` (+0x18) | Placements |
+| `0x41DAB0` | A piece's constructor (vtable `0x45EED8`) |
+| `0x41DD60` (piece +0x0C) | A piece's update: taken, spring, drag, loose, held, pushes |
+| `0x41E4B0` | A piece's rattle |
+| `0x41E460` / `0x41E760` | Two pieces linked / a neighbour added |
+| `0x41F550` / `0x41F570` | The piece whose turn it is / the next turn |
+| `0x41F5C0` | Brad complains |
+| `0x41F6F0` / `0x41DD10` | Every way out / one |
+| `0x431C10` / `0x431C70` | A sprite's depth among its siblings |
+| `0x435E80` / `0x435EF0` | A fader (the cursor's, game `+0x18`) out / in over n ticks |
 
 ##### Movies (WP-022)
 
