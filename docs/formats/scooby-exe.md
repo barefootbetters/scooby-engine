@@ -2203,6 +2203,75 @@ code:
 | `0x411480` (+0x40) | An answer clicked |
 | `0x410FF0` | A page set up |
 | `0x411940` | A line with a random digit the disc has |
+
+##### Phantom's kitchen storage room (WP-067)
+
+Traced 2026-11-17 for [WP-067](../work-packets/WP-067-kitchen-storage.md),
+in Phantom's `Scooby.exe`.
+
+**The kitchen storage room** (`ROOM_P17_Kitchen_Storage`, `0x4139A0`,
+vtable `0x45E994`; music group 1, no opening):
+- **Reset** (`0x413AF0`): the door untouched (`+0xBC`, saved as
+  `DoorClicked`), each line from its first (`+0xC0`, `+0xC4`, `+0xC8`).
+- **Placements** (`0x414B30`):
+  - **the door** (`OBJ_P17_KITCHEN_STORAGE_DOOR`), until it is open
+    (`DoorClicked` under 3), a requires object for the screwdriver under the
+    first layer at depth 0, hit by its step polygon; once begun its `+0x70`
+    is set to the screwdriver. Open, it isn't built;
+  - **the screwdriver and the shield,** placed as inventory objects, are
+    built as requires objects the arrow answers (`0x408C80`), until ever
+    taken;
+  - **hotspot 3** is a clickable as the default path builds it.
+- **Entry** (`0x413A00`, after the base entry):
+  - the door open, from elsewhere: `Kitchen_Storage.200A_`, blocking;
+  - back here through the first door movie (`DoorClicked` 1):
+    `Kitchen_Storage.200D_`, blocking;
+  - nothing pending; with the door begun, Fred stands 144 left and 13 up,
+    at it.
+- **The event** (`0x413EA0`):
+  - **the screwdriver** or **the shield** clicked: Fred or Daphne takes it;
+  - **hotspot 1:** `200XB_`, `200XB1_`, `200XB2_` in turn; **hotspot 2:**
+    `200X_`, `200X1_`, `200X2_`; **hotspot 3** on its `A`: `200XA_`; all
+    blocking;
+  - **the door,** each time through the room's exit handler (`+0x24`) back
+    to this room with a movie:
+
+    | `DoorClicked` | Clicked with | Then |
+    |---|---|---|
+    | 0 | the screwdriver | 1, movie 62, Fred turning (`TURN_UL`); the screwdriver used, the arrow back, the door's `+0x70` the screwdriver |
+    | 0 | the arrow | movie 65 with Fred turning, then `200B1_`, `200B2_`, in turn |
+    | 1 | anything | 2, movie 63 |
+    | 2 | anything | 3, movie 64: the door open |
+
+- **Each tick** (`0x413B20`, after the base tick), input held while either
+  is taken:
+  - **Fred,** idle with no scene playing and the opening done, takes the
+    screwdriver (`OBJ_FRED_P17_TAKE_SCREWDRIVER`, state `0xD`, with
+    `Kitchen_Storage.Fred_Takes_Screwdriver`), and it is hidden. On his
+    step 33 it goes in the toolbar unless ever had; idle again,
+    `Kitchen_Storage.200C_`, blocking.
+  - **Daphne** likewise takes the shield (`OBJ_DAPHNE_P17_TAKES_SHIELD`,
+    `Kitchen_Storage.Daphne_Takes_Shield`). Idle again it goes in the
+    toolbar unless had, and `200G_` plays if Brad has been met
+    (`0x40A930`), else `400A_`.
+- **Leaving** (`0x414DB0`): left while either is being taken, it goes in
+  the toolbar all the same.
+- **The profile** (`0x414E40`, `0x414E80`): `DoorClicked`.
+
+The packed exit (`0x404820`) takes the gang's directions as Daphne, Fred,
+Scooby, Shaggy, Velma (the exit object's `+0xA0`, `+0x80`, `+0x90`,
+`+0x98`, `+0x88`, read from `daphne`, `fred`, `scooby`, `shaggy`,
+`velma`); the door's `TURN_UL` is Fred's.
+
+| Address | What it does |
+|---|---|
+| `0x4139A0` | Kitchen storage room constructor |
+| `0x413AF0` (+0x08) / `0x414DB0` (+0x10) | Reset / leave |
+| `0x413A00` (+0x0C) | Entry |
+| `0x413B20` (+0x04) | Tick: the screwdriver, the shield |
+| `0x413EA0` (+0x14) | Event: the items, the hotspots, the door |
+| `0x414B30` (+0x18) | Placements |
+| `0x414E40` / `0x414E80` (+0x1C / +0x20) | Save / load |
 | `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
 | `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
 
