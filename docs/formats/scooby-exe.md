@@ -1930,6 +1930,66 @@ Phantom's `Scooby.exe`.
 | `0x417FB0` (+0x14) | The throne's event |
 | `0x418030` / `0x418090` (+0x1C / +0x20) | Save / load |
 
+##### Phantom's dining room (WP-063)
+
+Traced 2026-11-16 for [WP-063](../work-packets/WP-063-dining-room.md), in
+Phantom's `Scooby.exe`.
+
+**The dining room** (`ROOM_P12_Dining_Room`, `0x40FD00`, vtable
+`0x45E810`; music group 1, no opening), where Maria is:
+- **Reset** (`0x40FD60`): nothing pending (`+0xB8`, `+0xB9`), and Maria's
+  movie not played (`+0xBA`, saved as `MariaMoviePlayed`).
+- **Placements** (`0x40FEE0`), each under the second layer (game `+0x5C`).
+  The room has none, so each attaches to the root:
+  - **the burger** (`OBJ_INV_BURGER`), an inventory object (`0x408BD0`) at
+    depth 1, hidden until Maria's game is won (`MariaPuzzle`, game
+    `+0x255`);
+  - **the mug** (`OBJ_P12_DINING_ROOM_MUG`), an exit (`0x401850`) at depth
+    1000, to `ROOM_P31_KST` with `Dining_Room.350B_`;
+  - **hotspots 2, 3 and 4,** clickables (`0x408DC0` with 1) at depths
+    10000, 1 and 2.
+- **Entry** (`0x40FD80`):
+  - **The first time,** Maria's movie: `MariaMoviePlayed` is set and movie
+    35 plays into her game, `ROOM_Maria` (game vtable `+0x08`). That visit
+    skips the base entry (`0x40B920`).
+  - **After,** the base entry, and Maria is met (`0x40A8B0`). With her game
+    won and her clue not given (`0x40A870`): `Dining_Room.350A_`, blocking,
+    her clue (game vtable `+0x44`), and `+0xB8`.
+  - One snack is needed (`+0x24`).
+- **Each tick** (`0x410110`, after the base tick):
+  - **Maria clicked** with the arrow (game `+0x20` bit 4, her `+0x08`;
+    `0x433300` compares the cursor with the default) before her game is
+    won: the room's exit handler (`+0x24`) takes the gang to `ROOM_Maria`,
+    with no scene.
+  - **Her clue,** as the Jester's: once she is idle with `+0xB8`, she
+    `GIVES` (state `0xF`), and input is held with the cursor hidden
+    (`+0xB9`); idle again, the exit handler takes the gang to
+    `ROOM_Suspect_Chooser` with `Global.Thank_You_`.
+- **The event** (`0x410610`): hotspot 2 scares Daphne, Shaggy, Scooby, Fred
+  and Velma (state `0x11`).
+- **Idle chatter** (`0x4100C0`, `+0x34`): with Velma idle, her `GLASSES`
+  and `Global.1000A2_`, without holding input.
+- **The idle line** (`0x410550`, `+0x28`): Maria's, once her game is won,
+  by `rand() % 4`: `Dining_Room.1010I1_`, `1010I3_` (for 1 and 2) or
+  `1010I4_`. Everyone else's is the base line.
+- **The profile** (`0x4104D0`, `0x410510`): `MariaMoviePlayed`.
+
+`ROOM_Maria` (`0x428770`, vtable `0x45F2C0`) is her game, a set piece of
+its own: it generates its items (`0x428890`); when it is won it sets
+`MariaPuzzle`, and 72 ticks later goes back to the dining room
+(`0x428CE0`). Its port is the next work packet, WP-064.
+
+| Address | What it does |
+|---|---|
+| `0x40FD00` | Dining room constructor |
+| `0x40FD60` (+0x08) | Reset |
+| `0x40FD80` (+0x0C) | Entry: Maria's movie, her clue |
+| `0x40FEE0` (+0x18) | Placements |
+| `0x410110` (+0x04) | Tick: Maria clicked, her clue given |
+| `0x410610` (+0x14) | Event: hotspot 2 |
+| `0x4100C0` (+0x34) / `0x410550` (+0x28) | Idle chatter / idle line |
+| `0x4104D0` / `0x410510` (+0x1C / +0x20) | Save / load |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
