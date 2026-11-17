@@ -2141,6 +2141,69 @@ group 1, no opening), where Ewan cooks:
 | `0x4136C0` (+0x14) | Event: the grease, hotspot 3 |
 | `0x413740` (+0x18) | Placements |
 | `0x412D20` (+0x24) | The way out: no movie to the storage room with the screwdriver |
+
+##### Phantom's Ewan's quiz (WP-066)
+
+Traced 2026-11-16 for [WP-066](../work-packets/WP-066-ewan-quiz.md), in
+Phantom's `Scooby.exe`.
+
+**Ewan's quiz** (`ROOM_Ewan`, `0x4109D0`, vtable `0x45E890`; music group 1,
+opening `Ewan.NOTEBOOKPAGE_INTRO_`, no toolbar) is
+[the Sheriff's quiz](#the-sheriffs-quiz-wp-052) on a chalkboard, its own
+code:
+- **Reset** (`0x410A30`): `Question0`–`11` unanswered, no sounds, not
+  erasing, `CurrentQuestion` −1.
+- **Placements** (`0x411210`), under the first layer, all hidden at first:
+  - the board (`OBJ_EWAN_BOARD`), a sprite at depth 0, stopped on step 0;
+  - the four answers (`OBJ_EWAN_ANSWER*`, kept by their name's letter),
+    requires objects at depth 10, stopped, with `0x411480` as their
+    callback;
+  - the eraser (`OBJ_EWAN_ERASE`), a sprite at depth 100, stopped.
+- **Entry** (`0x410F20`): input held; with no question yet, one drawn:
+  `rand() % 12`, drawn again while 1, then while 4 or answered (pages 2 and
+  5 are never asked). Then the page (`0x410FF0`):
+  - the board on `ANIM_EWAN_BOARDPAGE<page>`, stopped and shown, with
+    `Ewan.NOTEBOOKPAGE<page>`;
+  - each answer on `ANIM_EWAN_ANSWER<letter><page>`, stopped and shown,
+    with `Ewan.NOTEBOOKPAGE<page>_<letter>`.
+- **Each tick** (`0x410A70`, after the base tick), input held:
+  - **Erasing:** once the eraser stops, the next page is drawn and set up,
+    and the eraser hidden. Until then, nothing else.
+  - **The level + 3 answered** (game `+0x160`) and the eraser stopped: the
+    board and answers hidden, done.
+  - Then only with the sound waited for over and the opening played (room
+    `+0x10`):
+    - done: back to the kitchen (game vtable `+0x04`);
+    - wrong: `Ewan.NOTEBOOKPAGE_ANSWER_WRONG_2`, then done;
+    - else, as the Sheriff's: the page read with the board lit (step 1),
+      each answer read lit in turn, then free. Hovered, the board or an
+      answer lights up and says itself 36 ticks on (the Sheriff's 9), and
+      every 72 ticks after its sound.
+- **An answer clicked** (`0x411480`, room vtable `+0x40`): pressed (step
+  2), the sounds stopped.
+  - **Right** (by page: `B`, `B`, `A`, `D`, `B`, `A`, `B`, `A`, `C`, `A`,
+    `A`, `B`): answered, a `RIGHT_` line (`0x411940`, as the Sheriff's
+    `0x417B70`), and the eraser shown and played once with
+    `Ewan.Erase_Board`.
+  - **Wrong:** a `WRONG_1.` line, then the second.
+
+  Either holds input.
+- **Leaving** (`0x410FB0`): the level + 3 answered, `EwanPuzzle` (game
+  `+0x254`).
+- **The profile** (`0x411780`, `0x411850`): `CurrentQuestion`,
+  `Question0`–`11`.
+
+| Address | What it does |
+|---|---|
+| `0x4109D0` | Ewan's quiz constructor |
+| `0x410A30` (+0x08) / `0x410FB0` (+0x10) | Reset / leave |
+| `0x410F20` (+0x0C) | Entry |
+| `0x410A70` (+0x04) | Tick: erasing, done, reading, hover |
+| `0x411210` (+0x18) | Placements |
+| `0x411480` (+0x40) | An answer clicked |
+| `0x410FF0` | A page set up |
+| `0x411940` | A line with a random digit the disc has |
+| `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
 | `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
 
 ##### Movies (WP-022)
