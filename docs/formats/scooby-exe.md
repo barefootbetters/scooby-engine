@@ -1976,8 +1976,8 @@ Phantom's `Scooby.exe`.
 
 `ROOM_Maria` (`0x428770`, vtable `0x45F2C0`) is her game, a set piece of
 its own: it generates its items (`0x428890`); when it is won it sets
-`MariaPuzzle`, and 72 ticks later goes back to the dining room
-(`0x428CE0`). Its port is the next work packet, WP-064.
+`MariaPuzzle`, and 73 ticks later goes back to the dining room
+(`0x428CE0`). [Below](#phantoms-maria-game-wp-064).
 
 | Address | What it does |
 |---|---|
@@ -1989,6 +1989,93 @@ its own: it generates its items (`0x428890`); when it is won it sets
 | `0x410610` (+0x14) | Event: hotspot 2 |
 | `0x4100C0` (+0x34) / `0x410550` (+0x28) | Idle chatter / idle line |
 | `0x4104D0` / `0x410510` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's Maria game (WP-064)
+
+Traced 2026-11-16 for [WP-064](../work-packets/WP-064-maria-game.md), in
+Phantom's `Scooby.exe`.
+
+**Maria's game** (`ROOM_Maria`, `0x428770`, vtable `0x45F2C0`; music group
+1, no opening, no toolbar): cups and plates on the floor go onto Maria's
+two trays until they balance.
+
+- **Maria** (`OBJ_MARIAGAME_MARIA`, `0x428F60`) is a sprite under the first
+  layer at depth −10, stopped on step 2 of `ANIM_MARIAGAME_MARIAHAPPY`. Her
+  step is her tilt: 2 level, 0 and 4 the furthest.
+- **The trays by her step** (`0x428770`): the first tray's x and the y of
+  its bottom item, then the second's:
+
+  | Step | First tray | Second tray |
+  |---|---|---|
+  | 0 | 180, 175 | 383, 158 |
+  | 1 | 181, 170 | 382, 162 |
+  | 2 | 181, 167 | 380, 164 |
+  | 3 | 183, 166 | 376, 167 |
+  | 4 | 186, 161 | 375, 170 |
+
+- **Entry** (`0x428890`, after the base entry): the toolbar hidden
+  (`0x407CC0`). The level (game `+0x160`) × 2 + 6 items, made in groups
+  that balance, and made again until the count is exact:
+  - each group has a floor, `rand() % 27 + 443`, and a first kind,
+    `rand() % 3` drawn again while 1;
+  - a cup B comes with two cups C;
+  - a plate P comes with two B (`rand() & 1` odd), or with a B and two C,
+    or four C (a second `rand() & 1`).
+
+  Both trays empty, Maria to be balanced (`+0x1F8`), and 129600 ticks (an
+  hour) before the game gives up (`+0x24C`).
+- **An item** (`0x4279D0`, vtable `0x45F280`): `OBJ_MARIAGAME_<colour><kind>`
+  with colour `G`, `R` or `Y` (`rand() % 3`) and kind `B`, `C` or `P`.
+  - It weighs 2, 1 or 4 (`+0x9C`), and sounds as a `Cup` or a `Plate`.
+  - It starts playing its `IDLE`, looping, at x `rand() % 600 + 20` on its
+    floor, at depth floor − 393.
+  - Its rollover (`0x428720`) is the open hand when it may be taken
+    (`0x429270`): the top item of a tray, or one on no tray.
+- **Its update** (`0x427CD0`, vtable `+0x0C`):
+  - **Resting:** a click on it (`0x4292D0`: a tray's top item only, back
+    at depth 50) takes it, and the cursor hides. Carried, it keeps where
+    it was taken, within x 10–630 and y 10–470.
+  - **Let go,** above its floor:
+    - over a tray (`0x429040`: within 80 of its x and under 20 below its
+      next place), it falls into it;
+    - else it is thrown spinning (`SPIN`, backwards if taken left of its
+      origin), at 0.2 × the last tick's move, at most 10, with
+      `Maria.Throw.<Cup|Plate>` over 3.
+  - **In the air:** 0.5 a tick of gravity. It bounces off the sides (x
+    0 and 639: 0.6 × its speed back, `Maria.Bounce`). Headed for a tray,
+    it is steered to it; else it spins with `Maria.Spin`, once for every
+    item spinning (`0x474D5C`).
+  - **Landing** on its floor (within 2), its sequence settles on step 3 or
+    its last. The next tick, `Maria.Spin` stops with the last spinner, and
+    `Maria.Floor.<Cup|Plate>.<rand() & 1 + 1>` plays. Landing in a tray
+    (2 below its place, `0x429180`): on top, at the depth of its place,
+    with `Maria.Place.<Cup|Plate>`.
+- **Each tick** (`0x428CE0`, after the base tick, which runs the items'
+  updates): the depths set since the last tick (`0x4296D0`), then:
+  - **Balancing** (`0x429400`): the second tray's weight less the first's
+    gives a step: 0 → 2, 1 → 3, 2 to 4 → 4, −1 → 1, −2 to −4 → 0, beyond
+    → 5 or −1. Maria moves one step a tick toward it; there, done. At 5
+    or −1 everything falls off (`0x4285B0`: thrown at `rand() % 10 − 5`,
+    `−(rand() % 10)`). At a new step she is `EXCITED` on it for 36 ticks,
+    then `HAPPY` again, and the trays' items move with it, 15 apart.
+  - **Done balancing,** every item on a tray and the trays equal:
+    `MariaPuzzle` (game `+0x255`), input held, the cursor hidden; 73 ticks
+    later the room's exit handler goes back to the dining room.
+
+| Address | What it does |
+|---|---|
+| `0x428770` / `0x428860` | Maria's game constructor / destructor |
+| `0x428890` (+0x0C) | Entry: the items |
+| `0x428CE0` (+0x04) | Tick: depths, balance, the win, the timers |
+| `0x428F60` (+0x18) | Placements: Maria |
+| `0x4279D0` | An item: constructor |
+| `0x427CD0` (item +0x0C) | An item's update: carried, thrown, falling, landing |
+| `0x428720` (item +0x18) | An item's rollover |
+| `0x429040` / `0x429180` | The tray under a point / an item put in a tray |
+| `0x4292D0` / `0x429270` | An item taken from a tray / whether it may be |
+| `0x4296D0` | A depth set at the next tick |
+| `0x429400` | Balance Maria one step |
+| `0x4285B0` | An item knocked off a tray |
 
 ##### Movies (WP-022)
 
