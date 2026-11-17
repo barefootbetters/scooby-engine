@@ -37,7 +37,7 @@ The first run differed on one line, and the reference was wrong. Entering the dr
 
 - **Phantom's engine is Showdown's at other addresses.** Matching instruction sequences with addresses masked pairs 980 functions, which made the trace a lookup.
 - **A Phantom new game sets 27 story values** (`0x42E880`); until now the fork set none, so nothing that reads them could fire.
-- **Jane's fourth scream is never played:** `rand() % 5` gives 1, 2, 3 and twice 5.
+- **Jane's fourth scream is never played:** `rand() % 5` gives 1, 2, 3 and twice 5. (Here; the king's armory plays it, [WP-068](WP-068-kings-armory.md).)
 - **The drawbridge's way out is in the castle's doorway,** behind the lowered drawbridge, which takes clicks in front of it.
 
 ---

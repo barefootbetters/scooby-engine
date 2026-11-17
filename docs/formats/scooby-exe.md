@@ -1781,7 +1781,8 @@ castle's ground floor:
   - **To the king's armory:** `Room_Of_Doors.140A_`, `140A1_` or `140A2_`
     (`rand() % 3`).
   - **To the throne room:** Jane stops crying, and her five screams stop
-    (`Jane_Screaming4` among them, which none plays). The first time
+    (`Jane_Screaming4` among them, which this room never plays; the king's
+    armory does, [WP-068](#phantoms-kings-armory-and-its-slide-wp-068)). The first time
     `Room_of_Doors.160D1_`, and `ThroneScene` is set; after that `140B_`,
     `140B1_` or `140B2_` (`rand() % 3`).
   - **To the dining room,** the duster used: `140C_` or `140C1_`
