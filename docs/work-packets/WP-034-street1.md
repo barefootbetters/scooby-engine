@@ -26,7 +26,7 @@ title: "WP-034: Street 1 and the Clues"
 **Deviations and gaps:**
 
 - **Street 3's third hotspot** (WP-033) tested the sequence playing. The trace reads the clickable's state (`+0x60`), so its scene comes while it plays A. Fixed here, and WP-033's result is corrected.
-- **The Sheriff's click** is taken by the room's class as the mouse is clicked, not in the room's tick (`0x42AF60` reads the click flags there). Clicks with other items go on to the game's wrong-item line, as before.
+- **The Sheriff's click** is taken by the room's class as the button goes down, not in the room's tick. The original's tick (`0x42AF60`) tests bit 4 of game `+0x20`, which is set when the button comes up. For an ordinary click the result is the same. *(The WP-001 session found the meaning of the bits during WP-039, 2026-11-15.)* Clicks with other items go on to the game's wrong-item line, as before.
 - **Phantom's clue function** isn't traced; `giveClue()` is Showdown's. The check runs only on Showdown.
 - **Follow-up fork commit [`1d6db2caa5`](https://github.com/barefootbetters/scummvm/commit/1d6db2caa5)**, on WP-035's `87b8c0dfb7`, keeps the setup check the same from run to run. WP-035 gives three of Chase B's rooms an opening drawn on each visit (`rand() & 3`), and the check now names the set. All four have a first line in each room, so input is held and the opening starts on tick 100 whichever is drawn. Every room still matches the reference on both titles, now with the chase openings in it, and the story checks give the same 129 lines on three runs.
 - **The setup check now starts from a new game's `SheriffWaiting`.** With no story state, Street 1 owes the Sheriff his clue on entry and starts that scene, which is right but isn't what the setup check measures.

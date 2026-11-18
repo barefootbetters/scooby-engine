@@ -3672,7 +3672,12 @@ Showdown. Both rooms have the music group 2 and no opening of their own
 - **Hit type 0** is never hit: the hit walk (`0x4311F0`) tests only types 1
   and 2.
 - **A plain sprite** (`graphics_AnimSprite_ctor`) takes its parent, depth,
-  mode (1, looping) and ticks a step (3); a room may set its hit type.
+  mode (1, looping) and ticks a step (3). Its hit type is the one
+  `graphics_Sprite_ctor` (`0x430D60`) sets, 1 (cels); a room may set
+  another. The default placement path sets 2 for a simple object
+  (`0x4094C0`). None of the room classes traced so far changes it, except
+  Street 2's window (0). *(Corrected 2026-11-15: until fork `36ce94a2f5` a
+  room's plain sprite was hit by its step polygon.)*
 ##### Street 1 and the clues (WP-034)
 
 Traced 2026-11-14 for [WP-034](../work-packets/WP-034-street1.md), in
