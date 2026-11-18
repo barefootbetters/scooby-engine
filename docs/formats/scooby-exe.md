@@ -2605,6 +2605,83 @@ clicked with the arrow (her `+0x08`, game `+0x20` bit 4) sets the final clue
 | `0x4182E0` | Treasury constructor |
 | `0x418340` (+0x04) | Tick: the Princess |
 
+##### Phantom's royal gallery and magic mirror room (WP-072)
+
+Traced 2026-11-18 for [WP-072](../work-packets/WP-072-royal-gallery.md), in
+Phantom's `Scooby.exe`. The level is read through the game's `int *` as
+index `+0x58` (byte `+0x160`).
+
+**The royal gallery** (`ROOM_P07_Royal_Gallery`, `0x416240`, vtable
+`0x45EADC`, opening `Royal_Gallery.210_`) keeps the found red ball, the
+mirror the gang hangs, and the Jester, who stands here as he does in the
+room of doors: its `+0xC8` is the same `JesterControl`
+([WP-061](#phantoms-room-of-doors-its-jester-and-phantoms-clues-wp-061),
+built by `0x4122D0`, entered by `0x412B80`, ticked by `0x4122E0`).
+- **Reset** (`0x4162D0`): the `210A_` line back to the first (`+0xBC`).
+- **Entry** (`0x416830`): from the dining room Velma walks in (`U`,
+  `0x405FE0`); from the magic mirror room Shaggy (`UR`, `0x405E60`). The
+  level's snacks plus two are needed for the way on (`+0x24`); nothing is
+  being hung (`+0xC0`, `+0xC1`, `+0xC2`); the Jester's entry.
+- **The event** (`0x416500`):
+  - **the red ball** (`OBJ_INV_BALL_RED`) shown: the gallery is re-entered
+    through movie 3 (game vtable `+0x08`), and the ball is found
+    (`RedBallFound`, game `+0x25B`), for the Jester to take.
+  - **the mirror** (`OBJ_P07_ROYAL_GALLERY_MIRROR`) with the found mirror
+    (the event's success): the found mirror leaves the toolbar (`0x406C80`),
+    and Shaggy is set to hang it (`+0xC0`). The room's own name is written
+    to the game's pending-opening string (`+0x8E`, `0x4324B0`), which names
+    no clip.
+  - **the mirror** clicked bare: `Royal_Gallery.210A_`, `210A1_` or `210A2_`
+    by `+0xBC`, blocking, and the mirror sprite plays once (`+0xB8`).
+- **Placements** (`0x4168D0`): `HOTSPOT1` a clickable at depth -200; the
+  mirror a requires object (`0x402D90`, `ANIM_CURSOROPEN`, `+0xB8`), hung
+  and looping (`Royal_Gallery.Mirror`) or bare and stopped; `OBJ_P07_TO_P08`
+  an exit (`0x408D20`) at depth -1000, hidden until the mirror is hung. The
+  red ball is offered only while it is not yet found and the Jester is here
+  (`0x40A930`).
+- **Leaving** (`0x4162F0`): the way to the magic mirror room with fewer
+  snacks given (`+0x88`) than the level plus two blocks, a line by level
+  (`Royal_Gallery.210C_`, `210C1_`, `210C2_`), and the snack box flashes
+  (`0x40D4D0`); else the base handler lets it through.
+- **Each tick** (`0x416610`, after the base tick and the Jester's): once the
+  mirror has been used, Shaggy, idle with no scene and the mirror sprite at
+  rest, walks over and hangs it (`OBJ_SHAGGY_P07_PUT_MIRROR`, `0x406130`,
+  with `Royal_Gallery.Shaggy_Puts_Mirror`); input is held meanwhile (game
+  `+0x24`). Shaggy idle again: the mirror shows, looping, the way on opens,
+  and a line by level (`210B_`, `210B2_`, `210B3_`) plays, blocking, then
+  the snack box flashes (`+0xC2`). The hung mirror shimmers — stopped off
+  its first frame it goes back to it; looped round to it, it plays on from
+  the first frame and hums again. The mirror stays hung, held as the found
+  mirror's history (`0x407060`) with no slot.
+
+**The magic mirror room** (`ROOM_P08_Magic_Mirror_Room`, `0x414EC0`, vtable
+`0x45E9DC`, opening `Magic_Mirror_Room.310_`):
+- **Reset** (`0x414F20`): both hotspot cycles back to the first (`+0xB8`,
+  `+0xBC`).
+- **Entry** (`0x415250`): the mirror hums (`Magic_Mirror_Room.Mirror`).
+- **The event** (`0x414F40`): `HOTSPOT2` toggles `310X1_` / `310X2_`
+  (`+0xBC`); `HOTSPOT3` gives `Magic_Mirror_Room.HOTSPOT3_`, blocking;
+  `HOTSPOT4` cycles `310X2_` / `310XA2_` / `310XA3_` (`+0xB8`). Only
+  `HOTSPOT3` holds input.
+- **Placements** (`0x415060`): `HOTSPOT5` a looping sprite at depth 0;
+  `OBJ_P08_TO_WIZARDS_SKULL` a looping sprite at depth -500; the four
+  cameras (`OBJ_P08_MAGIC_MIRROR_CAM1`–`4`) exits (`0x408D20`) at depth 1.
+
+| Address | What it does |
+|---|---|
+| `0x416240` | Royal gallery constructor |
+| `0x4162D0` (+0x08) | Reset: the `210A_` line |
+| `0x416830` (+0x0C) | Entry: the walk-ins, the snacks, the Jester |
+| `0x416610` (+0x04) | Tick: the Jester, Shaggy hangs the mirror, the shimmer |
+| `0x416500` (+0x14) | Event: the red ball, the mirror |
+| `0x4168D0` (+0x18) | Placements: the hotspot, the mirror, the way on, the ball |
+| `0x4162F0` (+0x24) | Leaving: the snack gate to the magic mirror room |
+| `0x414EC0` | Magic mirror room constructor |
+| `0x414F20` (+0x08) | Reset: the hotspot cycles |
+| `0x415250` (+0x0C) | Entry: the mirror's hum |
+| `0x414F40` (+0x14) | Event: the three hotspots |
+| `0x415060` (+0x18) | Placements: the hotspot, the skull, the cameras |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
