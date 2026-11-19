@@ -244,6 +244,28 @@ Mony's reply to our notes on the library builds. **Reported**:
 
 **A standing instruction for the agents (2026-11-16, Reported).** Mony recommends putting one instruction in decompdecomp's agent settings: read the `references` folder of outmatch's `msvc-matching` skill, by full path. Pointing at the skill itself doesn't work, because decompdecomp doesn't load skills well. He says it greatly improves the match rate. The folder holds MSVC matching notes gathered from other decompilation projects. One file is about 335 KB (Observed), so watch what reading it costs per attempt during the capped trial. The steps are in [setup §Give the agents Mony's matching notes](../reference/decompdecomp-setup.md#give-the-agents-monys-matching-notes). The setup page also now covers the `msvc6.5pp` default, which which every member needs installed too (Mony confirmed it 2026-11-16).
 
+### Progress across the games, twin matching and reuse counts (2026-11-18)
+
+Three emails from Mony. **Reported**:
+
+| Item | Value |
+|---|---|
+| Case File #1 | **37.5 %** matched. Almost every function now has some kind of decomp, even where it doesn't match yet. |
+| Real function count | Most functions in the games are thunks and tiny MSVC-generated assembly. Accounting for those and the CRT, the real count is about **1,600**, the same deflation libexpat and the `.lib` set-asides produced for Case File #1. |
+| Phantom and Showdown started | Both Gen 1 games are under way, to appear as branches of his decomp repo. DeepSeek agents on Showdown, Claude on Case File #1. |
+| Phantom | At **38 %**, pending the batch twin-matching he hasn't run there yet. |
+| Twin matching | He's matching twins between the games, and wrote an outmatch command that batch-matches twins faster than decompdecomp does, and attempts a twin even when the compiler differs. |
+| Measured reuse | The two Gen 1 games (Showdown, Phantom) share **280 completely identical functions**. Between those and Case File #1, **170 are completely identical**. His caveat: identical means byte-for-byte, so a single change drops a function from the count — these are floors on shared code, not the whole of it. |
+| Two questions for Jeff | Whether there are other games he should try beyond Case File #1 and the first two, and whether the decomps have been useful. |
+
+**What this changes:**
+
+- **170 identical functions Gen 1 → Gen 3 is real function-level reuse, but doesn't overturn the rewrite reading.** This project's string evidence shows Showdown and Case File #1 share no engine-surface strings ([scooby-exe §Case File #1](../formats/scooby-exe.md#case-file-1-gen-3)), and the [cross-game plan](#cross-game-reuse-strategy) expected Gen 1 reuse to be mostly CRT and runtime. 170 byte-identical functions is consistent with that: identical matches are exactly where CRT and small runtime helpers land, since those don't change between titles. It does not show the engine carried over — modified engine code wouldn't be byte-identical and so wouldn't be in this count. The number to watch for the engine question is near-matches, not identical ones (Inferred).
+- **The 1,600 figure scopes a Showdown project.** Once thunks and CRT are set aside, each Gen 1 game is about 1,600 real functions, not the raw count. A Showdown decompdecomp project ([cross-game plan step 4](#cross-game-reuse-strategy)) is that much smaller than the raw binary suggests.
+- **Mony's two questions are Jeff's to answer** (which games, and whether the output is useful). Recorded here; not answered in the repo.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -402,6 +424,8 @@ Plan:
 
 The output of each step is a count of identical, near and unique functions per binary pair, recorded with evidence levels. These counts are evidence for WP-005, not a classification by themselves.
 
+First measured counts (**Reported**, 2026-11-18): the two Gen 1 games share 280 byte-identical functions; Gen 1 ↔ Case File #1 share 170. Byte-identical undercounts shared-but-modified code and is weighted toward CRT and runtime helpers, so it is a floor, not the engine-reuse figure. See [§Progress across the games](#progress-across-the-games-twin-matching-and-reuse-counts-2026-11-18).
+
 ## ScummVM integration boundaries
 
 - The decompilation is **research evidence**. The ScummVM engine is an **independent implementation** written to ScummVM's architecture, style and licensing ([02-SCUMMVM-INTEGRATION §11](../02-SCUMMVM-INTEGRATION.md#11-code-style-and-licensing)).
@@ -556,6 +580,8 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-16 | Collaborator note (**Reported**): give the agents a standing instruction to read outmatch's `skills/msvc-matching/references` folder, by full path, not the skill itself. He says it greatly improves the match rate. Added to the [setup page](../reference/decompdecomp-setup.md#give-the-agents-monys-matching-notes), with the `msvc6.5pp` default a member most likely needs too (Inferred; to confirm). |
 | 2026-11-16 | **Agent setup on this PC (Observed).** decompdecomp updated to `v1.0.10-alpha.2`, the release the host is moving to. outmatch cloned at commit `89f1c45`, which made it MIT-licensed. The matching-notes line is added to **App instructions** (Agents & models → Agent prompts) as a global custom override, after decompdecomp's built-in text. Still to do before the trial: the agent provider and its cap, `msvc6.5pp` if the room needs it, and a current room link. |
 | 2026-11-16 | Collaborator reply (**Reported**): room members need `msvc6.5pp` installed locally too. Matched functions passed **2,000** (of 2,760 after the set-asides). His agents run unattended overnight, and he'll start the Gen 1 decompilations within a day or two. A current room link came with the reply; links aren't recorded. **On this PC (Observed):** `msvc6.5pp` staged at `%USERPROFILE%\Decomp\compilers\msvc6.5pp` from the archive downloaded 2026-11-15 (`C2.DLL` 13.00.9044). decompdecomp's trial stops are set: **Budget** $25, app-priced (Jeff, 2026-11-16), and 8 functions per agent session. Next: add the compiler on the **Microsoft Visual C++ (your own copy)** card, then the agent provider and its own limit. The [setup page](../reference/decompdecomp-setup.md#2-install-the-visual-c-60-compiler) has the steps, and from decompdecomp's source it notes that a member's copy has to be the same build as the host's. |
+
+| 2026-11-18 | Collaborator emails (**Reported**): Case File #1 at **37.5 %**, almost every function with some decomp; real function count ~1,600 after thunks and CRT; Phantom and Showdown both started (DeepSeek on Showdown, Claude on Case File #1), to land as branches of his decomp repo; Phantom at 38 %, pending batch twin-matching; a new outmatch command batch-matches twins across differing compilers. **Measured reuse:** the two Gen 1 games share 280 byte-identical functions; Gen 1 ↔ Case File #1 share 170. He asks Jeff which other games to decomp and whether the output is useful. Links not recorded. See [§Progress across the games](#progress-across-the-games-twin-matching-and-reuse-counts-2026-11-18). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
