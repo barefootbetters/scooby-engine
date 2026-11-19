@@ -77,6 +77,7 @@ Confirm every prereq WP listed in `WORK_INDEX` for `WP-XXX` is `✅ Done`. Read 
 ### Repo + disc state
 
 - [ ] Working tree clean (`git status --short` empty), HEAD on a named branch or `main`
+- [ ] **Engine-code WP (`engines/scooby/**`):** work happens in a dedicated fork worktree (`tools/New-ForkWorktree.ps1 -Branch <branch>`), not the shared `C:\dev\scummvm` checkout — forked from a freshly fetched `origin/scooby-engine`, with the base checkout left clean on `scooby-engine`. The branch name is the claim: `New-ForkWorktree.ps1` refuses if it already exists locally or on `origin`, catching a concurrent session before any work starts (the WP-075 collision, 2026-11-19).
 - [ ] Disc-on-hand for each target title is mounted / extracted to a known path; paths recorded below
 - [ ] If the WP re-uses a Ghidra `.gpr`: the file exists, the analysis state matches what the WP body assumes, and the file is not open in another Ghidra instance
 - [ ] If the WP re-uses prior tool output (e.g., a committed extract under `tools/samples/`): the input hash matches what the WP assumes

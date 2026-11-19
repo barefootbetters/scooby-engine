@@ -544,6 +544,7 @@ Local working set, established during Phase 1:
 - decompdecomp (proposed, [WP-011](work-packets/WP-011-casefile-decompdecomp.md)) for cooperative, byte-matching decompilation; project files stay outside this repo or under the gitignored `tools/decomp/`.
 - Python extractor scripts under `tools/` for repeatable asset dumps from `TGIFILE.ART` and the audio archives.
 - ScummVM debug-channel taxonomy defined in the engine (resource, render, input, script).
+- `tools/New-ForkWorktree.ps1` / `tools/Remove-ForkWorktree.ps1` — per-WP git worktrees of the scummvm fork under `C:\claude-worktrees\`, so concurrent sessions don't collide in the single `C:\dev\scummvm` checkout (see [wp-lifecycle §End-to-end step 5](reference/wp-lifecycle.md)).
 
 ---
 
@@ -560,7 +561,8 @@ bundled with the engine — players supply their own.
 
 ```
 C:\dev\scooby-engine\     ← this project (engine research + docs)
-C:\dev\scummvm\           ← fork of scummvm/scummvm (engine implementation)
+C:\dev\scummvm\           ← fork of scummvm/scummvm (engine implementation; base clone, kept clean on scooby-engine)
+C:\claude-worktrees\scummvm-*\  ← per-WP fork worktrees (one branch each; where engine WPs are worked — wp-lifecycle step 5)
 C:\pcloud\scooby-engine\  ← ISO images of original game discs (read-only)
 ```
 
