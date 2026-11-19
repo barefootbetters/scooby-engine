@@ -2682,6 +2682,82 @@ built by `0x4122D0`, entered by `0x412B80`, ticked by `0x4122E0`).
 | `0x414F40` (+0x14) | Event: the three hotspots |
 | `0x415060` (+0x18) | Placements: the hotspot, the skull, the cameras |
 
+##### Phantom's Knights of the Snack Table (WP-073)
+
+Traced 2026-11-18 for [WP-073](../work-packets/WP-073-kst.md), in Phantom's
+`Scooby.exe`. The difficulty is read through the game's `int *` as byte
+`+0x160`.
+
+**Knights of the Snack Table** (`ROOM_P31_KST`, `0x419700`, vtable
+`0x45EDEC`, opening `Knights_of_the_Snack_Table.350X_`, music
+`Knights.Music`) is the one room of the audit's group 6 that is a set piece
+of its own: the timed game Phantom gives where Showdown has Pie Noon
+([WP-055](#pie-noon-wp-055)). The two are separate classes, but share the
+framework — the asserts in `enter` still read "...specified in Pie Noon".
+Knights walk up to the benches and drink, Shaggy fills and serves the mugs,
+and the gang must serve the level's quota before the way back to the dining
+room opens. It overrides only four slots (tick, enter, leave, claim); it has
+no event, save or load of its own, and exits only to `ROOM_P12_Dining_Room`.
+
+- **Constructor** (`0x419700`): the two counter digits (`+0xB8`, `+0xBC`),
+  the serving flag (`+0xC0`) and the three sprite-queue handlers (Shaggy at
+  `+0xC4`, the knights at `+0xCC`, the drinks at `+0xE4`); the marker counts
+  (`+0x180`–`+0x190`) to zero; six knight-slot pointers (`+0xF0`–`+0x104`).
+- **Placements** (`0x41A970`): marker placements the class keeps and does
+  not build, each array held sorted ascending by **y** (the primary array
+  the y, the parallel the x):
+  - `OBJ_KST_SHAGGY` Shaggy's post (and the layer's x, `+0xEC`);
+  - `OBJ_KST_KNIGHT1` the three seats, the x read 40 less (`0x45EE50`), the
+    gang entering from off the left (`+0x114` y, `+0x108` x);
+  - `OBJ_KST_MUG` by its sequence: `ANIM_KST_MUGEMPTY` the bench-end row
+    (`+0x144`/`+0x138`), `ANIM_KST_MUGEMPTY_BREAKS` the bench-floor row (y
+    only, `+0x150`), `ANIM_KST_MUGFULL` the drink-spawn row
+    (`+0x168`/`+0x15C`), `ANIM_KST_MUGFULL_BREAKS` the bench-start row
+    (`+0x12C`/`+0x120`);
+  - `OBJ_KST_OVERLAY1`–`3` the three table overlays, sprites at depth 0;
+  - `OBJ_KST_COUNTER` with `ANIM_KST_COUNTERNUMBERS` the two counter digits,
+    sprites at depth 100 (the smaller x the tens). Each marker set caps at 3
+    ("More than 3 objects of the same type"); a third digit asserts.
+
+  The counter's box (`ANIM_KST_COUNTERBOX`), `OBJ_KST_EXIT` and
+  `OBJ_KST_FLAME` fall to the base path.
+- **Entry** (`0x419A80`, after the base entry): the camera pans (`+0xEC`);
+  the two counter digits are set from a game counter (`(game+0xAC)+0x30`:
+  each digit less one, mod ten); the quota (`+0xE8`) is five less the
+  difficulty; the round is laid out (`0x41A5C0`); on the first visit the
+  narrator's intro (`Knights_of_the_Snack_Table.350X_1_NARRATOR`) is
+  resolved into `+0x1A8`; `Knights.Ambience` plays, looping.
+- **Laying out a round** (`0x41A5C0`): six knight slots (`0x418CA0`, a knight
+  and its arm, state 4 parked until the loop walks it in); a full mug
+  (`ANIM_KST_MUGFULL`) for each knight still owed, from (550, 40) stepping
+  down by 35 (`0x45EE48`).
+- **A knight** (`0x418CA0`, vtable `0x45ED78`): `ANIM_KST_KNIGHT1WALKS` and
+  its arm, mirrored by its slot; its reach `(bench-end x − seat x) × 0.005`
+  (`0x45ED74`); the sounds `Knights.Knight_Walks.%d`, `Knights.Knight_Gulp.%d`.
+  Its states (`0x4191B0`): 0 drinks, 1 walks, 2 starts, 3 finishes, 4 parked
+  off-screen. Shaggy's success is `ANIM_KST_SHAGGYSUCCESS` (`0x4196D0`), his
+  drop `ANIM_KST_SHAGGYDROP_MUG` with `Knights.Zoinks` (`0x419680`).
+- **Each tick** (`0x419E40`, after the base tick): the music's volume by the
+  camera's x against 100 (`0x45EDAC`); the Shaggy queue steps; the narrator's
+  intro holds until the gang is idle; on the serve flag Shaggy drops the mug
+  and the quota (`+0xE8`) drops; once the quota is met and the room settles,
+  `ROOM_P12_Dining_Room` is requested (game vtable `+0x04`). Knights walk into
+  free slots on a `rand() % 0x48 + 0x24` timer; a finished round rerolls and
+  plays a random `Knights_of_the_Snack_Table.Correct1_NARRATOR`–`Correct6_NARRATOR`.
+- **Leaving** (`0x419CC0`, after the base leave): the marker counts and the
+  seat positions back to the constructor's, the digits cleared, the three
+  queue handlers released.
+
+| Address | What it does |
+|---|---|
+| `0x419700` | KST constructor: the digits, the handlers, the slots |
+| `0x419A80` (+0x0C) | Entry: the counter, the quota, the narrator, the ambience |
+| `0x419CC0` (+0x10) | Leaving: the markers and the round torn down |
+| `0x419E40` (+0x04) | Tick: the serving loop and the exit |
+| `0x41A970` (+0x18) | Placements: the seats, the benches, the drinks, the counter |
+| `0x41A5C0` | Laying out a round: the knight slots and the mugs |
+| `0x418CA0` | A knight: its walk, its reach, its drinking states |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
