@@ -2758,6 +2758,82 @@ no event, save or load of its own, and exits only to `ROOM_P12_Dining_Room`.
 | `0x41A5C0` | Laying out a round: the knight slots and the mugs |
 | `0x418CA0` | A knight: its walk, its reach, its drinking states |
 
+##### Phantom's hedge maze and maze map (WP-074)
+
+Traced 2026-11-19 for [WP-074](../work-packets/WP-074-maze.md), in Phantom's
+`Scooby.exe`. These open the audit's group 7, the maze; Showdown has neither
+room.
+
+**The hedge maze** (`ROOM_Hedge_Maze`, `0x42AA90`, vtable `0x45F3C4`, music
+`Hedge_Maze.Music`) is a grid the gang rides a unicycle through. The position
+is `(X = +0xc4, Y = +0xc8)`, initialised to `(2, 4)`; the **cell index is
+`Y + X*10`**. Each cell holds a 4-bit mask (an array at `+0xcc`, indexed by
+the cell) of which of its four sides is a passage: **`1` up, `4` down, `2`
+right, `8` left** — the bit is also the move's direction code. A parallel
+array at `+0x25c` holds a path-indicator sprite index per cell. It overrides
+five slots (tick, enter, leave, claim, and a `+0x24` cleanup).
+
+- **Constructor** (`0x42AA90`): the position `(2, 4)`; nine unicycle sound
+  clips resolved into `+0x41c`–`+0x43c` (`Hedge_Maze.Unicycle_Idle`,
+  `_Start_Left`/`_Right`/`_Up`/`_Down`, `_End_Up`/`_Down`/`_Left`/`_Right`).
+  The clip names use a **dot** (`Hedge_Maze.Unicycle_…`, `Hedge_Maze.Music`):
+  Ghidra's symbol labels underscore them, but the string bytes and the disc
+  index are dotted. The idle `Hedge_Maze.240A_` lines are voice clips, which
+  ship under the id plus a speaker suffix (`…240A_1_SHAGGY`).
+- **Entry** (`0x42AEB0`, after the base entry): if the maze map item
+  (`OBJ_INV_MAZE_MAP`) is active, go to `ROOM_Maze_Map`, stashing the current
+  room in `game+0x238`. Otherwise, by the room come from:
+  - **a maze location** (`ROOM_P06_Garden`, `ROOM_P23_Maze_Center`,
+    `ROOM_P27_Below_Balcony`) sets the start cell and direction (and, from the
+    centre, the `+0x440` centre-path flag), then plays the opening (game
+    vtable `+0x08`, opcode `0x2a` the first maze entry else `0x29`);
+  - **anywhere else** (within the maze, or the map) writes the level's cell
+    table, draws each of the four direction buttons as a passage
+    (`ANIM_HEDGE_MAZE_BACKEXIT`/`FRONTEXIT`/`REXIT`/`LEXIT`) where the cell's
+    bit is set or a wall (`…BACKOVERLAY`/`FRONTOVERLAY`/`ROVERLAY`/`LOVERLAY`)
+    where it is not, and builds the unicycle.
+
+  Moving into a designated garden-exit cell (level 1: cell 44; level 2: cells
+  41, 40, 58) leaves to `ROOM_P06_Garden`, repositioning the entry cell.
+- **The cell tables** are the binary's resolved code constants, written as a
+  run of immediate stores. They were derived mechanically from the decompile
+  (so the reference and the engine carry the same table, not a hand-copy);
+  their meaning — the index formula and the bit per direction — is read from
+  the overlay/exit tests and the move handlers. Levels have 20, 32 and 60
+  cells. The `+0x440` centre-path flag forces one cell's mask to `0xb` (level
+  0 cell 24, level 1 cell 26, level 2 cell 32).
+- **Placements** (`0x42BB00`): `OBJ_HEDGE_MAZE_BACK`/`FRONT`/`R`/`L` are the
+  four direction clickables (`+0x408`–`+0x414`); `OBJ_HEDGE_MAZE_PATH_EW`/`NS`/
+  `NE`/`NW`/`SE`/`SW` the six path indicators (slots 0–5).
+- **A move** (`0x42C0F0` back, `0x42C200` front, `0x42C310` R, `0x42C420` L):
+  sets the facing (`+0xc0` = 1/4/2/8), steps the position (back `Y−1`, front
+  `Y+1`, R `X+1`, L `X−1`), and plays the `Start_Up`/`Down`/`Right`/`Left`
+  clip; the next entry's `switch(+0xc0)` lands on the matching `End_` clip.
+- **Each tick** (`0x42AD00`, after the base tick): on `rand() % 3000 == 0`,
+  one of `Hedge_Maze.240A_`, `.240A1_`, `.240A2_` (`.240A2_` is referenced but
+  not shipped; `.240A3_` ships but is not referenced).
+- **Leaving** (`0x42BAE0`, after the base leave): the return string reset.
+
+**The maze map** (`ROOM_Maze_Map`, `0x42A7D0`, vtable `0x45F384`, music group
+`1`) is the close-up of the map item. Its entry (`0x42A830`) is the base plus
+the room's opening; its claim (`0x42A850`) builds a clickable for each of
+`OBJ_MAZEMAP_GARDEN`/`WELL`/`CENTER`/`BALCONY` (handler `0x42A9A0`) that jumps
+the game (game vtable `+0x04`) to `ROOM_P06_Garden`, `ROOM_P22_Well_In_Maze`,
+`ROOM_P23_Maze_Center` or `ROOM_P27_Below_Balcony`.
+
+| Address | What it does |
+|---|---|
+| `0x42AA90` | Hedge maze constructor: the position, the unicycle clips |
+| `0x42AEB0` (+0x0C) | Entry: the map item, the start cell, the cell table, the draw |
+| `0x42BAE0` (+0x10) | Leaving: the return string reset |
+| `0x42AD00` (+0x04) | Tick: the idle mutterings |
+| `0x42BB00` (+0x18) | Placements: the four direction buttons, the six path indicators |
+| `0x42C0F0`/`200`/`310`/`420` | A move: back / front / right / left |
+| `0x42A7D0` | Maze map constructor |
+| `0x42A830` (+0x0C) | Maze map entry |
+| `0x42A850` (+0x18) | Maze map placements: the four location markers |
+| `0x42A9A0` | A marker clicked: jump to its maze room |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
