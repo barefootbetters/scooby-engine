@@ -2834,6 +2834,114 @@ the game (game vtable `+0x04`) to `ROOM_P06_Garden`, `ROOM_P22_Well_In_Maze`,
 | `0x42A850` (+0x18) | Maze map placements: the four location markers |
 | `0x42A9A0` | A marker clicked: jump to its maze room |
 
+##### Phantom's maze interior — the centre, the fountain and the well (WP-075)
+
+Traced 2026-11-19 for [WP-075](../work-packets/WP-075-maze-interior.md), in
+Phantom's `Scooby.exe`. The second of the audit's group-7 packets: the three
+rooms inside the maze (WP-074 landed the entry pair). Showdown has none of
+them. All three take music group `"1"`; the numbered scene lines use a **dot**
+(`Center_of_Maze.250X_`, `Fountain.250D_`, `Well_in_Maze.290_`) and ship with a
+speaker suffix (`…250B_1_VELMA`, `…250D_1_NARRATOR`), as WP-074's did — read
+the string bytes (`StrAt`) and cross-check the sound index, not Ghidra's
+underscored labels. As with WP-074's `240A3_`, some clips ship but are not
+referenced by these rooms' slots (`Center_of_Maze.250X2_`, `.250A_`, the well's
+`330_`). The audit tagged the **centre** with the opening; the binary puts it on
+the **fountain** (the centre and the well have none — the constructor's 4th
+argument is the empty global for those two, `Fountain.250D_` for the fountain,
+which `room_setup` already carries). The three rooms were traced twice,
+independently, by two sessions whose Ghidra reads agree — the WP-073/074
+anti-shared-misreading move at the session level, on top of the engine ==
+reference match.
+
+The vtable's named slots (anchored on the throne class, `0x45EC1C`) are
+`+0x1c` save, `+0x20` load, `+0x24` the exit/destination list, `+0x30` the
+opening handler; the centre overrides `+0x24` (its entrance routing, `0x42A640`)
+and `+0x30` (the `Center_of_Maze.250_` / `.250C_` cycle, `0x42A1A0`).
+
+**The maze centre** (`ROOM_P23_Maze_Center`, `0x42A090`, vtable `0x45F344`, no
+opening) is the hub, reached from the hedge maze, the garden and below the
+balcony.
+
+- **Entry** (`0x42A580`, after the base entry): registers and plays the
+  babbling water `SFX_P23_MAZE_CENTER_WATER` (no dot — a flat sfx id) at
+  volume `0x5a` (90). The `+0x24` routing method (`0x42A640`) sets the flag the
+  hedge maze reads for its centre start cell (`game+0x289`): **the garden sets
+  it, below the balcony clears it**, and it registers `ROOM_Hedge_Maze` as an
+  entrance. (The fork sets this flag — named `MazeCenterFromGarden` — on entry
+  from the garden or balcony, and WP-074's `HedgeMazeRoom` now reads it.)
+- **Placements** (`0x42A280`): `OBJ_P23_MAZE_CENTER_WATER` a looping sprite at
+  depth `−1500`; `OBJ_INV_RUSTY_SHEARS` a requires object until taken (then
+  skipped); `OBJ_P23_TO_P44` the way to the fountain, **built by the default
+  path until the tokens are held, then skipped** (the detour closes once the
+  tokens are grabbed).
+- **The event** (`0x42A110`): `OBJ_P23_MAZE_CENTER_HOTSPOT4` cycles
+  `Center_of_Maze.250X_` / `.250X1_`; the rusty shears used starts the take.
+  (A second hotspot handler, `0x42A1A0`, cycles `Center_of_Maze.250_` /
+  `.250C_`.)
+- **Each tick** (`0x42A410`): once the shears are being taken, Shaggy (idle)
+  takes them (`OBJ_SHAGGY_P23_TAKES_SHEARS`, `Maze_Center.Shaggy_Takes_Shears`);
+  then `OBJ_INV_RUSTY_SHEARS` goes to the toolbar and `Center_of_Maze.250B_`
+  plays.
+- **Save / load** (`0x42A200` / `0x42A240`): the `Entrances` key, in the room's
+  own section.
+
+**The fountain close-up** (`ROOM_P44_Fountain_Closeup`, `0x429740`, vtable
+`0x45F304`, opening `Fountain.250D_`) opens off the centre, where a piranha
+guards the tokens.
+
+- **Entry** (`0x4297D0`): plays the water `FOUNTAIN_CLOSEUP.WATER` (dotted).
+- **Placements** (`0x429CC0`): `OBJ_PIRANHA` a looping sprite at depth `−1`,
+  `ANIM_PIRANHAFULL` when the burger has been used else `ANIM_PIRANHAIDLE`
+  (with the `Fountain_Closeup.Fountain_Closeup.Piranha_Swims` loop — the exe
+  literally doubles the prefix); `OBJ_INV_TOKENS` a requires object answering
+  the burger (`ANIM_CURSORBURGER`) at depth `−100` until taken; `OBJ_P44_TO_P23`
+  the exit back to the centre at depth `100`; `OBJ_SHAGGY_P44_GRAB_TOKENS` a
+  hidden sprite at depth `100`.
+- **The event** (`0x429B50`): the burger used on the piranha
+  (`OBJ_INV_BURGER` removed) sets it eating (`ANIM_PIRANHALUNGE_EAT_START`,
+  `Fountain_Closeup.Piranha_Eats`); a plain click cycles `Fountain.250D_` /
+  `.250D1_` / `.250D2_`.
+- **Each tick** (`0x429800`): fed, the piranha lunges and eats, then Shaggy
+  grabs the tokens (`Fountain_Closeup.Shaggy_Takes_Tokens`) into the toolbar
+  and the exit list (`Fountain.250F_`, `ROOM_P23_Maze_Center`) is built.
+
+**The well** (`ROOM_P22_Well_In_Maze`, `0x42C740`, vtable `0x45F404`, no
+opening) sits in the maze and links back to the royal gallery.
+
+- **Entry** (`0x42C810`): a queued return bounces to `ROOM_P07_Royal_Gallery`
+  through movie `0x36` (54) from the gallery or `0x39` (57) otherwise, unless
+  the full bottle has been used; otherwise it sets `WellVisited` (`game+0x262`,
+  read by the treasury's rope line, WP-071).
+- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once taken
+  (`YellowBallTaken`, `game+0x25d`); `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
+  `OBJ_P22_WELL_ROPE` are the climb, **gated on the rope being used** — the
+  rope then shows as a sprite (depth `0`) and the well and the way out become
+  the default clickables.
+- **The event** (`0x42C8E0`): the yellow ball shown plays movie `0x42` (66) the
+  first time (`YellowBallFound` clear) or `4` after, is marked taken, and
+  queues the return; the rope used on the well plays movie `0x3b` (59) and
+  spends the rope; a plain click cycles `Well_in_Maze.290_`, `Well_In_Maze.330X1_`,
+  `Well_In_Maze.330X2_`.
+
+| Address | What it does |
+|---|---|
+| `0x42A090` | Maze centre constructor (music `1`, no opening) |
+| `0x42A580` (+0x0C) | Centre entry: the water sfx at volume 90, the start flag |
+| `0x42A640` (+0x24) | Centre routing: `game+0x289` from the garden / balcony, the entrances |
+| `0x42A280` (+0x18) | Centre placements: the water, the shears, the token-gated exit |
+| `0x42A110` (+0x14) | Centre event: the hotspot's cycling lines, the shears |
+| `0x42A410` (+0x04) | Centre tick: Shaggy takes the shears |
+| `0x42A200`/`0x42A240` | Centre save / load: the `Entrances` key |
+| `0x429740` | Fountain constructor (music `1`, opening `Fountain.250D_`) |
+| `0x4297D0` (+0x0C) | Fountain entry: the water loop |
+| `0x429CC0` (+0x18) | Fountain placements: the piranha, the tokens, the exit, the grab |
+| `0x429B50` (+0x14) | Fountain event: the burger fed, the cycling fountain lines |
+| `0x429800` (+0x04) | Fountain tick: the lunge, the eat, the token grab |
+| `0x42C740` | Well constructor (music `1`, no opening) |
+| `0x42C810` (+0x0C) | Well entry: `WellVisited`, the queued return to the gallery |
+| `0x42CA20` (+0x18) | Well placements: the yellow ball, the rope-gated climb |
+| `0x42C8E0` (+0x14) | Well event: the yellow ball's movie, the rope on the well, the lines |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
