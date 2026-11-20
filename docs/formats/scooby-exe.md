@@ -3024,6 +3024,102 @@ WP-075).
 | `0x4107F0` (+0x0C) | Door entry: the return bounce to the gallery, `BlueBallSeen` |
 | `0x4107D0` (+0x04) | Door tick: the shared Jester |
 
+##### Phantom's wizard's skull and library (WP-077)
+
+Traced 2026-11-19 for [WP-077](../work-packets/WP-077-wizards-skull.md), in
+Phantom's `Scooby.exe`. The first of the audit's group-8 (Upstairs) packets: the
+Skull Puzzle room (its source asserts name `C:\Scooby\FBF\Wizards_Skull_Room.cpp`)
+and the library whose shelf reveals its combination. Reached from the magic
+mirror room (WP-072 builds `OBJ_P08_TO_WIZARDS_SKULL`). Showdown has neither room.
+Both were traced twice, independently, by two sessions whose Ghidra reads agree
+— the WP-073/074/075/076 anti-shared-misreading move — on top of the engine ==
+reference match (which passes line for line) and the disc sound-index probe.
+
+**The strcmp polarity is the catch this time.** The room-name compare `0x433360`
+returns **true when the strings are equal**; the first trace read it as `strcmp`
+(0 on equal) and so reversed the skull's `enter` branches. The second trace,
+handed the raw addresses, read the branches the other way, and the library's own
+code settles it (its taunt fires on `from == ROOM_Wizards_Skull`, and its
+shelf/hotspot dispatch both need equal→true). The corrected reading is below.
+
+**The Skull\* flags are not the `Scooby.ini` / `kPhantomFixed` list order**
+(the WP-076 hazard). Anchored on the functions that touch them: `SkullPuzzle`
+(`game+0x257`) is the solved flag, set by the skull's solve-tick `0x42E280`;
+`SkullMovie` (`game+0x258`) is set by the skull's hand-demo entry; and
+`SkullPuzzleAttempted` (`game+0x259`) by the skull's attempt entry. The engine
+keys game flags by name, so this is a naming, not an offset, hazard.
+
+**The skull** (`ROOM_Wizards_Skull`, `0x42D7B0`, vtable `0x45F4C4`, music
+`Skull_Puzzle.Music`, no opening) overrides tick, reset, enter, leave, event,
+claim and save/load. Four skulls rotate through four faces; turned to the
+per-game combination, the way to the wizard's bedroom opens.
+
+- **Placements** (`0x42DBF0`, +0x18): `OBJ_SKULL1`..`OBJ_SKULL4`, each a
+  **clickable** showing `ANIM_SKULL{n}` + the letter of its saved rotation
+  (`'A'` + `Skull{n}`, 0–3); `OBJ_SKULL_HAND`, whose placed position is recorded
+  (the hand is shown only during the demo); `OBJ_SKULL_EXIT`, the way back to the
+  magic mirror room (its object name and destination recorded).
+- **The event** (`0x42E060`, +0x14): a click on any object whose first nine
+  characters are `OBJ_SKULL` (any skull) plays `Wizards_Skull.Skull_Slide` and
+  arms the solve check (`game+0xF4`). The engine's clickable cycles the skull's
+  face; the tick reads it back.
+- **Entry** (`0x42D910`, +0x0C), on the room come from:
+  - **from the magic mirror room** — set `SkullMovie`; the wizard's hand
+    (`OBJ_SKULL_HAND`/`ANIM_SKULL_HANDLIFT`) demonstrates the combination,
+    turning each skull `SkullCombo{n}` times, then parks and the demo ends by
+    returning to the mirror room (movie `0x1F` = 31).
+  - **from anywhere else** — set `SkullPuzzleAttempted`; build the exit back to
+    the mirror room; the first time (`IntroDone` clear) play `Wizards_Library.300D_`
+    and set `IntroDone`.
+- **Each tick** (`0x42E100`, +0x04 = base tick + `0x42E3F0` the hand demo +
+  `0x42E280` the solve check): the hand demo is an easing state machine
+  (`OBJ_SKULL_HAND` at 5 px/tick toward each skull, the HANDLIFT / HANDTURN /
+  HANDRETURN loop by `SkullCombo{n}`). The solve check, once a skull has been
+  slid and all four have settled, reads each face letter (− `'A'`) into
+  `Skull1..4`; the four matching `SkullCombo0-3` requests `ROOM_P24_Wizards_Bedroom`
+  (movie 6) and sets `SkullPuzzle`.
+- **Save / load** (`0x42E120` / `0x42E1D0`): `Skull1`..`Skull4` (the four
+  rotations, ints) and `IntroDone` in the room's own section. `SkullCombo0-3`
+  are the per-game targets, randomised at new game (`0x42E880`) and read from the
+  profile.
+
+**The library** (`ROOM_P25_Wizards_Library`, `0x42D1F0`, vtable `0x45F484`,
+music `1`, opening `Wizards_Library.300_`) overrides reset, enter, event and
+claim; it keeps no save state of its own.
+
+- **Placements** (`0x42D600`, +0x18): `OBJ_P25_WIZARDS_LIBRARY_UNDERLAY`, a
+  settled sprite (depth −1001) built only once `SkullPuzzle` is set;
+  `OBJ_P25_WIZARDS_LIBRARY_SHELF`, a clickable built only while unsolved;
+  `OBJ_P25_TO_P24`, the way to the wizard's bedroom, suppressed until solved.
+- **The event** (`0x42D270`, +0x14): the spell book (`OBJ_INV_SPELL_BOOK`, from
+  the Princess's bedroom) used on the shelf reveals the combination — the first
+  time (`SkullMovie` clear) on Big Head (`Wizards_Library.300C_` on
+  `BIG_HEAD_BG_SKULLS`, returning to the library, movie `0x3D` = 61), after that
+  straight to the skull room — and is spent; a plain click with the book already
+  used routes there too (no movie), otherwise it cycles the shelf hints
+  (`Wizards_Library.300F_` / `300F1_` / `300F2_`). `HOTSPOT1` and `HOTSPOT3` give
+  their lines.
+- **Entry** (`0x42D580`, +0x0C): back from the skull room with the puzzle
+  attempted but not solved, the wizard taunts (`Wizards_Library.300C1_` or
+  `300C2_`, at random). **Reset** (`0x42D250`): the shelf-hint cycle.
+
+This opens the Upstairs group; the Princess's bedroom, the veranda, the wizard's
+bedroom and the WFR follow in later packets.
+
+| Address | What it does |
+|---|---|
+| `0x42D7B0` | Skull constructor (music `Skull_Puzzle.Music`, no opening) |
+| `0x42DBF0` (+0x18) | Skull placements: the four skulls, the hand, the exit |
+| `0x42E060` (+0x14) | Skull event: a skull slid (`Skull_Slide`), arms the solve check |
+| `0x42D910` (+0x0C) | Skull entry: the hand demo (from the mirror) or the attempt |
+| `0x42E100` (+0x04) | Skull tick: the hand demo (`0x42E3F0`) and solve check (`0x42E280`) |
+| `0x42E120`/`0x42E1D0` | Skull save / load: `Skull1`..`Skull4`, `IntroDone` |
+| `0x42D1F0` | Library constructor (music `1`, opening `Wizards_Library.300_`) |
+| `0x42D600` (+0x18) | Library placements: the underlay, the shelf, the way to P24, by `SkullPuzzle` |
+| `0x42D270` (+0x14) | Library event: the spell book's reveal, the shelf hints, the hotspots |
+| `0x42D580` (+0x0C) | Library entry: the taunt after a failed attempt |
+| `0x42E880` | New game: randomises `SkullCombo0-3` (and the villain) |
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
