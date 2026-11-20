@@ -995,7 +995,8 @@ These are the format facts that came out of the trace, each written up in
 | `0x430790` | `graphics_AnimSprite_ctor` | `(obj name, ANIM name, parent, depth, mode, ticks per step, start step)` |
 | `0x430A00` | `graphics_AnimSprite_SetAnim` | ANIM name → id (`GetId`) → `sequences[id & 0x3FFFF]` of the held object |
 | `0x430AA0` / `0x430890` | `graphics_AnimSprite_Start` / `_Tick` | Modes 1–5 (loop fwd/back, once fwd/back, jump to end); countdown of ticks per step. `_Tick` is sprite vtable slot `+8` |
-| `0x431130` | (sprite tree tick) | Walks the tree front to back and calls each sprite's `+8` (tick) and `+0xC`, unless the subtree is paused (`+0x30`). WP-017 |
+| `0x431130` | (sprite tree tick) | Walks the tree front to back and calls each sprite's `+8` (tick) and `+0xC`, unless the subtree is marked done (`+0x30`). Each child's next sibling is read before the child is walked. WP-017, WP-055 |
+| `0x431190` | (sprite tree sweep) | Right after `0x431130`, front to back: each sprite's `+0x10` (`0x4309C0`), or, marked done (`+0x30`), its deleting destructor. WP-055 |
 | `0x435BC0` | (game tick loop) | `ticks = elapsed_ms × 36 / 1000 − done`. Runs each owed tick (tree tick, room update) and then draws once: **36 ticks per second**. Phantom: `0x4368F0`, byte-identical. WP-017 |
 | `0x4309C0` | `graphics_AnimSprite_SelectFrame` | Current step's frame ref → frame record |
 | `0x430D10`, `0x431350`, `0x4312A0` | `input_AnimSprite_HitTest`, `input_PolygonHitTest`, `input_PointInPolygon` | Step polygon: bounding box, then even-odd test |
@@ -1263,7 +1264,7 @@ when the sequence stops (states other than 6 and 8). While talking, it
 shows step *shape* − 1 from the lip sync (`0x442DD0`). Starting a walk
 (`0x405D90`) moves the character 50 in front for a direction starting
 with `D`, and 50 behind for one starting with `U` (`0x430EE0`). States 2–5
-and 9–17 (random idles, Velma's reactions, fright) are not traced here; 18 (`0x12`) is under [Clickables](#clickables-wp-021).
+are under [Characters' idles](#characters-idles-wp-059); 9–17 (Velma's reactions, fright) are not traced here; 18 (`0x12`) is under [Clickables](#clickables-wp-021).
 
 | Address | What it does |
 |---|---|
@@ -1281,6 +1282,97 @@ and 9–17 (random idles, Velma's reactions, fright) are not traced here; 18 (`0
 | `0x442DD0` | Lip-sync shape of a playing clip |
 | `0x42DE10` | Game vtable `+0x08`: movie, then the next room |
 
+##### Characters' idles (WP-059)
+
+Traced 2026-11-16 for [WP-059](../work-packets/WP-059-idle-states.md), in
+Showdown. Phantom's character code is the same at the same addresses: the
+functions below decompile identically, apart from library calls.
+
+**When a character idles.** Each character keeps a countdown (`+0x5C`).
+- Every state change that reaches the end of `0x405190` sets it to
+  (`rand() % 15` + 10) × 36 ticks, at most the cap (`+0x98`). State 7 is
+  not one: it only sets the next state.
+- The cap is 3600 (the constructor, `0x4048E0`). The placement (`0x4091FF`)
+  sets Scooby's cap and countdown to 108 (any set), so he idles every three
+  seconds. The narrator's (`0x409670`) are `0x2F7600`, a day.
+- The update (`0x404B70`) counts it down by one each tick. Below 1 in
+  IDLE_MASTER, the character goes to state 2 and nothing else happens that
+  tick.
+
+**A click on an idle character.** The update reads it after the state
+code: the character under the mouse (`+0x08`), the button up (game `+0x20`
+bit 4), in IDLE_MASTER, with the arrow.
+- `rand() & 1`, forced to 0 while the speech lock is held.
+- 0: state 3 if `ANIM_<NAME><set>IDLE_S1` exists, else 4. 1: state 4.
+- The rollover (`0x4062E0`) shows `ANIM_CURSOROPEN` for the arrow while
+  `+0xB5` is set. The constructor sets it. Phantom's `0x42B8B7`, in a room
+  class, clears it for `UNICYCLE`.
+
+**The states** (`0x405190`):
+
+| State | What plays | Then |
+|---|---|---|
+| 2 | `rand() % 3`: 1 or 2 make it state 5. Else `ANIM_<NAME><set>IDLE_P<n>` once, and `Global.Idle.<NAME>_P<n><set>` if that clip exists and the character isn't hidden (`+0x14`) | 6 |
+| 3 | `ANIM_<NAME><set>IDLE_S<n>` once, with `Global.Idle.<NAME>_S<n><set>` as for 2 | 6 |
+| 4 | The room's idle line (room vtable `+0x28`). Not on the disc: back to 6 (no change if already 6). Else said with the speech lock (`0x404DB0`), which talks (8) | 6 when the line ends |
+| 5 | `ANIM_<NAME><set>BLINK` once. A missing ANIM leaves the sprite stopped (mode 0), so the next tick goes on | 6 |
+
+- **`<n>`** (`0x405CE0`): r = 9, then r = `rand() % r`, trying digit r + 1
+  each time, until one is an ANIM or r is 0.
+- **None found:** state 2 or 3 changes nothing, not even the countdown. A
+  character with no `IDLE_P` tries again each tick; two times in three it
+  blinks instead.
+- **Speech lock.** A line said with the speech lock is dropped if the lock
+  is held. Else the character keeps it (`+0xB4`) and lets it go on the first
+  update that isn't talking. A line said at once also starts the room's idle
+  timer again (room `+0xB4`).
+- **Scooby is busy** (`0x406060`) in his second idle, as he is talking, so
+  a scene waits for him.
+
+**The idle line** (room vtable `+0x28`).
+- **Base** (`0x40CB50`, every room in Showdown): `<room without
+  ROOM_>.Idle.<NAME>` if that clip exists.
+- **Else** r = 9; r = `rand() % r` until r is 0, then `Global.Idle.<NAME>`.
+  For each r above 0 it tries `Global.Idle%d.<NAME>`. `0x431EB0` only joins
+  strings, so the `%d` stays literal and is never found. The `Global.IdleN.`
+  clips on both discs are never played.
+- **Phantom's drawbridge** (`0x4272D0`): the base line, but
+  `P01_Drawbridge.Idle.VELMA` becomes `Global.Idle.VELMA` once the puzzle is
+  done (`+0xFC`).
+- **Phantom's dining room** (`0x410550`, vtable `0x45E810`): MARIA with
+  `MariaPuzzle` (game `+0x255`) gets `rand() & 3`:
+  - 0: `Dining_Room.1010I1_1_MARIA`;
+  - 1 or 2: `…1010I3_1_MARIA`;
+  - 3: `…1010I4_1_MARIA`.
+
+  Others get the base line.
+
+**What the discs have:**
+- **IDLE_S1:** the gang only, on both discs.
+- **No IDLE_P:** Showdown's donkey and ICDouble's second set; Phantom's
+  Brad's `_H` set, the Jester's `_S`, the Princess and the unicycle.
+- **No BLINK:** Showdown's Scooby, Artie, Gummy, the donkey and ICDouble's
+  second set; Phantom's Jester and the unicycle.
+- **Idle lines:** Velma's `P1`, and Shaggy's and Scooby's `S1`, on both
+  discs.
+- **Room lines:**
+  - Showdown: the post office, the dark and lit tunnels, the hotel hall and
+    the hotel room.
+  - Phantom: the drawbridge, the throne room, the kitchen, the kitchen
+    storage, the mermaids' cavern, the veranda and the princess's bedroom.
+
+| Address | What it does |
+|---|---|
+| `0x404B70` | Update: the speech lock let go, the countdown, a click while idle |
+| `0x405190` | State change: 2–5 above, and the countdown at its end |
+| `0x405CE0` | An idle's digit |
+| `0x404DB0` | Say a line, with or without the speech lock |
+| `0x406060` | Busy: talking, a line waiting, or Scooby in state 3 |
+| `0x4062E0` | Rollover: the open hand for the arrow |
+| `0x40CB50` | Room vtable `+0x28`, the base idle line |
+| `0x4272D0` / `0x410550` | Phantom's drawbridge and dining room `+0x28` |
+| `0x431EB0` | `operator+(const char *, CString)`: no formatting |
+
 ##### Clickables (WP-021)
 
 Traced 2026-11-14 for [WP-021](../work-packets/WP-021-clickable-actions.md),
@@ -1290,7 +1382,9 @@ A clickable keeps a **state**, an ANIM name (`+0x60`), and a **sound**,
 `SFX_` plus the state without `ANIM_` (`+0x68`). The state starts as the
 placement's ANIM, or as the save file's `Clickables` entry for the object.
 A click plays the state once (mode 3, 3 ticks per step) with its sound,
-advances the state, and tells the room. When the sequence ends, the object
+advances the state, and tells the room (game `+0x40` with 0, as the arrow
+on a requires object does; corrected in [WP-062](../work-packets/WP-062-throne-room.md),
+where the fork had passed 1). When the sequence ends, the object
 rests stopped on step 0 of its new state. The state advances by its last
 character + 1, unless that gives a digit 1–9; a name the art file doesn't
 have goes back to `A`. So `…HOTSPOT1A` → `…1B` → `…1C`, and a state with
@@ -1304,7 +1398,7 @@ default path, `rand() % 30 == 0`, and the room placed `OBJ_GHOST`. The
 ghost is shown and plays once, `Ghost_Appears` plays, and every character
 goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 `Global.Scared.<NAME>`. When the ghost's sequence ends, the game loads
-`ROOM_Ghost_Spot`.
+`ROOM_Ghost_Spot` ([the ghost spot](#the-ghost-spot-wp-056)).
 
 | Address | What it does |
 |---|---|
@@ -1318,6 +1412,1535 @@ goes to state `0x12`: `ANIM_<NAME><set>STAY_SCARED` once, with
 | `0x40A990` | The ghost appears |
 | `0x409BCA` | When the ghost's sequence ends: go to `ROOM_Ghost_Spot` |
 | `0x434CB0` / `0x434C70` | Stop / play a sound by id, in whichever file holds it |
+
+##### The ghost spot (WP-056)
+
+Traced 2026-11-16 for [WP-056](../work-packets/WP-056-ghost-spot.md), in
+Showdown. `ROOM_Ghost_Spot`'s class (`0x4222E0`, vtable `0x45EEAC`) is the
+same code in Phantom (`0x420350`, vtable `0x45EFD4`), compared byte for
+byte apart from addresses. The game comes here once the ghost has scared
+the gang.
+
+- **Entry** (`0x422420`, after the base entry):
+  - the background (layer 0, game `+0x58`) starts at x −1280;
+  - input is held (game `+0x24`) and the cursor fades (`0x435150`, `0x12`);
+  - the toolbar hides (`0x407CC0`);
+  - the countdown (`+0xB8`) is 396 ticks, 11 seconds;
+  - any music fade stops, with the music at full (`0x434F50`).
+- **The placements** (`0x422490`):
+  - `OBJ_TITLE_SCOOBY` and `OBJ_TITLE_DAPHNE` are sprites under the second
+    layer (game `+0x5C`). No room has one, so they hang from the root.
+    They sit at depths 1 and −1, looping, 3 ticks a step, as on the title.
+  - The class's flags `+0xBC` and `+0xBD` would leave the five unbuilt.
+    The constructor sets both and nothing clears them, so Shaggy, Velma and
+    Fred go to the default path.
+- **Each tick** (`0x422350`, after the base tick):
+  1. A global toggle (`0x475F10`) counts 0, 1, 0, …, and lasts across
+     visits.
+  2. The countdown goes down.
+  3. Until it reaches 0, and with no skip key, the background moves 6 pixels
+     right on the ticks the toggle is 0, and back 1280 once past 0. It never
+     gets there: 197 moves end at x −98.
+  4. Then the game goes on (game vtable `+0x04`) to the room game vtable
+     `+0x64` names.
+- **The skip key** is input slot 5, while `0x475F00` is set, as on the
+  title. It goes on at once and clears `0x475F00`.
+- **Where it goes on to** (game vtable `+0x64`, called only from here):
+  - Showdown's (`0x4303B0`) returns `ROOM_P01_Town_Center`.
+  - Phantom's (`0x430DD0`) returns `ROOM_P27_Below_Balcony` when the room
+    loaded (game `+0x04`'s name) is one of `ROOM_P29_Princess_Bedroom`,
+    `ROOM_P28_Veranda`, `ROOM_P25_Wizards_Library`,
+    `ROOM_P24_Wizards_Bedroom` or `ROOM_P26_Castle_Balcony`, and
+    `ROOM_P04_Town` otherwise. From the ghost spot the room loaded is the
+    ghost spot, so Phantom always goes on to its town.
+  - So the gang never goes back to the room the ghost scared them in.
+- **The rooms' size.** Showdown's ghost spot and title are 1920 × 480.
+  Phantom's headers say 1280 × 480, but their backgrounds are 1920 wide,
+  so the pan shows the same span on both.
+
+| Address | What it does |
+|---|---|
+| `0x4222E0` | Constructor: the base room with `Ghost_Spot.Music`, the flags `+0xBC` and `+0xBD` set |
+| `0x422350` (+0x04) | Tick: the toggle, the countdown, the pan, the skip key, then the town |
+| `0x422420` (+0x0C) | Entry, after the base entry |
+| `0x422490` (+0x18) | Placements: Scooby and Daphne |
+| `0x4303B0` | Game vtable `+0x64` (Showdown): `ROOM_P01_Town_Center` |
+
+##### Phantom's drawbridge and town (WP-057)
+
+Traced 2026-11-16 for [WP-057](../work-packets/WP-057-drawbridge.md), in
+Phantom's `Scooby.exe`, from an import of it in a scratch Ghidra project.
+The addresses in this section are Phantom's.
+
+**Phantom's functions against Showdown's.** Most of the engine is the same
+code at other addresses. Matching each function's instruction sequence, with
+addresses masked, pairs 980 of Phantom's 2756 functions with Showdown's. The
+base room's functions keep their addresses, and so do the walk-ins this WP
+calls (`0x405E60` `UR`, `0x405FE0` `U`, `0x406020` `D`, by their direction
+strings). Among those that move:
+
+| Phantom | Showdown | What it is |
+|---|---|---|
+| `0x4314C0` | `0x430790` | `graphics_AnimSprite_ctor` |
+| `0x4317D0` | `0x430AA0` | Start (mode, ticks, start) |
+| `0x431730` | `0x430A00` | Play an ANIM by name (vtable `+0x24`) |
+| `0x435760` | `0x434A30` | The sound manager |
+| `0x435AF0` / `0x4359A0` / `0x4359E0` / `0x435A10` | `0x434DC0` / `0x434C70` / `0x434CB0` / `0x434CE0` | Name → id; play, stop, is it over |
+| `0x435B60` | `0x434E30` | `audio_GameSound_PreloadSection` |
+| `0x437540` | `0x436810` | Restart the game's tick clock |
+
+`0x406020` is the walk-in from `D`: the depth 50 in front, then state 1.
+
+**A new game's story values** (game vtable `+0x4C`, `0x42E880`; the profile
+writer `0x42FFE0` names them):
+- `EwanPuzzle`, `MariaPuzzle`, `BradPuzzle`, `SkullPuzzle`, `SkullMovie`,
+  `SkullPuzzleAttempted`, `CrestPuzzle`, `RedBallFound`, `BlueBallFound`,
+  `BlueBallSeen`, `YellowBallFound`, `RedBallTaken`, `BlueBallTaken`,
+  `YellowBallTaken`, `WellVisited`, `MazeEntered` and `PlaqueSeen` off;
+- `Screaming` (`+0x288`) on;
+- `Whodunit`: `MARIA`, `BRAD`, `EWAN`, `WIZARD` or `JESTER` (`rand() % 5`);
+- `CrestSequence0`–`3`: 1–4, shuffled by five swaps of two `rand() & 3`
+  places;
+- `SkullCombo0`–`3`: `rand() & 3` each.
+
+The Throne Room's entry clears `Screaming`.
+
+**The drawbridge** (`ROOM_P01_Drawbridge`, `0x426730`, vtable `0x45F214`;
+music `Drawbridge.Music`, opening `Drawbridge.100A_`). Four flags (P1–P4)
+must wave their banners' colours (SP1–SP4).
+- **Reset** (`0x426790`): the puzzle not done, the sign's first line next.
+  Each banner's colour is `rand() & 3` + 1. Its flag starts one to three
+  colours on: `((rand() % 3 + banner) & 3) + 1`.
+- **Placements** (`0x426A80`), each under the first layer (game `+0x58`):
+  - each flag at depth 0, a flag object (`0x427380`) set to its saved
+    colour;
+  - each banner at depth 0, waving `ANIM_P01_DRAWBRIDGE_SP<n>F<colour>`
+    (mode 1, 4 ticks a step, from step `rand() & 3`);
+  - the door at depth −1, stopped on its first step, or its last once the
+    puzzle is done (mode 5);
+  - the overlay at depth 0;
+  - the way to the town (`OBJ_P01_TO_P04`) isn't built until the puzzle is
+    done.
+- **A flag** (`0x427380`, vtable `0x45F254`, 0x70 bytes): its colour
+  `+0x5C`, next state `+0x60`, banner's colour `+0x64`, clickable `+0x68`,
+  number `+0x6C`.
+  - **States 1–4** (`0x427490`) wave that colour: `ANIM_P01_DRAWBRIDGE_P<n>F<colour>`,
+    mode 1, 4 ticks a step, from step `rand() & 3`. A click goes on to 6, 8,
+    10 or 12. On its banner's colour, `Drawbridge.Flag_Fanfare.1` plays,
+    stopped and played again.
+  - **States 5–12** play `Drawbridge.Flag_Raise` and move the pennant at 3
+    ticks a step. The even states lower the colour (`…F<colour>_RISE`
+    backwards, mode 4); the odd ones raise the next (mode 3). The cycle:
+    6 → 7 → 2, 8 → 9 → 3, 10 → 11 → 4, 12 → 5 → 1.
+  - **Moved off its banner's colour,** with Velma idle (state 6), she says
+    `Drawbridge.100A_3_VELMA`.
+  - **Its update** (`0x427430`, after its player): clicked with the arrow
+    while clickable (game `+0x20` bit 4, its `+0x08`), or its sequence
+    over, it goes on to its next state. A click during a move skips to the
+    next.
+  - **Its rollover** (`0x4273D0`) is `ANIM_CURSOROPEN` while clickable with
+    the arrow.
+- **Entry** (`0x426840`, after the base entry):
+  - the `Drawbridge` sound section is preloaded (`0x435B60`);
+  - `Drawbridge.Flag_Loop` plays;
+  - one snack is needed (`+0x24`);
+  - from the town, Velma walks in (`U`).
+- **Each tick** (`0x4268D0`, after the base tick):
+  - **The second fanfare over:** the door plays once (mode 3), `Drawbridge.Down`
+    plays, the tick clock restarts (`0x437540`), and `Drawbridge.Enter_`
+    starts, blocking.
+  - **Until the puzzle is done,** each flag's colour is kept (`+0xEC`) while
+    it matches its banner's. With all four right:
+    - the puzzle is done (`+0xFC`);
+    - the flags are no longer clickable;
+    - the way to the town is built (`0x401850` under the first layer at
+      depth −1, hit by its polygon);
+    - `Drawbridge.Flag_Fanfare.2` plays, and its id is kept (`+0x104`).
+- **The sign** (`0x427270`, room vtable `+0x14`, `OBJ_INV_1428_SIGN`):
+  `Drawbridge.100X1_` and `…100X2_` in turn, not blocking.
+- **Leaving** (`0x426EA0`): with no snack eaten here, `Drawbridge.110A_`
+  plays, blocking, and the snack box flashes.
+- **The profile** (`0x427010`, `0x427140`): `FlagState0`–`3` (`+0xEC`),
+  `BannerState0`–`3` (`+0xDC`), then `PuzzleDone`.
+- **The idle line** (`+0x28`, `0x4272D0`): Velma's
+  `P01_Drawbridge.Idle.VELMA` becomes `Global.Idle.VELMA` once the puzzle is
+  done.
+
+**Who asks for the idle line** (room vtable `+0x28`). A character's state 4
+(`0x405190`, Showdown) asks the room for its line, and plays it if the line
+exists, else goes idle ([Characters' idles](#characters-idles-wp-059)).
+
+**The town** (`ROOM_P04_Town`, `0x4180F0`, vtable `0x45EC5C`; music
+`Bagpipes.Music`, opening `Town.110_`). Entry (`0x418150`, after the base
+entry):
+- **Walk-ins:**
+  - from the drawbridge, Velma (`D`);
+  - from the souvenir shop, Shaggy (`UR`);
+  - from the gardener's house, Fred (`UR`);
+  - from the room of doors, Velma (`U`).
+- **Screaming:** while `Screaming` is on, one of Jane's screams:
+  `Town.Jane_Screaming1`, `…2`, `…3`, or `…5` for both 3 and 4
+  (`rand() % 5`).
+
+| Address | What it does |
+|---|---|
+| `0x426730` | Drawbridge constructor |
+| `0x426790` (+0x08) | Reset: the colours |
+| `0x426840` (+0x0C) | Entry |
+| `0x4268D0` (+0x04) | Tick: the puzzle, the fanfare, the drawbridge down |
+| `0x426A80` (+0x18) | Placements |
+| `0x426EA0` (+0x24) | Leaving: a snack first |
+| `0x427010` / `0x427140` (+0x1C / +0x20) | Save / load |
+| `0x427270` (+0x14) | The sign |
+| `0x4272D0` (+0x28) | Velma's idle line |
+| `0x427380` / `0x427430` / `0x427490` | A flag: constructor, update, state |
+| `0x4180F0` / `0x418150` (+0x0C) | Town: constructor, entry |
+| `0x42E880` | Game vtable `+0x4C`: a new game's story values |
+
+##### Phantom's souvenir shop (WP-058)
+
+Traced 2026-11-16 for [WP-058](../work-packets/WP-058-souvenir-shop.md), in
+Phantom's `Scooby.exe`. `ROOM_P03_Souvenir_Shop` (`0x416FE0`, vtable
+`0x45EB9C`; music group 1, no opening of its own). The gang buys the empty
+bottle with the tokens.
+
+- **Reset** (`0x417040`): `IntroDone` (`+0xC2`) off.
+- **Placements** (`0x417170`):
+  - **The empty bottle**, once ever taken (`0x407060`): a sprite under the
+    first layer at depth 0, showing `ANIM_INV_BOTTLE_EMPTYB`. Until then,
+    a requires object (`0x408C80` with −1), kept (`+0xB8`); its
+    `requiredanim=` is the tokens' cursor.
+  - **Hotspot 1:** a clickable as the default path builds it (`0x408DC0`
+    with 1, −1), kept (`+0xBC`).
+- **Entry** (`0x4172D0`, after the base entry):
+  - nothing bought or being fetched (`+0xC0`, `+0xC1`);
+  - from the town, Fred walks in (`DL`, `0x405F20`);
+  - without `Screaming`, the first time (`IntroDone` off), the opening
+    becomes `Souvenir_Shop.1201_`, and `IntroDone` is set;
+  - while `Screaming`, one of Jane's screams
+    (`Souvenir_Shop.Jane_Screaming1`, `…2`, `…3`, or `…5` for 3 and 4,
+    `rand() % 5`), and the opening becomes `Souvenir_Shop.330A1_`, on every
+    visit;
+  - either opening is unplayed (`+0x10`), and `+0x3C` (`0x40C7B0`) runs
+    again, holding input for it.
+- **Events** (`0x417060`):
+  - **The bottle with the tokens:** they leave the toolbar (`0x406C80`),
+    the cursor is the arrow again, and the bottle is bought (`+0xC0`).
+  - **The bottle with the arrow:** `Souvenir_Shop.120A_`, blocking.
+  - **The hotspot:** playing its B, `Souvenir_Shop.120X_`; else, if its
+    next state is its A, `…120X1_`. Both blocking.
+- **Each tick** (`0x417400`, after the base tick), while bought:
+  1. Once Fred is idle, no scene plays, and the opening is done, he fetches
+     the bottle:
+     - `OBJ_FRED_P03_GET_WATER_BOTTLE`, state `0xD`, with
+       `Souvenir_Shop.Fred_Takes_Bottle`;
+     - the shelf shows `ANIM_INV_BOTTLE_EMPTYB`;
+     - the tick clock restarts (`0x437540`).
+  2. Input is held and the cursor hidden.
+  3. Once Fred is idle again, the bottle goes in the toolbar
+     (`ANIM_TOOLBARSPORTS_BOTTLE_EMPTY`, `ANIM_CURSORSPORTS_BOTTLE_EMPTY`)
+     unless it was ever taken, and `Souvenir_Shop.120B_` plays, blocking.
+- **Leaving** (`0x417580`, after the base leave): left while bought, the
+  bottle goes in the toolbar.
+- **The profile** (`0x4175D0`, `0x417610`): `IntroDone`.
+
+| Address | What it does |
+|---|---|
+| `0x416FE0` | Constructor: music `1`, no opening |
+| `0x417040` (+0x08) | Reset |
+| `0x417060` (+0x14) | The bottle and the hotspot |
+| `0x417170` (+0x18) | Placements |
+| `0x4172D0` (+0x0C) | Entry: the walk-in, the opening, the scream |
+| `0x417400` (+0x04) | Tick: Fred fetches the bottle |
+| `0x417580` (+0x10) | Leave |
+| `0x4175D0` / `0x417610` (+0x1C / +0x20) | Save / load |
+| `0x405F20` | The walk-in from `DL` (Phantom, as Showdown) |
+
+##### Phantom's gardener's house, garden and plaque (WP-060)
+
+Traced 2026-11-16 for [WP-060](../work-packets/WP-060-gardeners-house.md),
+in Phantom's `Scooby.exe`. The house's plaque leads to a puzzle: four
+buttons on a crest, pressed in the order a new game drew
+(`CrestSequence0`–`3`, [WP-057](#phantoms-drawbridge-and-town-wp-057)).
+Solved, the door to the garden opens.
+
+**The gardener's house** (`ROOM_P05_Gardeners_House`, `0x411BF0`, vtable
+`0x45E914`; music group 1, no opening of its own):
+- **Reset** (`0x411C50`): both line counters (`+0xB8`, `+0xBC`) at 0.
+- **Placements** (`0x412110`):
+  - with `CrestPuzzle`, the plaque (`OBJ_P05_GARDENERS_HOUSE_PLACQUE`)
+    isn't built;
+  - without it, the way to the garden (`OBJ_P05_TO_P06`) isn't;
+  - the door is a sprite under the first layer at depth 0, kept (`+0xC0`),
+    stopped on its first step, or its last with `CrestPuzzle` (mode 5).
+- **Arriving** (`0x411C70`, room vtable `+0x2C`, in the base entry):
+  - **From the plaque:**
+    - with `CrestPuzzle`, the opening is `Gardeners_House.130C_`;
+    - with the plaque untried (game `+0x287`), there is none;
+    - tried and wrong, `130B_`, `130B1_`, `130B2_` in turn (`+0xB8`).
+  - **From anywhere else, while `Screaming`:** `Gardeners_House.Intro2_`
+    when `rand()` is even, else `Intro_`.
+  - Each is unplayed, and `+0x3C` (`0x40C7B0`) runs.
+- **Entry** (`0x411D60`, after the base entry):
+  - **Back from the plaque** with `CrestPuzzle`: `Gardeners_House.Puzzle_Right`
+    and `…Door` play, and the door plays once (mode 3). Tried and wrong:
+    `…Puzzle_Wrong`.
+  - **Walk-ins:** from the town, Daphne (`UR`); from the garden, Fred
+    (`UL`, `0x405EE0`).
+  - **While `Screaming`:** one of Jane's screams (`…Jane_Screaming1`,
+    `…2`, `…3`, or `…5` for 3 and 4, `rand() % 5`).
+- **The plaque** (`0x411F10`, room vtable `+0x14`) sets `PlaqueSeen`.
+  - **With no ball found** (`RedBallFound`, `YellowBallFound`,
+    `BlueBallFound`): Big Head says `130A_`, `130A1_`, `130A2_` in turn
+    (`+0xBC`) on `BIG_HEAD_BG_PLAQUE`, and the game comes back here.
+  - **Otherwise:** `ROOM_Garden_Plaque`.
+
+**The garden plaque** (`ROOM_Garden_Plaque`, `0x40F840`, vtable
+`0x45E7D0`; no music of its own, opening `Gardeners_House.130A_`):
+- **Placements** (`0x40F940`): the four buttons are requires objects
+  (`0x402D90`) under the first layer at depth 0, hit by their polygon,
+  stopped on step 0, not pressed (`+0xD0`). Kept in order (`+0xC0`): the
+  lion, the bush, the deer, the dragon. Each answers `ANIM_CURSOROPEN`.
+- **Entry** (`0x40F8A0`, after the base entry): no presses (`+0xB8`), all
+  right so far (`+0xBC`), the toolbar hidden (`0x407CC0`), and the plaque
+  untried (game `+0x287`).
+- **Each tick** (`0x40F8E0`): a button not pressed shows step 1 under the
+  mouse and step 0 otherwise. Clicked without telling the room, it counts
+  as pressed.
+- **A button** (`0x40FB20`, room vtable `+0x14`), not yet pressed:
+  - its place in the crest is lion 3, bush 1, deer 2, dragon 4; one that
+    isn't `CrestSequence<presses>` spoils the try;
+  - it shows step 2 and counts, the plaque is tried, and
+    `Gardeners_House.Button_Click` plays.
+- **After four presses:**
+  - input is held and the cursor faded;
+  - all right, `CrestPuzzle` is set;
+  - the game goes back to the gardener's house.
+
+**The garden** (`ROOM_P06_Garden`, `0x411A20`, vtable `0x45E8D4`; music
+group 1):
+- **Placements** (`0x411B50`): the tracks (`OBJ_P06_GARDEN_TRACKS`) aren't
+  built until `MazeEntered`.
+- **Entry** (`0x411A80`): the tracks' first line next; from the gardener's
+  house, Velma walks in (`U`).
+- **The tracks** (`0x411AD0`): `Garden.230X_`, `230X1_`, `230X2_` in turn,
+  blocking.
+
+Game `+0x287` (the plaque tried) isn't in the profile; a new game
+(`0x42E880`) clears it.
+
+| Address | What it does |
+|---|---|
+| `0x411BF0` | Gardener's house constructor |
+| `0x411C50` (+0x08) | Reset |
+| `0x411C70` (+0x2C) | Arriving: the opening |
+| `0x411D60` (+0x0C) | Entry: the door, walk-ins, a scream |
+| `0x411F10` (+0x14) | The plaque: Big Head, or the puzzle |
+| `0x412110` (+0x18) | Placements |
+| `0x40F840` | Garden plaque constructor |
+| `0x40F8A0` (+0x0C) | Entry |
+| `0x40F8E0` (+0x04) | Tick: the buttons under the mouse |
+| `0x40F940` (+0x18) | Placements: the buttons |
+| `0x40FB20` (+0x14) | A button pressed; four, back to the house |
+| `0x411A20` / `0x411A80` (+0x0C) | Garden: constructor, entry |
+| `0x411AD0` (+0x14) / `0x411B50` (+0x18) | Garden: the tracks' lines, their placement |
+
+##### Phantom's room of doors, its Jester, and Phantom's clues (WP-061)
+
+Traced 2026-11-16 for [WP-061](../work-packets/WP-061-room-of-doors.md), in
+Phantom's `Scooby.exe`.
+
+**The room of doors** (`ROOM_P11_Room_Of_Doors`, `0x415720`, vtable
+`0x45EA9C`; music group 1, opening `Room_Of_Doors.140_`), the hub of the
+castle's ground floor:
+- **Reset** (`0x4157B0`): Jane crying (`+0xBA`, saved as `Crying`), the
+  throne room's scene not had (`+0xBB`, `ThroneScene`), the Jester not
+  introduced (`+0xD0`, `JesterIntro`).
+- **Placements** (`0x415F80`):
+  - the dining room's door (`OBJ_P11_ROD_DINING_ROOM_DOOR`), once the
+    duster is used, is a sprite under the first layer at depth −1000; until
+    then it isn't built;
+  - the Jester (`OBJ_JESTER*`) isn't built until the duster is used.
+
+  The duster is used when it was ever taken (`0x407060`) and is no longer
+  in a slot (`0x4070C0`).
+- **Entry** (`0x4157F0`, after the base entry):
+  - **Walk-ins:**
+    - from the dining room, Velma (`U`);
+    - from the kitchen, the king's armory or its slide, Fred (`UL`);
+    - from the throne room, Fred (`UR`);
+    - from the town, Fred (`DR`, `0x405EA0`).
+  - the door untried (`+0xB8`, `+0xB9`);
+  - the Jester's entry (`0x412B80`), with `JesterIntro`;
+  - while Jane cries, one of her screams (`Room_of_Doors.Jane_Screaming1`,
+    `…2`, `…3`, or `…5` for 3 and 4, `rand() % 5`).
+- **Leaving** (`0x4157D0`, after the base leave): `JesterIntro` kept from
+  the Jester.
+- **The ways out** (`0x415C00`, room vtable `+0x24`), each through the
+  default handler with its scene:
+  - **To the king's armory:** `Room_Of_Doors.140A_`, `140A1_` or `140A2_`
+    (`rand() % 3`).
+  - **To the throne room:** Jane stops crying, and her five screams stop
+    (`Jane_Screaming4` among them, which this room never plays; the king's
+    armory does, [WP-068](#phantoms-kings-armory-and-its-slide-wp-068)). The first time
+    `Room_of_Doors.160D1_`, and `ThroneScene` is set; after that `140B_`,
+    `140B1_` or `140B2_` (`rand() % 3`).
+  - **To the dining room,** the duster used: `140C_` or `140C1_`
+    (`rand() & 1`). Not used, the gang stays and the door is tried
+    (`+0xB8`).
+- **Each tick** (`0x415AB0`, after the base tick): the Jester's tick
+  (`0x4122E0`). With the door tried:
+  - Velma, once idle with no scene playing and the opening done, plays
+    `OBJ_VELMA_P11_DOOR_LOCKED`, with `Room_Of_Doors.Velma_Door_Locked`;
+  - input is held meanwhile;
+  - Velma idle again: `Room_of_Doors.130B_`, blocking, and input back.
+- **Idle chatter** (`0x4159D0`, `+0x34`): once the opening has played and
+  Jane has stopped crying, by `rand() % 5`:
+  - `Room_Of_Doors.1401_`, `1402_`, `140D_` or `140D2_`;
+  - or, with Velma idle, her `GLASSES` and `Global.1000A2_`.
+
+  None holds input.
+- **The profile** (`0x416140`, `0x4161C0`): `Crying`, `ThroneScene`,
+  `JesterIntro`.
+
+**The Jester** (a member of the room's class at `+0xBC`: `0x4122D0`
+constructs it, `0x412B80` runs on entry, `0x4122E0` each tick). Four
+classes call his tick: the room of doors, the royal gallery (`0x416610`),
+the well (`0x42C7F0`) and the balcony's door (`0x4107D0`). The throne room
+places him without it.
+- **Entry** (`0x412B80`): the room's Jester (`0x40A800`, `JESTER`), nothing
+  pending. Each ball found and not yet taken he takes, once:
+  - `TAKES_RED`, `TAKES_BLUE`, `TAKES_YELLOW` (state `0xF`);
+  - `RedBallTaken`, `BlueBallTaken`, `YellowBallTaken` are set.
+
+  Taking a ball when it is the only one found starts his talk.
+- **His clue:** all three balls found and his clue not given:
+  - `Global.Jester.Clue_` plays, holding input;
+  - he gives the clue (game vtable `+0x44`);
+  - once idle he `GIVES`;
+  - idle again, the room's exit handler takes the gang to
+    `ROOM_Suspect_Chooser` with `Global.Thank_You_`.
+- **His talk through the crest,** each scene holding input. The next waits
+  for the last one's done flag, for him idle, and for no room change asked
+  for:
+  - `Souvenir_Shop_Room.220D<n>_` for each `CrestSequence<i>`, its digit
+    `n`;
+  - then, once `PlaqueSeen`: `220E_`, `220E<n>_` for each digit, `220E5_`
+    and `220E6_`.
+- **A click on him** with the arrow (game `+0x20` bit 4, his `+0x08`):
+  - **The first time, in the room of doors:** he is met (`0x40A930`,
+    `0x40A8B0`), and introduces himself on Big Head
+    (`Souvenir_Shop_Room.220B_` on `BIG_HEAD_BG_P11`), back to the room of
+    doors.
+  - **Before `CrestPuzzle`:** with any ball found, his talk again (state 6
+    first); else one of `Global.1010J_`, `1010J1_`, `Jester1_`,
+    `Jester2_`, `Jester3_` (`rand() % 5`).
+  - **After it:** without the full bottle ever, or with it still in a
+    slot, the same room through movie 54 from the royal gallery, else 57
+    (game vtable `+0x08`). Otherwise one of his lines.
+
+**Phantom's clues** (game vtable `+0x44`, `0x4305C0`; `0x430F00`). The rule
+is Showdown's ([the accusation](#the-accusation-suspects-and-clues-and-big-head-wp-031)),
+with Phantom's tables:
+
+| Suspect | Clues (`0x46E88C`, five each) | Red herrings (`0x46E8F0`, two each) |
+|---|---|---|
+| `BRAD` | `BRAD_COUPON`, `BRAD_GLOVE`, `BRAD_OIL`, `BRAD_COAT`, `BRAD_SHEATH` | `RH_BRAD_SCHEDULE`, `RH_BRAD_HELMET` |
+| `EWAN` | `EWAN_COUPON`, `EWAN_BELLOWS`, `EWAN_K`, `EWAN_FILM`, `EWAN_SPOON` | `RH_EWAN_PAN`, `RH_EWAN_SPATULA` |
+| `JESTER` | `JESTER_COUPON`, `JESTER_SIGN`, `JESTER_BOOK`, `JESTER_MAKEUP`, `JESTER_BELL` | `RH_JESTER_CLOTH`, `RH_JESTER_TAP_SHOES` |
+| `MARIA` | `MARIA_LICENSE`, `MARIA_COUPON`, `MARIA_KEYS`, `MARIA_BOOTS`, `MARIA_BOW` | `RH_MARIA_BOOK`, `RH_MARIA_MUFFLER` |
+| `WIZARD` | `WIZARD_SMOKEBOMBS`, `WIZARD_COUPON`, `WIZARD_SCROLL`, `WIZARD_BOOK`, `WIZARD_WAND` | `RH_WIZARD_POTION`, `RH_WIZARD_TESTTUBE` |
+
+A red herring is of a suspect neither the villain nor the giver
+(`rand() % 5` until neither), then one of their two (`rand() & 1`).
+
+| Address | What it does |
+|---|---|
+| `0x415720` | Room of doors constructor |
+| `0x4157B0` (+0x08) / `0x4157D0` (+0x10) | Reset / leave |
+| `0x4157F0` (+0x0C) | Entry |
+| `0x4159D0` (+0x34) | Idle chatter |
+| `0x415AB0` (+0x04) | Tick: the Jester, the locked door |
+| `0x415C00` (+0x24) | The ways out |
+| `0x415F80` (+0x18) | Placements |
+| `0x416140` / `0x4161C0` (+0x1C / +0x20) | Save / load |
+| `0x4122D0` / `0x412B80` / `0x4122E0` | The Jester: constructor, entry, tick |
+| `0x4305C0` / `0x430F00` | Phantom's clue giver and red herring |
+
+##### Phantom's throne room (WP-062)
+
+Traced 2026-11-16 for [WP-062](../work-packets/WP-062-throne-room.md), in
+Phantom's `Scooby.exe`.
+
+**The throne room** (`ROOM_P10_Throne_Room`, `0x417A90`, vtable
+`0x45EC1C`; music group 1, opening `Throne_Room.160_`):
+- **Reset** (`0x417AF0`): Jane's movie not played (`+0xBC`, saved as
+  `JaneMoviePlayed`), and `+0xC0` 0 (saved as `Entrances`; nothing else
+  touches it). Its `+0x30` (`0x417B10`) does nothing.
+- **Placements** (`0x417C10`):
+  - **The way to the secret passage** (`OBJ_P10_TO_P19`) is an exit as the
+    default path builds it, then at depth −1 (`0x431C10`) where the other
+    exits are at −1000. It is the doorway behind the throne, and takes its
+    clicks once the throne is hidden.
+  - **The throne** (`OBJ_P10_THRONE_ROOM_THRONE`, placed as a requires
+    object for `ANIM_CURSORRUBY`):
+    - until the red, blue and yellow balls are all found (game `+0x25B`,
+      `+0x25C`, `+0x25D`), a clickable without the ghost (`0x408DC0` with
+      0, −1): it has no `layer=` or `priority=`, so the first layer and
+      depth −1;
+    - after, the requires object (`0x408C80` with −1: the first layer,
+      depth 0);
+    - hidden once the ruby is used: ever taken (`0x407060`) and in no slot
+      (`0x4070C0`).
+  - **The Jester** (`OBJ_JESTER*`) isn't built if the ruby was never
+    taken, or once the three balls are found. The room places him without
+    his logic ([the Jester](#phantoms-room-of-doors-its-jester-and-phantoms-clues-wp-061)).
+  - **The third hotspot** is a clickable as the default path builds it.
+- **Entry** (`0x417B20`):
+  - **The first time,** Jane's movie: `JaneMoviePlayed` is set and movie
+    18 plays, back to this room (game vtable `+0x08`). That visit skips the
+    base entry (`0x40B920`); later ones run it.
+  - **Walk-ins:** from the room of doors, Velma (`D`, `0x406020`); from the
+    first arena, Daphne (`UL`, `0x405EE0`); from the second, Shaggy (`UR`,
+    `0x405E60`).
+  - Jane's screaming stops (game `+0x288`, `Screaming`).
+- **Each tick** (`0x417E80`, after the base tick):
+  - **Jane and the duster.** Jane (`0x40A800`, `JANE`) under the mouse
+    (`+0x08`), the button up (game `+0x20` bit 4), and the cursor
+    `ANIM_CURSORDUSTER`: the duster leaves its slot (`0x406C80`), the
+    cursor is the arrow again, and `Throne_Room.160E_` plays, blocking.
+    The duster is then used, which unlocks the room of doors' dining room.
+  - **The third hotspot.** While it shows step 1 (`+0x4C`) of
+    `ANIM_P10_THRONE_ROOM_HOTSPOT3A` (`+0x54`), Daphne, Scooby, Shaggy,
+    Velma and Fred are scared (`0x405190`, state `0x11`), each tick.
+- **The throne's event** (`0x417FB0`, room vtable `+0x14`):
+  - **With the ruby:** movie 9, back to this room (game vtable `+0x08`);
+    the ruby leaves its slot and the cursor is the arrow again. Back in the
+    room the throne is hidden.
+  - **Otherwise** (the arrow on the requires object, or a click on the
+    clickable): `Throne_Room.160X_`, blocking.
+- **The profile** (`0x418030`, `0x418090`): `JaneMoviePlayed`, `Entrances`.
+
+| Address | What it does |
+|---|---|
+| `0x417A90` | Throne room constructor |
+| `0x417AF0` (+0x08) | Reset |
+| `0x417B20` (+0x0C) | Entry: Jane's movie, the walk-ins |
+| `0x417C10` (+0x18) | Placements |
+| `0x417E80` (+0x04) | Tick: the duster, the third hotspot |
+| `0x417FB0` (+0x14) | The throne's event |
+| `0x418030` / `0x418090` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's dining room (WP-063)
+
+Traced 2026-11-16 for [WP-063](../work-packets/WP-063-dining-room.md), in
+Phantom's `Scooby.exe`.
+
+**The dining room** (`ROOM_P12_Dining_Room`, `0x40FD00`, vtable
+`0x45E810`; music group 1, no opening), where Maria is:
+- **Reset** (`0x40FD60`): nothing pending (`+0xB8`, `+0xB9`), and Maria's
+  movie not played (`+0xBA`, saved as `MariaMoviePlayed`).
+- **Placements** (`0x40FEE0`), each under the second layer (game `+0x5C`).
+  The room has none, so each attaches to the root:
+  - **the burger** (`OBJ_INV_BURGER`), an inventory object (`0x408BD0`) at
+    depth 1, hidden until Maria's game is won (`MariaPuzzle`, game
+    `+0x255`);
+  - **the mug** (`OBJ_P12_DINING_ROOM_MUG`), an exit (`0x401850`) at depth
+    1000, to `ROOM_P31_KST` with `Dining_Room.350B_`;
+  - **hotspots 2, 3 and 4,** clickables (`0x408DC0` with 1) at depths
+    10000, 1 and 2.
+- **Entry** (`0x40FD80`):
+  - **The first time,** Maria's movie: `MariaMoviePlayed` is set and movie
+    35 plays into her game, `ROOM_Maria` (game vtable `+0x08`). That visit
+    skips the base entry (`0x40B920`).
+  - **After,** the base entry, and Maria is met (`0x40A8B0`). With her game
+    won and her clue not given (`0x40A870`): `Dining_Room.350A_`, blocking,
+    her clue (game vtable `+0x44`), and `+0xB8`.
+  - One snack is needed (`+0x24`).
+- **Each tick** (`0x410110`, after the base tick):
+  - **Maria clicked** with the arrow (game `+0x20` bit 4, her `+0x08`;
+    `0x433300` compares the cursor with the default) before her game is
+    won: the room's exit handler (`+0x24`) takes the gang to `ROOM_Maria`,
+    with no scene.
+  - **Her clue,** as the Jester's: once she is idle with `+0xB8`, she
+    `GIVES` (state `0xF`), and input is held with the cursor hidden
+    (`+0xB9`); idle again, the exit handler takes the gang to
+    `ROOM_Suspect_Chooser` with `Global.Thank_You_`.
+- **The event** (`0x410610`): hotspot 2 scares Daphne, Shaggy, Scooby, Fred
+  and Velma (state `0x11`).
+- **Idle chatter** (`0x4100C0`, `+0x34`): with Velma idle, her `GLASSES`
+  and `Global.1000A2_`, without holding input.
+- **The idle line** (`0x410550`, `+0x28`): Maria's, once her game is won,
+  by `rand() % 4`: `Dining_Room.1010I1_`, `1010I3_` (for 1 and 2) or
+  `1010I4_`. Everyone else's is the base line.
+- **The profile** (`0x4104D0`, `0x410510`): `MariaMoviePlayed`.
+
+`ROOM_Maria` (`0x428770`, vtable `0x45F2C0`) is her game, a set piece of
+its own: it generates its items (`0x428890`); when it is won it sets
+`MariaPuzzle`, and 73 ticks later goes back to the dining room
+(`0x428CE0`). [Below](#phantoms-maria-game-wp-064).
+
+| Address | What it does |
+|---|---|
+| `0x40FD00` | Dining room constructor |
+| `0x40FD60` (+0x08) | Reset |
+| `0x40FD80` (+0x0C) | Entry: Maria's movie, her clue |
+| `0x40FEE0` (+0x18) | Placements |
+| `0x410110` (+0x04) | Tick: Maria clicked, her clue given |
+| `0x410610` (+0x14) | Event: hotspot 2 |
+| `0x4100C0` (+0x34) / `0x410550` (+0x28) | Idle chatter / idle line |
+| `0x4104D0` / `0x410510` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's Maria game (WP-064)
+
+Traced 2026-11-16 for [WP-064](../work-packets/WP-064-maria-game.md), in
+Phantom's `Scooby.exe`.
+
+**Maria's game** (`ROOM_Maria`, `0x428770`, vtable `0x45F2C0`; music group
+1, no opening, no toolbar): cups and plates on the floor go onto Maria's
+two trays until they balance.
+
+- **Maria** (`OBJ_MARIAGAME_MARIA`, `0x428F60`) is a sprite under the first
+  layer at depth −10, stopped on step 2 of `ANIM_MARIAGAME_MARIAHAPPY`. Her
+  step is her tilt: 2 level, 0 and 4 the furthest.
+- **The trays by her step** (`0x428770`): the first tray's x and the y of
+  its bottom item, then the second's:
+
+  | Step | First tray | Second tray |
+  |---|---|---|
+  | 0 | 180, 175 | 383, 158 |
+  | 1 | 181, 170 | 382, 162 |
+  | 2 | 181, 167 | 380, 164 |
+  | 3 | 183, 166 | 376, 167 |
+  | 4 | 186, 161 | 375, 170 |
+
+- **Entry** (`0x428890`, after the base entry): the toolbar hidden
+  (`0x407CC0`). The level (game `+0x160`) × 2 + 6 items, made in groups
+  that balance, and made again until the count is exact:
+  - each group has a floor, `rand() % 27 + 443`, and a first kind,
+    `rand() % 3` drawn again while 1;
+  - a cup B comes with two cups C;
+  - a plate P comes with two B (`rand() & 1` odd), or with a B and two C,
+    or four C (a second `rand() & 1`).
+
+  Both trays empty, Maria to be balanced (`+0x1F8`), and 129600 ticks (an
+  hour) before the game gives up (`+0x24C`).
+- **An item** (`0x4279D0`, vtable `0x45F280`): `OBJ_MARIAGAME_<colour><kind>`
+  with colour `G`, `R` or `Y` (`rand() % 3`) and kind `B`, `C` or `P`.
+  - It weighs 2, 1 or 4 (`+0x9C`), and sounds as a `Cup` or a `Plate`.
+  - It starts playing its `IDLE`, looping, at x `rand() % 600 + 20` on its
+    floor, at depth floor − 393.
+  - Its rollover (`0x428720`) is the open hand when it may be taken
+    (`0x429270`): the top item of a tray, or one on no tray.
+- **Its update** (`0x427CD0`, vtable `+0x0C`):
+  - **Resting:** a click on it (`0x4292D0`: a tray's top item only, back
+    at depth 50) takes it, and the cursor hides. Carried, it keeps where
+    it was taken, within x 10–630 and y 10–470.
+  - **Let go,** above its floor:
+    - over a tray (`0x429040`: within 80 of its x and under 20 below its
+      next place), it falls into it;
+    - else it is thrown spinning (`SPIN`, backwards if taken left of its
+      origin), at 0.2 × the last tick's move, at most 10, with
+      `Maria.Throw.<Cup|Plate>` over 3.
+  - **In the air:** 0.5 a tick of gravity. It bounces off the sides (x
+    0 and 639: 0.6 × its speed back, `Maria.Bounce`). Headed for a tray,
+    it is steered to it; else it spins with `Maria.Spin`, once for every
+    item spinning (`0x474D5C`).
+  - **Landing** on its floor (within 2), its sequence settles on step 3 or
+    its last. The next tick, `Maria.Spin` stops with the last spinner, and
+    `Maria.Floor.<Cup|Plate>.<rand() & 1 + 1>` plays. Landing in a tray
+    (2 below its place, `0x429180`): on top, at the depth of its place,
+    with `Maria.Place.<Cup|Plate>`.
+- **Each tick** (`0x428CE0`, after the base tick, which runs the items'
+  updates): the depths set since the last tick (`0x4296D0`), then:
+  - **Balancing** (`0x429400`): the second tray's weight less the first's
+    gives a step: 0 → 2, 1 → 3, 2 to 4 → 4, −1 → 1, −2 to −4 → 0, beyond
+    → 5 or −1. Maria moves one step a tick toward it; there, done. At 5
+    or −1 everything falls off (`0x4285B0`: thrown at `rand() % 10 − 5`,
+    `−(rand() % 10)`). At a new step she is `EXCITED` on it for 36 ticks,
+    then `HAPPY` again, and the trays' items move with it, 15 apart.
+  - **Done balancing,** every item on a tray and the trays equal:
+    `MariaPuzzle` (game `+0x255`), input held, the cursor hidden; 73 ticks
+    later the room's exit handler goes back to the dining room.
+
+| Address | What it does |
+|---|---|
+| `0x428770` / `0x428860` | Maria's game constructor / destructor |
+| `0x428890` (+0x0C) | Entry: the items |
+| `0x428CE0` (+0x04) | Tick: depths, balance, the win, the timers |
+| `0x428F60` (+0x18) | Placements: Maria |
+| `0x4279D0` | An item: constructor |
+| `0x427CD0` (item +0x0C) | An item's update: carried, thrown, falling, landing |
+| `0x428720` (item +0x18) | An item's rollover |
+| `0x429040` / `0x429180` | The tray under a point / an item put in a tray |
+| `0x4292D0` / `0x429270` | An item taken from a tray / whether it may be |
+| `0x4296D0` | A depth set at the next tick |
+| `0x429400` | Balance Maria one step |
+| `0x4285B0` | An item knocked off a tray |
+
+##### Phantom's kitchen (WP-065)
+
+Traced 2026-11-16 for [WP-065](../work-packets/WP-065-kitchen.md), in
+Phantom's `Scooby.exe`.
+
+**The kitchen** (`ROOM_P13_Kitchen`, `0x412C90`, vtable `0x45E954`; music
+group 1, no opening), where Ewan cooks:
+- **Reset** (`0x412CF0`): no line playing (`+0xC8`), nothing pending
+  (`+0xBC`, `+0xBD`), his lines from the first (`+0xC0`), and Ewan not
+  introduced (`+0xC7`, saved as `EwanIntro`).
+- **Placements** (`0x413740`):
+  - **the grease** (`OBJ_P13_KITCHEN_HOTSPOT1`, a requires object for the
+    empty bottle) only with the screwdriver ever had and the full bottle
+    never: under the first layer at depth 0, hit by its step polygon;
+    otherwise it isn't built;
+  - **the way to the storage room** (`OBJ_P13_TO_P17`) isn't built until
+    Ewan's quiz is won (`EwanPuzzle`, game `+0x254`).
+- **Entry** (`0x412EA0`, after the base entry):
+  - **Walk-ins:** from the dining room, Daphne (`UR`); from the storage
+    room, Daphne (`UL`) and Fred (`UR`).
+  - **His quiz won, his clue not given:** `Kitchen.190B_`, blocking, his
+    clue (game vtable `+0x44`), and he gives it when idle (`+0xBC`).
+  - **Else, won:** Ewan stirs (`STIRRING`, state `0x10`) without the
+    screwdriver, or once the mirror is used. With the screwdriver until
+    then he sleeps (`SLEEPING`, `+0xC6`, with `Kitchen.Ewan_Sleeping`,
+    which isn't on the disc). Either way at depth −1.
+  - Nothing pending (`+0xC4`, `+0xC5`); Ewan hit by his step polygon
+    (`+0x04` = 2).
+- **The way to the storage room** (`0x412D20`, room vtable `+0x24`): its
+  movie (8) doesn't play once the screwdriver has been had.
+- **Each tick** (`0x4130D0`, after the base tick):
+  - **Ewan clicked** with the arrow:
+    - **before his quiz is won:** the first time he is met (`0x40A8B0`) and
+      introduces himself on Big Head (`Kitchen.190A_` on
+      `BIG_HEAD_BG_P13`), then his quiz, `ROOM_Ewan`; after, straight to
+      it (game vtable `+0x04`);
+    - **won and awake:** with the speech lock free (`0x40A230`), one of
+      `Kitchen.1010G_`, `1010G1_`, `1010G3_` in turn, played as a sound;
+      the lock is freed when it ends;
+    - **asleep:** `Kitchen.190F_`, `190F1_`, `190F2_` in turn, blocking.
+  - **His clue,** as Maria's: idle, he `GIVES`, input held; idle again,
+    the exit handler goes to `ROOM_Suspect_Chooser` with
+    `Global.Thank_You_`.
+  - **The grease** (`+0xC4`), input held: Fred idle, no scene playing and
+    the opening done, he fetches it (`OBJ_FRED_P13_GET_GREASE`, state
+    `0xD`, `Kitchen.Get_Grease`). The grease is hidden, the empty bottle
+    used, the arrow back. Idle again: the full bottle, unless ever had,
+    and `Kitchen.190G_`, blocking.
+- **The event** (`0x4136C0`): the grease with the empty bottle starts the
+  above; with the arrow, `Kitchen.190C_`, blocking. Hotspot 3 scares
+  Daphne (state `0x11`).
+- **Leaving** (`0x4138D0`): left with the bottle at the grease, the full
+  bottle all the same.
+- **The profile** (`0x413920`, `0x413960`): `EwanIntro`.
+
+| Address | What it does |
+|---|---|
+| `0x412C90` | Kitchen constructor |
+| `0x412CF0` (+0x08) / `0x4138D0` (+0x10) | Reset / leave |
+| `0x412EA0` (+0x0C) | Entry: walk-ins, his clue, stirring or sleeping |
+| `0x4130D0` (+0x04) | Tick: Ewan clicked, his clue, the grease |
+| `0x4136C0` (+0x14) | Event: the grease, hotspot 3 |
+| `0x413740` (+0x18) | Placements |
+| `0x412D20` (+0x24) | The way out: no movie to the storage room with the screwdriver |
+| `0x413920` / `0x413960` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's Ewan's quiz (WP-066)
+
+Traced 2026-11-16 for [WP-066](../work-packets/WP-066-ewan-quiz.md), in
+Phantom's `Scooby.exe`.
+
+**Ewan's quiz** (`ROOM_Ewan`, `0x4109D0`, vtable `0x45E890`; music group 1,
+opening `Ewan.NOTEBOOKPAGE_INTRO_`, no toolbar) is
+[the Sheriff's quiz](#the-sheriffs-quiz-wp-052) on a chalkboard, its own
+code:
+- **Reset** (`0x410A30`): `Question0`–`11` unanswered, no sounds, not
+  erasing, `CurrentQuestion` −1.
+- **Placements** (`0x411210`), under the first layer, all hidden at first:
+  - the board (`OBJ_EWAN_BOARD`), a sprite at depth 0, stopped on step 0;
+  - the four answers (`OBJ_EWAN_ANSWER*`, kept by their name's letter),
+    requires objects at depth 10, stopped, with `0x411480` as their
+    callback;
+  - the eraser (`OBJ_EWAN_ERASE`), a sprite at depth 100, stopped.
+- **Entry** (`0x410F20`): input held; with no question yet, one drawn:
+  `rand() % 12`, drawn again while 1, then while 4 or answered (pages 2 and
+  5 are never asked). Then the page (`0x410FF0`):
+  - the board on `ANIM_EWAN_BOARDPAGE<page>`, stopped and shown, with
+    `Ewan.NOTEBOOKPAGE<page>`;
+  - each answer on `ANIM_EWAN_ANSWER<letter><page>`, stopped and shown,
+    with `Ewan.NOTEBOOKPAGE<page>_<letter>`.
+- **Each tick** (`0x410A70`, after the base tick), input held:
+  - **Erasing:** once the eraser stops, the next page is drawn and set up,
+    and the eraser hidden. Until then, nothing else.
+  - **The level + 3 answered** (game `+0x160`) and the eraser stopped: the
+    board and answers hidden, done.
+  - Then only with the sound waited for over and the opening played (room
+    `+0x10`):
+    - done: back to the kitchen (game vtable `+0x04`);
+    - wrong: `Ewan.NOTEBOOKPAGE_ANSWER_WRONG_2`, then done;
+    - else, as the Sheriff's: the page read with the board lit (step 1),
+      each answer read lit in turn, then free. Hovered, the board or an
+      answer lights up and says itself 36 ticks on (the Sheriff's 9), and
+      every 72 ticks after its sound.
+- **An answer clicked** (`0x411480`, room vtable `+0x40`): pressed (step
+  2), the sounds stopped.
+  - **Right** (by page: `B`, `B`, `A`, `D`, `B`, `A`, `B`, `A`, `C`, `A`,
+    `A`, `B`): answered, a `RIGHT_` line (`0x411940`, as the Sheriff's
+    `0x417B70`), and the eraser shown and played once with
+    `Ewan.Erase_Board`.
+  - **Wrong:** a `WRONG_1.` line, then the second.
+
+  Either holds input.
+- **Leaving** (`0x410FB0`): the level + 3 answered, `EwanPuzzle` (game
+  `+0x254`).
+- **The profile** (`0x411780`, `0x411850`): `CurrentQuestion`,
+  `Question0`–`11`.
+
+| Address | What it does |
+|---|---|
+| `0x4109D0` | Ewan's quiz constructor |
+| `0x410A30` (+0x08) / `0x410FB0` (+0x10) | Reset / leave |
+| `0x410F20` (+0x0C) | Entry |
+| `0x410A70` (+0x04) | Tick: erasing, done, reading, hover |
+| `0x411210` (+0x18) | Placements |
+| `0x411480` (+0x40) | An answer clicked |
+| `0x410FF0` | A page set up |
+| `0x411940` | A line with a random digit the disc has |
+| `0x411780` / `0x411850` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's kitchen storage room (WP-067)
+
+Traced 2026-11-17 for [WP-067](../work-packets/WP-067-kitchen-storage.md),
+in Phantom's `Scooby.exe`.
+
+**The kitchen storage room** (`ROOM_P17_Kitchen_Storage`, `0x4139A0`,
+vtable `0x45E994`; music group 1, no opening):
+- **Reset** (`0x413AF0`): the door untouched (`+0xBC`, saved as
+  `DoorClicked`), each line from its first (`+0xC0`, `+0xC4`, `+0xC8`).
+- **Placements** (`0x414B30`):
+  - **the door** (`OBJ_P17_KITCHEN_STORAGE_DOOR`), until it is open
+    (`DoorClicked` under 3), a requires object for the screwdriver under the
+    first layer at depth 0, hit by its step polygon; once begun its `+0x70`
+    is set to the screwdriver. Open, it isn't built;
+  - **the screwdriver and the shield,** placed as inventory objects, are
+    built as requires objects the arrow answers (`0x408C80`), until ever
+    taken;
+  - **hotspot 3** is a clickable as the default path builds it.
+- **Entry** (`0x413A00`, after the base entry):
+  - the door open, from elsewhere: `Kitchen_Storage.200A_`, blocking;
+  - back here through the first door movie (`DoorClicked` 1):
+    `Kitchen_Storage.200D_`, blocking;
+  - nothing pending; with the door begun, Fred stands 144 left and 13 up,
+    at it.
+- **The event** (`0x413EA0`):
+  - **the screwdriver** or **the shield** clicked: Fred or Daphne takes it;
+  - **hotspot 1:** `200XB_`, `200XB1_`, `200XB2_` in turn; **hotspot 2:**
+    `200X_`, `200X1_`, `200X2_`; **hotspot 3** on its `A`: `200XA_`; all
+    blocking;
+  - **the door,** each time through the room's exit handler (`+0x24`) back
+    to this room with a movie:
+
+    | `DoorClicked` | Clicked with | Then |
+    |---|---|---|
+    | 0 | the screwdriver | 1, movie 62, Fred turning (`TURN_UL`); the screwdriver used, the arrow back, the door's `+0x70` the screwdriver |
+    | 0 | the arrow | movie 65 with Fred turning, then `200B1_`, `200B2_`, in turn |
+    | 1 | anything | 2, movie 63 |
+    | 2 | anything | 3, movie 64: the door open |
+
+- **Each tick** (`0x413B20`, after the base tick), input held while either
+  is taken:
+  - **Fred,** idle with no scene playing and the opening done, takes the
+    screwdriver (`OBJ_FRED_P17_TAKE_SCREWDRIVER`, state `0xD`, with
+    `Kitchen_Storage.Fred_Takes_Screwdriver`), and it is hidden. On his
+    step 33 it goes in the toolbar unless ever had; idle again,
+    `Kitchen_Storage.200C_`, blocking.
+  - **Daphne** likewise takes the shield (`OBJ_DAPHNE_P17_TAKES_SHIELD`,
+    `Kitchen_Storage.Daphne_Takes_Shield`). Idle again it goes in the
+    toolbar unless had, and `200G_` plays if Brad has been met
+    (`0x40A930`), else `400A_`.
+- **Leaving** (`0x414DB0`): left while either is being taken, it goes in
+  the toolbar all the same.
+- **The profile** (`0x414E40`, `0x414E80`): `DoorClicked`.
+
+The packed exit (`0x404820`) takes the gang's directions as Daphne, Fred,
+Scooby, Shaggy, Velma (the exit object's `+0xA0`, `+0x80`, `+0x90`,
+`+0x98`, `+0x88`, read from `daphne`, `fred`, `scooby`, `shaggy`,
+`velma`); the door's `TURN_UL` is Fred's.
+
+| Address | What it does |
+|---|---|
+| `0x4139A0` | Kitchen storage room constructor |
+| `0x413AF0` (+0x08) / `0x414DB0` (+0x10) | Reset / leave |
+| `0x413A00` (+0x0C) | Entry |
+| `0x413B20` (+0x04) | Tick: the screwdriver, the shield |
+| `0x413EA0` (+0x14) | Event: the items, the hotspots, the door |
+| `0x414B30` (+0x18) | Placements |
+| `0x414E40` / `0x414E80` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's king's armory and its slide (WP-068)
+
+Traced 2026-11-17 for [WP-068](../work-packets/WP-068-kings-armory.md), in
+Phantom's `Scooby.exe`.
+
+**The king's armory** (`ROOM_P20_Kings_Armory`) and **its slide**
+(`ROOM_P20_Kings_Armory_Slide`) share one class (`0x40EBC0`, vtable
+`0x45E710`; music group 1, no opening); the factory builds an object for
+each, with its own state:
+- **Reset** (`0x40EC20`): the scratch's lines from the first (`+0xC0`),
+  the intro not had (`+0xC6`, saved as `IntroDone` in each room's own
+  section).
+- **Placements** (`0x40EF10`): the duster (`OBJ_INV_DUSTER`), never had, a
+  requires object the arrow answers (`0x408C80`); had, not built. The
+  armour (`OBJ_P20_KINGS_ARMORY_MAN`) and the scratch are requires objects
+  for the full bottle, as placed.
+- **Entry** (`0x40EC40`):
+  - **In the armory with the full bottle used** (ever had, in no slot):
+    the slide room instead (game vtable `+0x04`), without the base entry.
+  - Else nothing pending, the base entry, and the intro:
+    - without Jane screaming (game `+0x288`), `Kings_Armory.150_` once;
+    - screaming, one of her five screams (`rand() % 5`; the disc has the
+      first four), then `Kings_Armory.Intro2_` or `Intro_` (`rand() & 1`).
+
+    Either opening is unplayed, and `+0x3C` (`0x40C7B0`) runs again.
+- **The event** (`0x40EDD0`):
+  - **the duster** clicked: Scooby takes it;
+  - **the full bottle** on the scratch or the armour: movie 7 to the slide
+    room (game vtable `+0x08`), the bottle used, the arrow back;
+  - **the arrow** on the scratch: `Kings_Armory.150C_`, `150C1_`, `150C2_`
+    in turn, blocking; on the armour, movie 44 back to the same room.
+- **Each tick** (`0x40EFE0`, after the base tick), input held while the
+  duster is taken: Scooby, idle with no scene playing and the opening
+  done, takes it (`OBJ_SCOOBY_P20_TAKES_DUSTER`, state `0xD`, with
+  `Kings_Armory.Scooby_Takes_Duster`), and it is hidden. Idle again, it
+  goes in the toolbar unless ever had, and `Kings_Armory.150B_`,
+  blocking.
+- **Leaving** (`0x40F150`): left while the duster is being taken, it goes
+  in the toolbar all the same.
+- **The profile** (`0x40F1A0`, `0x40F1E0`): `IntroDone`.
+
+| Address | What it does |
+|---|---|
+| `0x40EBC0` | King's armory constructor, for both rooms |
+| `0x40EC20` (+0x08) / `0x40F150` (+0x10) | Reset / leave |
+| `0x40EC40` (+0x0C) | Entry: to the slide, the intro, the screams |
+| `0x40EFE0` (+0x04) | Tick: the duster |
+| `0x40EDD0` (+0x14) | Event: the duster, the scratch, the armour |
+| `0x40EF10` (+0x18) | Placements |
+| `0x40F1A0` / `0x40F1E0` (+0x1C / +0x20) | Save / load |
+
+##### Phantom's two arenas (WP-069)
+
+Traced 2026-11-17 for [WP-069](../work-packets/WP-069-arenas.md), in
+Phantom's `Scooby.exe`.
+
+**The first arena** (`ROOM_P09_Arena1`, class `0x40D4E0`, vtable
+`0x45E68C`, opening `Arena_1.170_`) has the grindstone:
+- **Entry** (`0x40D700`, after the base entry): from the throne room Velma
+  walks in (`U`, `0x405FE0`), from the second arena Velma (`D`,
+  `0x406020`); back in the same room, after the stone's movie, the toolbar
+  opens (`0x407C00`).
+- **The event** (`0x40D560`):
+  - **the rusty shears** on the stone: movie 40 back to this room (game
+    vtable `+0x08`), the shears out of their slot, the arrow back, and
+    `+0xBC` set;
+  - **the arrow** on the stone: `Arena_1.170XB_`, `170A_`, `170A1_`,
+    `170A2_` in turn (`+0xB8`), blocking;
+  - **hotspot 3:** `Arena_1.170X_`, not blocking.
+- **Leaving** (`0x40D6A0`): with `+0xBC` set, the sharp shears
+  (`OBJ_INV_SHARP_SHEARS`) go in the toolbar, unless ever had.
+
+**The second arena** (`ROOM_P14_Arena2`, class `0x40D790`, vtable
+`0x45E6CC`, opening `Arena_2.180A_`) is Brad's. Until his game is won
+(`BradPuzzle`, game `+0x256`) he hides in the armour pile:
+- **Placements** (`0x40E090`):
+  - **the armour pile** (`OBJ_BRAD_ARMOR_PILE`), not won: a clickable as
+    the default path builds it (`0x408DC0` with 1, -1), with a click
+    queued (`0x401840`) and `+0xCA` set, so its first click is the room's
+    own. Won: not built.
+  - **the mirror** (`OBJ_INV_MIRROR`), never had: a sprite at depth -480,
+    not an inventory object; had, not built.
+  - **`OBJ_BRAD`** is built only once his game is won, **`OBJ_BRAD_H`**
+    (Brad in the pile) only until.
+  - **the pole,** won on level 1 or 2, and **the arena's shield,** the
+    shield ever had and in no slot: sprites at depth 0. Else not built.
+- **Entry** (`0x40D830`, after the base entry):
+  - his game won and his clue not given: his clue (game vtable `+0x44`),
+    Brad met (`0x40A8B0`), `Arena_2.180B_`, blocking, and `+0xC4`;
+  - not won with the opening unplayed: Brad hidden;
+  - the shield given him (`+0xC6`) and the mirror never had, or the
+    mirror had: Brad 50 to the left; in the first case `+0xC7` too;
+  - from the throne room Fred walks in (`UL`), from the first arena Velma
+    (`D`). `+0xCB` keeps whether the opening was unplayed.
+- **Before the scene player** (`0x40E440`, vtable `+0x38`, which the base
+  class leaves to the player):
+  - his game not won and the opening played: Brad, still hidden, rises
+    (`RISE`, state `0xF`, shown, `Arena2.Brad_H.Rise`);
+  - else in `Arena_2.180A_` with its fifth line said and its speaker done:
+    Brad, hidden, rises the same way, and while he isn't idle the scene
+    player doesn't run. His own line, the sixth, follows his rise.
+- **Each tick** (`0x40DA80`, after the base tick):
+  - **the opening played on this visit** (`+0xCB`): `+0xCA` cleared and a
+    click queued on the pile, so the party goes straight into Brad's game;
+  - **Brad clicked with the shield** (his clicked flag, read here before
+    the game's update, `0x4098B0`, could call it the wrong item): Big Head,
+    `Arena_2.180E_` on `BIG_HEAD_BG_P14`, back here through movie 29; the
+    shield used, the arrow back, `+0xC6`;
+  - **his clue** (`+0xC4`), no scene playing and the opening done: he
+    `GIVES`, `+0xC5` holds input (game `+0x24`); idle again, the exit
+    handler to `ROOM_Suspect_Chooser` with `Global.Thank_You_`;
+  - **the mirror** (`+0xC6`, `+0xC7`, never had): Velma, idle with no scene
+    playing and the opening done, takes it (`OBJ_VELMA_P14_TAKE_MIRROR`,
+    state `0xD`, `Arena2.Velma_Takes_Mirror`), and it is hidden; idle
+    again, it goes in the toolbar unless had;
+  - **the pile rattles,** `rand() % 500 == 0`: `Brad.Armor.<rand() % 4 +
+    1>`, `+0xCA` set and a click queued.
+- **The event** (`0x40E5A0`): the pile, `+0xCA` clear: the exit handler to
+  `ROOM_Brad_SPOOKY`, `ROOM_Brad_SPOOKIER` or `ROOM_Brad_SPOOKTACULAR` by
+  level; `+0xCA` set, it is cleared. Hotspot 2 moved on to its B:
+  `Arena_2.180X_`, not blocking.
+- **Leaving** (`0x40E030`): left while Velma takes the mirror, it goes in
+  the toolbar all the same.
+- **Brad's idle line** (`0x40EAC0`, `+0x28`), his game won: with the
+  shield used `Arena_2.1010H3_1_BRAD`, else `1010H_` or `1010H2_` (`rand()
+  & 1`); else the base line. **The idle chatter** (`0x40EBA0`, `+0x34`),
+  won: `Arena_2.1010H4_`, not blocking.
+
+**A queued click** (`0x401840`) adds one to a clickable's count (`+0x80`).
+The clickable's tick (`0x401440`) takes one while `+0x70` is clear and
+no click is pending (`+0x7E`), and plays it as if clicked, event and all;
+the fork takes it while the clickable isn't playing. Brad's game (`0x41E9E0`) is
+[below](#phantoms-brad-game-wp-070).
+
+| Address | What it does |
+|---|---|
+| `0x40D4E0` | First arena constructor |
+| `0x40D540` (+0x08) / `0x40D6A0` (+0x10) | Reset / leave |
+| `0x40D700` (+0x0C) | Entry: Velma, the toolbar |
+| `0x40D560` (+0x14) | Event: the stone, hotspot 3 |
+| `0x40D790` | Second arena constructor |
+| `0x40D7F0` (+0x08) / `0x40E030` (+0x10) | Reset / leave |
+| `0x40D830` (+0x0C) | Entry: his clue, Brad hidden or aside |
+| `0x40DA80` (+0x04) | Tick: into his game, the shield, the thanks, the mirror, the rattle |
+| `0x40E5A0` (+0x14) | Event: the pile, hotspot 2 |
+| `0x40E090` (+0x18) | Placements |
+| `0x40EAC0` (+0x28) / `0x40EBA0` (+0x34) | Brad's idle line / the idle chatter |
+| `0x40E440` (+0x38) | Before the scene player: Brad's rise |
+| `0x401840` | A clickable's click queued |
+
+##### Phantom's Brad game (WP-070)
+
+Traced 2026-11-17 for [WP-070](../work-packets/WP-070-brad-game.md), in
+Phantom's `Scooby.exe`.
+
+**Brad's game** (`ROOM_Brad_SPOOKY`, `ROOM_Brad_SPOOKIER` and
+`ROOM_Brad_SPOOKTACULAR`, one class: `0x41E9E0`, vtable `0x45EF50`) buries
+him under a pile of armour. Each piece hangs on a spring from its place and
+pushes on its neighbours. Only the next piece in the level's order comes
+off.
+- **Placements** (`0x41EA60`), for `OBJ_BRADARMOR_<suffix>`; anything else
+  takes the default path:
+  - **`EASY`, `MED`, `HARD`** of another level than the game's (`+0x160`):
+    claimed, not built. Of the game's level: a piece (`0x41DAB0`, vtable
+    `0x45EED8`) under the second layer (game `+0x5C`; no room has one, so
+    the root) at depth 10, looping, counted (`+0xB8`). Several placements
+    share each object name, so a piece is kept by its sequence's last
+    digit less one, `0` being the tenth: 6 pieces on `EASY`, 8 on `MED`,
+    10 on `HARD`.
+  - **`BODY`, `HEADS`** (`+0x120`) **and `MOUTHS`** (`+0x124`): sprites
+    under the root (parent 0) at depths -10, -9 and -8; the mouths
+    stopped.
+- **Entry** (`0x41EE80`, after the base entry):
+  - **the level's order** (`+0xE4`) and **links** (`0x41E460`, both ways,
+    each new neighbour at the head of the other's list, `0x41E760`). The
+    orders, by piece: `EASY` 0, 2, 4, 5, 1, 3; `MED` 2, 1, 6, 4, 3, 7, 0,
+    5; `HARD` 1, 2, 3, 8, 5, 4, 0, 9, 7, 6;
+  - the i-th in the order gets its share, (i + 1) / count (`+0x5C`), and
+    depth count - i (`0x431C10`, the depth move `0x431C70`), so the next
+    piece is always on top;
+  - **each piece's way out** (`0x41F6F0`): the angle from the middle of
+    the pieces still on the pile, where they are now, to where it hangs
+    (`+0x68`, `0x41DD10`);
+  - `Brad.ARMOR_INTRO_1` (`+0x118`), the cursor faded out at once
+    (`0x435E80` with 0 on game `+0x18`), and an hour (`+0x130`, 129600
+    ticks) before the game gives up.
+- **Each tick** (`0x41F3C0`, after the base tick):
+  - the mouths on the line playing's lip shape less one (`0x435A70`), held
+    on a 0, back to the first with no line;
+  - **the introduction over:** the cursor faded back in (`0x435EF0`,
+    `+0x12C`);
+  - the heads' excitement over (`+0x128` down to 0): `HEADSNORM`;
+  - **`+0x130` below 0:** back to `ROOM_P14_Arena2` (game vtable `+0x04`);
+  - **each piece still on the pile** (`0x41E4B0`): not loose and moved
+    more than 4 since the last tick, a rattle,
+    `Brad.Armor.<rand() % 5 + 1>`. The play call (`0x4359A0`) takes a
+    second argument, 500 here, whose use wasn't traced.
+- **A piece's update** (`0x41DD60`, its vtable `+0x0C`, after its player),
+  with d its place less where it hangs:
+  - **taken:** the button going down (input `+0x20` bit 2) on it (`+0x08`);
+  - **its turn, dragged, and d over 60:** loose (`+0x65`). Its way becomes
+    d's angle, and it flies that way at 1.5, faster by 1.5 each tick;
+  - **else a damped spring:** v = (v - k·d) × 0.2, k = (1 + θ/π) × 1.5,
+    θ how far d's angle is off its way;
+  - **not dragged** (or loose): speed held to 1.5 unless loose, then place
+    += v. **Dragged:** with the mouse, speed held to 1.5, and only v × 0.01;
+  - **loose and off the screen** (x past 960 or -320, y past 720 or -240):
+    unlinked from its neighbours, the next piece's turn (`0x41F570`), and
+    deleted (`+0x30`). The last: the game won (`BradPuzzle`, game
+    `+0x256`), the cursor fading out over 18 ticks, input held (game
+    `+0x24`), and back to the arena in 72 ticks (`+0x130`); else every way
+    out again;
+  - **out of turn, past 20 from where it hangs:** held at 20, and the
+    first time over, Brad complains (`0x41F5C0`). **Its turn:** held
+    within 78 - 18·a/s while a is under its share s, else
+    60 - 40·(a - s)/(1 - s), a being θ/π. Pulled its own way it can
+    reach 60; well off it, it can't;
+  - the button up (bit 1) or the mouse off it (its hit test, vtable
+    `+0x14`): no longer dragged;
+  - **on the pile:** each neighbour pushed along the line to it, by
+    (ux + uy) × dx × 0.05. The original reads d's x for both terms:
+    `0x41E2D5` stores it twice.
+- **Brad's complaints** (`0x41F5C0`): a new piece starts the count (`+0x114`)
+  and the lines over, from `Brad.ARMOR_RESPONSE_1` (`+0x11C`). Every fourth
+  time:
+  - the heads go `HEADSEXCITED` for 72 ticks (`+0x128`);
+  - unless a line still plays (`0x435A10`), the next complaint plays: 1,
+    then 2, 3, 2, 3...
+- **Reset and leave** (`0x41EA40`, `0x41F3A0`): no pieces, no piece
+  complained of.
+- **The rollover** on a piece (`0x41E6C0`, its vtable `+0x18`): the open
+  hand.
+
+| Address | What it does |
+|---|---|
+| `0x41E9E0` | Brad's game constructor, for the three rooms |
+| `0x41EA40` (+0x08) / `0x41F3A0` (+0x10) | Reset / leave |
+| `0x41EE80` (+0x0C) | Entry: the order, links, depths and ways; his introduction |
+| `0x41F3C0` (+0x04) | Tick: the mouths, the cursor, the heads, the way back, the rattles |
+| `0x41EA60` (+0x18) | Placements |
+| `0x41DAB0` | A piece's constructor (vtable `0x45EED8`) |
+| `0x41DD60` (piece +0x0C) | A piece's update: taken, spring, drag, loose, held, pushes |
+| `0x41E4B0` | A piece's rattle |
+| `0x41E460` / `0x41E760` | Two pieces linked / a neighbour added |
+| `0x41F550` / `0x41F570` | The piece whose turn it is / the next turn |
+| `0x41F5C0` | Brad complains |
+| `0x41F6F0` / `0x41DD10` | Every way out / one |
+| `0x431C10` / `0x431C70` | A sprite's depth among its siblings |
+| `0x435E80` / `0x435EF0` | A fader (the cursor's, game `+0x18`) out / in over n ticks |
+
+##### Phantom's secret passages, storage room and treasury (WP-071)
+
+Traced 2026-11-17 for [WP-071](../work-packets/WP-071-secret-passages.md),
+in Phantom's `Scooby.exe`. Several of these classes read the game through an
+`int *`: index `+0x42` is byte `+0x108` (`FinalClue`), `+0x58` is `+0x160`
+(the level) and `+0x2B` is `+0xAC` (the toolbar).
+
+**The first secret passage** (`ROOM_P15_Secret_Passage1`, `0x416C40`,
+vtable `0x45EB1C`, no opening) only has its walk-ins (`0x416CA0`, after the
+base entry): from the armory's slide, Velma (`D`, `0x406020`); from the
+storage room, Daphne (`UL`, `0x405EE0`).
+
+**The second secret passage** (`ROOM_P19_Secret_Passage2`, `0x416D10`,
+vtable `0x45EB5C`, opening `Secret_Passage_2.380_`) has the gargoyle's wall
+of fire across the way to the treasury:
+- **Reset** (`0x416D70`): the fire burning (`+0xB8`).
+- **Placements** (`0x416D90`): the fire (`OBJ_P19_SECRET_PASSAGE_GAR_FLAME`)
+  a requires object (`0x408C80` with -1). Burning, it plays `FLAMEA` with
+  `Secret_2.Wall_Of_Fire`; out, `FLAMEB`. Its `requiredanim=`
+  (`ANIM_BRAD_ARMOR_HEADBLINKS_A`) is never a cursor, so only the arrow's
+  event reaches it.
+- **Entry** (`0x416F30`): the level's snacks plus two needed (`+0x24`).
+- **The event** (`0x416E90`): the fire clicked.
+  - Fewer snacks given here (`+0x88`) than the level plus two: a line by
+    level, `Treasury.360A_`, `360A1_` or `360A2_`, blocking, and the snack
+    box flashes (`0x40D4D0`).
+  - Otherwise the fire goes out, and movie 39 plays back into this room
+    (game vtable `+0x08`).
+- **The profile** (`0x416F60`, `0x416FA0`): `GargoyleFlameActive`, in the
+  room's own section.
+
+**The storage room** (`ROOM_P18_Storage`, `0x417650`, vtable `0x45EBDC`,
+opening `Storage_Room.370_`):
+- **Reset** (`0x4176B0`): the hotspots' lines from the first (`+0xB8`).
+- **Placements** (`0x4179C0`): the rope (`OBJ_INV_ROPE`, an inventory
+  object in `object.ini`). Never had, it is a requires object
+  (`0x408C80` with -1, `+0xC0`); had, it isn't built.
+- **The event** (`0x4176D0`):
+  - **hotspot 1 or 2:** `Storage_Room.370X_`, `370X1_`, `370X2_` in turn,
+    not blocking;
+  - **the rope:** before the well is visited (`WellVisited`, game
+    `+0x262`) `Storage_Room.370B_`, after it `370A_`, blocking, with
+    `+0xBC` as the flag the scene sets when it ends (`0x40B400`).
+- **Each tick** (`0x4177C0`, after the base tick), with `+0xBC` set:
+  - Velma, idle with no scene and the opening done, takes the rope
+    (`OBJ_VELMA_P18_TAKE_ROPE`, with `Storage.Velma_Takes_Rope`), and it is
+    hidden (`+0xBD`);
+  - the cursor stays out and input held (`0x435E80`, game `+0x24`);
+  - on her step 34 (`+0x4C` = `0x22`), the rope goes in the toolbar unless
+    had;
+  - once she is idle again, the cursor and input come back.
+- **Leaving** (`0x417970`): left with `+0xBC` set, the rope goes in the
+  toolbar all the same.
+
+**The treasury** (`ROOM_P16_Treasury`, `0x4182E0`, vtable `0x45EC9C`, no
+opening) only has its tick (`0x418340`, after the base tick). The Princess
+clicked with the arrow (her `+0x08`, game `+0x20` bit 4) sets the final clue
+(`FinalClue`, game `+0x108`) and plays movie 55 to `ROOM_Suspect_Chooser`
+(game vtable `+0x08`): the accusation.
+
+| Address | What it does |
+|---|---|
+| `0x416C40` | First passage constructor |
+| `0x416CA0` (+0x0C) | Entry: the walk-ins |
+| `0x416D10` | Second passage constructor |
+| `0x416D70` (+0x08) | Reset: the fire burning |
+| `0x416F30` (+0x0C) | Entry: the snacks needed |
+| `0x416E90` (+0x14) | Event: the fire |
+| `0x416D90` (+0x18) | Placements |
+| `0x416F60` / `0x416FA0` (+0x1C / +0x20) | Save / load |
+| `0x417650` | Storage room constructor |
+| `0x4176B0` (+0x08) / `0x417970` (+0x10) | Reset / leave |
+| `0x417950` (+0x0C) | Entry |
+| `0x4177C0` (+0x04) | Tick: Velma takes the rope |
+| `0x4176D0` (+0x14) | Event: the hotspots, the rope |
+| `0x4179C0` (+0x18) | Placements |
+| `0x4182E0` | Treasury constructor |
+| `0x418340` (+0x04) | Tick: the Princess |
+
+##### Phantom's royal gallery and magic mirror room (WP-072)
+
+Traced 2026-11-18 for [WP-072](../work-packets/WP-072-royal-gallery.md), in
+Phantom's `Scooby.exe`. The level is read through the game's `int *` as
+index `+0x58` (byte `+0x160`).
+
+**The royal gallery** (`ROOM_P07_Royal_Gallery`, `0x416240`, vtable
+`0x45EADC`, opening `Royal_Gallery.210_`) keeps the found red ball, the
+mirror the gang hangs, and the Jester, who stands here as he does in the
+room of doors: its `+0xC8` is the same `JesterControl`
+([WP-061](#phantoms-room-of-doors-its-jester-and-phantoms-clues-wp-061),
+built by `0x4122D0`, entered by `0x412B80`, ticked by `0x4122E0`).
+- **Reset** (`0x4162D0`): the `210A_` line back to the first (`+0xBC`).
+- **Entry** (`0x416830`): from the dining room Velma walks in (`U`,
+  `0x405FE0`); from the magic mirror room Shaggy (`UR`, `0x405E60`). The
+  level's snacks plus two are needed for the way on (`+0x24`); nothing is
+  being hung (`+0xC0`, `+0xC1`, `+0xC2`); the Jester's entry.
+- **The event** (`0x416500`):
+  - **the red ball** (`OBJ_INV_BALL_RED`) shown: the gallery is re-entered
+    through movie 3 (game vtable `+0x08`), and the ball is found
+    (`RedBallFound`, game `+0x25B`), for the Jester to take.
+  - **the mirror** (`OBJ_P07_ROYAL_GALLERY_MIRROR`) with the found mirror
+    (the event's success): the found mirror leaves the toolbar (`0x406C80`),
+    and Shaggy is set to hang it (`+0xC0`). The room's own name is written
+    to the game's pending-opening string (`+0x8E`, `0x4324B0`), which names
+    no clip.
+  - **the mirror** clicked bare: `Royal_Gallery.210A_`, `210A1_` or `210A2_`
+    by `+0xBC`, blocking, and the mirror sprite plays once (`+0xB8`).
+- **Placements** (`0x4168D0`): `HOTSPOT1` a clickable at depth -200; the
+  mirror a requires object (`0x402D90`, `ANIM_CURSOROPEN`, `+0xB8`), hung
+  and looping (`Royal_Gallery.Mirror`) or bare and stopped; `OBJ_P07_TO_P08`
+  an exit (`0x408D20`) at depth -1000, hidden until the mirror is hung. The
+  red ball is offered only while it is not yet found and the Jester is here
+  (`0x40A930`).
+- **Leaving** (`0x4162F0`): the way to the magic mirror room with fewer
+  snacks given (`+0x88`) than the level plus two blocks, a line by level
+  (`Royal_Gallery.210C_`, `210C1_`, `210C2_`), and the snack box flashes
+  (`0x40D4D0`); else the base handler lets it through.
+- **Each tick** (`0x416610`, after the base tick and the Jester's): once the
+  mirror has been used, Shaggy, idle with no scene and the mirror sprite at
+  rest, walks over and hangs it (`OBJ_SHAGGY_P07_PUT_MIRROR`, `0x406130`,
+  with `Royal_Gallery.Shaggy_Puts_Mirror`); input is held meanwhile (game
+  `+0x24`). Shaggy idle again: the mirror shows, looping, the way on opens,
+  and a line by level (`210B_`, `210B2_`, `210B3_`) plays, blocking, then
+  the snack box flashes (`+0xC2`). The hung mirror shimmers — stopped off
+  its first frame it goes back to it; looped round to it, it plays on from
+  the first frame and hums again. The mirror stays hung, held as the found
+  mirror's history (`0x407060`) with no slot.
+
+**The magic mirror room** (`ROOM_P08_Magic_Mirror_Room`, `0x414EC0`, vtable
+`0x45E9DC`, opening `Magic_Mirror_Room.310_`):
+- **Reset** (`0x414F20`): both hotspot cycles back to the first (`+0xB8`,
+  `+0xBC`).
+- **Entry** (`0x415250`): the mirror hums (`Magic_Mirror_Room.Mirror`).
+- **The event** (`0x414F40`): `HOTSPOT2` toggles `310X1_` / `310X2_`
+  (`+0xBC`); `HOTSPOT3` gives `Magic_Mirror_Room.HOTSPOT3_`, blocking;
+  `HOTSPOT4` cycles `310X2_` / `310XA2_` / `310XA3_` (`+0xB8`). Only
+  `HOTSPOT3` holds input.
+- **Placements** (`0x415060`): `HOTSPOT5` a looping sprite at depth 0;
+  `OBJ_P08_TO_WIZARDS_SKULL` a looping sprite at depth -500; the four
+  cameras (`OBJ_P08_MAGIC_MIRROR_CAM1`–`4`) exits (`0x408D20`) at depth 1.
+
+| Address | What it does |
+|---|---|
+| `0x416240` | Royal gallery constructor |
+| `0x4162D0` (+0x08) | Reset: the `210A_` line |
+| `0x416830` (+0x0C) | Entry: the walk-ins, the snacks, the Jester |
+| `0x416610` (+0x04) | Tick: the Jester, Shaggy hangs the mirror, the shimmer |
+| `0x416500` (+0x14) | Event: the red ball, the mirror |
+| `0x4168D0` (+0x18) | Placements: the hotspot, the mirror, the way on, the ball |
+| `0x4162F0` (+0x24) | Leaving: the snack gate to the magic mirror room |
+| `0x414EC0` | Magic mirror room constructor |
+| `0x414F20` (+0x08) | Reset: the hotspot cycles |
+| `0x415250` (+0x0C) | Entry: the mirror's hum |
+| `0x414F40` (+0x14) | Event: the three hotspots |
+| `0x415060` (+0x18) | Placements: the hotspot, the skull, the cameras |
+
+##### Phantom's Knights of the Snack Table (WP-073)
+
+Traced 2026-11-18 for [WP-073](../work-packets/WP-073-kst.md), in Phantom's
+`Scooby.exe`. The difficulty is read through the game's `int *` as byte
+`+0x160`.
+
+**Knights of the Snack Table** (`ROOM_P31_KST`, `0x419700`, vtable
+`0x45EDEC`, opening `Knights_of_the_Snack_Table.350X_`, music
+`Knights.Music`) is the one room of the audit's group 6 that is a set piece
+of its own: the timed game Phantom gives where Showdown has Pie Noon
+([WP-055](#pie-noon-wp-055)). The two are separate classes, but share the
+framework — the asserts in `enter` still read "...specified in Pie Noon".
+Knights walk up to the benches and drink, Shaggy fills and serves the mugs,
+and the gang must serve the level's quota before the way back to the dining
+room opens. It overrides only four slots (tick, enter, leave, claim); it has
+no event, save or load of its own, and exits only to `ROOM_P12_Dining_Room`.
+
+- **Constructor** (`0x419700`): the two counter digits (`+0xB8`, `+0xBC`),
+  the serving flag (`+0xC0`) and the three sprite-queue handlers (Shaggy at
+  `+0xC4`, the knights at `+0xCC`, the drinks at `+0xE4`); the marker counts
+  (`+0x180`–`+0x190`) to zero; six knight-slot pointers (`+0xF0`–`+0x104`).
+- **Placements** (`0x41A970`): marker placements the class keeps and does
+  not build, each array held sorted ascending by **y** (the primary array
+  the y, the parallel the x):
+  - `OBJ_KST_SHAGGY` Shaggy's post (and the layer's x, `+0xEC`);
+  - `OBJ_KST_KNIGHT1` the three seats, the x read 40 less (`0x45EE50`), the
+    gang entering from off the left (`+0x114` y, `+0x108` x);
+  - `OBJ_KST_MUG` by its sequence: `ANIM_KST_MUGEMPTY` the bench-end row
+    (`+0x144`/`+0x138`), `ANIM_KST_MUGEMPTY_BREAKS` the bench-floor row (y
+    only, `+0x150`), `ANIM_KST_MUGFULL` the drink-spawn row
+    (`+0x168`/`+0x15C`), `ANIM_KST_MUGFULL_BREAKS` the bench-start row
+    (`+0x12C`/`+0x120`);
+  - `OBJ_KST_OVERLAY1`–`3` the three table overlays, sprites at depth 0;
+  - `OBJ_KST_COUNTER` with `ANIM_KST_COUNTERNUMBERS` the two counter digits,
+    sprites at depth 100 (the smaller x the tens). Each marker set caps at 3
+    ("More than 3 objects of the same type"); a third digit asserts.
+
+  The counter's box (`ANIM_KST_COUNTERBOX`), `OBJ_KST_EXIT` and
+  `OBJ_KST_FLAME` fall to the base path.
+- **Entry** (`0x419A80`, after the base entry): the camera pans (`+0xEC`);
+  the two counter digits are set from a game counter (`(game+0xAC)+0x30`:
+  each digit less one, mod ten); the quota (`+0xE8`) is five less the
+  difficulty; the round is laid out (`0x41A5C0`); on the first visit the
+  narrator's intro (`Knights_of_the_Snack_Table.350X_1_NARRATOR`) is
+  resolved into `+0x1A8`; `Knights.Ambience` plays, looping.
+- **Laying out a round** (`0x41A5C0`): six knight slots (`0x418CA0`, a knight
+  and its arm, state 4 parked until the loop walks it in); a full mug
+  (`ANIM_KST_MUGFULL`) for each knight still owed, from (550, 40) stepping
+  down by 35 (`0x45EE48`).
+- **A knight** (`0x418CA0`, vtable `0x45ED78`): `ANIM_KST_KNIGHT1WALKS` and
+  its arm, mirrored by its slot; its reach `(bench-end x − seat x) × 0.005`
+  (`0x45ED74`); the sounds `Knights.Knight_Walks.%d`, `Knights.Knight_Gulp.%d`.
+  Its states (`0x4191B0`): 0 drinks, 1 walks, 2 starts, 3 finishes, 4 parked
+  off-screen. Shaggy's success is `ANIM_KST_SHAGGYSUCCESS` (`0x4196D0`), his
+  drop `ANIM_KST_SHAGGYDROP_MUG` with `Knights.Zoinks` (`0x419680`).
+- **Each tick** (`0x419E40`, after the base tick): the music's volume by the
+  camera's x against 100 (`0x45EDAC`); the Shaggy queue steps; the narrator's
+  intro holds until the gang is idle; on the serve flag Shaggy drops the mug
+  and the quota (`+0xE8`) drops; once the quota is met and the room settles,
+  `ROOM_P12_Dining_Room` is requested (game vtable `+0x04`). Knights walk into
+  free slots on a `rand() % 0x48 + 0x24` timer; a finished round rerolls and
+  plays a random `Knights_of_the_Snack_Table.Correct1_NARRATOR`–`Correct6_NARRATOR`.
+- **Leaving** (`0x419CC0`, after the base leave): the marker counts and the
+  seat positions back to the constructor's, the digits cleared, the three
+  queue handlers released.
+
+| Address | What it does |
+|---|---|
+| `0x419700` | KST constructor: the digits, the handlers, the slots |
+| `0x419A80` (+0x0C) | Entry: the counter, the quota, the narrator, the ambience |
+| `0x419CC0` (+0x10) | Leaving: the markers and the round torn down |
+| `0x419E40` (+0x04) | Tick: the serving loop and the exit |
+| `0x41A970` (+0x18) | Placements: the seats, the benches, the drinks, the counter |
+| `0x41A5C0` | Laying out a round: the knight slots and the mugs |
+| `0x418CA0` | A knight: its walk, its reach, its drinking states |
+
+##### Phantom's hedge maze and maze map (WP-074)
+
+Traced 2026-11-19 for [WP-074](../work-packets/WP-074-maze.md), in Phantom's
+`Scooby.exe`. These open the audit's group 7, the maze; Showdown has neither
+room.
+
+**The hedge maze** (`ROOM_Hedge_Maze`, `0x42AA90`, vtable `0x45F3C4`, music
+`Hedge_Maze.Music`) is a grid the gang rides a unicycle through. The position
+is `(X = +0xc4, Y = +0xc8)`, initialised to `(2, 4)`; the **cell index is
+`Y + X*10`**. Each cell holds a 4-bit mask (an array at `+0xcc`, indexed by
+the cell) of which of its four sides is a passage: **`1` up, `4` down, `2`
+right, `8` left** — the bit is also the move's direction code. A parallel
+array at `+0x25c` holds a path-indicator sprite index per cell. It overrides
+five slots (tick, enter, leave, claim, and a `+0x24` cleanup).
+
+- **Constructor** (`0x42AA90`): the position `(2, 4)`; nine unicycle sound
+  clips resolved into `+0x41c`–`+0x43c` (`Hedge_Maze.Unicycle_Idle`,
+  `_Start_Left`/`_Right`/`_Up`/`_Down`, `_End_Up`/`_Down`/`_Left`/`_Right`).
+  The clip names use a **dot** (`Hedge_Maze.Unicycle_…`, `Hedge_Maze.Music`):
+  Ghidra's symbol labels underscore them, but the string bytes and the disc
+  index are dotted. The idle `Hedge_Maze.240A_` lines are voice clips, which
+  ship under the id plus a speaker suffix (`…240A_1_SHAGGY`).
+- **Entry** (`0x42AEB0`, after the base entry): if the maze map item
+  (`OBJ_INV_MAZE_MAP`) is active, go to `ROOM_Maze_Map`, stashing the current
+  room in `game+0x238`. Otherwise, by the room come from:
+  - **a maze location** (`ROOM_P06_Garden`, `ROOM_P23_Maze_Center`,
+    `ROOM_P27_Below_Balcony`) sets the start cell and direction (and, from the
+    centre, the `+0x440` centre-path flag), then plays the opening (game
+    vtable `+0x08`, opcode `0x2a` the first maze entry else `0x29`);
+  - **anywhere else** (within the maze, or the map) writes the level's cell
+    table, draws each of the four direction buttons as a passage
+    (`ANIM_HEDGE_MAZE_BACKEXIT`/`FRONTEXIT`/`REXIT`/`LEXIT`) where the cell's
+    bit is set or a wall (`…BACKOVERLAY`/`FRONTOVERLAY`/`ROVERLAY`/`LOVERLAY`)
+    where it is not, and builds the unicycle.
+
+  Moving into a designated garden-exit cell (level 1: cell 44; level 2: cells
+  41, 40, 58) leaves to `ROOM_P06_Garden`, repositioning the entry cell.
+- **The cell tables** are the binary's resolved code constants, written as a
+  run of immediate stores. They were derived mechanically from the decompile
+  (so the reference and the engine carry the same table, not a hand-copy);
+  their meaning — the index formula and the bit per direction — is read from
+  the overlay/exit tests and the move handlers. Levels have 20, 32 and 60
+  cells. The `+0x440` centre-path flag forces one cell's mask to `0xb` (level
+  0 cell 24, level 1 cell 26, level 2 cell 32).
+- **Placements** (`0x42BB00`): `OBJ_HEDGE_MAZE_BACK`/`FRONT`/`R`/`L` are the
+  four direction clickables (`+0x408`–`+0x414`); `OBJ_HEDGE_MAZE_PATH_EW`/`NS`/
+  `NE`/`NW`/`SE`/`SW` the six path indicators (slots 0–5).
+- **A move** (`0x42C0F0` back, `0x42C200` front, `0x42C310` R, `0x42C420` L):
+  sets the facing (`+0xc0` = 1/4/2/8), steps the position (back `Y−1`, front
+  `Y+1`, R `X+1`, L `X−1`), and plays the `Start_Up`/`Down`/`Right`/`Left`
+  clip; the next entry's `switch(+0xc0)` lands on the matching `End_` clip.
+- **Each tick** (`0x42AD00`, after the base tick): on `rand() % 3000 == 0`,
+  one of `Hedge_Maze.240A_`, `.240A1_`, `.240A2_` (`.240A2_` is referenced but
+  not shipped; `.240A3_` ships but is not referenced).
+- **Leaving** (`0x42BAE0`, after the base leave): the return string reset.
+
+**The maze map** (`ROOM_Maze_Map`, `0x42A7D0`, vtable `0x45F384`, music group
+`1`) is the close-up of the map item. Its entry (`0x42A830`) is the base plus
+the room's opening; its claim (`0x42A850`) builds a clickable for each of
+`OBJ_MAZEMAP_GARDEN`/`WELL`/`CENTER`/`BALCONY` (handler `0x42A9A0`) that jumps
+the game (game vtable `+0x04`) to `ROOM_P06_Garden`, `ROOM_P22_Well_In_Maze`,
+`ROOM_P23_Maze_Center` or `ROOM_P27_Below_Balcony`.
+
+| Address | What it does |
+|---|---|
+| `0x42AA90` | Hedge maze constructor: the position, the unicycle clips |
+| `0x42AEB0` (+0x0C) | Entry: the map item, the start cell, the cell table, the draw |
+| `0x42BAE0` (+0x10) | Leaving: the return string reset |
+| `0x42AD00` (+0x04) | Tick: the idle mutterings |
+| `0x42BB00` (+0x18) | Placements: the four direction buttons, the six path indicators |
+| `0x42C0F0`/`200`/`310`/`420` | A move: back / front / right / left |
+| `0x42A7D0` | Maze map constructor |
+| `0x42A830` (+0x0C) | Maze map entry |
+| `0x42A850` (+0x18) | Maze map placements: the four location markers |
+| `0x42A9A0` | A marker clicked: jump to its maze room |
+
+##### Phantom's maze interior — the centre, the fountain and the well (WP-075)
+
+Traced 2026-11-19 for [WP-075](../work-packets/WP-075-maze-interior.md), in
+Phantom's `Scooby.exe`. The second of the audit's group-7 packets: the three
+rooms inside the maze (WP-074 landed the entry pair). Showdown has none of
+them. All three take music group `"1"`; the numbered scene lines use a **dot**
+(`Center_of_Maze.250X_`, `Fountain.250D_`, `Well_in_Maze.290_`) and ship with a
+speaker suffix (`…250B_1_VELMA`, `…250D_1_NARRATOR`), as WP-074's did — read
+the string bytes (`StrAt`) and cross-check the sound index, not Ghidra's
+underscored labels. As with WP-074's `240A3_`, some clips ship but are not
+referenced by these rooms' slots (`Center_of_Maze.250X2_`, `.250A_`, the well's
+`330_`). The audit tagged the **centre** with the opening; the binary puts it on
+the **fountain** (the centre and the well have none — the constructor's 4th
+argument is the empty global for those two, `Fountain.250D_` for the fountain,
+which `room_setup` already carries). The three rooms were traced twice,
+independently, by two sessions whose Ghidra reads agree — the WP-073/074
+anti-shared-misreading move at the session level, on top of the engine ==
+reference match.
+
+The vtable's named slots (anchored on the throne class, `0x45EC1C`) are
+`+0x1c` save, `+0x20` load, `+0x24` the exit/destination list, `+0x30` the
+opening handler; the centre overrides `+0x24` (its entrance routing, `0x42A640`)
+and `+0x30` (the `Center_of_Maze.250_` / `.250C_` cycle, `0x42A1A0`).
+
+**The maze centre** (`ROOM_P23_Maze_Center`, `0x42A090`, vtable `0x45F344`, no
+opening) is the hub, reached from the hedge maze, the garden and below the
+balcony.
+
+- **Entry** (`0x42A580`, after the base entry): registers and plays the
+  babbling water `SFX_P23_MAZE_CENTER_WATER` (no dot — a flat sfx id) at
+  volume `0x5a` (90). The `+0x24` routing method (`0x42A640`) sets the flag the
+  hedge maze reads for its centre start cell (`game+0x289`): **the garden sets
+  it, below the balcony clears it**, and it registers `ROOM_Hedge_Maze` as an
+  entrance. (The fork sets this flag — named `MazeCenterFromGarden` — on entry
+  from the garden or balcony, and WP-074's `HedgeMazeRoom` now reads it.)
+- **Placements** (`0x42A280`): `OBJ_P23_MAZE_CENTER_WATER` a looping sprite at
+  depth `−1500`; `OBJ_INV_RUSTY_SHEARS` a requires object until taken (then
+  skipped); `OBJ_P23_TO_P44` the way to the fountain, **built by the default
+  path until the tokens are held, then skipped** (the detour closes once the
+  tokens are grabbed).
+- **The event** (`0x42A110`): `OBJ_P23_MAZE_CENTER_HOTSPOT4` cycles
+  `Center_of_Maze.250X_` / `.250X1_`; the rusty shears used starts the take.
+  (A second hotspot handler, `0x42A1A0`, cycles `Center_of_Maze.250_` /
+  `.250C_`.)
+- **Each tick** (`0x42A410`): once the shears are being taken, Shaggy (idle)
+  takes them (`OBJ_SHAGGY_P23_TAKES_SHEARS`, `Maze_Center.Shaggy_Takes_Shears`);
+  then `OBJ_INV_RUSTY_SHEARS` goes to the toolbar and `Center_of_Maze.250B_`
+  plays.
+- **Save / load** (`0x42A200` / `0x42A240`): the `Entrances` key, in the room's
+  own section.
+
+**The fountain close-up** (`ROOM_P44_Fountain_Closeup`, `0x429740`, vtable
+`0x45F304`, opening `Fountain.250D_`) opens off the centre, where a piranha
+guards the tokens.
+
+- **Entry** (`0x4297D0`): plays the water `FOUNTAIN_CLOSEUP.WATER` (dotted).
+- **Placements** (`0x429CC0`): `OBJ_PIRANHA` a looping sprite at depth `−1`,
+  `ANIM_PIRANHAFULL` when the burger has been used else `ANIM_PIRANHAIDLE`
+  (with the `Fountain_Closeup.Fountain_Closeup.Piranha_Swims` loop — the exe
+  literally doubles the prefix); `OBJ_INV_TOKENS` a requires object answering
+  the burger (`ANIM_CURSORBURGER`) at depth `−100` until taken; `OBJ_P44_TO_P23`
+  the exit back to the centre at depth `100`; `OBJ_SHAGGY_P44_GRAB_TOKENS` a
+  hidden sprite at depth `100`.
+- **The event** (`0x429B50`): the burger used on the piranha
+  (`OBJ_INV_BURGER` removed) sets it eating (`ANIM_PIRANHALUNGE_EAT_START`,
+  `Fountain_Closeup.Piranha_Eats`); a plain click cycles `Fountain.250D_` /
+  `.250D1_` / `.250D2_`.
+- **Each tick** (`0x429800`): fed, the piranha lunges and eats, then Shaggy
+  grabs the tokens (`Fountain_Closeup.Shaggy_Takes_Tokens`) into the toolbar
+  and the exit list (`Fountain.250F_`, `ROOM_P23_Maze_Center`) is built.
+
+**The well** (`ROOM_P22_Well_In_Maze`, `0x42C740`, vtable `0x45F404`, no
+opening) sits in the maze and links back to the royal gallery.
+
+- **Entry** (`0x42C810`): a queued return bounces to `ROOM_P07_Royal_Gallery`
+  through movie `0x36` (54) from the gallery or `0x39` (57) otherwise, unless
+  the full bottle has been used; otherwise it sets `WellVisited` (`game+0x262`,
+  read by the treasury's rope line, WP-071).
+- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once taken
+  (`YellowBallTaken`, `game+0x25d`); `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
+  `OBJ_P22_WELL_ROPE` are the climb, **gated on the rope being used** — the
+  rope then shows as a sprite (depth `0`) and the well and the way out become
+  the default clickables.
+- **The event** (`0x42C8E0`): the yellow ball shown plays movie `0x42` (66) the
+  first time (`YellowBallFound` clear) or `4` after, is marked taken, and
+  queues the return; the rope used on the well plays movie `0x3b` (59) and
+  spends the rope; a plain click cycles `Well_in_Maze.290_`, `Well_In_Maze.330X1_`,
+  `Well_In_Maze.330X2_`.
+
+| Address | What it does |
+|---|---|
+| `0x42A090` | Maze centre constructor (music `1`, no opening) |
+| `0x42A580` (+0x0C) | Centre entry: the water sfx at volume 90, the start flag |
+| `0x42A640` (+0x24) | Centre routing: `game+0x289` from the garden / balcony, the entrances |
+| `0x42A280` (+0x18) | Centre placements: the water, the shears, the token-gated exit |
+| `0x42A110` (+0x14) | Centre event: the hotspot's cycling lines, the shears |
+| `0x42A410` (+0x04) | Centre tick: Shaggy takes the shears |
+| `0x42A200`/`0x42A240` | Centre save / load: the `Entrances` key |
+| `0x429740` | Fountain constructor (music `1`, opening `Fountain.250D_`) |
+| `0x4297D0` (+0x0C) | Fountain entry: the water loop |
+| `0x429CC0` (+0x18) | Fountain placements: the piranha, the tokens, the exit, the grab |
+| `0x429B50` (+0x14) | Fountain event: the burger fed, the cycling fountain lines |
+| `0x429800` (+0x04) | Fountain tick: the lunge, the eat, the token grab |
+| `0x42C740` | Well constructor (music `1`, no opening) |
+| `0x42C810` (+0x0C) | Well entry: `WellVisited`, the queued return to the gallery |
+| `0x42CA20` (+0x18) | Well placements: the yellow ball, the rope-gated climb |
+| `0x42C8E0` (+0x14) | Well event: the yellow ball's movie, the rope on the well, the lines |
 
 ##### Movies (WP-022)
 
@@ -2069,7 +3692,7 @@ The rest of the room vtable:
 | Slot | Base | What it is |
 |---|---|---|
 | `+0x10` | `0x40BB70` | Leave: the scene, the parked exit and the delay are reset; the speech lock is let go |
-| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. Not traced further |
+| `+0x28` | `0x40CB50` | An idle line's name: `<room>_Idle_<x>`, else `Global.Idle…`. A character's state 4 asks for it ([Characters' idles](#characters-idles-wp-059)) |
 | `+0x2C` | `0x404460` | On entry, with the room left: nothing |
 | `+0x30` | `0x404810` | On entry, first: nothing |
 | `+0x34` | `0x404470` | Idle chatter: nothing |
@@ -2359,7 +3982,7 @@ fade for the music file:
 | `0x434F50` | Stop either fade, and set every music clip to 100% (`0x43C940` with `0xFFFFFFF`) |
 | `0x434C00` | Once a game tick (`0x435BC0`, after the room's tick): the countdown goes down by one; at 0 it starts again from the interval, and a fade moves the percent one step |
 | `0x43C940` (clip, percent) | Store the music file's percent, and set each playing clip's volume to percent × the file's gain (`+0x14`, the Options slider's 0.7–1.0) |
-| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there |
+| `0x43CC20` | Play a clip; its volume goes through the same driver call (`+0x18`). That it is the same product is an inference: Ghidra hides the `__ftol` operands there. Each clip has a buffer of its own (`+0x10` of its 0x14-byte entry). By the file's type (`+0x10`, set by `0x43C5A0`): `Sfx.dat` (0) keeps a clip's buffer and starts it again, and other clips play on; `Voice.dat` (1) makes a stream each time; `Music.dat` (2) plays nothing if the clip has a buffer, and frees every other clip's not kept (`+0x0C`) first. WP-055. A `Voice.dat` stream goes in the clip's own entry and frees no other clip's, so voice lines overlap, up to the driver's four streams ([voice lines overlap](#voice-lines-overlap-2026-11-16)) |
 
 **A step** (`0x434C00`):
 - **Fading up,** percent + 1. Reaching the target stops the fade and sets
@@ -2377,7 +4000,8 @@ A fade that starts at its target stops on its first step, with no change.
 | `0x40C810` (`0x40CA85`) | A scene ends, played out or skipped | Up to 100, a step every 4 ticks: 90 → 100 in 40 ticks |
 | `0x435DC0` (`0x4360B0`) | A room has loaded, after its entry | Up to 100, a step every 3 ticks |
 | `0x428380` (`0x42846E`) | The title shows | `0x434F50`: straight to 100 |
-| `0x41936E`, `0x422478` | A story room near P14, and the room whose tick is `0x422350` | `0x434F50` (not modelled yet) |
+| `0x41936E` | A story room near P14 | `0x434F50` (not modelled yet) |
+| `0x422478` | The ghost spot's entry ([WP-056](#the-ghost-spot-wp-056)) | `0x434F50`: straight to 100 |
 
 **Big Head's own player** (`0x403940`) never reaches `0x40C810`'s end. A
 Big Head scene therefore turns the music down when it starts, and it stays
@@ -2388,6 +4012,43 @@ first scenes are their openings (`+0x78`). The base room starts an opening
 100 ticks after entry (`+0x74`), holding input meanwhile (`0x40C7B0`), and
 only then does `0x40B400` turn the music down. Credits' opening is the
 factory's first scene: `Credits.1100A2_` (Phantom `Credits.10002_`).
+
+##### Voice lines overlap (2026-11-16)
+
+Traced 2026-11-16 in Showdown, for the gap WP-055 left. `0x43CC20` reaches
+the sound driver through the base factory (`0x433C70`, vtable `0x45F570`):
+its `+0x1C` (`0x43C020`) builds the driver once (`0x442510`, vtable
+`0x45F744`).
+
+| Address | What it does |
+|---|---|
+| `0x4428A0` (driver `+0x04`) | Create a stream in the first of the driver's four stream slots (`+0x3C`, 0x108 bytes each) not in use (slot `+0x68` bit 31). `0x445780` opens it and counts the slot's generation (`+0x104`, 1 to 512). The handle is `0x80000000` \| (generation × 4 + slot + 1). With all four in use the handle is 0, and `0x43CC20` logs `Failed to create stream` |
+| `0x442910` (`+0x08`) | Create an effect buffer, the first free of 128 (`+0x40`, 0x1C bytes each); the handle is its index + 1 |
+| `0x442970` / `0x442A60` (`+0x0C` / `+0x14`) | Free / stop a handle. A stream is destroyed either way, and only if the handle's generation is the slot's |
+| `0x442C50` (`+0x20`) | Is a handle playing; a stream handle of an older generation is not |
+| `0x442DD0` (`+0x28`) | A handle's lip sync: the shape, and the clue in the high nibble |
+| `0x442D40` (`+0x30`) | A handle's seconds played |
+| `0x445B30` | A stream slot's thread. When the clip ends, or the stream is freed, it destroys the stream and clears `+0x68`: the slot is free again |
+
+**`Voice.dat`** (type 1): `0x43CC20` passes `0x4428A0` the clip's own entry
+(`+0x10`) for the handle, and frees nothing else.
+- **Lines from different clips overlap,** up to four streams at once. The
+  music (`Music.dat`, type 2) is a stream too, so with a track playing three
+  lines can.
+- **A line played again** gets a new stream, and its entry's handle is
+  overwritten. The old stream plays to its end out of reach: stop
+  (`0x434CB0` → `0x43CB90`), stop effects (`0x434E10` → `0x43C850`) and the
+  readers all find the new one.
+- **With four streams playing** the entry's handle becomes 0. Nothing plays,
+  and an older stream of the same clip is out of reach too.
+
+**Every reader goes by clip id,** to the stream in its entry:
+- over (`0x434CE0` → `0x43CE10` → `+0x20`);
+- lip sync (`0x434D40` → `0x43CAF0` → `+0x28`);
+- seconds (`0x434BA0` → `0x43CA60` → `+0x30`).
+
+With two lines playing, each reader reads its own clip. Nothing in the
+original reads a "clip played last".
 
 ##### Street 2 and Street 3 (WP-033)
 
@@ -2427,7 +4088,12 @@ Showdown. Both rooms have the music group 2 and no opening of their own
 - **Hit type 0** is never hit: the hit walk (`0x4311F0`) tests only types 1
   and 2.
 - **A plain sprite** (`graphics_AnimSprite_ctor`) takes its parent, depth,
-  mode (1, looping) and ticks a step (3); a room may set its hit type.
+  mode (1, looping) and ticks a step (3). Its hit type is the one
+  `graphics_Sprite_ctor` (`0x430D60`) sets, 1 (cels); a room may set
+  another. The default placement path sets 2 for a simple object
+  (`0x4094C0`). None of the room classes traced so far changes it, except
+  Street 2's window (0). *(Corrected 2026-11-15: until fork `36ce94a2f5` a
+  room's plain sprite was hit by its step polygon.)*
 ##### Street 1 and the clues (WP-034)
 
 Traced 2026-11-14 for [WP-034](../work-packets/WP-034-street1.md), in
@@ -2719,10 +4385,18 @@ are [below](#the-bank-and-the-vault-clock-wp-039).
 [WP-040](../work-packets/WP-040-boot-hill.md)):
 - Only the factory names them; nothing in the art, `object.ini` or the
   executable sends the gang there, and no code builds the names.
-- Their class shows a strong box's lid opening, with `Strongbox.opens` and
-  `Bank_Vault.340D_`, then the vault again. In play, the right strong box
-  plays movie 38–41 instead (`0x429350`).
-- The fork leaves them the base class.
+- In play, the right strong box plays movie 38–41 instead (`0x429350`).
+- Their class (`0x42A340`, vtable `0x45F1A8`; no music, no opening) shows a
+  strong box's lid opening, then the vault again. The fork has it since
+  [WP-053](../work-packets/WP-053-strong-boxes.md#result-2026-11-15).
+
+| Address | What it does |
+|---|---|
+| `0x42A3A0` (+0x08) | Reset, after the base reset: `+0xB8` (the scene's done flag) and `+0xB9` (the lid opening) clear |
+| `0x42A600` (+0x18) | Placements. `OBJ_SB1_LID` to `OBJ_SB5_LID` a sprite under the first layer at depth 0, stopped on step 0 (`graphics_AnimSprite_Start` 0, 3, −1), kept in `+0xBC`. The layer is the engine's `+0x58` through `0x475F4C`, which the engine's constructor sets to itself: the same object as `0x475F14` |
+| `0x42A5B0` (+0x0C) | Entry, after the base entry: the toolbar hidden (`0x407CC0`), the cursor faded (`0x435150`, `0x12`), input held (game `+0x24`), and `+0xC0` 36 |
+| `0x42A3C0` (+0x04) | The tick, after the base tick. `+0xC0` counts down; at 0, `Strongbox.opens` plays and the lid plays once at 5 ticks a step (`Start` 3, 5, −1), and `+0xB9` is set. The lid stopped with `+0xB9`: `Bank_Vault.340D_` (the narrator's), held, with `+0xB8` as its done flag. Set, the room's exit handler (the base's) to `ROOM_P16_Bank_Vault`, with no scene and movie −1 |
+| `0x42A770` (+0x10) | Leave: the base leave only |
 
 **ROOM_P16_Bank_Vault**'s placements:
 - the gang;
@@ -3569,6 +5243,701 @@ Otherwise, and for the way to Street 1, it calls the default handler.
 2. **The dark hole clicked** (its `+8`) with ANIM_CURSORLANTERN as the
    cursor: the lantern is used up and the arrow is back. `TunnelLit` is
    set, and `160C_` plays, held, with `+0xD0` as its done flag.
+
+##### The railroad station (WP-049)
+
+Traced 2026-11-15 for [WP-049](../work-packets/WP-049-railroad-station.md).
+
+**ROOM_P09_Railroad_Station** (`0x4207C0`, vtable `0x45EE28`; music `2`):
+- **Its placements:**
+  - the gang;
+  - Gummy and his donkey, the characters GUMMY and DONKEY;
+  - the way back to Street 2;
+  - the way to the chase, OBJ_P09_TO_P40 (movie 32);
+  - hotspots 1 to 3. Hotspot 2 is at `priority=100000`, hotspot 3 at 200.
+- **Its fields:**
+  - `+0xB8`, `+0xBC`: hotspots 2 and 3.
+  - `+0xC0`: Gummy gives his clue when idle.
+  - `+0xC1`: then the thanks.
+  - `+0xC8`: Gummy's next hint.
+
+| Address | What it does |
+|---|---|
+| `0x420820` (+0x08) | Reset: `+0xC0`, `+0xC1`, `+0xC4` and `+0xC8` cleared. It doesn't call the base reset (`0x40CD20`) |
+| `0x4213C0` (+0x18) | OBJ_GUMMY* and OBJ_DONKEY* aren't built until Artie has been met, and the way to the chase isn't built until Gummy's clue has been given. Hotspots 2 and 3 are clickables, as the default path builds them |
+| `0x4212C0` (+0x2C) | The opening, unplayed: `Railroad_Station.Intro_`, or `110A_` while `MoaningActive`. With the whistle puzzle solved (`GummyPuzzle`, game `+0x274`) and his clue not yet given, Gummy's next hint instead. Back from the station itself, `220DP_` |
+| `0x4210F0` (+0x0C) | Entry, after the base entry. See below |
+| `0x421070` (+0x14) | The room's event: hotspot 2, moved on to its B, `HOTSPOT2A_`; to its C, `HOTSPOT2B_`. Held |
+| `0x420840` (+0x04) | The tick, after the base tick. See below |
+| `0x421680` | Gummy's next hint: `220C_`, `220C2_`, `220C3_` in turn (`+0xC8`). With the dentures had, it goes back to `220C_` after `220C2_` |
+| `0x4119E0` | The room's own name (`+8`) |
+
+**Entry** (`0x4210F0`):
+1. **Before the puzzle, with Artie met,** Gummy SLEEPS, looping
+   (`0x406210`).
+2. **After it,** the donkey's hit type is 0.
+3. **With his clue given,** Gummy and the donkey stand 100 further right
+   (their `+0xC`).
+4. **Back from the station itself,** Gummy's clue is given (game vtable
+   `+0x44`) and `+0xC0` is set.
+5. **From Street 2,** Shaggy walks in down and right (`0x405EA0`).
+
+**The tick** (`0x420840`):
+1. **Gummy clicked** (its `+8`, on the release):
+   - **With the dentures, the puzzle solved:** the dentures are used up and
+     the arrow is back. The room's exit handler takes the gang to the
+     station itself, with `220D_` and movie 30.
+   - **With the arrow, before the puzzle:** the exit handler takes the gang
+     to ROOM_Gummy.
+   - **With the arrow, after the puzzle:** his next hint, held, until his
+     clue has been given. After that, `Global.1000GA_`, `GB_` or `GC_`
+     (`rand() % 3`), not held.
+2. **No scene, the opening done, Gummy idle, and `+0xC0`:** Gummy plays
+   GIVES. `+0xC1` is set, and input is held.
+3. **`+0xC1`, with Gummy idle, looping, or not here:** the thanks
+   (`Global.Thank_You_`) take the gang to ROOM_Suspect_Chooser.
+4. **The donkey clicked with the arrow:** to ROOM_Gummy.
+5. **Hotspot 3 on step 8 of its C:** Scooby is scared.
+
+##### Gummy's whistle puzzle (WP-050)
+
+Traced 2026-11-15 for [WP-050](../work-packets/WP-050-gummy.md).
+
+**ROOM_Gummy** (`0x40FC40`, vtable `0x45E7D0`; music `Gummy.Music`, which
+isn't on the disc; opening `Gummy_Puzzle.220B_`):
+- **Its placements:**
+  - Gummy asleep, OBJ_GUMMYSLEEP_GUMMY;
+  - his donkey;
+  - five bells, all OBJ_GUMMYSLEEP_BELLS, told apart by their sequence's
+    digit;
+  - the way back to the station.
+- **Its fields:**
+  - `+0xB8`–`+0xC8`: the bells.
+  - `+0xCC`, `+0xD0`: the donkey and Gummy.
+  - `+0xD4`: the whistle.
+  - `+0xD8`: Gummy whistles again.
+  - `+0xD9`: the bells play the tune back.
+  - `+0xDC`: the sound waited for.
+  - `+0xE0`: the tune's length.
+  - `+0xE4`: its notes, as digits.
+  - `+0xEC`: the next note.
+  - `+0xF0`: the notes played back.
+  - `+0xF4`–`+0x104`: each bell's note.
+  - `+0x108`: the ticks to the station once the tune is rung.
+  - `+0x10C`, `+0x110`: the donkey's blink and Gummy's snore.
+  - `+0x114`: `220B2_`'s done flag.
+  - `+0x118`: the state.
+
+| Address | What it does |
+|---|---|
+| `0x410760` (+0x18) | The bells are clickables without the ghost (`0x408DC0` with 0, -1): bell 1 at depth 4, the others at 10, each with `0x410A00` as its callback. Gummy is a requires object on his snore, stopped, hit by his cels. The donkey is a sprite at depth 5, playing its idle once |
+| `0x4102C0` (+0x0C) | Entry, after the base entry. See below |
+| `0x4109B0` (+0x14) | The room's event: Gummy clicked, with the bells free in state 3, sets `+0xEC` to 0 and `+0xD8` |
+| `0x410A00` | A bell's callback. See below |
+| `0x40FD10` (+0x04) | The tick, after the base tick. See below |
+
+**Entry** (`0x4102C0`):
+1. **Set-up:** the toolbar slides off, the music file stops, and `rand()`
+   is reseeded from the clock.
+2. **The tune,** unless the gang is back from the quit screen: one of the
+   level's three, by `rand() % 3`.
+
+   | Level | Whistle | Tune | Bells' notes |
+   |---|---|---|---|
+   | 0 | `Gummy.Whistle1a`, `2a`, `3a` | `87656`, `77456`, `88645` | 4 5 6 7 8 |
+   | 1 | `Gummy.Whistle1b`, `2b`, `3b` | `7844345`, `6665565`, `4566554` | 3 4 5 7 8; then 4 5 6 7 8 for `2b` and `3b` |
+   | 2 | `Gummy.Whistle1c`, `2c`, `3c` | `76543454`, `41414564`, `456889864` | 3 4 5 6 7; 1 2 4 5 6; 4 5 6 8 9 |
+
+3. **The rest:**
+   - `+0xD8` is set, and `+0x108` is 1000000 (never).
+   - The whole tune will be played back.
+   - The snore comes in 108 ticks, and the blink in `(rand() & 7 + 3) * 36`.
+   - The state is 3 if the opening has played, 0 otherwise.
+
+**The tick** (`0x40FD10`). A sound is over when it isn't playing
+(`0x434CE0`).
+- **State 0,** the opening played: Gummy whistles, input is held, and it
+  goes to state 1.
+- **State 1,** the whistle over: `Gummy_Puzzle.220B2_` plays, held, with
+  `+0x114` as its done flag. Then state 2.
+- **State 2,** `220B2_` over: state 3.
+- **State 3:**
+  1. **Input** is held while `+0xD8` or `+0xD9` is set.
+  2. **The sound waited for, over:**
+     - **With `+0xD8`,** Gummy whistles again, and `+0xD9` is set.
+     - **With `+0xD9`,** each note of the tune in turn plays
+       `Gummy.Bell<digit>`, and every bell with that note rings. A ring
+       (`0x401840`, the clickable's `+0x80`) waits until the bell is free.
+     - **After the last note,** `+0xD9` is cleared and input is freed.
+  3. **The station:** once the tune is rung, `+0x108` counts down, and
+     below 0 the room's exit handler takes the gang to the station.
+  4. **Gummy snores** every 108 ticks: `Gummy.Snore`, and his snore plays
+     once.
+  5. **The donkey** blinks or idles once (`rand() & 1`) every 3 to 10
+     seconds, and is back on its idle, stopped, after a blink.
+- **In every state,** while Gummy whistles, his step follows the whistle's
+  lip sync (`0x434D40`).
+
+**A bell's callback** (`0x410A00`). While `+0xD9` is set it does nothing.
+Otherwise the bell plays `Gummy.Bell<its note>`:
+- **The tune's next note:** it moves on. On the last note:
+  - the cursor fades;
+  - `GummyPuzzle` (game `+0x274`) is set;
+  - Gummy is met (`0x40A8B0`);
+  - the station comes 72 ticks later.
+- **A wrong note:**
+  - the notes played back become at least the notes reached + 1;
+  - the tune starts over;
+  - `+0xD8` is set.
+
+  The bells free up in the same frame, before the room's tick, so Gummy
+  whistles again at once.
+
+##### The saloon and Artie (WP-051)
+
+Traced 2026-11-15 for [WP-051](../work-packets/WP-051-saloon.md).
+
+**ROOM_P12_Saloon** (`0x414430`, vtable `0x45E990`; music group 3; opening
+`Saloon.360A_`). Artie is gagged and in three chains. Three keys hide
+behind three of six hotspots; each one used takes a chain off in
+ROOM_Artie.
+
+**Its fields:**
+- **`+0xB8`:** the piano (hotspot 1).
+- **`+0xBC`:** the ticks to the next moan.
+- **`+0xC0`:** music group 3 again once the piano stops.
+- **Artie and the piano:**
+
+  | Field | Key | Reset |
+  |---|---|---|
+  | `+0xC1` | `ArtieMasked` | 1 |
+  | `+0xC4` | `ArtieChained` | 3 |
+  | `+0xC8` | `ShaggyPiano` | 0 |
+
+- **`+0xCC` + 16k, for hotspots 3–8 (k 0–5):**
+
+  | Offset | What it holds | Key |
+  |---|---|---|
+  | `+0xCC` | the key shows | `KeyVisible%i` |
+  | `+0xCD` | a key hides behind the hotspot | `KeyHidden%i` |
+  | `+0xD0` | the hotspot | — |
+  | `+0xD4` | its key | — |
+  | `+0xD8` | the key shows once the hotspot stops | — |
+
+- **`+0x12C`–`+0x131`:** `ClickableOpen%i`.
+- **The thanks:** `+0x132` (Artie gives his clue when idle), then `+0x133`
+  (the thanks).
+- **`+0x134`:** the buffer sprite.
+- **`+0x138`:** `BullRidden`.
+- **`+0x13C`:** the bull's line.
+- **`+0x140`–`+0x142`:** the gag coming off.
+
+| Address | What it does |
+|---|---|
+| `0x414490` (+0x08) | Reset, after the base reset: the table above, the moan at 36, and three keys hidden by `rand() % 6` |
+| `0x414FC0` (+0x18) | Placements. See below |
+| `0x414540` (+0x0C) | Entry, after the base entry. See below |
+| `0x414910` (+0x04) | The tick, after the base tick. See below |
+| `0x415660` (+0x14) | The room's event. See below |
+| `0x415C30` (+0x24) | The exit handler. See below |
+| `0x4148D0` (+0x34) | Idle chatter: with Artie free (`+0xC4` = 0), `Saloon.1100C_` (its `rand() & 1` always passes) |
+| `0x414820` (+0x10) | Leave, after the base leave: `ClickableOpen` is whether each hotspot's state ends in `B` |
+| `0x416000` / `0x4161D0` (+0x1C / +0x20) | The keys: `ArtieMasked`, `ArtieChained` (`%i`, `0x40C5E0` / `0x40C670`), `ShaggyPiano`, `BullRidden`, `ClickableOpen0`–`5`; once ungagged, `KeyHidden%i` and `KeyVisible%i` for each hotspot |
+
+**Placements** (`0x414FC0`). The first claim builds a `RENDER_ENTITY`: a
+640 × 480 buffer sprite (`0x4370D0`) under the first layer (game `+0x58`)
+at depth −1001. Everything below goes under it, but the bull:
+- **The piano,** hotspot 1: a clickable (`0x408DC0` with 1) at depth −11,
+  on its `B` (`0x401780`) once played.
+- **Hotspots 2–8 and the keys:** clickables at `0x408DC0`'s depth
+  (`priority=`, −1 without one). The keys are hidden (`0x4313F0`).
+- **Hotspots 3–8:**
+  - while Artie is gagged, without the open hand (`0x401770` clears the
+    clickable's `+0x7C`);
+  - one left open, on its `B`;
+  - one with a key behind it, on its `K`.
+
+  Each is stopped on step 0.
+- **The open door:** a sprite (`0x430790`) at depth 0, looping, once the
+  hotel hall's door is open (`HotelHallDoor`, game `+0x255`); else not
+  built.
+- **The chandelier:** a sprite at depth −1, looping, until the nickel is
+  used. Used means had (`0x407060`) and in no slot (`0x4070C0`). Once used,
+  it is not built.
+- **The bull:** a requires object (`0x408C80` with −1: layer 0), looping
+  `MECHBULLA`, or `MECHBULLB` once the nickel is used.
+- **The way to Pie Noon:** not built while Artie is chained.
+
+**Entry** (`0x414540`):
+1. **Walk-ins:** from the hotel hall, Fred walks in `UR`; from Street 3,
+   Daphne `UL`; from the stage, Velma `U`.
+2. **Artie:**
+   - chained, he is in his chains: the set `_<n>` (`0x406230`, the
+     character's `+0x60`) and idle, `OBJ_ARTIE_<n>`;
+   - gagged, `OBJ_ARTIE_MASKED` (`0x406190`: the object in `+0x8C`, state
+     `0xE`, `ANIM_ARTIE_MASKED1` looping);
+   - ungagged, at depth −1.
+3. **Free, and not yet a clue owner:**
+   - `Saloon.360C_` (`rand() % 3` = 0) or `360C3_`, held;
+   - his clue (game vtable `+0x44`), and Artie met (`0x40A8B0`);
+   - `+0x132`.
+4. **The rest:**
+   - the keys showing are shown at depth 1;
+   - the nickel used and the pump handle never had, the pump handle goes
+     in a slot;
+   - the snacks needed (`+0x24`) are the level + 2.
+
+**The tick** (`0x414910`):
+1. **The moans:** `+0xBC` counts down every tick. Below 1 with
+   `MoaningActive`, `Saloon.Moan.1`–`4` (`rand() & 3`), and the next in
+   `(rand() % 10 + 5) × 36`.
+2. **The piano** stopped with `+0xC0`: music group 3 (`0x40AA10`).
+3. **Artie clicked** (game `+0x20` & 4 and his `+8`) with the arrow:
+   - gagged, `+0x140`;
+   - chained, `Saloon.360D2_`, held;
+   - free, `Saloon.1601_`, `1701_` or `1801_`.
+4. **Artie idle:**
+   - with `+0x132`, he plays `GIVES` (`0x4061F0`) and input is held
+     (`+0x133`);
+   - idle again, `Global.Thank_You_` and `ROOM_Suspect_Chooser`, through
+     the room's own exit handler.
+5. **A key found:** shown at depth 1 once its hotspot stops, with
+   `Saloon.360G_`, `360G2_` or `360G3_`.
+6. **The gag** (`+0x140`), input held. With Velma idle, no scene and the
+   opening done, she plays `OBJ_VELMA_P12_UNGAG_ARTIE` (`0x406130`) and
+   `+0x141` is set. Then:
+   - **her step 6:** `Saloon.360D_1_VELMA` plays once (`+0x142`), and the
+     idle timer starts again;
+   - **her step 33:** Artie is idle (ungagged), and `MoaningActive` is off;
+   - **Velma idle:** Artie is ungagged (`+0xC1`), hotspots 3–8 get the
+     open hand (`0x401760`), and `Saloon.GAG_GONE_` plays, held.
+7. **Shaggy clicked with the nickel:** the bull's event with success, and
+   the arrow.
+
+**The room's event** (`0x415660`):
+- **The piano:**
+  - the first time, `Saloon.Piano_`;
+  - moved on to anything but its `B` (it plays its tune), music group −1
+    and `+0xC0`;
+  - on its `A`, it goes to its `B`.
+- **Hotspots 3–8,** once ungagged: a key behind one is found (`+0xD8`), and
+  the hotspot goes to its state with `B`.
+- **A key:**
+  - hidden, and no longer showing;
+  - a chain fewer (`+0xC4`);
+  - the room's own exit to ROOM_Artie, with no scene.
+- **The bull with the nickel:**
+  - movie 5 and the saloon again (game vtable `+0x08`);
+  - the nickel out of its slot (`0x406C80`), and the arrow;
+  - `BullRidden`.
+- **The bull without the nickel:** `Saloon.390A_`, `390A2_`, `390A3_` in
+  turn; once it is used, `Saloon.120E2_`. Held.
+
+**The exit handler** (`0x415C30`). Anywhere but ROOM_Artie:
+- **Gagged, or chained with no key showing:** `Saloon.360A1_`, `360A2_`,
+  `360A3_` or `Must_Free_Artie_` (`rand() & 3`), held. The gang stays.
+- **Chained, with keys showing:** `Saloon.340A2_`, `G3_` or `360D3_`. It is
+  `rand() & 1` with one key, `rand() % 3` with more. Held, and the gang
+  stays.
+- **To the stage without the level's snacks** (`+0x88` against level + 2):
+  `Saloon.380A_`, `380A2_`, `380A3_` by level, held, and the snack box
+  flashes (`0x40D4D0`).
+
+Otherwise the default handler.
+
+**ROOM_Artie** (`0x40D4E0`, vtable `0x45E68C`; music group 3; no opening).
+Field `+0xB8` is `ChainsLocked`, 3 at reset (`0x40D540`); `+0xBC` the
+chains; `+0xC0` a countdown.
+- **Placements** (`0x40D6D0`): `OBJ_CHAINS` a sprite under the first layer
+  at depth 0, on `ANIM_CHAINSA`, `B` or `C` by `ChainsLocked` 3, 2, 1,
+  stopped on step 0.
+- **Entry** (`0x40D680`):
+  - input is held;
+  - the cursor fades (`0x435150`, `0x12`);
+  - the toolbar is hidden (`0x407CC0`);
+  - the countdown is 36.
+- **The tick** (`0x40D560`). Input is held. With the chains stopped, the
+  countdown runs down:
+  - **on step 0,** they play once (`graphics_AnimSprite_Start` 3, 3, −1)
+    with `Artie.Chains_A`, `B` or `C`, and 36 more;
+  - **played,** a chain fewer, and the saloon (game vtable `+0x04`); once
+    none is left, through movie 6 (`+0x08`).
+- **Keys** (`0x40D820` / `0x40D860`): `ChainsLocked` (`%i`).
+
+##### The Sheriff's quiz (WP-052)
+
+Traced 2026-11-15 for [WP-052](../work-packets/WP-052-sheriff-quiz.md).
+
+**ROOM_Sheriff** (`0x416E20`, vtable `0x45EA10`; music group 5; no
+opening). Street 1's class sends the gang here when the Sheriff is clicked
+before his puzzle is done. Its fields:
+
+| Field | What it holds |
+|---|---|
+| `+0xB8` | `CurrentQuestion`: the page less 1, −1 for none |
+| `+0xBC` | the notebook |
+| `+0xC0`–`+0xCE` | `Question0`–`14`: answered |
+| `+0xD0`–`+0xDC` | the answers, A to D |
+| `+0xE0`–`+0xEC` | their sounds |
+| `+0xF0` | the page's sound |
+| `+0xF4` | the sound waited for |
+| `+0xF8` | the sound of what the mouse is over |
+| `+0xFC` | its countdown |
+| `+0x100` | the next page once the sound is over |
+| `+0x104` | the state: 0 the page, 1–4 its answers, 5 free |
+| `+0x108` | Street 1 once the sound is over |
+| `+0x109` | a wrong answer |
+
+`graphics_AnimSprite_Play(s, a, b, c)` (`0x430A80`) is
+`graphics_AnimSprite_Start(s, b, c, a)`. Here it is always called with
+mode 0, so it shows step `a`, stopped. The notebook and the answers have
+three such steps: 0 at rest, 1 lit up, 2 pressed.
+
+| Address | What it does |
+|---|---|
+| `0x416E80` (+0x08) | Reset, after the base reset: nothing answered, `+0xB8` −1, the sounds none |
+| `0x417530` (+0x18) | Placements. `OBJ_SHERIFF_NOTEBOOK` a sprite under the first layer (game `+0x58`) at depth 0, looping. Each of the four `OBJ_SHERIFF_ANSWERS1` (kept by its sequence's letter) a requires object (`0x408C80` with −1) at depth 10, stopped on step 0, its callback (`0x402FF0`) the room's vtable `+0x40` through `0x4047F0`. The exit back to Street 1 is the default path's |
+| `0x417220` (+0x0C) | Entry, after the base entry: the toolbar hidden (`0x407CC0`); `+0x108`, `+0x109` clear; with no question, one drawn (`rand() % 15` until it isn't 2, 5 or answered); then the page (`0x417300`) |
+| `0x417300` | The page. With the level's count answered (level + 2), page 3, the last. The notebook on `ANIM_SHERIFF_NOTEBOOKPAGE<page>` (looping), its sound `Sheriff.NOTEBOOKPAGE<page>`. Each answer to the object `OBJ_SHERIFF_ANSWERS<page>` (`0x4313C0`) on `ANIM_SHERIFF_ANSWERS<page><letter>`, stopped on step 0, its sound `Sheriff.NOTEBOOKPAGE<page>_<letter>`. State 0. Page 3 has no such object: its answers show nothing |
+| `0x416ED0` (+0x04) | The tick. See below |
+| `0x4176E0` (+0x40) | An answer clicked. See below |
+| `0x4172C0` (+0x10) | Leave, after the base leave: the level's count answered sets `SheriffPuzzle` (game `+0x26C`) |
+| `0x4179B0` / `0x417A80` (+0x1C / +0x20) | The keys: `CurrentQuestion` (`%i`, atoi), `Question0`–`14` |
+
+**The tick** (`0x416ED0`). Input is held (game `+0x24`) and the cursor
+fades every tick. The rest waits until the sound waited for (`+0xF4`) is
+over (`0x434CE0`):
+1. **`+0x108`:** to `ROOM_P03_Street1` (game vtable `+0x04`).
+2. **`+0x109`:** `Ewan.NOTEBOOKPAGE_ANSWER_WRONG_2`, then `+0x108`. The
+   disc's line is `Sheriff.NOTEBOOK_ANSWER_WRONG_2`, so nothing plays.
+3. **`+0x100`:** the next page (`0x417300`).
+4. **By state:**
+   - **0:** the page's sound, the page on step 1.
+   - **1–4:** the page and the answers on step 0, the answer read on step
+     1, and its sound.
+   - **5:** input free, the cursor shown. What the mouse is over (its `+8`)
+     is on step 1, the rest on step 0. Its sound goes in `+0xF8` and
+     `+0xFC` is 9. While that sound isn't playing, `+0xFC` counts down; at
+     0, the SFX and speech files are stopped (`0x434E10`), the sound
+     plays, and `+0xFC` is 72. Over nothing, it is stopped.
+5. **The level's count answered:** `+0x108`.
+
+**An answer clicked** (`0x4176E0`, through its requires object's click
+`0x402F20` with the arrow). The answer goes to step 2.
+- **Right** (its sequence one of 1C, 2C, 4C, 5D, 6C, 7A, 8B, 9C, 10A, 11D,
+  12B, 13D, 14C, 15A):
+  - the page answered;
+  - a `Sheriff.NOTEBOOK_ANSWER_RIGHT_` line;
+  - a new page drawn as at entry;
+  - `+0x100`.
+- **Wrong:** a `Sheriff.NOTEBOOK_ANSWER_WRONG_1.` line, and `+0x109`.
+
+Each line's digit comes from `0x417B70`. It draws `rand() % 9`, then
+`rand()` modulo the last draw, and takes the first digit (draw + 1) the
+disc has, or none. The SFX and speech files are stopped before the line.
+
+##### The horseshoe corral (WP-054)
+
+Traced 2026-11-16 for [WP-054](../work-packets/WP-054-horseshoe-corral.md).
+
+**ROOM_P30_Horseshoe_Corral** (`0x41DA10`, vtable `0x45ED00`; music
+`Horseshoe_Corral.Music`; no opening) is a game of horseshoes: Scooby and
+Rascal pitch ten each at three pegs. The room's class has no tick (its
+`+0x04` is the base's). The game is three sprite classes with updates of
+their own (their vtable `+0x0C`). The tree tick (`0x431130`) calls each
+right after the sprite's player, front to back.
+
+**The room's fields:**
+- **`+0xB8`:** whose turn: 0 Scooby, 1 Rascal.
+- **`+0xBC`, `+0xC0`:** Scooby and Rascal.
+- **`+0xC4`, `+0xC8`:** their piles.
+- **`+0xCC`–`+0xD4`:** the pegs.
+- **`+0xD8`–`+0xE4`:** the meter's placements' places.
+- **`+0xE8`, `+0xEC`:** the counter's tens and ones.
+
+| Address | What it does |
+|---|---|
+| `0x41DD00` (+0x18) | Placements. `OBJ_HC_SCOOBYPILE` and `OBJ_HC_RASCALPILE` sprites under the first layer, stopped, at depth 3 and 0. By their sequence: `ANIM_HC_METERA` and `ANIM_HC_METERARROW` are not built, only their places kept; `ANIM_HC_COUNTERBOX` a sprite at depth −10000, looping; `ANIM_HC_COUNTERNUMBERS` two sprites under the second layer (game `+0x5C`) at depth −9999, the left one the tens (a third is an error, not claimed). The exit back to Chase B5 is the default path's |
+| `0x41DA80` (+0x0C) | Entry, after the base entry. See below |
+| `0x41DCE0` (+0x10) | Leave, after the base leave: the counter's numbers forgotten |
+| `0x41E140` | A throw over. Scooby's: Rascal's turn. Rascal's: Scooby's, or, with Scooby's pile on its step 10, `ROOM_P28_Chase_B5` (game vtable `+0x04`) |
+| `0x41E1A0` | A snack (`0x407E00`: the inventory's `+0x30` plus 1, at most 99, and the snack box), and the counter on the snacks' tens and ones |
+
+**Entry** (`0x41DA80`):
+1. **Set-up:** the toolbar is hidden (`0x407CC0`).
+2. **The actors:**
+   - **Scooby** (`0x41E290`, 0x78 bytes): `OBJ_HC_SCOOBY` idle, looping,
+     at depth 2, with the meter (`OBJ_HC_METER` on `ANIM_HC_METERARROW`,
+     stopped, at depth −10, at the arrow's place).
+   - **Rascal** (`0x41D770`, 0x74 bytes): `OBJ_HC_RASCAL`, his head
+     (`RASCALHEAD_IDLE`, once) at depth −1 and his body (`RASCALBODY`,
+     looping) one behind it.
+   - **The pegs:** `OBJ_HC_PEG1`–`3`, idle, at depth −100.
+3. **Sound:** the `Horseshoe_Corral` sound section is preloaded.
+4. **The counter** shows the snacks.
+5. **Scooby's turn,** unless his pile is on its step 10; then Chase B5.
+
+**Scooby** (vtable `0x45ED40`; `+0x5C` his state, `+0x68` the meter, `+0x6C`
+the strength, `+0x70` his horseshoe landed, `+0x74` the meter's way):
+
+| State | Entered (`0x41E540`) | His update (`0x41E3A0`) |
+|---|---|---|
+| 0 | Idle, looping | — |
+| 1 | The meter once forward from its step, at 9 − 3 × level ticks a step | The meter stopped: once back (mode 4), then once forward, at that speed. The button held (game `+0x20` bit 1): the meter stopped, its step the strength, state 2 |
+| 2 | `+0x70` clear, `SCOOBYTHROW` once | His step 2: state 3. Then as state 3 |
+| 3 | His pile one step on | His step 15: a horseshoe at his strength, state 4 |
+| 4 | — | Stopped: state 5 |
+| 5 | The meter stopped, `SCOOBYWATCH` once | Stopped, with `+0x70`: state 0, and the throw over |
+
+**Rascal** (vtable `0x45ECD8`; `+0x5C` his state, `+0x68` a countdown, `+0x6C`
+his horseshoe landed):
+
+| State | Entered (`0x41D920`) | His update (`0x41D860`) |
+|---|---|---|
+| 0 | — | His head stopped: a countdown of `rand() % 60 + 48`; run out, his idle once again |
+| 1 | — | His head stopped: state 2 |
+| 2 | `+0x6C` clear, `RASCALHEAD_TOSS` once | His head's step 7: state 3 |
+| 3 | A horseshoe at `rand() % 9 + 1`, his pile one step on | His head stopped: state 4 |
+| 4 | `RASCALHEAD_IDLE` once | His head stopped, with `+0x6C`: state 0, and the throw over |
+
+**A horseshoe** (`0x41D210`, vtable `0x45ECB0`) is a sprite under the first
+layer at depth −2, playing once:
+- **Scooby's** is `OBJ_HC_ARCS` on `ANIM_HC_ARCS<strength>x<nn>`:
+  - **The digits:** `nn` is drawn from `rand() % 20`, then `rand()` modulo
+    the draw before, until that name, or it with `H`, is in the art, or the
+    draw is 0.
+  - **A ringer:** the `H` arcs are ringers. With strength 1–3 one rings
+    that peg (`+0x6C`).
+  - **Depth:** `4x02` is drawn at depth 10000.
+  - **Sound:** `Horseshoe_Corral.Arc_0<strength>x<nn>`, with `H` when that
+    one isn't on the disc.
+- **Rascal's** is `OBJ_HC_RASCAL_ARCS` on `ANIM_HC_RASCAL_ARCS<n>`:
+  - **Strength:** an 8 is taken as 9.
+  - **A ringer:** 1–3 rings that peg.
+  - **Sound:** `Horseshoe_Corral.Rascal.Arc<n>`.
+
+Its update (`0x41D5B0`):
+1. **Landed** (stopped), on a peg: it becomes the peg with the horseshoe on
+   it (`OBJ_HC_PEG<n>`, its `HORSESHOE_HIT` or `RASCAL_HIT` once), and
+   `Horseshoe_Corral.Rascal.Peg<n>.Hit` plays, Scooby's ringer too (the
+   disc's `Scooby.Peg<n>.Hit` sounds are never used). Then a countdown of
+   36.
+2. **Stopped, with the countdown run out:**
+   - Scooby and Rascal are told (`0x41E630`, `0x41DA00`);
+   - a ringer of Scooby's is a snack (`0x41E1A0`);
+   - the sprite is marked done (`+0x30`), and the sweep after the walk
+     (`0x431190`) deletes it. Corrected in
+     [WP-055](../work-packets/WP-055-pie-noon.md): until then the fork kept
+     each horseshoe in view.
+
+Created during the tree walk, a horseshoe behind its thrower is reached in
+the same walk: its player runs that tick.
+
+##### Pie Noon (WP-055)
+
+Traced 2026-11-16 for [WP-055](../work-packets/WP-055-pie-noon.md).
+
+**ROOM_P32_Pie_Noon** (`0x41B840`, vtable `0x45EC3C`) is a pie fight on the
+saloon's stage, until the clock chimes:
+- **Scooby** walks along the front after the mouse and throws a pie at each
+  press.
+- **The ghost** walks along the back, throws pies back, and hides in smoke.
+  A pie that reaches it is a snack.
+- **The rest of the gang** run across three lanes in between, and a pie
+  splats on them.
+- **The chime over:** back to the saloon.
+
+The audit's 602 instructions are only the room's own functions. Scooby, the
+ghost and each runner are sprites with updates of their own (vtable `+0x0C`),
+called in the tree walk. Each pie is a sprite the room's tick moves.
+
+**The stage.** The placements give it:
+- **Scooby's row,** and the ends of his walk.
+- **The ghost's row,** and its four places, sorted by x.
+- **Five start places,** sorted by y.
+
+On entry, four edges run from the ghost's row to Scooby's. With `gy` the
+ghost's row, the slopes are:
+- `+0xB8` = (Scooby's left end − ghost x₁) / (Scooby's row − `gy`)
+- `+0xBC` = (Scooby's right end − ghost x₂) / (Scooby's row − `gy`)
+- `+0xC0` = (left end − x₀) / (Scooby's row − `gy`)
+- `+0xC4` = (right end − x₃) / (Scooby's row − `gy`)
+
+At a depth `z`, measured as a row, the edges are (`0x41C980`–`0x41C9E0`):
+
+| Edge | At depth `z` |
+|---|---|
+| Left inner | (`z` − `gy`) × `+0xB8` + x₁ |
+| Right inner | (`z` − `gy`) × `+0xBC` + x₂ |
+| Left outer | (`z` − `gy`) × `+0xC0` + x₀ |
+| Right outer | (`z` − `gy`) × `+0xC4` + x₃ |
+
+The stage's width at a depth is the inner edges' gap.
+
+**The lanes** (left end `+0x124`, right end `+0x118`, row `+0x130`):
+
+| Lane | Ends | Row |
+|---|---|---|
+| 2, the back | The first two start places | The first's |
+| 1, the middle | The next two | The third's |
+| 0, the front | The other two lanes' ends, carried on | The fifth's |
+
+On Showdown the front lane runs from −553 to 1017, well off the screen.
+
+| Address | What it does |
+|---|---|
+| `0x41C190` (+0x18) | Placements, none of them built:<br>- **Scooby's** give his row (`+0xD0`) and the ends of his walk (`+0xCC`, `+0xC8`).<br>- **The ghost's** give its row (`+0xE4`) and four places (`+0xD4`), sorted.<br>- **The gang's** give five start places (`+0xEC`, `+0x100`), by y (`0x41C880`).<br>Built:<br>- **`OBJ_PIE_NOON_OVERLAY`s** ending `FR`, `FL`, `BR`, `BL` are sprites under the first layer, looping.<br>- **`OBJ_PIE_NOON_CLOCK`** is a sprite under the first layer, stopped on step level × 15.<br>- **`ANIM_PIE_NOON_COUNTERNUMBERS`** is two sprites under no layer at depth 9999, looping, the left one the tens. A third is an error |
+| `0x41B8E0` (+0x0C) | Entry, after the base entry. See below |
+| `0x41C130` (+0x10) | Leave, after the base leave: the places, the gang, Scooby and the counter forgotten |
+| `0x41BF10` (+0x04) | The tick, after the base tick. See below |
+| `0x41CC40` | One of the gang on: a lane drawn (`rand() % 3`). If it has been free over 10 ticks, a runner, running as the lane says (0 left, 1 right, 2 either, `rand()` even for right). The lane's time goes to 0 and its way to the runner's |
+| `0x41CA00` | A pie in the first of ten free slots (`+0x154`) |
+| `0x41CA90` | Tests a pie against the runners: Shaggy, Fred, Daphne, Velma |
+| `0x41CB50` | A snack (`0x407E00`), and the counter |
+| `0x41CD20` | Scooby may throw: lane 0's time is not below 0, and there is no chime |
+
+**Entry** (`0x41B8E0`):
+1. **The slopes and the lanes** as above.
+2. **The ghost and Scooby.**
+3. **The lanes:** each either way (2), with a time of −216.
+4. **The counter** on the snacks.
+5. **Sound:** `Pie_Noon.Music`, then `Pie_Noon.Intro`.
+6. **The overlays:** `FR` and `FL` one in front of the middle lane's row; `BR`
+   and `BL` one in front of the back lane's.
+7. **The clock:** the intro set (`+0x1AC`) and the clock's step kept
+   (`+0x1C4`). The next sound is a tick (`+0x1B8`).
+
+**The tick** (`0x41BF10`), after the walk and its sweep:
+1. **The cursor fades.**
+2. **The gang:** each of Velma, Fred, Daphne and Shaggy not on may run on
+   (`0x41CC40`).
+3. **Hit countdowns:** each runner's (`0x41A4B0`), Shaggy, Daphne, Fred,
+   Velma.
+4. **The pies:** each updated (`0x41B2C0`); those done deleted. A kept one
+   selects its frame (`0x4309C0`).
+5. **Lane times:** each goes up 1; past 100 a lane is either way again.
+6. **The clock:**
+   - In the intro, once lane 0's time reaches 0, the clock runs from step 1
+     at 36 ticks a step.
+   - After it, back on step 0, it stops and `Pie_Noon.Clock_Chime` plays.
+   - Each step it changes plays `Clock_Tick` or `Clock_Tock`, in turn.
+7. **The chime over** (`0x434CE0`): `ROOM_P12_Saloon`.
+
+On Showdown the clock has 60 steps. The intro is 216 ticks, and the chime
+comes at tick 216 + 36 × 59 = 2340. The level changes only the step the
+clock shows during the intro.
+
+**A runner** (`0x419C50`, vtable `0x45EBA0`; `+0x5C` its state, `+0x68` its
+name, `+0x70` running right, `+0x74` its lane, `+0x78` its speed, `+0x7C` its
+target, `+0x80` its hit countdown, `+0x84` its hit ticks, `+0x88` its `Hit.X`
+played) is a sprite under the first layer:
+- **Its sequence:** `OBJ_PIE_NOON_<NAME>` on
+  `ANIM_PIE_NOON_<NAME>RUN_<RIGHT|LEFT><lane + 1>`, looping (`0x41A310`).
+- **Its course:** from one end of its lane to the other, at a hundredth of
+  the lane a tick, at the lane's row and depth.
+- **Its update** (`0x419DE0`):
+  - **Running:** it moves on. Past the target, its slot is freed and it is
+    marked done.
+  - **Hit:** while its countdown runs, it counts hit ticks. Then it runs
+    again, its `_Hit.X` stopped.
+
+Its hit test (`0x419EB0`) passes three tests in turn:
+1. The pie is within a tenth of the stage's width (at the lane's row) of
+   that row.
+2. The pie is inside its frame's first cel.
+3. The pie is on its pixels: a hit.
+
+Inside the cel but off the pixels, while it hasn't been hit, it plays
+`Pie_Noon.<NAME>_Miss`.
+
+A hit (`0x41A110`):
+- **The sequence:** its `HIT`, looping.
+- **The countdown:** 12.
+- **The sound:** `Pie_Noon.<NAME>_Hit.<1|2>`, or once it has been hit over
+  72 ticks, `_Hit.X` once.
+
+**The ghost** (`0x41A550`, vtable `0x45EBDC`; `+0x5C` its speed, `+0x60` a
+countdown, `+0x68` its state, `+0x6C` facing right, `+0x70` hidden, `+0x74`
+its smoke, `+0x78` and `+0x7C` the throws and hits to its next line):
+- **Where it starts:** a sprite under the first layer, half way along its
+  row, facing right.
+- **Its speed:** 0.005 of its row a tick.
+- **Its draw** (`0x41B0D0`) skips it while it is hidden.
+
+In each state, "side" is the way it faces:
+
+| State | Entered (`0x41AA40`) | Its update (`0x41A650`), after deleting a stopped smoke |
+|---|---|---|
+| 0 | Shown; `IDLE_<side>`, looping; 25 ticks | Run out: `rand() % 7`. 0 → 5; 1–2 → 4; 3 → 6 (if no smoke is up, else 2); 4–6 → 2 |
+| 1 | `HIT_<side>`, looping; 15 ticks. `Ghost_Hit` restarted. A `Good_Job.<1-8>` line every hit | Run out: `rand()` odd 4, else 2 |
+| 2 | Scooby walking (state not 0 or 1) and the intro over: `THROW_<side>_TO_<other>` once, turned. Otherwise as 5 | Its step 2: a pie from its place, state 3, `Ghost_Throw`, and every 5–9 throws (the first at once) a `Lookout.<1-3>` line. Then as 3 |
+| 3 | — | Stopped: 0 |
+| 4 | `RUN_<other>_TO_<side>`, looping | Along its row. Past its end: `rand()` even 2, else 5. Otherwise 1 in 90: 0 |
+| 5 | `TRANS_<side>_TO_<other>` once, turned | Stopped: `rand()` odd 0, else 4 |
+| 6 | Smoke (`OBJ_PIE_NOON_SMOKE` on `SMOKECYCLE` once, under the first layer, a row in front) at its place; `Smoke_Cycle` | The smoke's step 5: 8 |
+| 7 | Somewhere along its row (`rand()` / 32767), then as 6 | The smoke's step 5: 0 |
+| 8 | Hidden; 20 ticks | Run out, and no smoke: 7 |
+
+Its hit test (`0x41A9D0`): shown, and on its pixels.
+
+**A pie** (`0x41B0F0`, vtable `0x45EC0C`; `+0x60` its state, `+0x64` across,
+`+0x68` its depth as a row, `+0x6C` its size, `+0x70` thrown by the ghost,
+`+0x74` the runner slot it hit):
+- **Its sprite:** under the first layer, stopped, `OBJ_PIE_NOON_PIE`.
+- **Thrown from the back half** (the ghost's): it shows `PIEG_THROW`, and
+  "across" is its x along the ghost's places.
+- **Thrown from the front:** it shows `PIETHROW`, and "across" is its x
+  along Scooby's walk.
+- **Its place:** x is "across" between the outer edges at its depth. y is
+  its depth less 0.6 of the stage's width there.
+- **Its size:** its step's first cel's width.
+
+Its update (`0x41B2C0`):
+1. **Landed:** once its sequence stops, it is done. Until then, a runner it
+   splatted on keeps a countdown of 12 (`0x41A4D0`).
+2. **Flying:**
+   - **It moves** a tenth of the stage's width at its depth: back if it is
+     Scooby's, forward if it is the ghost's.
+   - **Its step grows** while a fifth of the width is under its size
+     (Scooby's) or over it (the ghost's), up to 9.
+   - **Its depth** is its row.
+3. **In front of Scooby's row:** it is tested on Scooby's pixels (`0x41D160`)
+   at its x, and a quarter and a half of its size either side.
+   - **A hit** (`0x41D1B0`): his `HIT_<L|R>` once and `Scooby_Hit`; the pie
+     shows `PIEG_HIT` once, one behind him.
+   - **Otherwise:** done.
+4. **Behind the ghost's row:** on the ghost, the ghost is hit, a snack (`0x41CB50`), and
+   `PIEHIT3` once, one in front of the ghost. Otherwise it is done.
+5. **Between the two:** the runners in turn. A hit splats:
+   - **The sound:** `Pie_Noon.Splat.<n>`, from a global (`0x475F08`) that
+     goes 0 to 4 in turn. The old value is pushed before the increment.
+   - **The sequence:** `PIEHIT<lane + 1>` once.
+   - **Its depth:** two in front of the runner, or two behind for a ghost's pie.
+
+**Scooby** (`0x41CD50`, vtable `0x45EC7C`; `+0x60` a press used, `+0x64` his
+state, `+0x68` facing right, `+0x6C` his throw's number):
+- **Where he starts:** a sprite under no layer, at his row's depth, at his
+  walk's left end, on `WALK_LEFT_ARM` stopped, walking (3).
+- **Each update** (`0x41CE30`):
+  - **The press:** let go, it can be used again.
+  - **The target:** the mouse's x, kept to his walk.
+
+| State | His update |
+|---|---|
+| 0 (hit) | Stopped: `LICK_<L\|R>` once and `Scooby_Lick`, state 1 |
+| 1 | Stopped: his walk for his side, stopped, state 3 |
+| 2 (thrown) | Stopped: turned, his walk for the new side, state 3 |
+| 3 | There: stopped. Else 15 a tick at most, his walk restarted when stopped, from its step, a step a tick (left forward, right back). Then, a press not used and allowed (`0x41CD20`): a pie from his place, the press used, `THROW_L_TO_R` (or `R_TO_L`) once, state 2, the next of throws 1–3 and `Scooby_Throw.<n>` |
+
+**The tree's sweep** (`0x431190`) runs after the walk each tick, front to
+back. It selects each sprite's frame (`0x4309C0`) and deletes each sprite
+marked done (`+0x30`) with its subtree. So "paused" in the walk's row above
+means done: a runner past its lane's end is gone before the draw.
+
+**A step past the last.** A pie's step can go one past its sequence's last
+(`PIETHROW` and `PIEG_THROW` have 9). `0x4309C0` and `0x41B2C0` read it as
+any other: the frame reference is the next sequence's step count. On
+Showdown, Scooby's pie shows frame 9, a 3 × 5 speck, for its last few ticks.
 
 ##### Deterministic asset-naming rule for WP-002 hand-off
 

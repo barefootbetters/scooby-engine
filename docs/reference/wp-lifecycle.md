@@ -146,7 +146,7 @@ The pre-flight artifact stays the audit record of why execution was authorized. 
 
 ### Discipline
 
-- **One WP per branch (or per focused session)**, unless the work is small enough to commit straight to `main` (status bumps, link fixes, format-doc text corrections that don't lock new facts). The pre-flight gate's "Allowed paths" list is the scope contract for the duration of the session.
+- **One WP per branch (or per focused session)**, unless the work is small enough to commit straight to `main` (status bumps, link fixes, format-doc text corrections that don't lock new facts). The pre-flight gate's "Allowed paths" list is the scope contract for the duration of the session. For engine-code WPs that branch lives in its own fork worktree (§End-to-end step 5), never in the shared `C:\dev\scummvm` checkout.
 - **Every claim cites its generation.** This is the single discipline that makes findings durable across the engine-lineage split. A finding stated as "the engine loads `TGIFILE.ART` via `CreateFileA`" should read "Gen 1 (Showdown) loads `TGIFILE.ART` via `CreateFileA`" — the Gen 1 qualifier prevents the claim from getting silently mis-applied to Jinx's MMFW pipeline.
 - **Raw extracts stay local.** Per the copyright posture in [tools/exes/README](../../tools/exes/README.md) and [tools/samples/README](../../tools/samples/README.md): full strings dumps, decoded image samples, audio clips, and raw archive payloads live under gitignored paths. Only categorized samples + functional/factual identifiers (filenames, function names, SHA-256s, hex citations of small headers) get promoted into `docs/`.
 - **Regenerable diagnostic outputs also stay local.** Catalog JSON, name-table dumps, cross-check unmatched-asset lists, and similar tool outputs (`tools/samples/asset-catalog.json`, `tools/samples/wp003-name-table.txt`, `tools/samples/unmatched-assets.txt`) are reproducible from SHA-256-locked source binaries via the tooling under `tools/`; committing them adds noise and drifts from the canonical regeneration. The WP body cites the regeneration command (or names the script that produces the file) so a future reader can rebuild on demand. Findings derived from the file get promoted into `docs/` — the file itself does not.
@@ -225,6 +225,8 @@ For WPs touching `engines/scooby/**`: run [`tools/Sync-Fork.ps1`](../../tools/Sy
 
 For scooby-docs-repo-only WPs (every Phase 0–1 WP to date): `git switch main && git pull --ff-only origin main` against this repo. There is no upstream fork; the script does not apply.
 
+Note: with the fork-worktree model (step 5), each engine WP's worktree forks from a freshly fetched `origin/scooby-engine`, so it starts current without a per-WP rebase. `Sync-Fork.ps1` is for the periodic upstream merge (`scummvm/scummvm` master → the fork's `scooby-engine`), run in the base `C:\dev\scummvm` checkout — not per WP.
+
 ### 2. Draft WP
 
 Per §Phase 1 — Drafting. The supersession check is non-optional — three 15-second checks (WORK_INDEX scan, format-doc scan, `git log --oneline --all --grep=<slug>`); a hit means stop and extend the existing WP rather than draft a parallel one. Reserve the WP number, write `docs/work-packets/WP-NNN-<slug>.md`, add the row to [WORK_INDEX](../work-packets/WORK_INDEX.md) at 📝 Drafted.
@@ -241,11 +243,19 @@ For substantive WPs, spawn an Agent (subagent_type `code-reviewer`) for an indep
 
 This is one activity, not two ("review" + "apply suggestions"). Real review is iterative.
 
-### 5. Branch (conditional — substantive code WPs only)
+### 5. Branch — a fork worktree (conditional — substantive code WPs only)
 
-`git switch -c wp-NNN-<slug>`. From here, everything lands on the branch, not on `main`. The §Phase 3 "one WP per branch" rule activates here.
+Engine-code WPs land in `engines/scooby/**` on the **scummvm fork**, whose checkout at `C:\dev\scummvm` is a *single* working copy shared by every session. Switching its branch in place is how two sessions collide (the WP-075 collision, 2026-11-19). Don't `git switch` in that checkout — carve a dedicated worktree instead:
 
-**Skip for substantive docs-only WPs** — they commit direct to `main` per the triage path; the §Phase 3 Discipline allowlist + the pre-flight scope-lock + the two-commit topology provide the discipline the branch would otherwise add. Skip for trivial fixes that triage already routed past.
+```pwsh
+tools\New-ForkWorktree.ps1 -Branch wp-NNN-<slug>
+# -> C:\claude-worktrees\scummvm-wp-NNN-<slug>, branch wp-NNN-<slug>,
+#    forked from a freshly fetched origin/scooby-engine.
+```
+
+The worktree is a separate working directory on its own branch sharing one object store, so edits, builds and HEAD never cross between sessions. `C:\dev\scummvm` itself stays clean on `scooby-engine` as the base clone — never work in it directly. The branch name doubles as the claim: `New-ForkWorktree.ps1` refuses, before creating anything, if the branch already exists locally or on `origin`, surfacing a concurrent session that holds the WP. From here everything lands on the worktree's branch, not on `main`; the §Phase 3 "one WP per branch" rule activates here. Tear the worktree down in step 13.
+
+**Skip for substantive docs-only WPs** — they commit direct to `main` per the triage path; the §Phase 3 Discipline allowlist + the pre-flight scope-lock + the two-commit topology provide the discipline the branch would otherwise add. (Docs-repo work that wants the same isolation can take a plain `git worktree add` off this repo's `main` — as the WP that introduced these scripts did.) Skip for trivial fixes that triage already routed past.
 
 ### 6. Pre-flight
 
@@ -295,6 +305,7 @@ Exception: if execution surfaced something the next WP genuinely needs that does
 
 - `git status --short` after merge — confirms raw extracts under `tools/exes/**` and `tools/samples/**` are still gitignored (zero files staged), and no session-local detritus is left in the working tree
 - Drop any session-local stashes (`git stash list` → `git stash drop`) or branches that didn't get cleaned up by `--delete-branch`
+- **Engine-code WPs:** remove the fork worktree — `tools\Remove-ForkWorktree.ps1 -Branch wp-NNN-<slug> -DeleteBranch` (removes the worktree dir, prunes the registry, deletes the local branch). This is what stops fork worktrees and stale local branches piling up in `C:\dev\scummvm`; the loose WP branches already sitting in that checkout are the symptom of skipping it.
 
 That's the scope. Directory-casing normalization, archived logs, cache pruning, etc. are session-level concerns — they ride along inside step 8 if needed, not in workflow-level tidy.
 
@@ -314,6 +325,8 @@ The off-ramps are first-class — taking one is a complete and valid outcome, no
 ## Abandonment
 
 Drafting and execution get interrupted for many reasons — a higher-priority finding lands first, the WP's premise dissolves under inspection, the operator's attention shifts to a different generation. The four states below cover cleanup per state, in ascending order of "how far did this go before abandoning."
+
+**Engine-code WPs:** if the branch is in a fork worktree, remove it first — `tools\Remove-ForkWorktree.ps1 -Branch <branch> -DeleteBranch -Force` folds states (b)/(c)'s local-branch delete into one step (add `git push origin --delete <branch>` for state (c), where the branch reached `origin`).
 
 ### (a) Pre-commit abandonment
 

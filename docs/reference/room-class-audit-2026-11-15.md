@@ -70,5 +70,5 @@ ROOM_Cheat and ROOM_Test_Scroll are developer rooms: no exit object in object.in
 
 ## Not covered
 
-- **Phantom of the Knight.** The Ghidra project holds Showdown's `Scooby.exe` only. Phantom's factory needs its own import before the same audit can run.
+- **Phantom of the Knight.** The Ghidra project holds Showdown's `Scooby.exe` only. Phantom's audit, from an import of its own, is [room-class-audit-phantom-2026-11-16](room-class-audit-phantom-2026-11-16.md).
 - **Slot by slot in the ported classes.** This audit checks that a ported room has a class at all. It doesn't check that the class overrides every slot the original's does.
