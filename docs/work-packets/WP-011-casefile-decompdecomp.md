@@ -337,6 +337,33 @@ What this changes:
 
 Room links and his email address are not recorded.
 
+### Catalog once-over: two more TGIFILE.ART titles and a DOS "TGI" signature (2026-11-20)
+
+Mony took up the catalog once-over he'd offered and went through TerraGlyph's list (MobyGames was down, so via PCGamingWiki and [LaunchBox gamesdb, developer 487](https://gamesdb.launchbox-app.com/developers/games/487-terraglyph-interactive-studios)). All **Reported** — his quick disc / executable look, not reproduced here.
+
+| Title | Mony's finding |
+|---|---|
+| **Clue Jr.: SpyGlass Mysteries** | `TGIFILE.ART` on the disc — "definitely one of ours." On GOG. Uses DirectX, unlike the later `TGIFILE.ART` titles. |
+| **The Little Mermaid II: Return to the Sea** | `TGIFILE.ART` — ours. |
+| Hansel & Gretel and the Enchanted Castle (DOS) | No `TGIFILE.ART`. Uses WinG (Microsoft's WinG graphics API — not an engine name; his correction) and carries `TGI_ENGINE` / `TGI_QA` strings. |
+| Tiny Toon Adventures: Buster and the Beanstalk (DOS) | Same: WinG + `TGI_ENGINE` / `TGI_QA`. |
+| The 1995–96 DOS pair, overall | Likely a *separate, earlier* TerraGlyph engine carrying the studio's "TGI" signature — probably not the `TGIFILE.ART` ancestor — but the two share an engine with each other. |
+| Tiny Toon Adventures: The Great Beanstalk (PS1) | Little debug info; file structure suggests bespoke; plays differently on different hardware. Maybe worth a deeper look. |
+| Scooby-Doo! Classic Creep Capers | 3D; not examined — unlikely to share a 2D point-and-click engine. |
+| Toonenstein, Blue's Big Musical, Kidsongs: Musical Mystery, Rumpelstiltskin's Labyrinth of the Lost | Not our engine (his read). |
+| Canceled titles | TerraGlyph has a few; if versions surface, maybe worth a look (ScummVM prototype policy unknown). |
+| DOS / Mac variants | Several titles have DOS and Mac releases; supporting them would mean checking version differences and reading both their files. |
+
+What this changes:
+
+- **Two more non-Scooby `TGIFILE.ART` titles, bringing the set to three (Reported).** Activity Center (Observed here, [2026-11-19](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)) + **Clue Jr.: SpyGlass Mysteries** + **The Little Mermaid II: Return to the Sea**. The two new ones are **Reported** until reproduced locally the way Activity Center was (download, scan for `TGIFILE.ART`). Clue Jr. is on GOG, so it's the readily obtainable one for a local check; Little Mermaid II's source is still to find.
+- **The DOS titles are a sibling "TGI" engine, not the ancestor the 2026-11-19 note guessed.** That note put the 1995–96 CD-ROM titles as "at most an ancestor of the framework (unverified)". Mony's read refines it: Hansel & Gretel and Buster and the Beanstalk run WinG and carry `TGI_ENGINE` / `TGI_QA` — the studio's signature prefix — but are more likely a *different* TerraGlyph engine than a direct ancestor of `TGIFILE.ART`; they do share an engine with each other. So it's a candidate *second* TerraGlyph engine family (DOS / WinG), separate from the Gen 1–3 `TGIFILE.ART` / `MMFW` lineage this project targets. Out of scope, but "ancestor" becomes "sibling engine."
+- **"TGI" is the studio's cross-engine signature — which is the case for the TerraGlyph naming call.** `TGIFILE.ART`, `TGI_ENGINE` and `TGI_QA` all share "TGI" = TerraGlyph Interactive, and the prefix spans at least two distinct engines (DOS / WinG and the Windows `TGIFILE.ART` line). Naming this project's engine generically after the studio (TerraGlyph) rather than after a file signature or Scooby sits at the right altitude — the [2026-11-20 naming point](#reply-targets-naming-and-the-director-path-2026-11-20), now with evidence.
+- **Scope is unchanged.** Still five in-scope binaries. Clue Jr. and Little Mermaid II are candidate decomp / support targets and Gen-1 lineage data, not current scope; a full engine-family check on either would be its own WP (as Activity Center would). The PS1 Great Beanstalk (different system) and the DOS pair (different engine) stay out.
+- **Platform variants and canceled prototypes parked for any future support work** — DOS / Mac file differences would need the engine to read both; prototypes are a maybe, pending ScummVM's case-by-case policy.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -660,6 +687,8 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-19 | **Finding (Observed): Disney's 102 Dalmatians: Activity Center (2000) runs the TerraGlyph Gen 1 engine** — the first confirmed non-Scooby binary on it. Downloaded the Internet Archive disc image (`102_Dalmatians.img`, SHA-1 `a84fe50e…2370`, verified); a raw scan finds `TGIFILE.ART` present and no Trinket/Director/Crystal markers. Confirms the catalog lead from the previous row (was unverified). The *Puppies to the Rescue* disc (`flt-102d`) is a different engine (Crystal/Eidos) and ruled out. Byte-format identity and a full engine-family check remain open; also a candidate decomp target for Mony. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
 
 | 2026-11-20 | Collaborator reply (**Reported**): Activity Center + Activity Challenge are good later decomp targets, or at minimum document them as engine-sharing; he'll give some older TerraGlyph console/CD-ROM titles a once-over for shared lineage; Case File #3 (Director) is already partly supported in ScummVM, so it'd be the next target before Case File #2 if the other Scooby games are ever done; and he suggests a generic engine name — "Maybe TerraGlyph?", which is already this project's convention ([VISION](../01-VISION.md)). Reconfirms he'll target the `0x10`/`+0x88` loader fields once usage resets (Claude Tue, opencode +2 days). No new question for Jeff; reply drafted. See [§Reply: targets, naming and the Director path](#reply-targets-naming-and-the-director-path-2026-11-20). |
+
+| 2026-11-20 | Collaborator catalog once-over (**Reported**): two more non-Scooby `TGIFILE.ART` titles — **Clue Jr.: SpyGlass Mysteries** (on GOG; uses DirectX) and **The Little Mermaid II: Return to the Sea** — bringing the non-Scooby Gen-1 set to three with Activity Center (the two new ones Reported, not yet reproduced here). The 1995–96 DOS titles (Hansel & Gretel, Buster and the Beanstalk) use WinG and carry `TGI_ENGINE` / `TGI_QA` signature strings — likely a *separate, earlier* TerraGlyph engine sharing the studio's "TGI" prefix, not the `TGIFILE.ART` ancestor the 2026-11-19 note guessed; they share an engine with each other. PS1 Great Beanstalk likely bespoke; Classic Creep Capers (3D), Toonenstein, Blue's Big Musical, Kidsongs, Rumpelstiltskin ruled out by him. Sources: PCGamingWiki, LaunchBox gamesdb (dev 487). Scope unchanged (five in-scope binaries); the two new Gen-1 titles are candidate targets / lineage data, local verification open. See [§Catalog once-over](#catalog-once-over-two-more-tgifileart-titles-and-a-dos-tgi-signature-2026-11-20). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
