@@ -5,7 +5,7 @@ title: "EC-006: Showdown playthrough run sheet"
 
 # EC-006: Showdown closeout — playthrough and gate-walk checklist
 
-**Paired WP:** [WP-078](../work-packets/WP-078-showdown-closeout.md)
+**Paired WP:** [WP-079](../work-packets/WP-079-showdown-closeout.md)
 **Purpose:** Keep the *Showdown* closeout run scoped and reproducible — a
 single start-to-credits playthrough plus the release-gate walk — without it
 sprawling into inline bug-fixing. Every defect found is **logged as a one-line
@@ -21,11 +21,11 @@ legal way forward), which is itself the top finding.
 
 ## Pre-flight
 
-- [ ] Pre-flight verdict: **READY** — fill in `docs/reference/pre-flight-WP-078-YYYY-MM-DD.md` and commit it before the run; `NOT READY` blocks this session.
+- [ ] Pre-flight verdict: **READY** — fill in `docs/reference/pre-flight-WP-079-YYYY-MM-DD.md` and commit it before the run; `NOT READY` blocks this session.
 - [ ] Fork at `C:\dev\scummvm` on `scooby-engine`, built Scooby-only against the pin (`c553503d9d`): `0 errors, 0 warnings`. Build command + commit hash recorded here: ____
 - [ ] *Showdown in Ghost Town* ISO mounted, unmodified; mount path + ISO SHA-256 recorded here: ____
 - [ ] Capture sink ready for screenshots/logs under a gitignored path (per [tools/exes/README](../../tools/exes/README.md)); no raw game data leaves the gitignored tree.
-- [ ] [WP-078](../work-packets/WP-078-showdown-closeout.md) open in a second window for the §Result write-up.
+- [ ] [WP-079](../work-packets/WP-079-showdown-closeout.md) open in a second window for the §Result write-up.
 
 ---
 
@@ -112,7 +112,7 @@ Re-run the mechanical checks; do not quote an earlier WP.
 ## Step 4 — Wiki page + verdict (time-box: 45 min)
 
 - [ ] Draft the ScummVM `Scooby` wiki-page content as a committed repo doc (e.g. `docs/reference/scummvm-wiki-scooby.md`): supported titles, known limitations, required game-data file list, save-state status ([§12](../02-SCUMMVM-INTEGRATION.md#12-upstream-pr-checklist)).
-- [ ] Write the **go/no-go verdict** in [WP-078 §Result](../work-packets/WP-078-showdown-closeout.md): go only if Step 1 reached credits clean **and** every gate is green.
+- [ ] Write the **go/no-go verdict** in [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md): go only if Step 1 reached credits clean **and** every gate is green.
 - [ ] Compile the **gap list**: every ⚠/✗ and failed gate, each tagged with the follow-up WP that owns its fix.
 
 ---
@@ -120,9 +120,9 @@ Re-run the mechanical checks; do not quote an earlier WP.
 ## Definition of done
 
 - [ ] All step outcomes recorded; the beat table and gate table filled in.
-- [ ] WP-078 exit criteria 1–6 each satisfied or explicitly marked unmet with its gap.
+- [ ] WP-079 exit criteria 1–6 each satisfied or explicitly marked unmet with its gap.
 - [ ] Go/no-go verdict written; gap list complete with follow-up-WP tags.
-- [ ] WP-078 status updated in [WORK_INDEX](../work-packets/WORK_INDEX.md) (✅ on a clean go; stays 🚧 if a blocker was hit).
+- [ ] WP-079 status updated in [WORK_INDEX](../work-packets/WORK_INDEX.md) (✅ on a clean go; stays 🚧 if a blocker was hit).
 
 ## Out-of-scope captures
 
