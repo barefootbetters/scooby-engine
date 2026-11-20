@@ -383,6 +383,25 @@ Byte-format identity (decoding a `.ART` with the WP-002 decoder) and a full engi
 
 Room links and his email address are not recorded.
 
+### Localized releases: Norwegian Showdown and Case File #2 for the detection tables (2026-11-20)
+
+A forward-looking note: he owns **Norwegian retail copies of Showdown and Case File #2** (bought thinking they were English). His proposal is that *after* the supported games are done, we scour abandonware sites for other localized releases, add each to the engine's ScummVM detection tables, and check that each still runs. He flags that **the Norwegian Showdown isn't on the abandonware sites** — so his physical disc may be the only accessible source for that release.
+
+| Item (Reported) | Detail |
+|---|---|
+| Owns | Norwegian Showdown (Gen 1, **in scope**) and Norwegian Case File #2 (Trinket / OM++, **out of scope** — see [§Scope](#scope)). |
+| Proposal | After the in-scope games work, collect localized releases, add them to the detection tables, verify each boots. A post-engine task, not now. |
+| Preservation flag | The Norwegian Showdown is not on the abandonware sites; his disc may be the only route to its file hashes. |
+
+**What this changes:**
+
+- **This is standard, and correct, ScummVM practice — not scope creep.** ScummVM detects a game by hashing key files, so every localized pressing is its own detection entry (different files → different hashes). A mature engine's detection table carries as many real-world releases as can be legally obtained. So "add the languages to the detection" is just filling out the table once the engine exists; it doesn't touch what the engine has to *do*.
+- **Norwegian Showdown is the directly useful one.** Showdown is the primary in-scope Gen 1 target, and a localization we can't otherwise get is exactly the kind of release a detection table would otherwise miss. His owning it — and it being absent from abandonware — makes his copy a genuine preservation asset: the hashes for that entry would have to come from his disc. Worth noting now so it isn't lost, even though the detection work is months out.
+- **Norwegian Case File #2 is a preservation note, not an engine input.** Case File #2 runs the excluded Trinket / OM++ framework, so its localizations don't feed this engine's detection table. Good to have mapped (and a nice artifact if #2 is ever revisited), but it changes nothing here.
+- **Timing: post-engine, as he framed it.** Nothing to do until the in-scope set detects and runs. Parked as a known follow-up: when the detection table is built, pull localized Showdown releases (his Norwegian disc included) and add an entry per pressing.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -709,6 +728,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 
 | 2026-11-20 | Collaborator catalog once-over (**Reported**): two more non-Scooby `TGIFILE.ART` titles — **Clue Jr.: SpyGlass Mysteries** (on GOG; uses DirectX) and **The Little Mermaid II: Return to the Sea** — bringing the non-Scooby Gen-1 set to three with Activity Center (the two new ones Reported, not yet reproduced here). The 1995–96 DOS titles (Hansel & Gretel, Buster and the Beanstalk) use WinG and carry `TGI_ENGINE` / `TGI_QA` signature strings — likely a *separate, earlier* TerraGlyph engine sharing the studio's "TGI" prefix, not the `TGIFILE.ART` ancestor the 2026-11-19 note guessed; they share an engine with each other. PS1 Great Beanstalk likely bespoke; Classic Creep Capers (3D), Toonenstein, Blue's Big Musical, Kidsongs, Rumpelstiltskin ruled out by him. Sources: PCGamingWiki, LaunchBox gamesdb (dev 487). Scope unchanged (five in-scope binaries); the two new Gen-1 titles are candidate targets / lineage data, local verification open. See [§Catalog once-over](#catalog-once-over-two-more-tgifileart-titles-and-a-dos-tgi-signature-2026-11-20). |
 | 2026-11-20 | **Finding (Observed): Clue Jr.: SpyGlass Mysteries (1999) and The Little Mermaid II: Return to the Sea (2000) both run the TerraGlyph Gen 1 engine** — confirming Mony's catalog leads. Downloaded Internet Archive images (`CLUEJR.iso`, SHA-1 `6255baef…`, verified; `MERMAID2.iso` RUS, SHA-1 `368c5c38…`, verified). Clue Jr. carries a loose `TGIFILE.ART` and is DirectX-based (corroborating Mony's note); Little Mermaid II's InstallShield `data1.cab` file table lists `tgifile.art` + `lmii.exe` / `lm2.exe`. No competing-engine markers on either. Non-Scooby Gen-1 set now three with Activity Center; Clue Jr. (1999) is the earliest confirmed Gen-1 binary, predating Showdown. Byte-format / engine-family checks remain open. See [§Verified: Clue Jr. and Little Mermaid II](#verified-clue-jr-and-little-mermaid-ii-confirmed-on-the-engine-2026-11-20). |
+| 2026-11-20 | Collaborator note (**Reported**): he owns **Norwegian retail copies of Showdown and Case File #2**, and proposes that after the in-scope games work, we collect localized releases, add each to the ScummVM detection tables, and verify each boots. The **Norwegian Showdown isn't on abandonware sites**, so his disc may be the only source for that entry's hashes. Standard detection practice, not scope creep; Showdown's localization is the directly useful one (in scope), Case File #2's is a preservation note (Trinket / OM++, out of scope). Parked as a post-engine follow-up. See [§Localized releases](#localized-releases-norwegian-showdown-and-case-file-2-for-the-detection-tables-2026-11-20). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
