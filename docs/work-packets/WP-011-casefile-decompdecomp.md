@@ -364,6 +364,25 @@ What this changes:
 
 Room links and his email address are not recorded.
 
+### Verified: Clue Jr. and Little Mermaid II confirmed on the engine (2026-11-20)
+
+Followed Activity Center's method on the two new leads: downloaded a disc image for each from the Internet Archive, checked it against the Archive's recorded hash, and scanned it for `TGIFILE.ART` and competing-engine markers. Both **Observed** on this PC. Images live under `C:\pcloud\scooby-engine\` (non-git).
+
+| Title | Image (archive.org) | Size / SHA-1 | Engine evidence (Observed) |
+|---|---|---|---|
+| **Clue Jr.: SpyGlass Mysteries (1999)** | [`cluejr1999`](https://archive.org/details/cluejr1999) → `CLUEJR.iso` | 565,450,752 B / `6255baef…4772` (verified) | `TGIFILE.ART` loose on the disc (43 `TGIFILE` hits). No `MMFW`, `trinket` / `RScenePort`, `Macromedia` or `EIDOS`. **DirectX-based** — `DDRAW.DLL`, `DINPUT.DLL`, `D3DIM.DLL`, `DSOUND.DLL` all present, confirming Mony's DirectX note. |
+| **The Little Mermaid II: Return to the Sea (2000, Russian release)** | [`MERMAID2-RUS`](https://archive.org/details/MERMAID2-RUS) → `MERMAID2.iso` | 604,604,416 B / `368c5c38…4aca` (verified) | Game ships in an InstallShield `data1.cab` (magic `ISc(`); its uncompressed file table lists **`tgifile.art`** and the game exes **`lmii.exe` / `lm2.exe` / `Disney.exe`**. No `trinket`, `Macromedia` or `MMFW`. (A loose `tgifile.001` on the disc is a QuickTime movie — `ftypqt` / `moov` — a name coincidence, not the art container.) |
+
+**Verdict: both are TerraGlyph Gen 1, confirmed.** That makes **three** confirmed non-Scooby `TGIFILE.ART` titles: Activity Center (2000), Clue Jr. (1999) and Little Mermaid II (2000).
+
+- **Clue Jr. (1999) is the earliest confirmed Gen-1 binary — it predates the Scooby Gen-1 titles.** Showdown is 2000; Clue Jr. is 1999. So the `TGIFILE.ART` engine was already shipping a year before Showdown, and its early form is **DirectX-based** (DDraw / DInput / Direct3D / DirectSound), which the 2000–2001 titles dropped. A within-Gen-1 variation to account for if these ever get engine support.
+- **Little Mermaid II is confirmed from the InstallShield file table, not a loose file.** `tgifile.art` and `lmii.exe` / `lm2.exe` are named in the cab directory with no competing-engine markers — enough to settle the engine identity. The `.ART` bytes themselves sit inside the compressed cab, so a byte-level decode (the [WP-002](WP-002-tgifile-art-decoder.md) decoder) would need the cab extracted with `unshield` (not available here). This is the Russian localization; the English original wasn't on the Archive as software.
+- **No competing engine on either.** Neither shows Case File #2's Trinket / `R*` framework, Macromedia Director, or the Crystal / Eidos *Puppies to the Rescue* markers. Clue Jr.'s high raw "Crystal" string count is bundled third-party audio / video drivers and game demos on the disc (NFS / FIFA / NBA demo exes, ATI / XGI driver DLLs), not the Crystal Dynamics engine.
+
+Byte-format identity (decoding a `.ART` with the WP-002 decoder) and a full engine-family check (exe hash, imports, RTTI) stay open on all three non-Scooby titles, and each would be its own WP. Images: `C:\pcloud\scooby-engine\Clue Jr SpyGlass Mysteries\CLUEJR.iso` and `…\Little Mermaid II Return to the Sea\MERMAID2.iso`.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -689,6 +708,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-20 | Collaborator reply (**Reported**): Activity Center + Activity Challenge are good later decomp targets, or at minimum document them as engine-sharing; he'll give some older TerraGlyph console/CD-ROM titles a once-over for shared lineage; Case File #3 (Director) is already partly supported in ScummVM, so it'd be the next target before Case File #2 if the other Scooby games are ever done; and he suggests a generic engine name — "Maybe TerraGlyph?", which is already this project's convention ([VISION](../01-VISION.md)). Reconfirms he'll target the `0x10`/`+0x88` loader fields once usage resets (Claude Tue, opencode +2 days). No new question for Jeff; reply drafted. See [§Reply: targets, naming and the Director path](#reply-targets-naming-and-the-director-path-2026-11-20). |
 
 | 2026-11-20 | Collaborator catalog once-over (**Reported**): two more non-Scooby `TGIFILE.ART` titles — **Clue Jr.: SpyGlass Mysteries** (on GOG; uses DirectX) and **The Little Mermaid II: Return to the Sea** — bringing the non-Scooby Gen-1 set to three with Activity Center (the two new ones Reported, not yet reproduced here). The 1995–96 DOS titles (Hansel & Gretel, Buster and the Beanstalk) use WinG and carry `TGI_ENGINE` / `TGI_QA` signature strings — likely a *separate, earlier* TerraGlyph engine sharing the studio's "TGI" prefix, not the `TGIFILE.ART` ancestor the 2026-11-19 note guessed; they share an engine with each other. PS1 Great Beanstalk likely bespoke; Classic Creep Capers (3D), Toonenstein, Blue's Big Musical, Kidsongs, Rumpelstiltskin ruled out by him. Sources: PCGamingWiki, LaunchBox gamesdb (dev 487). Scope unchanged (five in-scope binaries); the two new Gen-1 titles are candidate targets / lineage data, local verification open. See [§Catalog once-over](#catalog-once-over-two-more-tgifileart-titles-and-a-dos-tgi-signature-2026-11-20). |
+| 2026-11-20 | **Finding (Observed): Clue Jr.: SpyGlass Mysteries (1999) and The Little Mermaid II: Return to the Sea (2000) both run the TerraGlyph Gen 1 engine** — confirming Mony's catalog leads. Downloaded Internet Archive images (`CLUEJR.iso`, SHA-1 `6255baef…`, verified; `MERMAID2.iso` RUS, SHA-1 `368c5c38…`, verified). Clue Jr. carries a loose `TGIFILE.ART` and is DirectX-based (corroborating Mony's note); Little Mermaid II's InstallShield `data1.cab` file table lists `tgifile.art` + `lmii.exe` / `lm2.exe`. No competing-engine markers on either. Non-Scooby Gen-1 set now three with Activity Center; Clue Jr. (1999) is the earliest confirmed Gen-1 binary, predating Showdown. Byte-format / engine-family checks remain open. See [§Verified: Clue Jr. and Little Mermaid II](#verified-clue-jr-and-little-mermaid-ii-confirmed-on-the-engine-2026-11-20). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
