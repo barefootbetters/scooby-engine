@@ -315,6 +315,93 @@ What this changes:
 
 Room links and his email address are not recorded.
 
+### Reply: targets, naming and the Director path (2026-11-20)
+
+Mony's answer to our 2026-11-19 reply. No new question for Jeff this time — he takes the catalog finding, proposes next steps and raises a naming point. **Reported.**
+
+| Item | Value |
+|---|---|
+| Activity Center and Activity Challenge | Good decomp targets once the current engine is done; failing that, at least document them as sharing the engine so someone else can add support. |
+| Older catalog titles | Worth a quick once-over for shared lineage; he'll check some of the console / CD-ROM titles himself for common ground. |
+| Case File #3 (Director) | Already partially implemented and supported in ScummVM, so if the other Scooby games are ever done after these, it'd be the good next target — and only then Case File #2. |
+| Engine naming | Since the Gen 1 and Gen 2 engines both have non-Scooby games, he suggests a more generic engine name — "Maybe TerraGlyph?" |
+| `TGIFILE.ART` fields | Reconfirms he'll point agents at the matched/partial functions once usage resets: Claude on Tuesday, opencode two days after. |
+
+What this changes:
+
+- **The naming suggestion is already this project's convention.** This project calls it the **TerraGlyph engine** throughout — the [VISION lineage](../01-VISION.md#engine-lineage-2026-06-finding) ("the three TerraGlyph titles", the engine "continued through IBS"), this WP, and the user-level repo map. Only the GitHub repo keeps the historical name `scooby-engine`. So Mony's instinct matches the name already in use, and the 102 Dalmatians confirmation ([§Reply: name leak fixed](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)) is exactly why a Scooby-specific name was never right. Nothing to change; independent corroboration of the existing choice.
+- **The Director-before-Trinket sequencing is sound and matches our out-of-scope calls.** Case File #3 is Macromedia Director, and ScummVM's Director engine already gives it partial support — so if it were ever pursued it would ride that existing engine, not a TerraGlyph fork. Case File #2 (Trinket / OM++) has no ScummVM support and would be a ground-up engine, so it correctly comes last. Both stay **out of scope for this project** ([WP-005](WP-005-engine-family-check.md); [VISION](../01-VISION.md)); recorded as a forward note for a possible separate project, not a plan here.
+- **He's volunteering the catalog once-over this project marked unverified.** The 1995–96 TerraGlyph CD-ROM titles (Hansel & Gretel, Rumpelstiltskin, Kidsongs, Tiny Toon: Buster and the Beanstalk) were logged as "at most an ancestor of the framework (unverified)" ([§Reply: name leak fixed](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)), and the console titles as different engines. Mony checking some himself could turn those into Observed on his side; this project takes any such finding as **Reported** until reproduced here.
+- **"Document them as sharing the engine" is already done.** WP-011 now records **Activity Center** as confirmed Gen 1 and **Activity Challenge** as the Gen-2 engine ([WP-013](WP-013-activity-challenge-engine-check.md)), so his minimum bar is met; the decomp-target idea is noted for after the current set.
+- **The one ask stays in progress, now with a timeline.** He'll aim agents at the scene-block loader's matched/partial functions once usage resets (Claude Tuesday, opencode +2 days). Both Ghidra gaps — room-block word `0x10` and placement field `+0x88` — stay open until that loader is decompiled ([§Jinx added, overnight Showdown progress](#jinx-added-overnight-showdown-progress-2026-11-19)).
+
+Room links and his email address are not recorded.
+
+### Catalog once-over: two more TGIFILE.ART titles and a DOS "TGI" signature (2026-11-20)
+
+Mony took up the catalog once-over he'd offered and went through TerraGlyph's list (MobyGames was down, so via PCGamingWiki and [LaunchBox gamesdb, developer 487](https://gamesdb.launchbox-app.com/developers/games/487-terraglyph-interactive-studios)). All **Reported** — his quick disc / executable look, not reproduced here.
+
+| Title | Mony's finding |
+|---|---|
+| **Clue Jr.: SpyGlass Mysteries** | `TGIFILE.ART` on the disc — "definitely one of ours." On GOG. Uses DirectX, unlike the later `TGIFILE.ART` titles. |
+| **The Little Mermaid II: Return to the Sea** | `TGIFILE.ART` — ours. |
+| Hansel & Gretel and the Enchanted Castle (DOS) | No `TGIFILE.ART`. Uses WinG (Microsoft's WinG graphics API — not an engine name; his correction) and carries `TGI_ENGINE` / `TGI_QA` strings. |
+| Tiny Toon Adventures: Buster and the Beanstalk (DOS) | Same: WinG + `TGI_ENGINE` / `TGI_QA`. |
+| The 1995–96 DOS pair, overall | Likely a *separate, earlier* TerraGlyph engine carrying the studio's "TGI" signature — probably not the `TGIFILE.ART` ancestor — but the two share an engine with each other. |
+| Tiny Toon Adventures: The Great Beanstalk (PS1) | Little debug info; file structure suggests bespoke; plays differently on different hardware. Maybe worth a deeper look. |
+| Scooby-Doo! Classic Creep Capers | 3D; not examined — unlikely to share a 2D point-and-click engine. |
+| Toonenstein, Blue's Big Musical, Kidsongs: Musical Mystery, Rumpelstiltskin's Labyrinth of the Lost | Not our engine (his read). |
+| Canceled titles | TerraGlyph has a few; if versions surface, maybe worth a look (ScummVM prototype policy unknown). |
+| DOS / Mac variants | Several titles have DOS and Mac releases; supporting them would mean checking version differences and reading both their files. |
+
+What this changes:
+
+- **Two more non-Scooby `TGIFILE.ART` titles, bringing the set to three (Reported).** Activity Center (Observed here, [2026-11-19](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)) + **Clue Jr.: SpyGlass Mysteries** + **The Little Mermaid II: Return to the Sea**. The two new ones are **Reported** until reproduced locally the way Activity Center was (download, scan for `TGIFILE.ART`). Clue Jr. is on GOG, so it's the readily obtainable one for a local check; Little Mermaid II's source is still to find.
+- **The DOS titles are a sibling "TGI" engine, not the ancestor the 2026-11-19 note guessed.** That note put the 1995–96 CD-ROM titles as "at most an ancestor of the framework (unverified)". Mony's read refines it: Hansel & Gretel and Buster and the Beanstalk run WinG and carry `TGI_ENGINE` / `TGI_QA` — the studio's signature prefix — but are more likely a *different* TerraGlyph engine than a direct ancestor of `TGIFILE.ART`; they do share an engine with each other. So it's a candidate *second* TerraGlyph engine family (DOS / WinG), separate from the Gen 1–3 `TGIFILE.ART` / `MMFW` lineage this project targets. Out of scope, but "ancestor" becomes "sibling engine."
+- **"TGI" is the studio's cross-engine signature — which is the case for the TerraGlyph naming call.** `TGIFILE.ART`, `TGI_ENGINE` and `TGI_QA` all share "TGI" = TerraGlyph Interactive, and the prefix spans at least two distinct engines (DOS / WinG and the Windows `TGIFILE.ART` line). Naming this project's engine generically after the studio (TerraGlyph) rather than after a file signature or Scooby sits at the right altitude — the [2026-11-20 naming point](#reply-targets-naming-and-the-director-path-2026-11-20), now with evidence.
+- **Scope is unchanged.** Still five in-scope binaries. Clue Jr. and Little Mermaid II are candidate decomp / support targets and Gen-1 lineage data, not current scope; a full engine-family check on either would be its own WP (as Activity Center would). The PS1 Great Beanstalk (different system) and the DOS pair (different engine) stay out.
+- **Platform variants and canceled prototypes parked for any future support work** — DOS / Mac file differences would need the engine to read both; prototypes are a maybe, pending ScummVM's case-by-case policy.
+
+Room links and his email address are not recorded.
+
+### Verified: Clue Jr. and Little Mermaid II confirmed on the engine (2026-11-20)
+
+Followed Activity Center's method on the two new leads: downloaded a disc image for each from the Internet Archive, checked it against the Archive's recorded hash, and scanned it for `TGIFILE.ART` and competing-engine markers. Both **Observed** on this PC. Images live under `C:\pcloud\scooby-engine\` (non-git).
+
+| Title | Image (archive.org) | Size / SHA-1 | Engine evidence (Observed) |
+|---|---|---|---|
+| **Clue Jr.: SpyGlass Mysteries (1999)** | [`cluejr1999`](https://archive.org/details/cluejr1999) → `CLUEJR.iso` | 565,450,752 B / `6255baef…4772` (verified) | `TGIFILE.ART` loose on the disc (43 `TGIFILE` hits). No `MMFW`, `trinket` / `RScenePort`, `Macromedia` or `EIDOS`. **DirectX-based** — `DDRAW.DLL`, `DINPUT.DLL`, `D3DIM.DLL`, `DSOUND.DLL` all present, confirming Mony's DirectX note. |
+| **The Little Mermaid II: Return to the Sea (2000, Russian release)** | [`MERMAID2-RUS`](https://archive.org/details/MERMAID2-RUS) → `MERMAID2.iso` | 604,604,416 B / `368c5c38…4aca` (verified) | Game ships in an InstallShield `data1.cab` (magic `ISc(`); its uncompressed file table lists **`tgifile.art`** and the game exes **`lmii.exe` / `lm2.exe` / `Disney.exe`**. No `trinket`, `Macromedia` or `MMFW`. (A loose `tgifile.001` on the disc is a QuickTime movie — `ftypqt` / `moov` — a name coincidence, not the art container.) |
+
+**Verdict: both are TerraGlyph Gen 1, confirmed.** That makes **three** confirmed non-Scooby `TGIFILE.ART` titles: Activity Center (2000), Clue Jr. (1999) and Little Mermaid II (2000).
+
+- **Clue Jr. (1999) is the earliest confirmed Gen-1 binary — it predates the Scooby Gen-1 titles.** Showdown is 2000; Clue Jr. is 1999. So the `TGIFILE.ART` engine was already shipping a year before Showdown, and its early form is **DirectX-based** (DDraw / DInput / Direct3D / DirectSound), which the 2000–2001 titles dropped. A within-Gen-1 variation to account for if these ever get engine support.
+- **Little Mermaid II is confirmed from the InstallShield file table, not a loose file.** `tgifile.art` and `lmii.exe` / `lm2.exe` are named in the cab directory with no competing-engine markers — enough to settle the engine identity. The `.ART` bytes themselves sit inside the compressed cab, so a byte-level decode (the [WP-002](WP-002-tgifile-art-decoder.md) decoder) would need the cab extracted with `unshield` (not available here). This is the Russian localization; the English original wasn't on the Archive as software.
+- **No competing engine on either.** Neither shows Case File #2's Trinket / `R*` framework, Macromedia Director, or the Crystal / Eidos *Puppies to the Rescue* markers. Clue Jr.'s high raw "Crystal" string count is bundled third-party audio / video drivers and game demos on the disc (NFS / FIFA / NBA demo exes, ATI / XGI driver DLLs), not the Crystal Dynamics engine.
+
+Byte-format identity (decoding a `.ART` with the WP-002 decoder) and a full engine-family check (exe hash, imports, RTTI) stay open on all three non-Scooby titles, and each would be its own WP. Images: `C:\pcloud\scooby-engine\Clue Jr SpyGlass Mysteries\CLUEJR.iso` and `…\Little Mermaid II Return to the Sea\MERMAID2.iso`.
+
+Room links and his email address are not recorded.
+
+### Localized releases: Norwegian Showdown and Case File #2 for the detection tables (2026-11-20)
+
+A forward-looking note: he owns **Norwegian retail copies of Showdown and Case File #2** (bought thinking they were English). His proposal is that *after* the supported games are done, we scour abandonware sites for other localized releases, add each to the engine's ScummVM detection tables, and check that each still runs. He flags that **the Norwegian Showdown isn't on the abandonware sites** — so his physical disc may be the only accessible source for that release.
+
+| Item (Reported) | Detail |
+|---|---|
+| Owns | Norwegian Showdown (Gen 1, **in scope**) and Norwegian Case File #2 (Trinket / OM++, **out of scope** — see [§Scope](#scope)). |
+| Proposal | After the in-scope games work, collect localized releases, add them to the detection tables, verify each boots. A post-engine task, not now. |
+| Preservation flag | The Norwegian Showdown is not on the abandonware sites; his disc may be the only route to its file hashes. |
+
+**What this changes:**
+
+- **This is standard, and correct, ScummVM practice — not scope creep.** ScummVM detects a game by hashing key files, so every localized pressing is its own detection entry (different files → different hashes). A mature engine's detection table carries as many real-world releases as can be legally obtained. So "add the languages to the detection" is just filling out the table once the engine exists; it doesn't touch what the engine has to *do*.
+- **Norwegian Showdown is the directly useful one.** Showdown is the primary in-scope Gen 1 target, and a localization we can't otherwise get is exactly the kind of release a detection table would otherwise miss. His owning it — and it being absent from abandonware — makes his copy a genuine preservation asset: the hashes for that entry would have to come from his disc. Worth noting now so it isn't lost, even though the detection work is months out.
+- **Norwegian Case File #2 is a preservation note, not an engine input.** Case File #2 runs the excluded Trinket / OM++ framework, so its localizations don't feed this engine's detection table. Good to have mapped (and a nice artifact if #2 is ever revisited), but it changes nothing here.
+- **Timing: post-engine, as he framed it.** Nothing to do until the in-scope set detects and runs. Parked as a known follow-up: when the detection table is built, pull localized Showdown releases (his Norwegian disc included) and add an entry per pressing.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -636,6 +723,12 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 
 | 2026-11-19 | Collaborator reply (**Reported**): the `SM*`-on-Showdown names were a twin-matcher name-leak bug, now fixed, though some leaked through before the fix (confirms the 2026-11-19 name caution); and when his usage resets he'll point an agent at the matched/partial functions to try to resolve the `0x10` and `+0x88` fields (accepts the one ask). Two questions for Jeff: plans for Case File #2/#3, and other games on this engine (he cites the Powerpuff game). Documented position for the reply: #2 is the Trinket/OM++ framework and #3 is Macromedia Director — both out of scope, and the Powerpuff demo rides #2's engine, not the TerraGlyph engine; the in-scope TerraGlyph set is Showdown, Phantom, Jinx, Activity Challenge and Case File #1. Questions remain Jeff's; a reply is drafted. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
 | 2026-11-19 | **Finding (Observed): Disney's 102 Dalmatians: Activity Center (2000) runs the TerraGlyph Gen 1 engine** — the first confirmed non-Scooby binary on it. Downloaded the Internet Archive disc image (`102_Dalmatians.img`, SHA-1 `a84fe50e…2370`, verified); a raw scan finds `TGIFILE.ART` present and no Trinket/Director/Crystal markers. Confirms the catalog lead from the previous row (was unverified). The *Puppies to the Rescue* disc (`flt-102d`) is a different engine (Crystal/Eidos) and ruled out. Byte-format identity and a full engine-family check remain open; also a candidate decomp target for Mony. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
+
+| 2026-11-20 | Collaborator reply (**Reported**): Activity Center + Activity Challenge are good later decomp targets, or at minimum document them as engine-sharing; he'll give some older TerraGlyph console/CD-ROM titles a once-over for shared lineage; Case File #3 (Director) is already partly supported in ScummVM, so it'd be the next target before Case File #2 if the other Scooby games are ever done; and he suggests a generic engine name — "Maybe TerraGlyph?", which is already this project's convention ([VISION](../01-VISION.md)). Reconfirms he'll target the `0x10`/`+0x88` loader fields once usage resets (Claude Tue, opencode +2 days). No new question for Jeff; reply drafted. See [§Reply: targets, naming and the Director path](#reply-targets-naming-and-the-director-path-2026-11-20). |
+
+| 2026-11-20 | Collaborator catalog once-over (**Reported**): two more non-Scooby `TGIFILE.ART` titles — **Clue Jr.: SpyGlass Mysteries** (on GOG; uses DirectX) and **The Little Mermaid II: Return to the Sea** — bringing the non-Scooby Gen-1 set to three with Activity Center (the two new ones Reported, not yet reproduced here). The 1995–96 DOS titles (Hansel & Gretel, Buster and the Beanstalk) use WinG and carry `TGI_ENGINE` / `TGI_QA` signature strings — likely a *separate, earlier* TerraGlyph engine sharing the studio's "TGI" prefix, not the `TGIFILE.ART` ancestor the 2026-11-19 note guessed; they share an engine with each other. PS1 Great Beanstalk likely bespoke; Classic Creep Capers (3D), Toonenstein, Blue's Big Musical, Kidsongs, Rumpelstiltskin ruled out by him. Sources: PCGamingWiki, LaunchBox gamesdb (dev 487). Scope unchanged (five in-scope binaries); the two new Gen-1 titles are candidate targets / lineage data, local verification open. See [§Catalog once-over](#catalog-once-over-two-more-tgifileart-titles-and-a-dos-tgi-signature-2026-11-20). |
+| 2026-11-20 | **Finding (Observed): Clue Jr.: SpyGlass Mysteries (1999) and The Little Mermaid II: Return to the Sea (2000) both run the TerraGlyph Gen 1 engine** — confirming Mony's catalog leads. Downloaded Internet Archive images (`CLUEJR.iso`, SHA-1 `6255baef…`, verified; `MERMAID2.iso` RUS, SHA-1 `368c5c38…`, verified). Clue Jr. carries a loose `TGIFILE.ART` and is DirectX-based (corroborating Mony's note); Little Mermaid II's InstallShield `data1.cab` file table lists `tgifile.art` + `lmii.exe` / `lm2.exe`. No competing-engine markers on either. Non-Scooby Gen-1 set now three with Activity Center; Clue Jr. (1999) is the earliest confirmed Gen-1 binary, predating Showdown. Byte-format / engine-family checks remain open. See [§Verified: Clue Jr. and Little Mermaid II](#verified-clue-jr-and-little-mermaid-ii-confirmed-on-the-engine-2026-11-20). |
+| 2026-11-20 | Collaborator note (**Reported**): he owns **Norwegian retail copies of Showdown and Case File #2**, and proposes that after the in-scope games work, we collect localized releases, add each to the ScummVM detection tables, and verify each boots. The **Norwegian Showdown isn't on abandonware sites**, so his disc may be the only source for that entry's hashes. Standard detection practice, not scope creep; Showdown's localization is the directly useful one (in scope), Case File #2's is a preservation note (Trinket / OM++, out of scope). Parked as a post-engine follow-up. See [§Localized releases](#localized-releases-norwegian-showdown-and-case-file-2-for-the-detection-tables-2026-11-20). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
