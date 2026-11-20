@@ -292,6 +292,29 @@ What this changes:
 
 Room links and his email address are not recorded.
 
+### Reply: name leak fixed, scope questions for Jeff (2026-11-19)
+
+Mony's answer to our 2026-11-19 reply. **Reported.**
+
+| Item | Value |
+|---|---|
+| Name leak | He confirms the cause of the `SM*`-on-Showdown names: a bug that leaked names across games while twin-matching. He fixed it, but some names got through before the fix. |
+| `TGIFILE.ART` fields | When his usage resets, he'll point an agent at the matched and partially-matched functions to try to work out the room-block word at `0x10` and the placement field at `+0x88`. He takes up the one ask. |
+| Questions for Jeff | (1) Any plans to handle Case File #2 and #3 once the initial titles are done? (2) Is there any other game on this engine beyond the ones known — he cites "the powerpuff game" and doubts it was the only one. |
+
+What this changes:
+
+- **The name drift is a confirmed, fixed bug, not inference.** Our 2026-11-19 read flagged `SM*` Gen-2/3 class names stamped on the Gen-1 Showdown binary and treated them as guesses ([§Jinx added, overnight Showdown progress](#jinx-added-overnight-showdown-progress-2026-11-19)). Mony confirms the twin-matcher was bleeding names across games and has fixed it. So names on commits before the fix stay **guesses**; names on branches pushed after it should be cleaner, but this project still only takes a name as Observed when reproduced here ([§Evidence model](#evidence-model)).
+- **The one ask is accepted.** He'll aim an agent at the scene-block loader's matched/partial functions once usage resets. Both Ghidra gaps stay open until that loader is decompiled and the fields are read ([§Jinx added, overnight Showdown progress](#jinx-added-overnight-showdown-progress-2026-11-19)).
+- **His two questions are Jeff's; the documented position the reply draws on:**
+  - **Case File #2 and #3 are each a different engine from ours, and from each other.** Case File #2 runs the Trinket / OM++ launcher framework (`R*` classes, `.bul`/`.inx`, LZO), with no code continuity to the TerraGlyph/IBS lineage ([WP-005](WP-005-engine-family-check.md), 2026-11-13; [VISION §Case File #2](../01-VISION.md)). Case File #3 is Macromedia Director (TLC/Broderbund), confirmed out of scope 2026-06-03 ([VISION](../01-VISION.md)). Neither feeds this project's engine, so there's no plan to decomp them here; each would be its own project on its own engine.
+  - **The Powerpuff demo is on *Case File #2's* engine, not ours.** The `GroovyGoodies\PPG2Demo\` demo on the Case File #2 disc uses that same Trinket/OM++ framework (`trinket.dll`, 17 shared `R*` classes, same LZO build) — the engine this project *excluded*, not the TerraGlyph engine. So it's "another game on the Case File #2 engine," and a worth-correcting mix-up in his question.
+  - **The confirmed TerraGlyph-engine set is the Scooby titles:** Showdown (2000), Phantom (2001), Jinx at the Sphinx (2001) — all TerraGlyph Interactive Studios — plus Activity Challenge (2001, Jinx's Gen-2 engine, [WP-013](WP-013-activity-challenge-engine-check.md)) and Case File #1 (2002, IBS inheriting the engine via embedded `MMFW` objects). That is the five in-scope binaries.
+  - **One non-Scooby candidate found (2026-11-19 catalog pass, secondary sources — unverified).** TerraGlyph Interactive Studios shipped about 11 titles 1995–2001 before closing in 2001 (MobyGames, Wikipedia). The only non-Scooby title that plausibly shares this PC engine is **Disney's 102 Dalmatians: Activity Center (2000)** — TerraGlyph-developed, Disney-published, Windows + Mac, a point-and-click rendered children's game, same studio/platform/genre/year as Showdown. Engine match is **not confirmed** — it needs a WP-005-style check (RTTI classes, `MMFW` strings, import table) against the executable, which this project doesn't have. The Cutting Room Floor has a page on it. The studio's console titles (Scooby-Doo! Classic Creep Capers, N64; Tiny Toon and Blue's Clues games, PlayStation) run other engines; its 1995–96 CD-ROM titles predate Gen 1 by five-plus years and are at most an ancestor of the framework (unverified). Secondary wikis disagree on Showdown's developer (Kotaku: TLC; SPONG: Mattel), but the binary's `MMFW`/`TGIFILE.ART` engine and shared RTTI settle the TerraGlyph lineage regardless.
+- Recorded here; not answered in the repo. A reply is drafted 2026-11-19, with the catalog finding folded in.
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -610,6 +633,8 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-18 | Collaborator emails (**Reported**): Case File #1 at **37.5 %**, almost every function with some decomp; real function count ~1,600 after thunks and CRT; Phantom and Showdown both started (DeepSeek on Showdown, Claude on Case File #1), to land as branches of his decomp repo; Phantom at 38 %, pending batch twin-matching; a new outmatch command batch-matches twins across differing compilers. **Measured reuse:** the two Gen 1 games share 280 byte-identical functions; Gen 1 ↔ Case File #1 share 170. He asks Jeff which other games to decomp and whether the output is useful. Links not recorded. See [§Progress across the games](#progress-across-the-games-twin-matching-and-reuse-counts-2026-11-18). |
 
 | 2026-11-19 | Collaborator email (**Reported**), cross-checked against his pushed branches (**Observed**, fetched read-only to `C:\dev\scooby-tlr-decomp` 2026-11-19). "I added sphinx" = he added **Jinx at the Sphinx** (Gen 2) as a new decomp target — branch `jinx-at-the-sphinx`, first commit 2026-11-19 — the game [§Cross-game reuse strategy](#cross-game-reuse-strategy) step 2 named next, not an AI agent. Agents advanced Showdown overnight (`showdown-at-ghost-town`, from 2026-11-18). All four in-scope binaries now have a branch. He's out of Claude/opencode usage for a few days and asks this project's Claude to read the functions for minigame logic and file formats; match rates not yet measured locally. His 2026-11-18 questions remain Jeff's; a reply is drafted 2026-11-19. See [§Jinx added, overnight Showdown progress](#jinx-added-overnight-showdown-progress-2026-11-19). |
+
+| 2026-11-19 | Collaborator reply (**Reported**): the `SM*`-on-Showdown names were a twin-matcher name-leak bug, now fixed, though some leaked through before the fix (confirms the 2026-11-19 name caution); and when his usage resets he'll point an agent at the matched/partial functions to try to resolve the `0x10` and `+0x88` fields (accepts the one ask). Two questions for Jeff: plans for Case File #2/#3, and other games on this engine (he cites the Powerpuff game). Documented position for the reply: #2 is the Trinket/OM++ framework and #3 is Macromedia Director — both out of scope, and the Powerpuff demo rides #2's engine, not the TerraGlyph engine; the in-scope TerraGlyph set is Showdown, Phantom, Jinx, Activity Challenge and Case File #1. Questions remain Jeff's; a reply is drafted. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
