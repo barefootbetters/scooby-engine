@@ -5,7 +5,7 @@ title: "WP-079: Showdown closeout"
 
 # WP-079: Showdown closeout — full playthrough and release readiness (Gen 1)
 
-**Status:** 📝 Drafted (2026-11-19)
+**Status:** 🚧 In Progress (2026-11-19) — Part B (release-gate walk) complete; Part A (live playthrough) + save/load **pending a live interactive-desktop run**. See [§Result](#result-2026-11-19).
 **Renumbered:** from WP-078 on 2026-11-19 — a parallel session had already claimed WP-078 for Phantom's princess-bedroom / mermaid's-cavern port (the sequential room WP after WP-077). This WP yielded the number per the supersession/claim discipline in [wp-lifecycle §Supersession check](../reference/wp-lifecycle.md#supersession-check-required-before-reserving-a-number).
 **Phase:** 5 (polish & contribution). Also satisfies the Phase 3 success criterion for *Showdown* ([01-VISION §Phase 3](../01-VISION.md)).
 **Depends on:** WP-056 ✅ (every *Showdown* game class ported — [room-class audit](../reference/room-class-audit-2026-11-15.md)), and with it the whole Gen 1 chain WP-014 ✅ … WP-056 ✅; WP-012 ✅ (detection table), WP-022 ✅ (Bink movies), WP-026 ✅ (profile saves), WP-031 ✅ (the accusation, Big Head and the credits)
@@ -192,5 +192,67 @@ blocker as the top gap (the blocker's fix WP is then the real next step).
 
 ---
 
-*Drafted 2026-11-19. Phase 1 (drafting) only; pre-flight, session prompt and
-execution are later lifecycle phases.*
+## Result (2026-11-19)
+
+**Outcome: Part B done, Part A not run. Go/no-go verdict WITHHELD.**
+
+Executed against fork `scooby-engine` @ `a709d6d94f` (pin `c553503d9d`
+reachable) with the genuine *Showdown* disc mounted at `H:\scooby\`
+(`Scooby.exe` SHA-256 `1328454334…7478`, matching the identity lock;
+`showdown.cd` present). The release-gate walk (Part B) was completed with
+fresh evidence — not quoted from earlier WPs. The continuous playthrough
+(Part A) and the save/load cycle did **not** run: the engine requires a real
+interactive desktop, which the build/CLI context does not provide (the SDL
+backend hangs or fails to allocate a surface headlessly — see EC-006 Step 0).
+A continuous start-to-credits run also cannot be scripted blind through the
+`test_script` harness, and fabricating beat results is out of bounds. So the
+one deliverable the WP exists to produce — evidence the game plays through to
+credits — is the open item, and the verdict is **withheld**, not **go** (not
+demonstrated) and not a 🚧 **no-go blocker** (no hard dead-end was found).
+
+### Acceptance-gate walk (the ten merge-blocking gates, for *Showdown*)
+
+Full table + evidence in [EC-006 Step 3](../execution-checklists/EC-006-showdown-playthrough.md#step-3--acceptance-gate-walk-time-box-45-min). Summary:
+
+- **Green (7):** 1 clean build (0 warnings in `engines/scooby/`), 2 registered/discovered, 3 detects `scooby:showdown` and discriminates Phantom with no false positive, 4 no raw file I/O, 5 audio via `Audio::Mixer` only, 6 no `binkw32.dll`, 7 single-threaded, 9 GPL headers on all 143 files.
+- **✗ Gate 10 (gap):** `showdown` is `ADGF_UNSTABLE`, below the required `ADGF_TESTING`. A shipping/initial-merge build must flip the flag.
+- **⚠ Gate 8 (not definitively run):** the gate's named script `devtools/code_check.sh` does not exist at the pin; `clang-format` (the current equivalent) is not installed in the build env. Compiler-warning / tab-indentation / GPL-header proxies are clean.
+
+### Per-variant MD5s
+
+Recorded in [EC-006 Step 3](../execution-checklists/EC-006-showdown-playthrough.md#step-3--acceptance-gate-walk-time-box-45-min) and the [ScummVM wiki-page draft](../reference/scummvm-wiki-scooby.md). *Showdown* (one EN/Windows variant): `Scooby.exe` `a7a84eb0…` / `TGIFILE.ART` `ba57da01…` / `object.ini` `42db419b…` (detection MD5, first 5000 bytes), with full-file SHA-256 identity locks.
+
+### Exit-criteria status
+
+| # | Criterion | Status |
+|---|---|---|
+| 1 | Uninterrupted run to credits, no missing asset/fatal/assertion/blocker | **Unmet — not run** (needs interactive desktop) |
+| 2 | Win condition end-to-end (final clue → accusation → Big Head → credits) | **Unmet — not run** |
+| 3 | Save before transition, relaunch, load, state restores | **Unmet — not run** (scriptable via `test_script` `save`/`load` once a display exists) |
+| 4 | Each of the ten gates recorded pass/fail with evidence; mechanical checks re-run | **Met** — all ten walked with fresh evidence (gate 10 ✗, gate 8 ⚠) |
+| 5 | Wiki-page content exists; per-variant MD5s recorded | **Met** — [`scummvm-wiki-scooby.md`](../reference/scummvm-wiki-scooby.md) |
+| 6 | Written go/no-go verdict + gap list, each tagged with its follow-up WP | **Met** — verdict = **withheld**; gap list below |
+
+### Gap list (each tagged with the follow-up that owns its fix)
+
+1. **Live playthrough + save/load not run** (exit criteria 1–3). *Owner:* the live-run session (this WP, resumed on an interactive desktop — see hand-off). Not a code defect; no follow-up WP until the run surfaces one.
+2. **Gate 10 — `showdown` is `ADGF_UNSTABLE`, needs `ADGF_TESTING`** for a shipping build. *Owner:* its own one-line `detection_tables.h` follow-up WP, gated on the live-run verdict confirming the game is playable.
+3. **Gate 8 — authoritative style/lint pass not run** (tool absent). *Owner:* install `clang-format` in the fork build env, or rely on upstream CI; rides with the upstream-PR WP.
+
+### Live-run hand-off (what's left, and the options)
+
+The only thing standing between here and a **go** verdict is the single
+continuous playthrough (plus the mid-run save/load) — on a real desktop.
+The build, detection and all mechanical gates are done; a fresh
+`scummvm.exe` is linked at `C:\dev\scummvm\scummvm.exe`. Options:
+
+- **Jeff drives it** (knows the game; the 1–2-day estimate is for a human run), reporting per-beat observations to fill [EC-006 Step 1](../execution-checklists/EC-006-showdown-playthrough.md) and the save/load result; this session writes the verdict.
+- **This session drives it via desktop control** (computer-use) — tractable for boot + the save/load cycle; the full 23-beat puzzle playthrough is slow and would likely need Jeff's help at the hard puzzles. Higher cost, uncertain.
+
+WORK_INDEX stays as-is (📝/🚧); the row flips to ✅ only on a clean go after
+the run.
+
+---
+
+*Drafted 2026-11-19. Part B executed 2026-11-19; Part A (live playthrough)
+pending an interactive-desktop session.*
