@@ -2912,14 +2912,17 @@ opening) sits in the maze and links back to the royal gallery.
   through movie `0x36` (54) from the gallery or `0x39` (57) otherwise, unless
   the full bottle has been used; otherwise it sets `WellVisited` (`game+0x262`,
   read by the treasury's rope line, WP-071).
-- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once taken
-  (`YellowBallTaken`, `game+0x25d`); `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
+- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once found
+  (`YellowBallFound`, `game+0x25d` — the flag the Jester reads to take it;
+  WP-075 first mislabelled it `YellowBallTaken`, corrected 2026-11-19);
+  `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
   `OBJ_P22_WELL_ROPE` are the climb, **gated on the rope being used** — the
   rope then shows as a sprite (depth `0`) and the well and the way out become
   the default clickables.
 - **The event** (`0x42C8E0`): the yellow ball shown plays movie `0x42` (66) the
-  first time (`YellowBallFound` clear) or `4` after, is marked taken, and
-  queues the return; the rope used on the well plays movie `0x3b` (59) and
+  first time (`YellowBallFound` clear) or `4` after, is marked found
+  (`YellowBallFound`, `game+0x25d`), and queues the return; the rope used on the
+  well plays movie `0x3b` (59) and
   spends the rope; a plain click cycles `Well_in_Maze.290_`, `Well_In_Maze.330X1_`,
   `Well_In_Maze.330X2_`.
 
