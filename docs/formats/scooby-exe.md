@@ -2912,14 +2912,17 @@ opening) sits in the maze and links back to the royal gallery.
   through movie `0x36` (54) from the gallery or `0x39` (57) otherwise, unless
   the full bottle has been used; otherwise it sets `WellVisited` (`game+0x262`,
   read by the treasury's rope line, WP-071).
-- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once taken
-  (`YellowBallTaken`, `game+0x25d`); `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
+- **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once found
+  (`YellowBallFound`, `game+0x25d` — the flag the Jester reads to take it;
+  WP-075 first mislabelled it `YellowBallTaken`, corrected 2026-11-19);
+  `OBJ_P22_TO_P21`, `OBJ_P22_WELL` and
   `OBJ_P22_WELL_ROPE` are the climb, **gated on the rope being used** — the
   rope then shows as a sprite (depth `0`) and the well and the way out become
   the default clickables.
 - **The event** (`0x42C8E0`): the yellow ball shown plays movie `0x42` (66) the
-  first time (`YellowBallFound` clear) or `4` after, is marked taken, and
-  queues the return; the rope used on the well plays movie `0x3b` (59) and
+  first time (`YellowBallFound` clear) or `4` after, is marked found
+  (`YellowBallFound`, `game+0x25d`), and queues the return; the rope used on the
+  well plays movie `0x3b` (59) and
   spends the rope; a plain click cycles `Well_in_Maze.290_`, `Well_In_Maze.330X1_`,
   `Well_In_Maze.330X2_`.
 
@@ -2941,6 +2944,85 @@ opening) sits in the maze and links back to the royal gallery.
 | `0x42C810` (+0x0C) | Well entry: `WellVisited`, the queued return to the gallery |
 | `0x42CA20` (+0x18) | Well placements: the yellow ball, the rope-gated climb |
 | `0x42C8E0` (+0x14) | Well event: the yellow ball's movie, the rope on the well, the lines |
+
+##### Phantom's below-the-balcony and its door (WP-076)
+
+Traced 2026-11-19 for [WP-076](../work-packets/WP-076-below-balcony.md), in
+Phantom's `Scooby.exe`. The last of the audit's group-7 (maze) packets: the
+pocket below the balcony (WP-074's maze map jumps to it, and Phantom's
+ghost-spot skip, `0x430DD0`, lands the scared gang here) and its door back to
+the royal gallery. Showdown has neither room. Both were traced twice,
+independently, by two sessions whose Ghidra reads agree — the WP-073/074/075
+anti-shared-misreading move — on top of the engine == reference match (which
+passes line for line) and the disc sound-index probe.
+
+**The ball-flag block is not in the `Scooby.ini` key order.** Anchored on the
+gallery (`0x416500` sets `RedBallFound` at `game+0x25b`) and the Jester
+(`0x412B80`, which touches all six by `TAKES_RED` / `_BLUE` / `_YELLOW`), the
+bytes run `game+0x25b RedBallFound`, `+0x25c BlueBallFound`, `+0x25d
+YellowBallFound`, `+0x25e BlueBallSeen`, `+0x25f RedBallTaken`, `+0x260
+BlueBallTaken`, `+0x261 YellowBallTaken`. A first pass that assumed the key order
+(`…BlueBallSeen, YellowBallFound…`) mislabelled three of these rooms' flags; the
+`TAKES_*` anchors are the reliable read. (The engine keys game flags by name, so
+this is a naming, not an offset, hazard.)
+
+**Below the balcony** (`ROOM_P27_Below_Balcony`, `0x40F220`, vtable `0x45E750`,
+music `1`, no opening) overrides tick, reset, event, claim and save/load; entry
+is the base.
+
+- **Placements** (`0x40F380`, +0x18): `OBJ_P27_BELOW_BALCONY_OVERLAY`, the vines,
+  a requires object until the sharp shears are used, then skipped;
+  `OBJ_P27_TO_P26`, the way on, skipped until the shears are used (then the
+  default path builds it); `OBJ_P27_BELOW_BALCONY_BALL`, a plain sprite.
+- **The event** (`0x40F2B0`, +0x14): the sharp shears used on the vines request
+  movie `5` and spend the shears; the rusty (unsharpened) shears tried on them
+  play `Below_Balcony.260F_` (the exe polls the held cursor in tick; the fork
+  answers it on the click the engine dispatches); a plain click cycles
+  `Below_Balcony.260D_` and, once a prior click has landed with the reveal still
+  to come and the blue ball not yet seen (`BlueBallSeen` clear), `Below_Balcony.260_`,
+  whose end sets `ShowBall`.
+- **Each tick** (`0x40F5A0`, +0x04): `ShowBall` queues the reveal — the ball
+  sprite animates in with `SFX_P27_BELOW_BALCONY_BALL` (a flat sfx id), input
+  held; when its animation plays out, `Below_Balcony.100A_` plays and
+  `PlayBallScene` is spent.
+- **Save / load** (`0x40F6E0` / `0x40F760`): `ShowBall`, `VineClicks` (an int)
+  and `PlayBallScene` in the room's own section.
+
+**The door** (`ROOM_P27A_Below_Balcony_Door`, `0x4106B0`, vtable `0x45E850`,
+`Princess_Bedroom.Music`, no opening) overrides tick, reset, enter, event and
+claim, and keeps the shared Jester (`+0xB8`, the member the room of doors and
+the royal gallery also hold).
+
+- **Placements** (`0x4108C0`, +0x18): `OBJ_INV_BALL_BLUE` built only once
+  `BlueBallFound`; `OBJ_JESTER` present until then (he holds the ball before it
+  is found).
+- **The event** (`0x410760`, +0x14): the blue ball clicked requests movie `2`
+  the first time or `0x43` (67) once `YellowBallFound`, sets `BlueBallFound`, and
+  queues the return (`+0xCC`). The Jester takes the ball (his tick); it is not
+  removed here.
+- **Entry** (`0x4107F0`, +0x0C): a queued return bounces back the way it came —
+  movie `0x36` (54) from `ROOM_P07_Royal_Gallery`, `0x39` (57) otherwise —
+  unless `OBJ_INV_BOTTLE_FULL` has been used; otherwise the Jester takes the
+  stage and `BlueBallSeen` is set, which ends the balcony's reveal line.
+- **Each tick** (`0x4107D0`, +0x04): the shared Jester tick (`0x4122E0`), one of
+  its four callers alongside the room of doors, the royal gallery and the well.
+
+This closes the maze group and the blue third of the three-ball Jester chain
+(the red came from the magic mirror room in WP-072, the yellow from the well in
+WP-075).
+
+| Address | What it does |
+|---|---|
+| `0x40F220` | Below-balcony constructor (music `1`, no opening) |
+| `0x40F380` (+0x18) | Below-balcony placements: the vines, the shears-gated exit, the ball |
+| `0x40F2B0` (+0x14) | Below-balcony event: the cut (movie 5), the wrong-tool line, the vine cycle |
+| `0x40F5A0` (+0x04) | Below-balcony tick: the ball-reveal scene |
+| `0x40F6E0`/`0x40F760` | Below-balcony save / load: `ShowBall`, `VineClicks`, `PlayBallScene` |
+| `0x4106B0` | Door constructor (`Princess_Bedroom.Music`), builds the Jester member |
+| `0x4108C0` (+0x18) | Door placements: the blue ball / the Jester, by `BlueBallFound` |
+| `0x410760` (+0x14) | Door event: the blue ball's movie, `BlueBallFound`, the queued return |
+| `0x4107F0` (+0x0C) | Door entry: the return bounce to the gallery, `BlueBallSeen` |
+| `0x4107D0` (+0x04) | Door tick: the shared Jester |
 
 ##### Movies (WP-022)
 

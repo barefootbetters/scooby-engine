@@ -5,7 +5,7 @@ title: "WP-076: Phantom's below-the-balcony and its door"
 
 # WP-076: Phantom's below-the-balcony and its door (Gen 1)
 
-**Status:** 📝 Drafted (2026-11-19)
+**Status:** ✅ Done (2026-11-19)
 **Phase:** 4 (game logic)
 **Depends on:** WP-018 ✅ (hotspots and exits), WP-021 ✅ (clickables), WP-023 ✅ (the inventory), WP-057 ✅ (Phantom's new game and first room), WP-072 ✅ (the royal gallery — the door's exit target and the shared Jester), WP-074 ✅ (the hedge maze and maze map — the `BALCONY` marker that reaches this room), WP-075 ✅ (the maze interior — the sibling rooms)
 **Companion EC:** none (inline checklist under Exit criteria)
@@ -103,3 +103,59 @@ surfaces a one-line hook into a sibling class (as WP-075 needed in
   declaration and its call).
 - [scooby-exe](../formats/scooby-exe.md): below the balcony and its door.
 - `WORK_INDEX` row and ledger line flipped to ✅ Done on close.
+
+---
+
+## Result (2026-11-19)
+
+`BelowBalconyRoom` and `BelowBalconyDoorRoom` in fork commit `fb1dfe1576`
+(scooby-engine [PR #1](https://github.com/barefootbetters/scummvm/pull/1)),
+files staged by name: `below_balcony_rooms.{h,cpp}`, `below_balcony_check.cpp`,
+the factory line in `room_class.cpp`, the two `module.mk` entries, and the
+check's declaration (`scooby.h`) and call (`chase_check.cpp`). No sibling-room
+edit was needed — both rooms' music and (absent) opening were already in
+`room_setup`, WP-074's maze map already jumps to the `BALCONY` marker, and
+WP-072's royal gallery is the door's exit target.
+
+**Exit criteria.**
+
+1. **Engine == reference, line for line.** On Phantom the check reports: both
+   classes build; every clip ships (the four dotted voice lines
+   `Below_Balcony.260_` / `.260D_` / `.260F_` / `.100A_` by prefix, the flat
+   `SFX_P27_BELOW_BALCONY_BALL` exact); the vines a requires object that skips
+   once the sharp shears are used, the way to P26 skipped until then; the ball a
+   sprite; `ShowBall` / `VineClicks` / `PlayBallScene` round-trip with
+   `PlayBallScene` defaulting on; the door's blue ball skipped until
+   `BlueBallFound` and the Jester present until then; the movies (2 / 67, 54 /
+   57) and the gallery exit. **Showdown prints it has neither room.**
+2. **Live (Phantom).** Started in each room (`start_room`): below the balcony
+   draws its placements — the vines as a requires object, the ball as a sprite
+   (`ANIM_P27_BELOW_BALCONY_BALLA`), the shears-gated way to P26 skipped; the
+   door skips the blue ball until found, runs the Jester on entry, and names
+   `ROOM_P07_Royal_Gallery` as its exit. (Reached by `start_room`, not by
+   walking the maze map's `BALCONY` marker — that jump is WP-074's, already
+   live.)
+3. **Scooby-only build:** `--disable-all-engines --enable-engine=scooby`,
+   **0 errors, 0 warnings** in `engines/scooby/`. The fork diff stays inside
+   `engines/scooby/`, staged by name.
+
+**The one real catch.** The ball-flag byte block is **not** in the `Scooby.ini`
+key order. A first pass assumed it was (`…BlueBallSeen, YellowBallFound…`) and
+mislabelled three flags; the authoritative read is the gallery (`0x416500`,
+`RedBallFound` = `game+0x25b`) and the Jester (`0x412B80`, all six by
+`TAKES_*`): `0x25b RedBallFound, 0x25c BlueBallFound, 0x25d YellowBallFound,
+0x25e BlueBallSeen, 0x25f/0x260/0x261` the Taken trio. Corrected before the
+commit; the check and the live run confirm the corrected names.
+
+See [scooby-exe → below the balcony and its door](../formats/scooby-exe.md#phantoms-below-the-balcony-and-its-door-wp-076).
+
+## Notes
+
+- **Possible pre-existing issue in WP-075 (not touched here).** The well section
+  of [scooby-exe](../formats/scooby-exe.md) cites `YellowBallTaken` at
+  `game+0x25d`, but the Jester (`0x412B80`) reads `game+0x25d` as the *found*
+  condition — i.e. `0x25d` is `YellowBallFound`, with `YellowBallTaken` at
+  `0x261`. The well's port sets `YellowBallTaken` on pickup while the Jester
+  reads `YellowBallFound`; whether those two engine-keyed names stay in sync at
+  runtime is worth a look. Flagged for a follow-up, not changed under this WP's
+  scope.
