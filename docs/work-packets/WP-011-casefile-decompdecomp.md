@@ -315,6 +315,28 @@ What this changes:
 
 Room links and his email address are not recorded.
 
+### Reply: targets, naming and the Director path (2026-11-20)
+
+Mony's answer to our 2026-11-19 reply. No new question for Jeff this time — he takes the catalog finding, proposes next steps and raises a naming point. **Reported.**
+
+| Item | Value |
+|---|---|
+| Activity Center and Activity Challenge | Good decomp targets once the current engine is done; failing that, at least document them as sharing the engine so someone else can add support. |
+| Older catalog titles | Worth a quick once-over for shared lineage; he'll check some of the console / CD-ROM titles himself for common ground. |
+| Case File #3 (Director) | Already partially implemented and supported in ScummVM, so if the other Scooby games are ever done after these, it'd be the good next target — and only then Case File #2. |
+| Engine naming | Since the Gen 1 and Gen 2 engines both have non-Scooby games, he suggests a more generic engine name — "Maybe TerraGlyph?" |
+| `TGIFILE.ART` fields | Reconfirms he'll point agents at the matched/partial functions once usage resets: Claude on Tuesday, opencode two days after. |
+
+What this changes:
+
+- **The naming suggestion is already this project's convention.** This project calls it the **TerraGlyph engine** throughout — the [VISION lineage](../01-VISION.md#engine-lineage-2026-06-finding) ("the three TerraGlyph titles", the engine "continued through IBS"), this WP, and the user-level repo map. Only the GitHub repo keeps the historical name `scooby-engine`. So Mony's instinct matches the name already in use, and the 102 Dalmatians confirmation ([§Reply: name leak fixed](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)) is exactly why a Scooby-specific name was never right. Nothing to change; independent corroboration of the existing choice.
+- **The Director-before-Trinket sequencing is sound and matches our out-of-scope calls.** Case File #3 is Macromedia Director, and ScummVM's Director engine already gives it partial support — so if it were ever pursued it would ride that existing engine, not a TerraGlyph fork. Case File #2 (Trinket / OM++) has no ScummVM support and would be a ground-up engine, so it correctly comes last. Both stay **out of scope for this project** ([WP-005](WP-005-engine-family-check.md); [VISION](../01-VISION.md)); recorded as a forward note for a possible separate project, not a plan here.
+- **He's volunteering the catalog once-over this project marked unverified.** The 1995–96 TerraGlyph CD-ROM titles (Hansel & Gretel, Rumpelstiltskin, Kidsongs, Tiny Toon: Buster and the Beanstalk) were logged as "at most an ancestor of the framework (unverified)" ([§Reply: name leak fixed](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19)), and the console titles as different engines. Mony checking some himself could turn those into Observed on his side; this project takes any such finding as **Reported** until reproduced here.
+- **"Document them as sharing the engine" is already done.** WP-011 now records **Activity Center** as confirmed Gen 1 and **Activity Challenge** as the Gen-2 engine ([WP-013](WP-013-activity-challenge-engine-check.md)), so his minimum bar is met; the decomp-target idea is noted for after the current set.
+- **The one ask stays in progress, now with a timeline.** He'll aim agents at the scene-block loader's matched/partial functions once usage resets (Claude Tuesday, opencode +2 days). Both Ghidra gaps — room-block word `0x10` and placement field `+0x88` — stay open until that loader is decompiled ([§Jinx added, overnight Showdown progress](#jinx-added-overnight-showdown-progress-2026-11-19)).
+
+Room links and his email address are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -636,6 +658,8 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 
 | 2026-11-19 | Collaborator reply (**Reported**): the `SM*`-on-Showdown names were a twin-matcher name-leak bug, now fixed, though some leaked through before the fix (confirms the 2026-11-19 name caution); and when his usage resets he'll point an agent at the matched/partial functions to try to resolve the `0x10` and `+0x88` fields (accepts the one ask). Two questions for Jeff: plans for Case File #2/#3, and other games on this engine (he cites the Powerpuff game). Documented position for the reply: #2 is the Trinket/OM++ framework and #3 is Macromedia Director — both out of scope, and the Powerpuff demo rides #2's engine, not the TerraGlyph engine; the in-scope TerraGlyph set is Showdown, Phantom, Jinx, Activity Challenge and Case File #1. Questions remain Jeff's; a reply is drafted. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
 | 2026-11-19 | **Finding (Observed): Disney's 102 Dalmatians: Activity Center (2000) runs the TerraGlyph Gen 1 engine** — the first confirmed non-Scooby binary on it. Downloaded the Internet Archive disc image (`102_Dalmatians.img`, SHA-1 `a84fe50e…2370`, verified); a raw scan finds `TGIFILE.ART` present and no Trinket/Director/Crystal markers. Confirms the catalog lead from the previous row (was unverified). The *Puppies to the Rescue* disc (`flt-102d`) is a different engine (Crystal/Eidos) and ruled out. Byte-format identity and a full engine-family check remain open; also a candidate decomp target for Mony. See [§Reply: name leak fixed, scope questions for Jeff](#reply-name-leak-fixed-scope-questions-for-jeff-2026-11-19). |
+
+| 2026-11-20 | Collaborator reply (**Reported**): Activity Center + Activity Challenge are good later decomp targets, or at minimum document them as engine-sharing; he'll give some older TerraGlyph console/CD-ROM titles a once-over for shared lineage; Case File #3 (Director) is already partly supported in ScummVM, so it'd be the next target before Case File #2 if the other Scooby games are ever done; and he suggests a generic engine name — "Maybe TerraGlyph?", which is already this project's convention ([VISION](../01-VISION.md)). Reconfirms he'll target the `0x10`/`+0x88` loader fields once usage resets (Claude Tue, opencode +2 days). No new question for Jeff; reply drafted. See [§Reply: targets, naming and the Director path](#reply-targets-naming-and-the-director-path-2026-11-20). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
