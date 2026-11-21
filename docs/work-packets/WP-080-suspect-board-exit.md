@@ -5,7 +5,7 @@ title: "WP-080: Suspect-board back-exit soft-lock fix"
 
 # WP-080: Suspect/clue board back-exit soft-lock fix (Gen 1)
 
-**Status:** 🚧 In flight (2026-11-21) — engine fix committed + PR'd ([barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5)); self-test green on both titles; live re-verify pending (see §Execution)
+**Status:** ✅ Done (2026-11-21) — soft-lock fixed; self-test green on both titles; live re-verified by Jeff (board exit returns, run reaches credits, save/load restores). *Showdown* closeout flips to **GO**. Engine fix in [barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5) — **ready for merge, not yet merged** (Jeff's call). See §Result.
 **Phase:** 5 (polish & contribution). The fix for [WP-079](WP-079-showdown-closeout.md)'s NO-GO blocker; unblocks the *Showdown* release-readiness verdict.
 **Depends on:** [WP-079](WP-079-showdown-closeout.md) 🚧 (the closeout that found the blocker — the NO-GO verdict and the root-cause lead; its §Result and [EC-006](../execution-checklists/EC-006-showdown-playthrough.md) hold the live evidence), [WP-031](WP-031-accusation.md) ✅ (the `SuspectChooserRoom` port this corrects)
 **Unblocks:** a re-run of the WP-079 playthrough from the board forward to the credits + the save/load cycle, and with it the *Showdown* **go** verdict; Gate 10 (`showdown` `ADGF_UNSTABLE` → `ADGF_TESTING`), which WP-079 left explicitly blocked on this fix ("the flag cannot be promoted while the game is soft-lockable")
@@ -152,21 +152,25 @@ not blocked; only the always-available review-and-return exit is a dead end.
 
 ## Exit criteria
 
-1. [ ] A click on `OBJ_SUSPECT_CLUES_EXIT` in `SuspectChooserRoom` returns the
+1. [x] A click on `OBJ_SUSPECT_CLUES_EXIT` in `SuspectChooserRoom` returns the
    gang to the room the board was opened from, in code: the exit is registered as
-   a button and `onClick()` routes it to `leaveBy()`.
-2. [ ] The accusation self-test drives the **click → exit** path (not a direct
+   a button and `onClick()` routes it to `leaveBy()`. — done (fork `45a7d71de7`).
+2. [x] The accusation self-test drives the **click → exit** path (not a direct
    `leaveBy()`), and the `accusation check exit:` trace shows a valid exit button
-   index and the destination room, for both `showdown` and `phantomknight`.
-3. [ ] A fresh Scooby-only build links clean with zero warnings in
-   `engines/scooby/`.
-4. [ ] Phantom's board is confirmed to take the same fix (shared class) and is not
-   separately broken.
-5. [ ] **Live re-verify:** on a mounted *Showdown* ISO, opening the board and
+   index and the destination room, for both `showdown` and `phantomknight`. — done
+   (`button 3, click to ROOM_P01_Town_Center` / `ROOM_P01_Drawbridge`).
+3. [x] A fresh Scooby-only build links clean with zero warnings in
+   `engines/scooby/`. — done (`make -j32`, EXIT 0, 0 warnings in `engines/scooby/`).
+4. [x] Phantom's board is confirmed to take the same fix (shared class) and is not
+   separately broken. — done (shared `SuspectChooserRoom`; self-test trace green
+   under `phantomknight`).
+5. [x] **Live re-verify:** on a mounted *Showdown* ISO, opening the board and
    clicking the exit returns to the opening room; the run then reaches the end
    credits (final clue → accusation → Big Head → credits) and one explicit
-   save → quit → relaunch → load cycle restores state. (Needs Jeff; this is the
-   evidence that clears WP-079 exit-criterion 1.)
+   save → quit → relaunch → load cycle restores state. — **confirmed by Jeff live**
+   (exit returns to Town Center; end-credits screenshot; save → quit → relaunch →
+   load slot 0 restored to his save point). Evidence detail and its honest limits
+   in §Result. This clears WP-079 exit-criterion 1.
 
 ## Deliverables
 
@@ -220,19 +224,73 @@ into `scooby-engine`), scoped to the three allowed files:
   - The probes also confirm the exit shows on a non-final board and is hidden on
     the final board. Pre-fix, the regression reads `button -1 ... to -`.
 
-**Remaining before close (✅ Done):**
+---
 
-1. **Live re-verify** (EC-006 tail) — a real-desktop playthrough: open the board
-   from the magnifier → click the back exit → confirm the gang returns, then play
-   forward to the credits + a save/load cycle. Needs an interactive desktop;
-   being coordinated with Jeff. (Headless runs of `ADGF_UNSTABLE` titles require
-   `enable_unsupported_game_warning=false` in the config to skip the launch modal.)
-2. Fork [PR #5](https://github.com/barefootbetters/scummvm/pull/5) squash-merged to
-   `scooby-engine`.
-3. Close commit here: flip WORK_INDEX WP-080 → ✅ Done, add §Result with the
-   squash-merge SHA, and mark Gate 10 (`ADGF_TESTING`) unblocked.
+## Result (2026-11-21)
+
+**Verdict: fix works; *Showdown* closeout flips NO-GO → GO.** The suspect-board
+back-exit soft-lock is closed in the shared `SuspectChooserRoom`; the live
+re-verify passed on Jeff's desktop. Evidence below is labelled by how it was
+captured — what is log-verified, what is Jeff's own live visual confirmation, and
+what was not captured — so the close is honest about its receipts.
+
+### Evidence of record
+
+- **Exit fix (EC-1, EC-2, EC-3, EC-4) — code + self-test, log-verified.** Clean
+  Scooby-only build (`make -j32`, EXIT 0, 0 warnings in `engines/scooby/`). The
+  rewritten click-path self-test prints, under `--debuglevel=11`:
+  - Showdown: `accusation check exit: button 3, click to ROOM_P01_Town_Center`
+  - Phantom:  `accusation check exit: button 3, click to ROOM_P01_Drawbridge`
+
+  Probes also confirm the exit shows on a non-final board and is hidden on the
+  final board; pre-fix the regression read `button -1 … to -`.
+- **Suspect-board exit (EC-5, part 1) — confirmed by Jeff live.** On a mounted
+  *Showdown* disc, opening the board from the toolbar magnifier and clicking the
+  back exit returned the gang to the room it was opened from (Town Center). This
+  is the exact interaction WP-079 found soft-locked; it now works.
+- **Reaches credits (EC-5, part 2) — confirmed by Jeff's end-credits screenshot.**
+  The run played forward from the board to the end credits. *That run was not
+  debug-logged* — the evidence is Jeff's screenshot of the end-credits screen, not
+  a `credits check` trace line.
+- **Save / load (EC-5, part 3) — confirmed by Jeff live; log-level corroboration
+  not captured.** Jeff saved, quit, relaunched, loaded slot 0, and the game
+  restored to his save point. The save file `showdown-win.000` (slot 0) is
+  verified present on disk. **This is Jeff's own live visual confirmation, not a
+  log verification** — the engine's `profile read: StartRoom …` restore receipt
+  was *not* captured in a debug log and is not claimed here.
+
+### Honest limits / context (not blockers)
+
+- The attempt to log-capture the restore via `--save-slot=0 --debuglevel=11` is a
+  clumsy combination: at `--debuglevel=11` the engine runs its full in-`run()`
+  self-test (including `checkAllMovies`, which decodes every `BK.*` movie
+  synchronously and freezes the window for minutes) *before* it applies
+  `--save-slot` at [`scooby.cpp:172-173`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/scooby.cpp).
+  The restore receipt would only land after that long self-test, so it was not
+  worth waiting out; the save/load is recorded as Jeff's visual confirmation
+  instead. Noted for future verification tooling, not a WP-080 defect.
+- The save used for the restore test was a **mid-chase** save (slot 0's StartRoom
+  was a Chase room). That is context on which save was exercised, not a limitation
+  of the fix.
+
+### Lifecycle state
+
+- Engine fix: fork branch `wp-080-suspect-board-exit`,
+  commit [`barefootbetters/scummvm@45a7d71de7`](https://github.com/barefootbetters/scummvm/pull/5),
+  base `scooby-engine`. **[PR #5](https://github.com/barefootbetters/scummvm/pull/5)
+  is ready for merge but NOT yet merged** — the squash-merge is Jeff's call. The
+  §Result SHA is the branch commit; it will be the squash SHA once Jeff merges.
+- Docs: this WP body + [WORK_INDEX](WORK_INDEX.md) row + pre-flight on
+  `claude/wp-080-suspect-board-exit`
+  ([PR #136](https://github.com/barefootbetters/scooby-engine/pull/136)).
+- **Gate 10** (`showdown` `ADGF_UNSTABLE` → `ADGF_TESTING`), which WP-079 left
+  blocked on this fix, is now **unblocked** — the game is no longer soft-lockable.
+  Promoting the flag remains its own one-line `detection_tables.h` follow-up WP
+  (out of scope here, per §Scope).
 
 ---
 
-*Drafted 2026-11-20. In flight 2026-11-21 (engine fix PR'd, self-test green);
-close pending the live re-verify and fork-PR merge.*
+*Drafted 2026-11-20. Executed and live re-verified 2026-11-21; closed ✅ Done.
+Engine [PR #5](https://github.com/barefootbetters/scummvm/pull/5) and docs
+[PR #136](https://github.com/barefootbetters/scooby-engine/pull/136) ready for
+Jeff's review/merge — nothing merged by the session.*
