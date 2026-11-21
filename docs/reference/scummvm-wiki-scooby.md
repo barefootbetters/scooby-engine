@@ -75,18 +75,18 @@ thumbnails, dates, play time). The engine declares
 `kSupportsLoadingDuringRuntime` and `kSupportsSavingDuringRuntime` (saving
 pauses while a scene or an exit transition is playing).
 
-> Note: per-room auto-save was observed writing cleanly throughout the WP-079
-> live run; the full end-to-end save → quit → relaunch → load cycle has not yet
-> been release-verified (the run was halted by the suspect-board soft-lock before
-> that step).
+> Note: the save/load cycle has not yet been release-verified — WP-079's live
+> playthrough has not been run (the suspect-board soft-lock, found by source
+> audit, blocks a full run until it is fixed). Save-state support is declared by
+> the MetaEngine as above but not yet exercised end-to-end.
 
 ## Known limitations
 
 - **Suspect/clue board soft-lock (open blocker).** Opening the suspects-and-clues
   board from the toolbar magnifying glass currently traps the player: its back
-  exit does not respond and there is no keyboard/mouse escape. Found by the
-  *Showdown* closeout run (WP-079); fix pending. Until it lands, *Showdown* is
-  not completable once the board is opened.
+  exit does not respond and there is no keyboard/mouse escape. Found by source
+  audit during the *Showdown* closeout (WP-079); fix pending (WP-080). Until it
+  lands, *Showdown* is not completable once the board is opened.
 - **Gen 1 only.** Gen 2 (Jinx, Activity Challenge) and Gen 3 (Case File #1)
   are detected but unsupported.
 - **No horizontal scrolling yet.** Rooms wider than the 640×480 screen
