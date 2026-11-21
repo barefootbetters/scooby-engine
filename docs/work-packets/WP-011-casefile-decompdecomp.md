@@ -402,6 +402,38 @@ A forward-looking note: he owns **Norwegian retail copies of Showdown and Case F
 
 Room links and his email address are not recorded.
 
+### MobyGames dev catalog reconciled: 11 titles, two entities, what it misses (2026-11-21)
+
+Jeff found the MobyGames TerraGlyph page, the authoritative developer-credit catalog Mony couldn't reach ("mobygames wouldn't load"). The live site is Cloudflare bot-walled (a "Just a moment…" challenge — the same wall Mony hit, and not one to defeat), so I read it from the **Wayback Machine** instead: the [L.P. page](https://web.archive.org/web/2024/https://www.mobygames.com/company/3679/terraglyph-interactive-studios-lp/) (Moby ID 3679, snapshot 2025-01-16) and the [Productions Limited page](https://web.archive.org/web/2024/https://www.mobygames.com/company/35436/terraglyph-productions-limited/) (Moby ID 35436, snapshot 2025-02-19). **Observed** (catalog read directly); the engine column below is *our* map, not MobyGames'.
+
+**Two TerraGlyph entities.** MobyGames splits the studio in two: **TerraGlyph Interactive Studios, L.P.** (Schaumburg, IL — the game-dev arm, credited on **11 games, 1995–2001**) and **TerraGlyph Productions Limited** (Dublin, IE — a feature-animation house, credited on 4 of those same games for art). The Dublin arm adds no titles of its own; its 4 (Phantom, Activity Center, Showdown, Buster) are a subset of the L.P. list.
+
+The L.P. catalog, against our lineage map:
+
+| MobyGames title (year, platforms) | Where it sits in our map |
+|---|---|
+| Scooby-Doo!: Show Down in Ghost Town (2000, Win) | **In scope** — Gen 1, primary target |
+| Scooby-Doo!: Phantom of the Knight (2001, Win) | **In scope** — Gen 1 |
+| Scooby-Doo!: Jinx at the Sphinx (2001, Win) | **In scope** — Gen 2 |
+| Disney Activity Center: 102 Dalmatians (2000, Mac/Win) | **Confirmed Gen 1** (Observed, 2026-11-19) |
+| Scooby-Doo!: Classic Creep Capers (2000, N64) | Ruled out — 3D console title |
+| Tiny Toon Adventures: Toonenstein — Dare to Scare! (1999, PS1) | Ruled out — console |
+| Blue's Clues: Blue's Big Musical (2001, PS1) | Ruled out — console; Mony: not our engine |
+| Tiny Toon Adventures: Buster and the Beanstalk (1996, Win/PS1/Mac) | Sibling DOS/WinG engine (Mony: `TGI_ENGINE`/`TGI_QA`) |
+| Hansel & Gretel and the Enchanted Castle (1995, DOS/Win) | Sibling WinG/`TGI_ENGINE` engine (Mony) |
+| Kidsongs: Musical Mystery (1996, DOS/Win/Mac) | Ruled out by Mony |
+| Rumpelstiltskin's Labyrinth of the Lost (1995, Win/Mac/DOS) | Ruled out by Mony |
+
+**What this changes:**
+
+- **No new titles — full corroboration.** All 11 were already in our map or Mony's once-over; MobyGames surfaces nothing we hadn't placed. It independently confirms every title Mony flagged is a TerraGlyph *studio* product, which is the premise under the "TGI" signature read.
+- **The catalog undercounts the engine. This is the load-bearing point.** Neither TerraGlyph page credits **Clue Jr.: SpyGlass Mysteries** or **The Little Mermaid II: Return to the Sea** — yet we verified both ship `TGIFILE.ART` (Observed, 2026-11-20). So a MobyGames TerraGlyph credit is *not* the boundary of the engine's footprint; the engine appears on titles MobyGames attributes to other developers/publishers. Binary evidence (`TGIFILE.ART` on the disc) outranks a credit list, and this is exactly why Mony's PCGW + LaunchBox route found what MobyGames would have missed anyway.
+- **No Case File titles on either page** — both stop at 2001. Consistent with the known 2002+ dev handoff (Case File #1 → IBS), not a contradiction; MobyGames credits the later games elsewhere.
+- **Studio shipped across DOS/Win/Mac/PS1/N64 on multiple engines** (1995 Hansel & Gretel through 2001 Jinx). Reinforces that "TerraGlyph" is correctly a **studio-level** name, not an engine-specific one — the naming decision holds.
+- **Scope unchanged** — still five in-scope binaries (Showdown, Phantom, Jinx, Activity Challenge, Case File #1).
+
+The live MobyGames pages and Mony's room/email are not recorded.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -729,6 +761,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-20 | Collaborator catalog once-over (**Reported**): two more non-Scooby `TGIFILE.ART` titles — **Clue Jr.: SpyGlass Mysteries** (on GOG; uses DirectX) and **The Little Mermaid II: Return to the Sea** — bringing the non-Scooby Gen-1 set to three with Activity Center (the two new ones Reported, not yet reproduced here). The 1995–96 DOS titles (Hansel & Gretel, Buster and the Beanstalk) use WinG and carry `TGI_ENGINE` / `TGI_QA` signature strings — likely a *separate, earlier* TerraGlyph engine sharing the studio's "TGI" prefix, not the `TGIFILE.ART` ancestor the 2026-11-19 note guessed; they share an engine with each other. PS1 Great Beanstalk likely bespoke; Classic Creep Capers (3D), Toonenstein, Blue's Big Musical, Kidsongs, Rumpelstiltskin ruled out by him. Sources: PCGamingWiki, LaunchBox gamesdb (dev 487). Scope unchanged (five in-scope binaries); the two new Gen-1 titles are candidate targets / lineage data, local verification open. See [§Catalog once-over](#catalog-once-over-two-more-tgifileart-titles-and-a-dos-tgi-signature-2026-11-20). |
 | 2026-11-20 | **Finding (Observed): Clue Jr.: SpyGlass Mysteries (1999) and The Little Mermaid II: Return to the Sea (2000) both run the TerraGlyph Gen 1 engine** — confirming Mony's catalog leads. Downloaded Internet Archive images (`CLUEJR.iso`, SHA-1 `6255baef…`, verified; `MERMAID2.iso` RUS, SHA-1 `368c5c38…`, verified). Clue Jr. carries a loose `TGIFILE.ART` and is DirectX-based (corroborating Mony's note); Little Mermaid II's InstallShield `data1.cab` file table lists `tgifile.art` + `lmii.exe` / `lm2.exe`. No competing-engine markers on either. Non-Scooby Gen-1 set now three with Activity Center; Clue Jr. (1999) is the earliest confirmed Gen-1 binary, predating Showdown. Byte-format / engine-family checks remain open. See [§Verified: Clue Jr. and Little Mermaid II](#verified-clue-jr-and-little-mermaid-ii-confirmed-on-the-engine-2026-11-20). |
 | 2026-11-20 | Collaborator note (**Reported**): he owns **Norwegian retail copies of Showdown and Case File #2**, and proposes that after the in-scope games work, we collect localized releases, add each to the ScummVM detection tables, and verify each boots. The **Norwegian Showdown isn't on abandonware sites**, so his disc may be the only source for that entry's hashes. Standard detection practice, not scope creep; Showdown's localization is the directly useful one (in scope), Case File #2's is a preservation note (Trinket / OM++, out of scope). Parked as a post-engine follow-up. See [§Localized releases](#localized-releases-norwegian-showdown-and-case-file-2-for-the-detection-tables-2026-11-20). |
+| 2026-11-21 | **MobyGames dev catalog reconciled (Observed, via Wayback — live site is Cloudflare bot-walled).** Two TerraGlyph entities: **L.P.** (Schaumburg IL, game dev, 11 games 1995–2001) and **Productions Limited** (Dublin IE, animation arm, 4 of the same for art). All 11 L.P. titles already in our map/Mony's once-over — **no new titles**. Key finding: **neither page credits Clue Jr. or Little Mermaid II**, both of which we verified ship `TGIFILE.ART` (2026-11-20) — so MobyGames **undercounts the engine footprint**; a TerraGlyph credit isn't the engine boundary, and binary evidence outranks it (validates Mony's PCGW/LaunchBox route). No Case File titles (both stop at 2001) — consistent with the 2002+ IBS handoff. Studio shipped DOS/Win/Mac/PS1/N64 across multiple engines → reinforces studio-level "TerraGlyph" naming. Scope unchanged. See [§MobyGames dev catalog reconciled](#mobygames-dev-catalog-reconciled-11-titles-two-entities-what-it-misses-2026-11-21). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
