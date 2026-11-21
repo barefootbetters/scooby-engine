@@ -31,7 +31,7 @@ hidden unless unstable games are enabled.
 
 | Title | Game id | Generation | Status |
 |---|---|---|---|
-| Scooby-Doo! Showdown in Ghost Town | `showdown` | Gen 1 | In development — all rooms ported; full-playthrough release-verification pending |
+| Scooby-Doo! Showdown in Ghost Town | `showdown` | Gen 1 | In development — all rooms ported; **a suspect/clue-board soft-lock currently blocks completion** (WP-079, fix pending) |
 | Scooby-Doo! Phantom of the Knight | `phantomknight` | Gen 1 | In development — room port in progress |
 | Scooby-Doo! Jinx at the Sphinx | `jinxsphinx` | Gen 2 | Detected only — unsupported (MMFW archive reader not implemented) |
 | Scooby-Doo! Case File #1: The Glowing Bug Man | `casefile1` | Gen 3 | Detected only — unsupported |
@@ -75,11 +75,18 @@ thumbnails, dates, play time). The engine declares
 `kSupportsLoadingDuringRuntime` and `kSupportsSavingDuringRuntime` (saving
 pauses while a scene or an exit transition is playing).
 
-> Note: an end-to-end save → quit → relaunch → load cycle has been
-> implemented but not yet release-verified on a live run (WP-079).
+> Note: per-room auto-save was observed writing cleanly throughout the WP-079
+> live run; the full end-to-end save → quit → relaunch → load cycle has not yet
+> been release-verified (the run was halted by the suspect-board soft-lock before
+> that step).
 
 ## Known limitations
 
+- **Suspect/clue board soft-lock (open blocker).** Opening the suspects-and-clues
+  board from the toolbar magnifying glass currently traps the player: its back
+  exit does not respond and there is no keyboard/mouse escape. Found by the
+  *Showdown* closeout run (WP-079); fix pending. Until it lands, *Showdown* is
+  not completable once the board is opened.
 - **Gen 1 only.** Gen 2 (Jinx, Activity Challenge) and Gen 3 (Case File #1)
   are detected but unsupported.
 - **No horizontal scrolling yet.** Rooms wider than the 640×480 screen

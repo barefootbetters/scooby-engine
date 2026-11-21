@@ -10,7 +10,7 @@ title: "EC-006: Showdown playthrough run sheet"
 single start-to-credits playthrough plus the release-gate walk — without it
 sprawling into inline bug-fixing. Every defect found is **logged as a one-line
 gap and the run continues**; fixes are follow-up WPs, never done here.
-**Status:** Partially executed (2026-11-19) — **Part B (release-gate walk) complete with fresh evidence; Part A (the live playthrough) and the save/load cycle NOT run.** The mechanical gates (build, detection, the I/O/audio/thread/header greps, the ADGF flag, the MD5 record, the wiki page) are done below. The continuous start-to-credits run (Step 1) and the save/load cycle (Step 2) require the engine running on a real interactive desktop; they could not be driven from the headless build/CLI context (the SDL backend hangs or fails to allocate a surface without an interactive session), and faking beat results is out of bounds. The go/no-go verdict is therefore **withheld pending the live run** — see [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md).
+**Status:** Executed — **NO-GO** (Part B 2026-11-19; Part A live run 2026-11-20). Part B (release-gate walk) is complete with fresh evidence. Part A was run live on a real interactive desktop (Jeff driving, this session reading the `--debugflags=script,input --debuglevel=1` console): boot, the front end and the first rooms played clean, then the run hit a **hard progression blocker — the suspect/clue board soft-lock** (its back exit is unresponsive, no Esc/right-click escape), which traps the player and halts the run. Per the stop rule below, that blocker is the top finding and the go/no-go verdict is **NO-GO** — see [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md).
 
 A full playthrough is the canonical sprawl case: every stuck exit invites a
 detour into the room's code. This checklist holds the line — observe, log,
@@ -24,30 +24,34 @@ legal way forward), which is itself the top finding.
 - [x] Pre-flight verdict: **READY** — [`docs/reference/pre-flight-WP-079-2026-11-19.md`](../reference/pre-flight-WP-079-2026-11-19.md), committed on `main` @ `8f13ce4`.
 - [x] Fork at `C:\dev\scummvm` on `scooby-engine`, built Scooby-only against the pin (`c553503d9d`). **Build command:** `./configure --disable-all-engines --enable-engine=scooby && make -j32` under MSYS2 UCRT64 (g++ 16.2.0, GNU Make 4.4.1). **Fork commit:** `a709d6d94f` (pin `c553503d9d` is a reachable ancestor). **Result:** `scummvm.exe` linked (104 MB), all 84 `engines/scooby/*.o` compiled with **0 errors, 0 warnings in `engines/scooby/`** (2 warnings exist in unrelated upstream files — `engines/gob/dataio.cpp`, `audio/mac/halestorm.cpp` — outside this engine). This is gate 1.
 - [x] *Showdown in Ghost Town* ISO mounted, unmodified. **Mount:** `H:\scooby\`, `showdown.cd` marker present at `H:\`. `H:\scooby\Scooby.exe` **SHA-256** `1328454334CDDB9518168B78BA7FFEB13BA7B772E6B52F4E2B87098D18AF7478` — exact match to the Showdown identity lock in [tools/exes/README](../../tools/exes/README.md#showdown-gen-1). (Phantom is also mounted at `G:\`; the run uses `H:\` only, confirmed by detection discriminating the two — gate 3 below.)
-- [x] Capture sink: screenshots/logs under the session scratchpad (never committed); no raw game data staged. (Note: the live-render captures Step 0/1 would produce were **not** generated — the run did not execute; see Status.)
-- [x] [WP-079](../work-packets/WP-079-showdown-closeout.md) §Result written with the outcome, gap list, and the withheld verdict.
+- [x] Capture sink: screenshots/logs under the session scratchpad (never committed); no raw game data staged. The live run's debug console + screenshots stayed in gitignored session paths; the blocker's evidence is quoted (not raw-captured) in [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md).
+- [x] [WP-079](../work-packets/WP-079-showdown-closeout.md) §Result written with the outcome, gap list, and the **NO-GO** verdict.
 
 ---
 
 ## Step 0 — Boot and new game (time-box: 15 min)
 
 - [x] Launcher detects the mounted disc as `scooby:showdown` with no manual identification (gate 3 evidence). **Verified** via `scummvm.exe --detect --path='H:\scooby'` → `scooby:showdown  Scooby-Doo! Showdown in Ghost Town (Windows/English)  H:\scooby\`. (The advanced detector is the same code the launcher's "Add Game" dialog runs.)
-- [ ] Title → main menu → level select; start a **new game** at the level/difficulty: **NOT RUN** — needs the engine on an interactive desktop (see below).
-- [ ] Sign In: create a player; the new game sets the story's start values ([WP-028](../work-packets/WP-028-sign-in.md)): **NOT RUN.**
-- [ ] First story room (Town Center) loads with its opening and music ([WP-029](../work-packets/WP-029-room-setup.md)): **NOT RUN.**
+- [x] Title → main menu; start a **new game** at a difficulty: **✅** — title movies (27, 28) played, `ROOM_Title_Screen` → Sign In → `ROOM_Difficulty`; picked Spooky; intro movie 1 (671 frames) played to `ROOM_P01_Town_Center`.
+- [x] Sign In: create a player; the new game sets the story's start values ([WP-028](../work-packets/WP-028-sign-in.md)): **✅** — `sign in: play as J` → `new game` → `signed in as J, slot 2`; first-room profile saved (`player J saved in slot 2: No error`).
+- [x] First story room (Town Center) loads with its opening and music ([WP-029](../work-packets/WP-029-room-setup.md)): **✅** — `ROOM_P01_Town_Center` opened scene `Town_Center.100B_` with Town-Center music; characters, hotspots and exits present.
 
-**Outcome:** detection confirmed (`scooby:showdown`), **but the boot-to-render step did not execute.** The engine was launched headlessly against `H:\scooby` via the `test_script` harness (`wait; shot; quit`); under the build/CLI shell it has no interactive desktop, so the SDL graphics backend either hangs (default/`windows` driver) or fails to allocate a surface (`SDL_VIDEODRIVER=offscreen` → `SDL_BlitSurface failed: 'src' is invalid`; `dummy` → `Could not load any graphics mode`). No frame was rendered. Booting the engine (and Steps 1–2) requires a real interactive desktop session — this is the live-run hand-off, not an engine defect.
+**Outcome:** **✅ boot clean, on a real interactive desktop (2026-11-20).** Detection, title sequence, sign-in, difficulty, intro movie and the first room all rendered and played correctly. (The earlier headless/`test_script` boot attempts failed only because the SDL backend needs an interactive desktop — not an engine defect; the live run supersedes them.)
 
 ## Step 1 — Story playthrough (time-box: open; this is the run)
 
-> **NOT RUN (2026-11-19).** The continuous playthrough did not execute: the
-> engine needs a real interactive desktop (Step 0 outcome), and a continuous
-> start-to-credits run cannot be scripted blind through the `test_script`
-> harness — it would require the full per-beat click/puzzle solution path,
-> which does not exist as a reference. The beat rows below are left unmarked.
-> Filling them with anything other than observations from a real run would be
-> fabrication, which the WP explicitly forbids. This table is the live-run
-> hand-off (WP-079 §Result names the options).
+> **Run executed 2026-11-20 — halted early by a cross-cutting blocker.** On a
+> real desktop the gang moved through the opening rooms cleanly (Town Center →
+> Street 2 → Street 3 → Saloon; scenes, music, walking, the snack-to-Scooby
+> mechanic and every room exit worked). But before the story beats below were
+> completed, opening the suspect/clue board (the toolbar magnifier, available in
+> every room) **soft-locked the game** — its back exit is unresponsive and there
+> is no Esc/right-click escape (full evidence + root cause in
+> [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md)). Because the
+> blocker is reachable from any room, the run could not continue, so the numbered
+> story beats below stay **unverified** (☐) — they were not individually
+> completed, and marking them otherwise would be fabrication. The blocker, not a
+> beat-table row, is the finding.
 
 Play straight through in the room order from
 [WORK_INDEX §Current state](../work-packets/WORK_INDEX.md). Fill one row per
@@ -85,18 +89,19 @@ inline.
 table is the spine, not a script — follow the game's own flow and log what
 actually happens.)*
 
-- [ ] Every beat reached; no missing asset, no crash, no assertion, no dead-end: **NOT RUN.**
-- [ ] Any ✗ captured (screenshot + the `--debugflags` log line) under the gitignored capture path: **NOT RUN.**
+- [x] Every beat reached; no missing asset, no crash, no assertion, no dead-end: **✗** — a hard progression blocker (the suspect-board soft-lock) was found and halted the run before the story beats completed.
+- [x] Any ✗ captured (screenshot + the `--debugflags` log line) under the gitignored capture path: **✅** — the soft-lock's console lines (`suspects: … back to ROOM_P12_Saloon`, the exit click with no `exit … going to` dispatch) and screenshots captured in session paths; quoted in WP-079 §Result.
 
-**Outcome:** **NOT RUN** — pending the live session. No hard progression
-blocker was found (none could be, the run not having happened); this is a
-live-run hand-off, not a 🚧 blocker.
+**Outcome:** **✗ HARD PROGRESSION BLOCKER** — the suspect/clue board soft-lock
+(see WP-079 §Result for evidence and root cause). Per the stop rule, the run
+stops here and the blocker is the top gap. Everything before it (boot, front
+end, the opening rooms) ran clean.
 
 ## Step 2 — Save/load cycle (time-box: 20 min)
 
-- [ ] Mid-run, save before a room transition: **NOT RUN.**
-- [ ] Quit the engine fully; relaunch: **NOT RUN.**
-- [ ] Load the save; confirm room, inventory, clues and puzzle flags restore ([02-SCUMMVM-INTEGRATION §9](../02-SCUMMVM-INTEGRATION.md)): **NOT RUN.**
+- [~] Mid-run, save before a room transition: **Partial** — the engine's per-transition **auto-save** was observed writing cleanly on every room change in the live run (`profile saved: NNNN bytes, StartRoom ROOM_…` → `player J saved in slot 2: No error`). The explicit manual save-slot step was **not reached** — the run hit the board soft-lock first.
+- [ ] Quit the engine fully; relaunch: **NOT REACHED** (blocked).
+- [ ] Load the save; confirm room, inventory, clues and puzzle flags restore ([02-SCUMMVM-INTEGRATION §9](../02-SCUMMVM-INTEGRATION.md)): **NOT REACHED** (blocked). The full save → quit → relaunch → load cycle moves to the blocker's fix WP, which resumes the run past the board.
 
 > **Note for the live run:** save/load *is* scriptable headlessly once a
 > display is available — the `test_script` harness has `save N` / `load N`
@@ -135,17 +140,17 @@ Re-run the mechanical checks; do not quote an earlier WP.
 ## Step 4 — Wiki page + verdict (time-box: 45 min)
 
 - [x] Drafted the ScummVM `Scooby` wiki-page content: [`docs/reference/scummvm-wiki-scooby.md`](../reference/scummvm-wiki-scooby.md) — supported titles, known limitations, required game-data file list, save-state status, per-variant MD5s.
-- [x] Verdict written in [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md): **WITHHELD** — not go (Step 1 did not reach credits; it did not run), not a 🚧 blocker (no hard dead-end found). Gate walk is green except gate 10 (✗ flag gap) and gate 8 (⚠ tool not run).
+- [x] Verdict written in [WP-079 §Result](../work-packets/WP-079-showdown-closeout.md): **NO-GO** — the live run hit a hard progression blocker (the suspect-board soft-lock). Gate walk is green except gate 10 (✗ flag gap) and gate 8 (⚠ tool not run).
 - [x] Gap list compiled in §Result, each item tagged with its follow-up WP.
 
 ---
 
 ## Definition of done
 
-- [~] All step outcomes recorded; the **gate table is filled** (Part B). The **beat table is not** — Step 1 did not run (needs an interactive desktop).
-- [~] WP-079 exit criteria: 4 ✅ (gate walk, with gate 10 ✗ and gate 8 ⚠ as gaps) and 5 ✅ (wiki page + MD5s); criteria 1, 2, 3 (the live run + win condition + save/load) **unmet — pending the live session**; criterion 6 (verdict) satisfied as **WITHHELD**.
-- [x] Verdict written (withheld); gap list complete with follow-up-WP tags.
-- [ ] WP-079 status in [WORK_INDEX](../work-packets/WORK_INDEX.md): **unchanged** (stays 📝/🚧) — not closed, because the live run has not happened. Flips to ✅ only on a clean go after the playthrough.
+- [x] All step outcomes recorded; the **gate table is filled** (Part B) and the live run (Part A) is recorded with its blocker. The beat table stays ☐ — the run was halted by the cross-cutting board soft-lock before the story beats completed (not fabricated).
+- [x] WP-079 exit criteria: 4 ✅ (gate walk) and 5 ✅ (wiki page + MD5s); criterion 1 **✗ NO-GO** (blocker), 2 not reached, 3 partial (auto-save clean; full cycle not reached); criterion 6 (verdict) satisfied as **NO-GO**.
+- [x] Verdict written (NO-GO); gap list complete with follow-up-WP tags.
+- [x] WP-079 status in [WORK_INDEX](../work-packets/WORK_INDEX.md): closed 🚧 **NO-GO** (not ✅). *Showdown* is not release-ready until the blocker's fix WP lands and the run reaches credits.
 
 ## Out-of-scope captures
 
@@ -154,4 +159,4 @@ session**:
 
 - **Gate 10 flag flip** — `showdown` is `ADGF_UNSTABLE`; a shipping build needs `ADGF_TESTING`. Own follow-up WP, gated on the live-run verdict.
 - **Gate 8 lint tooling** — install `clang-format` (ucrt-x86_64-clang-tools-extra) in the fork build env, or rely on upstream CI, to get an authoritative style pass. Rides with the upstream-PR WP.
-- **The live run itself** (Step 0 boot → Step 1 playthrough → Step 2 save/load) — needs an interactive desktop; see WP-079 §Result for the hand-off options.
+- **Suspect/clue board soft-lock fix** — the blocker found by the live run: route `OBJ_SUSPECT_CLUES_EXIT` to `leaveBy()` in `SuspectChooserRoom` and add a click→exit regression test (the self-test at `scooby.cpp:1328` calls `leaveBy()` directly and masked it). Its own follow-up WP; it also resumes the playthrough past the board (beats 1–23) and runs the save/load cycle. Check Phantom's shared board too.
