@@ -5,7 +5,7 @@ title: "WP-080: Suspect-board back-exit soft-lock fix"
 
 # WP-080: Suspect/clue board back-exit soft-lock fix (Gen 1)
 
-**Status:** 📝 Drafted (2026-11-20)
+**Status:** 🚧 In flight (2026-11-21) — engine fix committed + PR'd ([barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5)); self-test green on both titles; live re-verify pending (see §Execution)
 **Phase:** 5 (polish & contribution). The fix for [WP-079](WP-079-showdown-closeout.md)'s NO-GO blocker; unblocks the *Showdown* release-readiness verdict.
 **Depends on:** [WP-079](WP-079-showdown-closeout.md) 🚧 (the closeout that found the blocker — the NO-GO verdict and the root-cause lead; its §Result and [EC-006](../execution-checklists/EC-006-showdown-playthrough.md) hold the live evidence), [WP-031](WP-031-accusation.md) ✅ (the `SuspectChooserRoom` port this corrects)
 **Unblocks:** a re-run of the WP-079 playthrough from the board forward to the credits + the save/load cycle, and with it the *Showdown* **go** verdict; Gate 10 (`showdown` `ADGF_UNSTABLE` → `ADGF_TESTING`), which WP-079 left explicitly blocked on this fix ("the flag cannot be promoted while the game is soft-lockable")
@@ -196,4 +196,43 @@ not blocked; only the always-available review-and-return exit is a dead end.
 
 ---
 
-*Drafted 2026-11-20. Phase 1 (drafting); pre-flight and execution follow.*
+## Execution (in flight, 2026-11-21)
+
+The engine fix landed on fork branch `wp-080-suspect-board-exit`
+(`barefootbetters/scummvm@45a7d71de7`, [PR #5](https://github.com/barefootbetters/scummvm/pull/5)
+into `scooby-engine`), scoped to the three allowed files:
+
+- `accusation_rooms.cpp` — `enter()` registers `OBJ_SUSPECT_CLUES_EXIT` as a
+  button (`_exit = addButton(s)`) while the board is non-final (still hidden once
+  the final clue is found); `onClick()` routes `button == _exit` to
+  `leaveBy("OBJ_SUSPECT_CLUES_EXIT")`; `_exit` reset in `enter()`.
+- `accusation_rooms.h` — `_exit` member + `getExitButton()` accessor.
+- `scooby.cpp` — the accusation self-test's back-exit check now drives a **click**
+  on `getExitButton()` instead of a direct `leaveBy()`.
+
+**Evidence:**
+
+- Scooby-only build clean (incremental `make -j32`, EXIT 0; 0 warnings in `engines/scooby/`).
+- Self-test trace (`--debuglevel=11`, which bypasses the per-channel gate in
+  `debugChannelSet`), both titles that share `SuspectChooserRoom`:
+  - Showdown: `accusation check exit: button 3, click to ROOM_P01_Town_Center`
+  - Phantom:  `accusation check exit: button 3, click to ROOM_P01_Drawbridge`
+  - The probes also confirm the exit shows on a non-final board and is hidden on
+    the final board. Pre-fix, the regression reads `button -1 ... to -`.
+
+**Remaining before close (✅ Done):**
+
+1. **Live re-verify** (EC-006 tail) — a real-desktop playthrough: open the board
+   from the magnifier → click the back exit → confirm the gang returns, then play
+   forward to the credits + a save/load cycle. Needs an interactive desktop;
+   being coordinated with Jeff. (Headless runs of `ADGF_UNSTABLE` titles require
+   `enable_unsupported_game_warning=false` in the config to skip the launch modal.)
+2. Fork [PR #5](https://github.com/barefootbetters/scummvm/pull/5) squash-merged to
+   `scooby-engine`.
+3. Close commit here: flip WORK_INDEX WP-080 → ✅ Done, add §Result with the
+   squash-merge SHA, and mark Gate 10 (`ADGF_TESTING`) unblocked.
+
+---
+
+*Drafted 2026-11-20. In flight 2026-11-21 (engine fix PR'd, self-test green);
+close pending the live re-verify and fork-PR merge.*
