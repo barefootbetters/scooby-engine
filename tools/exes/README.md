@@ -668,14 +668,23 @@ d----                                              scripts
 ### Case File #3 (*Frights! Camera! Mystery!*) — OUT OF SCOPE
 
 **⚠️ Not an IBS engine title.** CF#3 was published by **The Learning Company / Broderbund** and authored in
-**Macromedia Director** — a completely different engine and publisher from the IBS/Humble lineage. It shares the
+**Macromedia Flash** — a completely different engine and publisher from the IBS/Humble lineage. It shares the
 Scooby-Doo license but is architecturally unrelated to this project.
 
-- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo! #3.iso`
+> **Correction (2026-11-21): engine is Flash, not Director.** The 2026-06-03 entry below read "Director" from the
+> disc exe's version resource, but that exe is a **Windows installer database** (version resource: product
+> "Scooby-Doo!(TM)", v4.1.07, The Learning Company — not an engine binary), and the game payload inside it is
+> **Macromedia Flash**. A raw scan of `Scooby Doo! #3.iso` finds **456 `.swf` + 6 `.flv`** and 92 `FWS`/`CWS` SWF
+> headers, and **zero** Director markers (no `.dcr`/`.dxr`/`.dir`/`.cst`, `MV93`, `RIFX`, "Macromedia Director",
+> "Lingo"). Mounted, the disc root holds only `AUTORUN.inf`, `scooby_icon.ico` and the installer. Confirms Mony's
+> 2026-11-21 report; it plays under **Ruffle**, and ScummVM has no Flash engine, so #3 is permanently out of scope.
+
+- **ISO source:** `C:\pcloud\scooby-engine\Scooby Doo! #3.iso` (182,718,464 B, SHA-1 `bc709817…b11`)
 - **Publisher:** The Learning Company (TLC) / Broderbund
-- **Engine:** Macromedia Director (confirmed via `Director` string in PE, TLC version resource)
-- **Version resource:** `4.1.07` / `Scooby-Doo! Case File #3 - Frights! Camera! Mystery!.exe`
-- **Disc layout:** Single-file installer at disc root — no accessible engine payload without installation
+- **Engine:** Macromedia Flash (verified 2026-11-21 — 456 `.swf` + `.flv` payload; no Director markers). *Was logged
+  as Director 2026-06-03 from a misread of the installer's version resource.*
+- **Disc exe:** `Scooby-Doo!.exe` — a TLC Windows installer database (v4.1.07), **not** an engine binary
+- **Disc layout:** Single-file installer at disc root — the Flash payload is packed inside it, not loose on the disc
 
 **Disc inventory (`E:\`):**
 
@@ -686,7 +695,7 @@ Scooby-Doo license but is architecturally unrelated to this project.
 ```
 
 **Cached for reference only** — installer EXE kept locally as `Scooby-CF3-Installer.exe` to avoid remounting the
-disc if the Director projector structure ever becomes useful for comparison or archival context.
+disc if the Flash payload structure ever becomes useful for comparison or archival context.
 
 **CF#3 cached-payload identity table:**
 
@@ -694,8 +703,8 @@ disc if the Director projector structure ever becomes useful for comparison or a
 |------|---------|-------------|------|
 | `Scooby-CF3-Installer.exe` | `22041FF004C4A237833F006571A1EDFC49C7797AEDDAEB91ED2FAAD0F0C4160C` | `E:\Scooby-Doo!.exe` | 181,897,154 |
 
-**Why out of scope:** This project targets the IBS engine family (Gen 1–4 above). Director titles require a
-completely separate reverse-engineering approach (Dirapi / ProjectorRays tooling) and would not share any engine
-code, asset formats, or scripting surface with the IBS engine reimplementation. If a Director adapter is ever
-desired it would be a separate project.
+**Why out of scope:** This project targets the IBS engine family (Gen 1–4 above). Flash titles share no engine
+code, asset formats, or scripting surface with the IBS engine reimplementation, and ScummVM does not support Flash
+(and is not expected to). CF#3 already plays well under **Ruffle**, so there is nothing for this project to add; it
+stays permanently out of scope.
 

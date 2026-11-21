@@ -3120,6 +3120,68 @@ bedroom and the WFR follow in later packets.
 | `0x42D580` (+0x0C) | Library entry: the taunt after a failed attempt |
 | `0x42E880` | New game: randomises `SkullCombo0-3` (and the villain) |
 
+##### Phantom's Princess's bedroom and Mermaid's cavern (WP-078)
+
+Traced 2026-11-19 for [WP-078](../work-packets/WP-078-princess-bedroom.md), in
+Phantom's `Scooby.exe`. The second of the audit's group-8 (Upstairs) packets: the
+bedroom where the spell book (the library of WP-077 consumes it) is taken, and
+the cavern whose one hotspot frightens the gang. Showdown has neither room. Both
+were traced twice, independently, by two sessions whose Ghidra reads agree — the
+WP-073–077 anti-shared-misreading move — on top of the engine == reference match
+(which passes line for line) and the disc sound-index probe. The two traces
+agreed on every slot, clip, flag and gate, with no correction needed this packet.
+
+**The bedroom** (`ROOM_P29_Princess_Bedroom`, `0x415350`, vtable `0x45EA5C`, music
+`Princess_Bedroom.Music`, opening `Princess_Bedroom.280_`) overrides tick, enter,
+leave, event and claim; it keeps no save state of its own (the base
+`OpeningPlayed` / `SnacksGiven` only).
+
+- **Placements** (`0x4155E0`, +0x18): `OBJ_P29_PRINCESS_BEDROOM_HOTSPOT1`, a
+  **clickable** at depth 300; `OBJ_INV_SPELL_BOOK`, a **requires** object (the
+  arrow answers, builder `0x408C80`) built only while the book is not yet in the
+  toolbar — claimed but not built once it is.
+- **The event** (`0x415570`, +0x14): the spell book clicked with the settled
+  (default) cursor — the compare `0x433300` of the cached cursor against the live
+  one — arms the take (`+0xB8`); the hotspot plays `Princess_Bedroom.280XA_`.
+- **Each tick** (`0x4153B0`, +0x04, after the base tick), while the take is armed
+  (input held, `game+0x24`): Daphne, once idle (state 6) with no scene playing and
+  the opening done, takes the book (`OBJ_DAPHNE_P24_TAKE_BOOK`, state `0xD`, with
+  `Princess_Bedroom.Daphne_Takes_Book`) and it is hidden; idle again, the book
+  goes in the toolbar (`ANIM_TOOLBARSPELL_BOOK` / `ANIM_CURSORSPELL_BOOK`) and
+  `Princess_Bedroom.280A_` plays. **Leaving** mid-take (`0x415520`, +0x10) gives
+  the book all the same.
+
+**The cavern** (`ROOM_P21_Mermaids_Cavern`, `0x415280`, vtable `0x45EA1C`, music
+`1`, opening `Mermaids_Cavern.340_`) overrides event only — one of Phantom's
+smallest classes.
+
+- **The event** (`0x4152E0`, +0x14): `OBJ_P21_MERMAID_HOTSPOT1` frightens the
+  gang — Daphne, Shaggy and Scooby each play their SCARED reaction (state `0x11`).
+  No line.
+- **The echo flag.** The cavern's constructor sets the room's byte `+0x29` to 1
+  (the base room and the bedroom leave it 0). Anchored on its only reader, the
+  wrong-item line selector `0x4098B0`: in an echo room the three with an echo line
+  (Shaggy `Global.WRONGS_Echo_`, Velma `Global.WRONGV_Echo_`, Scooby
+  `Global.WRONGSC_Echo_`) say it in place of the dry `Global.WRONG{S,V,SC}_`, and
+  Fred, who has none, is passed over. In the fork the class declares it
+  (`RoomHooks::isEcho`, the Mermaid's cavern overriding it) and the wrong-item
+  selector in `inventory.cpp` reads it — a one-reader hook staged by name, not a
+  behaviour change for any other room (the base class leaves the flag clear).
+
+| Address | What it does |
+|---|---|
+| `0x415350` | Bedroom constructor (music `Princess_Bedroom.Music`, opening `Princess_Bedroom.280_`) |
+| `0x4155E0` (+0x18) | Bedroom placements: the hotspot (clickable, depth 300), the spell book (requires, until taken) |
+| `0x415570` (+0x14) | Bedroom event: the spell book arms the take, the hotspot's line |
+| `0x4153B0` (+0x04) | Bedroom tick: Daphne takes the book, then the toolbar and `280A_` |
+| `0x415700`/`0x415520` | Bedroom enter / leave: clear the take flags; leaving mid-take still gives the book |
+| `0x415280` | Cavern constructor (music `1`, opening `Mermaids_Cavern.340_`; sets the echo byte `+0x29`) |
+| `0x4152E0` (+0x14) | Cavern event: the hotspot scares the gang (state `0x11`) |
+| `0x4098B0` | Wrong-item lines: an echo room (`+0x29`) takes the `_Echo_` variants, Fred stays silent |
+
+This continues the Upstairs group; the wizard's bedroom, the veranda and the WFR
+follow in the last packet.
+
 ##### Movies (WP-022)
 
 Traced 2026-11-14 for [WP-022](../work-packets/WP-022-movies.md); the
