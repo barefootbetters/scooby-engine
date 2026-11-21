@@ -51,7 +51,7 @@ titles share the engine first. That is now settled:
 - Showdown and Phantom are Gen 1 (WP-006).
 - Jinx is Gen 2 and Case File #1 is Gen 3 (WP-005, WP-007).
 - Case File #2 runs a different engine and is excluded (WP-005).
-- Case File #3 is a Director title and is out of scope (vision doc).
+- Case File #3 is a Flash title (corrected 2026-11-21; was logged as Director) and is out of scope (vision doc).
 
 Integration §3 calls the generation flag the load-bearing piece. Phase 3
 archive readers dispatch on it, so the table should not need restructuring
