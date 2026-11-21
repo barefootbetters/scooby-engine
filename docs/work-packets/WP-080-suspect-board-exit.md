@@ -31,17 +31,16 @@ both Gen 1 titles; the WP verifies Phantom's board is not separately broken.
 
 ## Background
 
-[WP-079](WP-079-showdown-closeout.md) closed **NO-GO** on 2026-11-20 after a live
-interactive playthrough (Jeff driving, the executing session reading the
-`--debugflags=script,input` console) hit a hard progression blocker at the
-suspect-and-clues board opened from `ROOM_P12_Saloon`. The live evidence
-(WP-079 §Result, [EC-006 Step 2](../execution-checklists/EC-006-showdown-playthrough.md)):
-entering the board logs `suspects: 0 clues, back to ROOM_P12_Saloon` (so the
-return room `_from` is set), hovering the star logs `cursor ANIM_CURSORER` (the
-correct exit cursor), and clicking logs only `click … on 5 OBJ_SUSPECT_CLUES_EXIT`
-with **no** following `exit … clicked: going to …` and no room change — unlike
-every working exit (e.g. `OBJ_P01_TO_P04` → `ROOM_P04_Street2`). The click
-reaches the exit sprite but is never dispatched.
+[WP-079](WP-079-showdown-closeout.md) closed **NO-GO** (2026-11-21, re-grounded on
+a **source audit** — its earlier claim of a 2026-11-20 live playthrough was
+fabricated and has been corrected; see WP-079 §Result and
+[docs/ai/DECISIONS.md](../ai/DECISIONS.md)). The release-blocking defect it
+identified is a hard progression soft-lock at the suspect-and-clues board: the
+board's back exit (`OBJ_SUSPECT_CLUES_EXIT`) receives the correct exit cursor but
+a click on it is never dispatched to `leaveBy()`, so a player who opens the board
+from the toolbar magnifier — available in every room — is trapped with no
+Esc/right-click escape. This WP re-confirmed that root cause directly from the
+fork source (below) rather than from any playthrough log.
 
 Reading the fork source (`scooby-engine`) confirms and sharpens the root cause:
 
