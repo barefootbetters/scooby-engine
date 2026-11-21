@@ -45,7 +45,7 @@ partially open (Case Files) — see the provenance check below.
 | *Scooby-Doo! Jinx at the Sphinx* | 2001 | `Scooby Doo Jinx at the Sphinx.iso` | 554 MB | |
 | *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | `Case File 1.iso` | 407 MB | |
 | *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | `Case File #2.iso` | 584 MB | |
-| *Scooby-Doo! Case File #3: Frights, Camera, Mystery!* | 2003 / 2007 re-release | `Scooby Doo! #3.iso` | 174 MB | **Confirmed out of scope (2026-06-03).** Disc is a single 174 MB self-contained installer (`Scooby-Doo!.exe`). PE version resource confirms Macromedia Director engine, published by The Learning Company / Broderbund. No IBS engine payload — not part of this engine lineage. A Director adapter would be a separate project. |
+| *Scooby-Doo! Case File #3: Frights, Camera, Mystery!* | 2003 / 2007 re-release | `Scooby Doo! #3.iso` | 174 MB | **Confirmed out of scope.** Disc is a single TLC installer (`Scooby-Doo!.exe`), published by The Learning Company / Broderbund. **Engine corrected 2026-11-21 — Macromedia *Flash*, not Director** (the 2026-06-03 "Director" reading misread installer metadata): the installed payload is Flash (**456 `.swf` + `.flv`**, verified by raw scan; zero Director markers). Runs today under **Ruffle**; ScummVM has no Flash engine and never will, so it stays out of scope permanently. No IBS engine payload. |
 
 Also on disk: `ScoobyDoo.iso` (221 MB). Identified via the companion
 `archive.org-activity-challenge.url` shortcut (pointing to
@@ -82,9 +82,16 @@ August 2001 re-pressing of both games (installer version 1.2, exes
   the TerraGlyph engine via IP transfer — TLC was itself acquired by
   Riverdeep around the same time.
 - The **Case File #3** disc on hand is a self-contained installer. **Confirmed
-  out of scope (2026-06-03):** PE version resource + string scan confirms
-  Macromedia Director engine, published by TLC / Broderbund. Single 174 MB
-  EXE at disc root; no IBS engine payload is accessible.
+  out of scope.** Published by TLC / Broderbund; single ~174 MB installer EXE at
+  disc root (`Scooby-Doo!.exe`, a Windows installer database per its version
+  resource — product "Scooby-Doo!(TM)", v4.1.07, The Learning Company).
+  **Engine corrected 2026-11-21 — Macromedia *Flash*, not Director.** The
+  2026-06-03 reading mistook the installer's version metadata for a Director
+  engine; a raw scan of the disc payload finds **456 `.swf` + 6 `.flv`** Flash
+  movies and 92 `FWS`/`CWS` SWF headers, and **zero** Director markers
+  (no `.dcr`/`.dxr`/`.dir`/`.cst`, `MV93`, `RIFX`, "Macromedia Director",
+  "Lingo"). It plays today under **Ruffle**; ScummVM has no Flash engine, so #3
+  is permanently out of scope regardless of what happens with #2.
 
 Implication: the "single shared engine" assumption only holds with
 confidence for the three TerraGlyph titles. Whether the Case Files share
@@ -197,8 +204,9 @@ reuse. This is the strongest possible engine-family signal.
   its `.dat` audio passes `probe_audio.py --verify`. All 71 functions WP-001
   traced in Showdown are byte-identical in Phantom's `Scooby.exe`, so Gen 1
   is one engine build over two data sets.
-- **Case File #3: confirmed out of scope** — Macromedia Director engine,
-  TLC/Broderbund publisher. Not part of this lineage.
+- **Case File #3: confirmed out of scope** — Macromedia Flash engine
+  (corrected 2026-11-21; was misread as Director), TLC/Broderbund publisher.
+  Not part of this lineage; plays under Ruffle, never a ScummVM target.
 - **Activity Challenge (2001): Gen 2** — WP-013 (2026-11-14). Same `MMFW`
   framework as Jinx, from the same source tree. 323 of its 510 RTTI names
   and 532 of its 549 engine strings are Jinx's, and its imports differ by
@@ -413,7 +421,7 @@ independently. Record and rationale:
   title (WP-005, see Engine Lineage) and is out of scope. Phantom's archive
   format is confirmed Gen 1 (`TGIFILE.ART` on disc, identical `binkw32.dll`
   hash to Showdown). Case File #3 is confirmed out of scope (Macromedia
-  Director). Working assumption: three generation-specific adapters on one
+  Flash; corrected 2026-11-21). Working assumption: three generation-specific adapters on one
   engine. Residual uncertainty: function-level confirmation of the Gen 2 → Gen 3 inheritance
   ([WP-011](work-packets/WP-011-casefile-decompdecomp.md)).
 - **Schedule realism.** This is a first-time ScummVM engine on an undocumented
@@ -503,7 +511,7 @@ Scope rule (revised per Engine Lineage finding above):
 - **Extended (medium confidence):** + Jinx (Gen 2 — requires `MMFW` container parser as a sibling to the Gen 1 `TGIFILE.ART` parser).
 - **Stretch (medium confidence):** + Case File #1 (Gen 3 — requires MMFW parser, XML config via `libexpat.dll`, raw `.avi` cutscene path alongside the Bink path).
 - **Unassigned:** Activity Challenge (Gen 2 by code, WP-013, 2026-11-14). Its archives would open with the Jinx-tier `MMFW` parser, but its real-time mini-games are game-layer work no adventure title needs. It joins a tier by decision, not by default. The fork already detects it as Gen 2, unsupported, so the launcher recognises the disc but will not start it.
-- **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13) and Case File #3 (Macromedia Director / TLC-Broderbund).
+- **Excluded:** Case File #2 (a different engine, shared with a *Powerpuff Girls* title; WP-005, 2026-11-13) and Case File #3 (Macromedia Flash / TLC-Broderbund; corrected 2026-11-21).
 
 Each generation extends the engine with one new adapter per axis; the
 shared engine core handles room/scene management, cursor/inventory,
