@@ -5,7 +5,7 @@ title: "WP-079: Showdown closeout"
 
 # WP-079: Showdown closeout — full playthrough and release readiness (Gen 1)
 
-**Status:** 📝 Drafted (2026-11-19)
+**Status:** 🚧 Closed — **NO-GO** (2026-11-20). Live playthrough hit a hard progression blocker: the suspect/clue board soft-locks (its back exit is unresponsive, no keyboard/mouse escape), trapping the player the moment the board is opened. Part B (release-gate walk) complete. See [§Result](#result).
 **Renumbered:** from WP-078 on 2026-11-19 — a parallel session had already claimed WP-078 for Phantom's princess-bedroom / mermaid's-cavern port (the sequential room WP after WP-077). This WP yielded the number per the supersession/claim discipline in [wp-lifecycle §Supersession check](../reference/wp-lifecycle.md#supersession-check-required-before-reserving-a-number).
 **Phase:** 5 (polish & contribution). Also satisfies the Phase 3 success criterion for *Showdown* ([01-VISION §Phase 3](../01-VISION.md)).
 **Depends on:** WP-056 ✅ (every *Showdown* game class ported — [room-class audit](../reference/room-class-audit-2026-11-15.md)), and with it the whole Gen 1 chain WP-014 ✅ … WP-056 ✅; WP-012 ✅ (detection table), WP-022 ✅ (Bink movies), WP-026 ✅ (profile saves), WP-031 ✅ (the accusation, Big Head and the credits)
@@ -192,5 +192,129 @@ blocker as the top gap (the blocker's fix WP is then the real next step).
 
 ---
 
-*Drafted 2026-11-19. Phase 1 (drafting) only; pre-flight, session prompt and
-execution are later lifecycle phases.*
+## Result
+
+**Outcome: 🚧 Closed — NO-GO. A hard progression blocker was found.**
+
+Part B (release-gate walk) was executed 2026-11-19 with fresh evidence. Part A
+(the live playthrough) was executed **2026-11-20 on a real interactive desktop**
+— Jeff drove the engine window; this session read the `--debugflags=script,input
+--debuglevel=1` console and characterized the defect. (An earlier attempt to
+drive the run headlessly / via the `test_script` harness was abandoned: the
+engine needs a real display, and fabricating beats is out of bounds. The live
+run replaces that.)
+
+Executed against fork `scooby-engine` @ `a709d6d94f` (pin `c553503d9d`
+reachable) with the genuine *Showdown* disc mounted at `H:\scooby\`
+(`Scooby.exe` SHA-256 `1328454334…7478`, matching the identity lock;
+`showdown.cd` present).
+
+### The blocker — suspect/clue board soft-lock (release-blocking)
+
+**The player cannot leave the suspect-and-clues board.** It opens from the
+toolbar magnifying glass, available in every room (`inventory.cpp:475`). Once
+open, the only intended way out is its on-screen back exit — and that exit is
+dead. There is **no keyboard or mouse escape** (Esc and right-click do nothing;
+the board deliberately has no toolbar — `toolbar_rooms.cpp:34`). Any player who
+opens the board to review clues before the final clue is **trapped**, and the
+game cannot be completed from that state.
+
+Evidence (live console, 2026-11-20, board opened from `ROOM_P12_Saloon`):
+
+```
+toolbar: the magnifying glass goes to ROOM_Suspect_Chooser
+suspects: 0 clues, back to ROOM_P12_Saloon          ← return room IS set
+hover 5 OBJ_SUSPECT_CLUES_EXIT, cursor ANIM_CURSORER ← star IS the exit; correct exit cursor
+click at 603,443 on 5 OBJ_SUSPECT_CLUES_EXIT         ← click lands on the exit object…
+```
+
+…but **no** `exit 5 OBJ_SUSPECT_CLUES_EXIT clicked: going to …` line follows and
+no room change occurs — unlike every working exit, which logs
+`exit N OBJ_X clicked: going to <room>` (e.g. `OBJ_P01_TO_P04` →
+`ROOM_P04_Street2` earlier in the same run). The click reaches the exit sprite
+but is **never dispatched to `leaveBy()`**.
+
+**Root cause (lead for the fix WP, not fixed here):** in `SuspectChooserRoom`
+the back exit gets art and the right rollover cursor but is wired to no click
+handler — `onClick()` routes only suspect portraits and clues
+([`accusation_rooms.cpp:240`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/accusation_rooms.cpp)),
+and `OBJ_SUSPECT_CLUES_EXIT` is neither added as a button (`addButton`) nor
+registered as a room exit, so clicking it hits nothing. `leaveBy()` itself works
+— the engine's own self-test calls it **directly**
+(`scooby.cpp:1328`, `sc->leaveBy("OBJ_SUSPECT_CLUES_EXIT")`) and passes, which
+is exactly why the defect shipped: the test exercises `leaveBy()` but not the
+click→`leaveBy()` wiring the real game depends on.
+
+**Scope note:** the *endgame* accusation leaves the board by a different path
+(`accuse()` → `requestRoom()` → villain movie → verdict → credits), so the final
+accusation itself is not blocked. But the review-and-return exit — the normal,
+always-available use of the board — is a dead end.
+
+### What ran clean before the blocker
+
+Boot and the front end and the first rooms played correctly, which is why the
+blocker is a clean single-defect finding rather than a pile-up: title movies →
+sign-in (new player, slot 2) → difficulty (Spooky) → intro movie 1 (671 frames)
+→ `ROOM_P01_Town_Center` (scene, music, snack-to-Scooby mechanic, exits) →
+`ROOM_P04_Street2` → `ROOM_P11_Street3` → `ROOM_P12_Saloon`, with per-room
+auto-save firing on every transition (`profile saved … player J saved in slot 2:
+No error`). The run halted at the board opened from the Saloon.
+
+### Acceptance-gate walk (the ten merge-blocking gates, for *Showdown*)
+
+Full table + evidence in [EC-006 Step 3](../execution-checklists/EC-006-showdown-playthrough.md#step-3--acceptance-gate-walk-time-box-45-min). Summary:
+
+- **Green (7):** 1 clean build (0 warnings in `engines/scooby/`), 2 registered/discovered, 3 detects `scooby:showdown` and discriminates Phantom with no false positive, 4 no raw file I/O, 5 audio via `Audio::Mixer` only, 6 no `binkw32.dll`, 7 single-threaded, 9 GPL headers on all 143 files.
+- **✗ Gate 10 (gap):** `showdown` is `ADGF_UNSTABLE`, below the required `ADGF_TESTING`. A shipping/initial-merge build must flip the flag.
+- **⚠ Gate 8 (not definitively run):** the gate's named script `devtools/code_check.sh` does not exist at the pin; `clang-format` (the current equivalent) is not installed in the build env. Compiler-warning / tab-indentation / GPL-header proxies are clean.
+
+### Per-variant MD5s
+
+Recorded in [EC-006 Step 3](../execution-checklists/EC-006-showdown-playthrough.md#step-3--acceptance-gate-walk-time-box-45-min) and the [ScummVM wiki-page draft](../reference/scummvm-wiki-scooby.md). *Showdown* (one EN/Windows variant): `Scooby.exe` `a7a84eb0…` / `TGIFILE.ART` `ba57da01…` / `object.ini` `42db419b…` (detection MD5, first 5000 bytes), with full-file SHA-256 identity locks.
+
+### Exit-criteria status
+
+| # | Criterion | Status |
+|---|---|---|
+| 1 | Uninterrupted run to credits, no missing asset/fatal/assertion/blocker | **✗ NO-GO** — hard progression blocker (suspect-board soft-lock); run halted at the board opened from the Saloon |
+| 2 | Win condition end-to-end (final clue → accusation → Big Head → credits) | **Not reached** — run blocked before the final clue |
+| 3 | Save before transition, relaunch, load, state restores | **Partial** — per-transition auto-save observed firing clean (`player J saved in slot 2: No error`); the explicit save → quit → relaunch → load cycle was not reached before the blocker |
+| 4 | Each of the ten gates recorded pass/fail with evidence; mechanical checks re-run | **Met** — all ten walked with fresh evidence (gate 10 ✗, gate 8 ⚠) |
+| 5 | Wiki-page content exists; per-variant MD5s recorded | **Met** — [`scummvm-wiki-scooby.md`](../reference/scummvm-wiki-scooby.md) |
+| 6 | Written go/no-go verdict + gap list, each tagged with its follow-up WP | **Met** — verdict = **NO-GO**; gap list below |
+
+### Gap list (each tagged with the follow-up that owns its fix)
+
+1. **Suspect/clue board soft-lock — the blocker (release-blocking).** The board's
+   back exit (`OBJ_SUSPECT_CLUES_EXIT`) receives clicks with the correct exit
+   cursor but is never dispatched to `leaveBy()`; no Esc/right-click escape; the
+   board has no toolbar. Opening the board (available from every room's
+   magnifier) traps the player. *Owner:* **a new follow-up WP** — route the exit
+   object to `leaveBy()` in `SuspectChooserRoom` (register it as a room exit, or
+   add it as a button whose click calls `leaveBy("OBJ_SUSPECT_CLUES_EXIT")`), and
+   add a regression test that drives the **click→exit** path, not just
+   `leaveBy()` directly (the existing self-test at `scooby.cpp:1328` calls
+   `leaveBy()` directly and masked this). Phantom shares this room class — verify
+   the same fix and check Phantom's board before its own closeout.
+2. **Gate 10 — `showdown` is `ADGF_UNSTABLE`, needs `ADGF_TESTING`** for a
+   shipping build. *Owner:* its own one-line `detection_tables.h` follow-up WP —
+   now explicitly **blocked on gap 1**: the flag cannot be promoted while the
+   game is soft-lockable.
+3. **Gate 8 — authoritative style/lint pass not run** (tool absent). *Owner:*
+   install `clang-format` in the fork build env, or rely on upstream CI; rides
+   with the upstream-PR WP.
+
+### Next step
+
+The blocker (gap 1) is the real next piece of work: its fix WP, which closes the
+soft-lock and re-runs the playthrough from the board forward to credits + the
+save/load cycle, is what moves *Showdown* toward **go**. Until then WORK_INDEX
+holds *Showdown* at 🚧 / not-release-ready; the row flips to ✅ only on a clean
+go after a full run. The build, detection and all mechanical gates are done; a
+fresh `scummvm.exe` is linked at `C:\dev\scummvm\scummvm.exe`.
+
+---
+
+*Part B executed 2026-11-19. Part A (live playthrough) executed 2026-11-20 on an
+interactive desktop (Jeff driving, this session reading the debug console).
+Closed NO-GO on the suspect-board soft-lock.*
