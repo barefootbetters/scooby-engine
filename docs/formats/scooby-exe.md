@@ -3179,8 +3179,72 @@ smallest classes.
 | `0x4152E0` (+0x14) | Cavern event: the hotspot scares the gang (state `0x11`) |
 | `0x4098B0` | Wrong-item lines: an echo room (`+0x29`) takes the `_Echo_` variants, Fred stays silent |
 
-This continues the Upstairs group; the wizard's bedroom, the veranda and the WFR
-follow in the last packet.
+This continues the Upstairs group; the wizard's bedroom and the veranda follow in
+WP-081, and the WFR (the Wizard's Rule Room, the group's largest class) in WP-082.
+
+##### Phantom's wizard's bedroom and veranda (WP-081)
+
+Traced 2026-11-21 for [WP-081](../work-packets/WP-081-wizards-bedroom-veranda.md),
+in Phantom's `Scooby.exe`. The third of the audit's group-8 (Upstairs) packets:
+the wizard's bedroom, where he is met and, on the return from the Wizard's Rule
+Room, accused; and the veranda, which overlooks the well. Showdown has neither
+room. The string-compare polarity (the WP-077 trap) was pinned by decompiling
+both helpers — `0x433360` is true on **equal**, `0x433460` on **not equal** — and
+each engine call was mapped against the fork's existing siblings: the dining
+room's accusation (`meetSuspect` `0x40A8B0`, the clue at game vtable `+0x44`,
+`act("GIVES")` `0x4061F0`, the `ROOM_Suspect_Chooser` / `Global.Thank_You_` exit),
+the post office's `arrive`, and the below-balcony door's save/load. Engine ==
+reference passes line for line. The WFR (`ROOM_P30_WFR`), the group's largest
+class, is split off to WP-082.
+
+**The bedroom** (`ROOM_P24_Wizards_Bedroom`, `0x42CCF0`, vtable `0x45F444`, music
+`1`, no opening) overrides tick, reset, enter and claim; it keeps no save state of
+its own.
+
+- **Placements** (`0x42D140`, +0x18): `OBJ_INV_MAZE_MAP`, an **inventory** object
+  (builder `0x408BD0`) the enter shows or hides.
+- **Enter** (`0x42CD70`, +0x0C): the wizard is met (`0x40A8B0`). Up from
+  `ROOM_P30_WFR` with his clue not yet given (`0x40A870`), his clue is given (game
+  vtable `+0x44`), he ACTs `GIVES` (`0x4061F0`, state `0xF`) and the accusation is
+  armed (`+0xB8`). The maze-map scroll shows and `Wizards_Bedroom.Scroll` plays
+  only while his clue is given and the gang hasn't the map (`0x407060`); otherwise
+  the scroll's sprite is hidden (its `+0x14`).
+- **Each tick** (`0x42CF70`, +0x04, after the base tick): armed, once the wizard
+  is idle (state 6), the exit handler (`+0x24`) takes the gang to
+  `ROOM_Suspect_Chooser` with `Global.Thank_You_` — the dining-room (WP-063) and
+  arena (WP-069) idiom. (The base click of the wizard with the plain arrow — the
+  cursor compare `0x433300` — the fork's engine already does.)
+- **Reset** (`0x42CD50`, +0x08): clear the armed flag.
+
+**The veranda** (`ROOM_P28_Veranda`, `0x4183B0`, vtable `0x45ECDC`, music
+`Princess_Bedroom.Music` — shared with WP-076's below-balcony door, no opening)
+overrides reset, event, save, load and arrive.
+
+- **Arrive** (`0x4185E0`, +0x2C): **not** back from Big Head (`0x433460`, true on
+  not equal), the first ever entry opens with `Veranda.270D_` (`Entrances` set);
+  before the first well click, `Veranda.290_`.
+- **The event** (`0x418410`, +0x14): `OBJ_P28_VERANDA_HOTSPOT1`, the well.
+  `WellClicks` cycles 1 → 2 → 3 → 1, each click a line (`Veranda.290B_` /
+  `290X1_` / `290X2_`) the gang says over Big Head (`BIG_HEAD_BG_P44P22`), back
+  here.
+- **Save / load** (`0x418650` / `0x4186B0`, +0x1C / +0x20): `Entrances` (`+0xB8`)
+  and `WellClicks` (`+0xBC`), in the room's section.
+- **Reset** (`0x4185C0`, +0x08): `Entrances` and `WellClicks` to 0.
+
+| Address | What it does |
+|---|---|
+| `0x42CCF0` | Bedroom constructor (music `1`, no opening) |
+| `0x42CD70` (+0x0C) | Bedroom enter: meet the wizard; from the WFR give his clue, GIVES, arm the accusation; the maze-map scroll / `Wizards_Bedroom.Scroll` |
+| `0x42CF70` (+0x04) | Bedroom tick: armed and the wizard idle, the `Global.Thank_You_` exit to `ROOM_Suspect_Chooser` |
+| `0x42D140` (+0x18) | Bedroom placements: `OBJ_INV_MAZE_MAP`, an inventory object |
+| `0x42CD50` (+0x08) | Bedroom reset: clear the armed flag |
+| `0x4183B0` | Veranda constructor (music `Princess_Bedroom.Music`, no opening) |
+| `0x4185E0` (+0x2C) | Veranda arrive: not from Big Head, `Veranda.270D_` first entry, `Veranda.290_` before a well click |
+| `0x418410` (+0x14) | Veranda event: the well cycles `290B_` / `290X1_` / `290X2_` over Big Head |
+| `0x418650`/`0x4186B0` | Veranda save / load: `Entrances`, `WellClicks` |
+| `0x433360` / `0x433460` | String compare: true on equal / true on not equal (the WP-077 polarity trap) |
+
+Only the WFR (WP-082), the group's largest class, now remains.
 
 ##### Movies (WP-022)
 
