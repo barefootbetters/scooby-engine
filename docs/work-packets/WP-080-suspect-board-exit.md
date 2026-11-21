@@ -5,7 +5,7 @@ title: "WP-080: Suspect-board back-exit soft-lock fix"
 
 # WP-080: Suspect/clue board back-exit soft-lock fix (Gen 1)
 
-**Status:** ✅ Done (2026-11-21) — soft-lock fixed; self-test green on both titles; live re-verified by Jeff (board exit returns, run reaches credits, save/load restores). *Showdown* closeout flips to **GO**. Engine fix in [barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5) — **ready for merge, not yet merged** (Jeff's call). See §Result.
+**Status:** ✅ Done (2026-11-21) — soft-lock fixed; self-test green on both titles; live re-verified by Jeff (board exit returns, run reaches credits, save/load restores). *Showdown* closeout flips to **GO**. Engine fix [barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5) **merged** (squash `18f718a`). See §Result.
 **Phase:** 5 (polish & contribution). The fix for [WP-079](WP-079-showdown-closeout.md)'s NO-GO blocker; unblocks the *Showdown* release-readiness verdict.
 **Depends on:** [WP-079](WP-079-showdown-closeout.md) 🚧 (the closeout that found the blocker — the NO-GO verdict and the root-cause lead; its §Result and [EC-006](../execution-checklists/EC-006-showdown-playthrough.md) hold the live evidence), [WP-031](WP-031-accusation.md) ✅ (the `SuspectChooserRoom` port this corrects)
 **Unblocks:** a re-run of the WP-079 playthrough from the board forward to the credits + the save/load cycle, and with it the *Showdown* **go** verdict; Gate 10 (`showdown` `ADGF_UNSTABLE` → `ADGF_TESTING`), which WP-079 left explicitly blocked on this fix ("the flag cannot be promoted while the game is soft-lockable")
@@ -153,7 +153,8 @@ not blocked; only the always-available review-and-return exit is a dead end.
 
 1. [x] A click on `OBJ_SUSPECT_CLUES_EXIT` in `SuspectChooserRoom` returns the
    gang to the room the board was opened from, in code: the exit is registered as
-   a button and `onClick()` routes it to `leaveBy()`. — done (fork `45a7d71de7`).
+   a button and `onClick()` routes it to `leaveBy()`. — done (merged to
+   `scooby-engine` as `18f718a`).
 2. [x] The accusation self-test drives the **click → exit** path (not a direct
    `leaveBy()`), and the `accusation check exit:` trace shows a valid exit button
    index and the destination room, for both `showdown` and `phantomknight`. — done
@@ -202,7 +203,7 @@ not blocked; only the always-available review-and-return exit is a dead end.
 ## Execution (in flight, 2026-11-21)
 
 The engine fix landed on fork branch `wp-080-suspect-board-exit`
-(`barefootbetters/scummvm@45a7d71de7`, [PR #5](https://github.com/barefootbetters/scummvm/pull/5)
+(`barefootbetters/scummvm@18f718a`, [PR #5](https://github.com/barefootbetters/scummvm/pull/5)
 into `scooby-engine`), scoped to the three allowed files:
 
 - `accusation_rooms.cpp` — `enter()` registers `OBJ_SUSPECT_CLUES_EXIT` as a
@@ -274,11 +275,11 @@ what was not captured — so the close is honest about its receipts.
 
 ### Lifecycle state
 
-- Engine fix: fork branch `wp-080-suspect-board-exit`,
-  commit [`barefootbetters/scummvm@45a7d71de7`](https://github.com/barefootbetters/scummvm/pull/5),
-  base `scooby-engine`. **[PR #5](https://github.com/barefootbetters/scummvm/pull/5)
-  is ready for merge but NOT yet merged** — the squash-merge is Jeff's call. The
-  §Result SHA is the branch commit; it will be the squash SHA once Jeff merges.
+- Engine fix: **merged** to `scooby-engine` as squash commit
+  [`barefootbetters/scummvm@18f718a`](https://github.com/barefootbetters/scummvm/pull/5)
+  ([PR #5](https://github.com/barefootbetters/scummvm/pull/5), merged 2026-11-21;
+  branch commit `45a7d71de7` squashed). The §Result SHA is this canonical
+  merged squash commit.
 - Docs: this WP body + [WORK_INDEX](WORK_INDEX.md) row + pre-flight on
   `claude/wp-080-suspect-board-exit`
   ([PR #136](https://github.com/barefootbetters/scooby-engine/pull/136)).
@@ -290,6 +291,7 @@ what was not captured — so the close is honest about its receipts.
 ---
 
 *Drafted 2026-11-20. Executed and live re-verified 2026-11-21; closed ✅ Done.
-Engine [PR #5](https://github.com/barefootbetters/scummvm/pull/5) and docs
-[PR #136](https://github.com/barefootbetters/scooby-engine/pull/136) ready for
-Jeff's review/merge — nothing merged by the session.*
+Engine [PR #5](https://github.com/barefootbetters/scummvm/pull/5) **merged** by Jeff
+(squash `18f718a`, 2026-11-21); docs
+[PR #136](https://github.com/barefootbetters/scooby-engine/pull/136) carries this
+close, awaiting Jeff's merge. No merges performed by the session.*
