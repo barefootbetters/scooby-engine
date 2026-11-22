@@ -82,7 +82,11 @@ truthful co-authored history intact.
 - **The door stays open.** If a human maintainer ever does the hand
   re-authorship and wants to carry the engine on the ScummVM team, the
   mechanical prep (gates green, builds clean on current master, a wiki page, MD5
-  records) is already done and ready.
+  records) is already done and ready. We've also opened the question directly
+  with upstream on the
+  [scummvm-devel mailing list](https://lists.scummvm.org/listinfo/scummvm-devel) —
+  honestly disclosing the AI-assisted development and asking whether a path
+  exists, rather than trying to slip past the policy.
 
 ## See also
 
