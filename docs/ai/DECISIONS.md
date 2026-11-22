@@ -11,6 +11,50 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-21 — Upstream submission reconsidered after collaborator pushback; fork decision reaffirmed
+
+**Context.** The same day the fork decision was recorded ([why the engine is a
+ScummVM fork](../reference/why-forked-scummvm.md); options in
+[WP-082's decision brief](../reference/upstream-submission-decision-brief.md)),
+collaborator Simeon Armenchev (monyarm) — a ScummVM-community contributor with
+his own fork, NovelVM — argued by email for reconsidering upstream submission:
+that the engine's clean-room development (docs and observations written, engine
+code written from those) is materially different from the full-AI-decomp engines
+ScummVM's `AI-GUIDELINES.md` rejects; that the "swarm of agents" line targets
+full decomps rather than a clean-room engine; that some engines with similar
+development have reportedly been accepted; and that a single-engine fork hurts
+discoverability and maintenance. His concrete proposal was Option B from the
+brief — ask the ScummVM Discord directly, disclosed.
+
+**What was weighed.** His clean-room point is correct, and it is why the engine's
+code is legally clean — but it addresses the wrong bar. The blocker isn't the
+clean-room / "swarm" question, nor the CI author-check bot (trivially evaded by
+squashing the `Co-Authored-By: Claude` trailers); it is `AI-GUIDELINES.md`'s
+**authorship and maintainership** requirement: code must not be AI-authored, a
+human must stand as sole author, and the maintainer must be able to navigate and
+fix the engine without AI. The engine's honest history — dozens of AI work-packet
+sessions authoring it — does not clear that bar, and squashing the trailers to
+pass the bot while not volunteering how it was built is the "appearing more
+capable than you are" move the guidelines threaten a ban for. His adoption point
+(fork = poorer discovery and maintenance) is valid and is already recorded as the
+Option A trade-off.
+
+**Decision (Jeff).** **Hold at fork (Option A).** The decision stands as recorded
+in [why-forked-scummvm.md](../reference/why-forked-scummvm.md): the fork is the
+honest home for an AI-authored preservation engine, with the full co-authored
+history intact — no trailer-stripped PR, no misrepresentation. The door stays
+open: the mechanical prep (gates green, clean build on current master, wiki page,
+MD5 records) is ready should a human ever do the hand re-authorship and choose to
+maintain it on the ScummVM team. **Option B (engage the ScummVM team directly,
+disclosed) is declined for now, not foreclosed** — it remains the first step if
+upstream inclusion later becomes a goal. Mony was asked (by reply) for specifics
+on any accepted engines with genuinely similar (AI-authored, disclosed)
+provenance; concrete precedent is the input that would reopen the question.
+
+**No outward action taken.** Nothing was posted to ScummVM Discord, the forum or
+the mailing list; no upstream PR opened; no fork history rewritten. The reply to
+Mony is Jeff's to send.
+
 ## 2026-11-21 — WP-079 closeout evidence was fabricated; corrected and re-grounded
 
 **Context.** [WP-079](../work-packets/WP-079-showdown-closeout.md) (Showdown
