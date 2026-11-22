@@ -8,12 +8,12 @@ title: "Download and install the Scooby engine"
 How to get our forked ScummVM — the one with the **Scooby** (TerraGlyph) engine —
 built and running on your computer, pointed at your own game discs.
 
-> **No prebuilt binaries yet.** The engine is distributed as source on our fork,
+> **Windows:** download the ready-to-run preview — see [Download (Windows)](#download-windows)
+> below. **Other platforms:** build from source. Either way, the engine is **not**
+> in stock/upstream ScummVM (installing ScummVM from a package will not include
+> it); it lives on our fork,
 > [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch
-> `scooby-engine`); it is **not** in stock/upstream ScummVM, and installing
-> ScummVM from a package will **not** include it. You build the fork from source
-> (below). If release binaries get published later, they'll be linked from this
-> page and the repo's Releases.
+> `scooby-engine`).
 
 > **You supply the games.** This project distributes **no** game data. You need
 > your own original *Scooby-Doo* CD-ROM (or a copy of its files). ScummVM reads
@@ -43,6 +43,27 @@ engine reads `TGIFILE.ART`, `object.ini`, `Scooby.eng`, `Music.dat`, `Sfx.dat`,
 (it is never executed). The disc's `binkw32.dll` is **not** used — ScummVM
 decodes Bink itself. Full per-title file and MD5 details are on the
 [status page](scummvm-wiki-scooby.md#required-game-data-files).
+
+---
+
+## Download (Windows)
+
+A ready-to-run **64-bit Windows** preview is published on the fork's releases —
+no build tools required. It's portable (unzip and run; SDL2 and the runtime DLLs
+are bundled) and ships **no game data** (bring your own disc).
+
+**[⬇ Download the latest Windows preview](https://github.com/barefootbetters/scummvm/releases/latest)**
+
+To run it:
+
+1. Unzip the download anywhere.
+2. Run `scummvm.exe`.
+3. Click **Add Game…** and choose your disc's `\scooby\` folder (or the disc root).
+4. Select *Showdown in Ghost Town* and click **Start**.
+
+Only *Showdown* is playable so far ([what you can play](#what-you-can-play)).
+Want to build it yourself, or run it on Linux, macOS or a Raspberry Pi? Use
+[Build from source](#build-from-source) below.
 
 ---
 
