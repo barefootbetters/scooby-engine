@@ -1,8 +1,41 @@
 # Scooby-Doo ScummVM Engine
 
-Reverse-engineering and engine implementation project to run
-[The Learning Company's *Scooby-Doo* CD-ROM adventure games][mobygames]
-(2000–2003) in [ScummVM](https://www.scummvm.org/).
+**Makes The Learning Company's classic *Scooby-Doo* CD-ROM adventures
+playable again on a modern computer.**
+
+In 2000 you could buy *Scooby-Doo! Showdown in Ghost Town* on CD, put the
+disc in your Windows PC, and play. More than twenty-five years later you may
+still own that disc — but the computer it was built for is gone. Modern
+machines often have no optical drive, the game was written for an old Windows
+runtime, and no engine still ships that can run it.
+
+**The game survived. The computer it depended on didn't.**
+
+This project rebuilds the missing piece: a new [ScummVM](https://www.scummvm.org/)
+engine that reads the original game data directly and plays these titles on
+hardware people actually own today.
+
+## The broken path, and the fix
+
+```mermaid
+flowchart LR
+    A["2000<br/>Buy the Scooby-Doo CD"] --> B["Windows PC<br/>with a CD-ROM drive"] --> C["🎮 Play"]
+
+    D["Today<br/>You still own the disc"] --> E["Modern PC<br/>often no optical drive;<br/>the old Windows runtime is gone"] --> F["❌ The original path<br/>is broken"]
+
+    F --> G["This engine<br/>+ ScummVM"] --> H["Windows · macOS · Linux<br/>Raspberry Pi · TV boxes"] --> I["🎮 Play again"]
+
+    style C fill:#2e7d32,color:#fff
+    style F fill:#b71c1c,color:#fff
+    style G fill:#1565c0,color:#fff
+    style I fill:#2e7d32,color:#fff
+```
+
+You supply the game you already own — your disc or a legally obtained ISO.
+The engine does the rest: graphics, audio, and the Bink cutscenes all play
+through ScummVM, with no original runtime required and nothing extra to
+install. ScummVM runs on Windows, macOS, Linux, the Raspberry Pi, and TV
+boxes, so the same build reaches the screen already under your TV.
 
 ***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
@@ -19,6 +52,9 @@ Reverse-engineering and engine implementation project to run
 
 ## Target games
 
+These games came from
+[The Learning Company's *Scooby-Doo* CD-ROM line][mobygames] (2000–2003).
+
 | Title | Year | Developer | Status |
 |---|---|---|---|
 | *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph | ✅ Playable (preview, `ADGF_TESTING`) — complete, start to credits |
@@ -29,24 +65,6 @@ Reverse-engineering and engine implementation project to run
 
 Per-title status moves as the work does; the
 [status page](docs/reference/scummvm-wiki-scooby.md) is the live, authoritative version.
-
----
-
-## What lives here
-
-This repo holds the **research, docs and tooling**. The **engine code** lives in
-the ScummVM fork at [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm)
-under `engines/scooby/` (branch `scooby-engine`).
-
-```
-docs/               Research, specs, and the work-packet governance
-  01-VISION.md      Project vision, phases, scope
-  02-SCUMMVM-INTEGRATION.md  ScummVM API contract + acceptance gates
-  formats/          Reverse-engineered file-format specs (art, audio, exe)
-  work-packets/     Units of work (WP-NNN) + the work index
-  reference/        Install guide, status page, build notes, decisions
-tools/              Python format-probing / extraction + fork helpers (PowerShell)
-```
 
 ---
 
@@ -69,7 +87,35 @@ sources:
 
 ---
 
-## Development phases
+## What lives here
+
+This repo holds the **research, docs and tooling**. The **engine code** lives in
+the ScummVM fork at [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm)
+under `engines/scooby/` (branch `scooby-engine`).
+
+```
+docs/               Research, specs, and the work-packet governance
+  01-VISION.md      Project vision, phases, scope
+  02-SCUMMVM-INTEGRATION.md  ScummVM API contract + acceptance gates
+  formats/          Reverse-engineered file-format specs (art, audio, exe)
+  work-packets/     Units of work (WP-NNN) + the work index
+  reference/        Install guide, status page, build notes, decisions
+tools/              Python format-probing / extraction + fork helpers (PowerShell)
+```
+
+---
+
+## How it works
+
+Most engine reverse-engineering starts from fully opaque binaries. These games
+turned out to be unusually well-structured: `object.ini` (every interactive
+object, exit, and cursor as plain INI text) and `Scooby.eng` (a plain-text
+string table) ship human-readable, and the `BK.XXX` cutscenes are Bink video,
+which ScummVM already decodes. The real reverse-engineering was the proprietary
+`TGIFILE.ART` graphics archive and the `.dat` audio containers — both now
+decoded ([art](docs/formats/tgifile-art.md), [audio](docs/formats/audio-archives.md)).
+
+### Development phases
 
 - Phase 1 — Format Research ✅
 - Phase 2 — ScummVM Engine Scaffold ✅
