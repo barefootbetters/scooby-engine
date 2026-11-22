@@ -20,12 +20,6 @@ CD-ROM adventure games on modern hardware via
 Once complete, players add these games to ScummVM the same way as any other
 supported title — point ScummVM at their disc or ripped ISO, and play.
 
-> **Beyond the engine:** a separate, forward-looking note sketches how these
-> out-of-print titles could actually reach players — the
-> [distribution & compatibility-layer strategy](reference/distribution-and-licensing-strategy.md),
-> and the licensing an optional commercial layer would need. The engine goal
-> above needs no license and proceeds regardless.
-
 ---
 
 ## Non-Goals
