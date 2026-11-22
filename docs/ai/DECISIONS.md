@@ -11,6 +11,47 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-22 — Merged-PR survey on the precedent question; fork decision unchanged
+
+**Context.** Following up the [2026-11-21 reaffirmation](#2026-11-21--upstream-submission-reconsidered-after-collaborator-pushback-fork-decision-reaffirmed)
+(which asked Mony for specifics on accepted engines with genuinely similar
+provenance), Mony replied that recent ScummVM merges — "including ones for new
+engines" — explicitly mention AI assistance, that the rules are "really more
+vague suggestions than anything else," and that wording and framing matter. This
+is a checkable claim, so it was checked rather than taken on his word or on our
+prior reading.
+
+**Observed** (surveyed 2026-11-22 via `gh` against `scummvm/scummvm` merged PRs):
+
+- **AI _assistance_, disclosed, does merge** — Mony is right on that narrow
+  point. PR [#8084](https://github.com/scummvm/scummvm/pull/8084) (nickknissen,
+  DIRECTOR fixes, merged 2026-11-18) states plainly: *"I used Claude and Codex to
+  investigate the causes … write the patches and prepare the commits. I have
+  reviewed every change and tested it."* So AI disclosure is not disqualifying.
+  But it is a **bug-fix to an existing engine by a contributor who stands as
+  sole author** — the permitted lane — and the disclosure is prose in the PR
+  body; no `Co-Authored-By:` AI trailer in the commits.
+- **The recently merged _new engines_ are human-authored, not AI.** SNATCHER
+  ([#8029](https://github.com/scummvm/scummvm/pull/8029), athrxx, merged
+  2026-11-15) advertises *"This engine is completely AI free."* HAROLD/BCB
+  ([#7989](https://github.com/scummvm/scummvm/pull/7989), Scorpeg, merged
+  2026-10-22) is a human decompilation with no AI mention. Neither carries AI
+  co-author trailers.
+- **No surveyed merge pairs a _new engine_ with _AI authorship_** — our case.
+  The guidelines' distinction (AI-assisted work by a member who authors, vs. an
+  engine authored by agents) is holding in practice, not dissolving.
+
+**Bearing on the decision.** This **confirms Hold at fork.** The permissive
+precedent is for assisted authorship — a lane this engine is not in; the
+comparable precedent (an AI-_authored_ new engine, disclosed and accepted) still
+does not appear. "Framing matters" cuts the other way here: framing an
+agent-authored engine as member-assisted authorship is exactly the "appearing
+more capable than you are" misrepresentation the ban clause targets. The decision
+is unchanged and the door stays open on the same terms — a specific merged PR
+showing an AI-authored new engine would still reopen it.
+
+**No outward action taken.** The survey was read-only; nothing posted upstream.
+
 ## 2026-11-21 — Upstream submission reconsidered after collaborator pushback; fork decision reaffirmed
 
 **Context.** The same day the fork decision was recorded ([why the engine is a
