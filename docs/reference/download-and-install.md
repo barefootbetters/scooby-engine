@@ -33,7 +33,10 @@ This is a testing-stage engine, not a finished product — expect rough edges.
 For the full picture of what works, see the engine's
 [status & limitations page](scummvm-wiki-scooby.md), and for why it lives on a
 fork rather than upstream ScummVM, see
-[Why the engine is a ScummVM fork](why-forked-scummvm.md).
+[Why the engine is a ScummVM fork](why-forked-scummvm.md). To see what it looks
+like running, browse the
+[Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots)
+— every room, captured from our engine.
 
 ### Required game-data files
 
@@ -224,6 +227,7 @@ part of upstream ScummVM, do **not** file Scooby-engine issues on scummvm.org.
 - Fork: [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch `scooby-engine`).
 - [Why the engine is a ScummVM fork](why-forked-scummvm.md) — the fork vs. upstream decision.
 - [Scooby engine status & limitations](scummvm-wiki-scooby.md) — supported titles, data files, MD5s, known limits.
+- [Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots) — every room, captured from our engine running.
 - [Installing ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md) — the Pi developer build + controllers.
 - ScummVM compiling guides: [MSYS2 (Windows)](https://wiki.scummvm.org/index.php/Compiling_ScummVM/MSYS2),
   [macOS](https://wiki.scummvm.org/index.php/Compiling_ScummVM/macOS),
