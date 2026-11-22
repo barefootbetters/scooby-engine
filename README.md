@@ -35,7 +35,7 @@ More than twenty-five years later, every part of that path can break:
   still find no authorized storefront offering a new one.
 
 It comes down to one reasonable consumer question — *I want to play; can I get
-the game?* — and the two branches end very differently:
+the game?* — and the branches end very differently:
 
 ```mermaid
 flowchart TD
@@ -44,7 +44,8 @@ flowchart TD
     A --> B{"Do I have<br/>the game?"}
 
     B -->|"Yes"| C["Original game data"]
-    B -->|"No / Lost CD"| D["❌ UNABLE TO BUY!<br/>No authorized digital<br/>distribution available"]
+    B -->|"No / Lost CD"| D["❌ UNABLE TO BUY AUTHORIZED COPY<br/>No authorized digital<br/>distribution available"]
+    B -->|"Buy used copy"| U["⚠️ COMMERCIAL DEAD END<br/>A used sale sends no new-sale revenue<br/>to the current rights holder, and builds<br/>no market signal for more releases"]
 
     C --> E["❌ Original platform obsolete<br/>Old Windows / CD-ROM"]
     E --> F["SCOOBY ENGINE<br/>+ ScummVM"]
@@ -52,13 +53,15 @@ flowchart TD
     G --> H["✅ PLAY"]
 
     style D fill:#b71c1c,color:#fff,stroke:#7f0000,stroke-width:4px
+    style U fill:#7f0000,color:#fff,stroke:#4a0000,stroke-width:4px
     style E fill:#d97706,color:#fff,stroke:#92400e,stroke-width:3px
     style F fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:3px
     style H fill:#2e7d32,color:#fff,stroke:#1b5e20,stroke-width:3px
 ```
 
-Nothing leaves the red box. That's what *broken* means: today the commercial
-branch has no next step.
+Only one branch reaches *Play*. The other two are terminal — neither red box
+reconnects to the engine, because the engine can't repair the purchase side.
+That's what *broken* means: the commercial branches have no next step.
 
 **The technical path has a solution. The commercial path does not.**
 
@@ -90,6 +93,10 @@ Preservation keeps these games from disappearing. This engine makes them
 playable again. An authorized digital edition could one day make them
 available to buy again. The first two are underway here; the third is a
 direction, not a promise.
+
+The point isn't a single old Scooby game running — it's a working commercial
+loop where authorized sales actually reach the rightsholders and demonstrate
+demand, so a successful release can justify bringing the next game back too.
 
 ***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
