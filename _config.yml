@@ -44,6 +44,9 @@ exclude:
   # theme vendored under ewiki/themes/) must never render on this public site.
   - ewiki/
   - tools/
+  # Internal strategy / business notes — these render on the Access-gated
+  # engineering wiki, but must not ship to the public Pages site.
+  - docs/reference/distribution-and-licensing-strategy.md
   - "*.iso"
   - "*.ART"
   - "*.dat"
