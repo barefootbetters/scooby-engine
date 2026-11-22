@@ -9,7 +9,11 @@ still own that disc — but the computer it was built for is gone. Modern
 machines often have no optical drive, the game was written for an old Windows
 runtime, and no engine still ships that can run it.
 
-**The game survived. The computer it depended on didn't.**
+**The game survived. The computer it depended on didn't** — and if you no
+longer have the disc, there may be nowhere left to buy another copy.
+
+> **Owning an old game shouldn't require owning an old computer. And wanting
+> to buy an old game shouldn't lead to a dead end.**
 
 This project rebuilds the missing piece: a new [ScummVM](https://www.scummvm.org/)
 engine that reads the original game data directly and plays these titles on
@@ -17,35 +21,55 @@ hardware people actually own today.
 
 ## The broken path, and the fix
 
+In 2000 the path was simple:
+
+> See the game → Buy the CD → Put it in your PC → Play
+
+More than twenty-five years later, every part of that path can break:
+
+- **Still have your original CD?** Your computer may have no optical drive,
+  and the game was built for a long-gone generation of Windows.
+- **Bought it years ago but lost or damaged the disc?** There may be no
+  current digital edition where you can simply buy another copy.
+- **Discovering it for the first time?** You may be glad to pay for it, and
+  still find no authorized storefront offering a new one.
+
+A secondhand disc can hand an old copy from one person to the next, but it
+doesn't restore the missing *new-sale* relationship between the player and
+whoever holds these games' commercial rights today. So there are really two
+kinds of obsolescence here:
+
 ```mermaid
 flowchart LR
-    A["2000<br/>Buy the Scooby-Doo CD"] --> B["Windows PC<br/>with a CD-ROM drive"] --> C["🎮 Play"]
+    subgraph TECH["🖥️ Technical obsolescence — I have the game"]
+      direction TB
+      A["Original disc in hand"] --> A2["No optical drive;<br/>old Windows runtime gone"] --> A3["This engine + ScummVM<br/>runs the original data"] --> A4["🎮 Play"]
+    end
+    subgraph COMM["🛒 Commercial obsolescence — I want to pay for it"]
+      direction TB
+      B["Lost the disc, or<br/>buying it for the first time"] --> B2["No authorized storefront<br/>selling a new copy"] --> B3["Authorized digital distribution<br/>(a direction, not a promise)"] --> B4["💳 Buy it legitimately"]
+    end
+    B4 --> A3
 
-    D["Today<br/>You still own the disc"] --> E["Modern PC<br/>often no optical drive;<br/>the old Windows runtime is gone"] --> F["❌ The original path<br/>is broken"]
-
-    F --> G["This engine<br/>+ ScummVM"] --> H["Windows · macOS · Linux<br/>Raspberry Pi · TV boxes"] --> I["🎮 Play again"]
-
-    style C fill:#2e7d32,color:#fff
-    style F fill:#b71c1c,color:#fff
-    style G fill:#1565c0,color:#fff
-    style I fill:#2e7d32,color:#fff
+    style A3 fill:#1565c0,color:#fff
+    style B3 fill:#6a1b9a,color:#fff
+    style A4 fill:#2e7d32,color:#fff
+    style B4 fill:#2e7d32,color:#fff
 ```
 
-You supply the game you already own — your disc or a legally obtained ISO.
-The engine does the rest: graphics, audio, and the Bink cutscenes all play
-through ScummVM, with no original runtime required and nothing extra to
-install. ScummVM runs on Windows, macOS, Linux, the Raspberry Pi, and TV
-boxes, so the same build reaches the screen already under your TV.
+This project tackles the **technical** half. You bring game data you're
+entitled to — your own disc or a legally obtained ISO — and the engine does
+the rest: graphics, audio, and the Bink cutscenes all play through ScummVM,
+with no original runtime required and nothing extra to install. ScummVM runs
+on Windows, macOS, Linux, the Raspberry Pi, and TV boxes, so the same build
+reaches the screen already under your TV.
 
 ## The larger goal
 
-Compatibility solves only half the problem. Some people already own these
-games and want to play them again. Others are meeting them for the first time
-and would gladly buy a copy — if a modern authorized edition existed.
-
-The long-term goal is to restore the whole experience players once had:
-**discover a game, obtain it legitimately, and play it** — without needing
-obsolete hardware or a decades-old operating system.
+The long-term goal is to close the **commercial** half too — to restore the
+whole experience players once had: **discover a game, obtain it legitimately,
+and play it**, without needing obsolete hardware or a decades-old operating
+system.
 
 > **See it → Want it → Buy it → Play it**
 
