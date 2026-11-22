@@ -37,6 +37,23 @@ through ScummVM, with no original runtime required and nothing extra to
 install. ScummVM runs on Windows, macOS, Linux, the Raspberry Pi, and TV
 boxes, so the same build reaches the screen already under your TV.
 
+## The larger goal
+
+Compatibility solves only half the problem. Some people already own these
+games and want to play them again. Others are meeting them for the first time
+and would gladly buy a copy — if a modern authorized edition existed.
+
+The long-term goal is to restore the whole experience players once had:
+**discover a game, obtain it legitimately, and play it** — without needing
+obsolete hardware or a decades-old operating system.
+
+> **See it → Want it → Buy it → Play it**
+
+Preservation keeps these games from disappearing. This engine makes them
+playable again. An authorized digital edition could one day make them
+available to buy again. The first two are underway here; the third is a
+direction, not a promise.
+
 ***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
 [mobygames]: https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/
