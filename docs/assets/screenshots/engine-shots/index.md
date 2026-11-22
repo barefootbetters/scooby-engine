@@ -10,13 +10,14 @@ These are screen captures of **our `scooby` ScummVM engine actually running**
 engine's own 640×480 output: a decoded `TGIFILE.ART` background with the gang and
 room objects composited as sprites, exactly as the engine draws them.
 
-This is the **complete room set** — every room the engine enumerates from the
-disc's art archive, captured straight from the running engine. Filenames use the
-canonical `ROOM_*` IDs, so this gallery mirrors the
-[`showdown-screens/`](../showdown-screens/index.md) reference library
-one-to-one (and fills the two rooms that library left as gaps —
-`ROOM_P27_Chase_B4` and `ROOM_Main_Menu` — which the longplay never reached but
-our engine renders).
+This covers the game's **story, location and chase rooms** — every playable
+place in *Showdown*, captured straight from the running engine. Filenames use the
+canonical `ROOM_*` IDs, so this gallery lines up with the
+[`showdown-screens/`](../showdown-screens/index.md) reference library (and fills
+the rooms that library left as gaps — the longplay never reached them, but our
+engine renders them: `ROOM_P27_Chase_B4`, and the full `B3`/`B6` track-fork and
+`Chase_Start` rooms). The engine's menu, suspect-chooser and artifact-overlay
+screens aren't rooms, so they sit apart from the gallery.
 
 > **Provenance — why these are our engine, not reference frames.** Unlike the
 > `showdown-screens/` library (which is captures of the *original* retail game
@@ -76,21 +77,29 @@ engine.
 | `ROOM_P22_Boot_Hill2.png` | Boot Hill 2 — the signpost |
 | `ROOM_P23_Boot_Hill3.png` | Boot Hill 3 |
 
-### Chase sequences (P24–P39)
+### Chase sequences
+
+In chase order. The B-leg runs `Chase_Start` → `B1`–`B6`; the C-leg runs
+`C1`–`C6`. Two of the B rooms are **track forks** where the rails split: `B3`
+(the Dig Site fork) and `B6` (whose switch sends one track to `C4`, an oil-can
+room that's easy to miss).
 
 | File | Room |
 |---|---|
+| `ROOM_P40_Chase_Start.png` | Chase start — the locomotive at the depot |
 | `ROOM_P24_Chase_B1.png` | Chase B1 — the runaway mine cart |
 | `ROOM_P25_Chase_B2.png` | Chase B2 |
 | `ROOM_P25A_Chase_B2_Closeup.png` | Chase B2 — character close-up |
-| `ROOM_P27_Chase_B4.png` | Chase B4 — the canyon trestle (gap in the reference library) |
+| `ROOM_P26_Chase_B3.png` | Chase B3 — the Dig Site track fork |
+| `ROOM_P27_Chase_B4.png` | Chase B4 — the canyon trestle |
 | `ROOM_P28_Chase_B5.png` | Chase B5 — the ranch turn |
+| `ROOM_P29_Chase_B6.png` | Chase B6 — the track-switch fork to C4 |
 | `ROOM_P33_Chase_C1.png` | Chase C1 |
-| `ROOM_P34_Chase_C5.png` | Chase C5 — the spiral butte |
-| `ROOM_P35_Chase_C6.png` | Chase C6 |
 | `ROOM_P37_Chase_C2.png` | Chase C2 |
 | `ROOM_P38_Chase_C3.png` | Chase C3 |
-| `ROOM_P39_Chase_C4.png` | Chase C4 |
+| `ROOM_P39_Chase_C4.png` | Chase C4 — the oil can on the track |
+| `ROOM_P34_Chase_C5.png` | Chase C5 — the spiral butte |
+| `ROOM_P35_Chase_C6.png` | Chase C6 |
 
 ### Minigames
 
