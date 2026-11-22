@@ -11,6 +11,7 @@ Reverse-engineering and engine implementation project to run
 
 - ▶ **Play it** — [Download & build instructions](docs/reference/download-and-install.md)
 - 📸 **See it** — [Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots) (every room, captured from our engine running)
+- 🗺 **Screen map** — [room navigation map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map) built from the engine's real exits
 - 📋 **What works** — [Engine status & supported titles](docs/reference/scummvm-wiki-scooby.md)
 - 🍴 **Why a fork** — [Why the engine is a ScummVM fork](docs/reference/why-forked-scummvm.md)
 
