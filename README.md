@@ -34,35 +34,51 @@ More than twenty-five years later, every part of that path can break:
 - **Discovering it for the first time?** You may be glad to pay for it, and
   still find no authorized storefront offering a new one.
 
-A secondhand disc can hand an old copy from one person to the next, but it
-doesn't restore the missing *new-sale* relationship between the player and
-whoever holds these games' commercial rights today. So there are really two
-kinds of obsolescence here:
+It comes down to one reasonable consumer question — *I want to play; can I get
+the game?* — and the branches end very differently:
 
 ```mermaid
-flowchart LR
-    subgraph TECH["🖥️ Technical obsolescence — I have the game"]
-      direction TB
-      A["Original disc in hand"] --> A2["No optical drive;<br/>old Windows runtime gone"] --> A3["This engine + ScummVM<br/>runs the original data"] --> A4["🎮 Play"]
-    end
-    subgraph COMM["🛒 Commercial obsolescence — I want to pay for it"]
-      direction TB
-      B["Lost the disc, or<br/>buying it for the first time"] --> B2["No authorized storefront<br/>selling a new copy"] --> B3["Authorized digital distribution<br/>(a direction, not a promise)"] --> B4["💳 Buy it legitimately"]
-    end
-    B4 --> A3
+flowchart TD
+    A["I want to play a classic<br/>Scooby-Doo PC game"]
 
-    style A3 fill:#1565c0,color:#fff
-    style B3 fill:#6a1b9a,color:#fff
-    style A4 fill:#2e7d32,color:#fff
-    style B4 fill:#2e7d32,color:#fff
+    A --> B{"Do I have<br/>the game?"}
+
+    B -->|"Yes"| C["Original game data"]
+    B -->|"No / Lost CD"| D["❌ UNABLE TO BUY AUTHORIZED COPY<br/>No authorized digital<br/>distribution available"]
+    B -->|"Buy used copy"| U["⚠️ COMMERCIAL DEAD END<br/>A used sale sends no new-sale revenue<br/>to the current rights holder, and builds<br/>no market signal for more releases"]
+
+    C --> E["❌ Original platform obsolete<br/>Old Windows / CD-ROM"]
+    E --> F["SCOOBY ENGINE<br/>+ ScummVM"]
+    F --> G["Modern computer<br/>or TV device"]
+    G --> H["✅ PLAY"]
+
+    style D fill:#b71c1c,color:#fff,stroke:#7f0000,stroke-width:4px
+    style U fill:#7f0000,color:#fff,stroke:#4a0000,stroke-width:4px
+    style E fill:#d97706,color:#fff,stroke:#92400e,stroke-width:3px
+    style F fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:3px
+    style H fill:#2e7d32,color:#fff,stroke:#1b5e20,stroke-width:3px
 ```
 
-This project tackles the **technical** half. You bring game data you're
-entitled to — your own disc or a legally obtained ISO — and the engine does
-the rest: graphics, audio, and the Bink cutscenes all play through ScummVM,
-with no original runtime required and nothing extra to install. ScummVM runs
-on Windows, macOS, Linux, the Raspberry Pi, and TV boxes, so the same build
-reaches the screen already under your TV.
+Only one branch reaches *Play*. The other two are terminal — neither red box
+reconnects to the engine, because the engine can't repair the purchase side.
+That's what *broken* means: the commercial branches have no next step.
+
+**The technical path has a solution. The commercial path does not.**
+
+If you still have your original game data, this project is being built to
+overcome the obsolete-computer problem: you bring data you're entitled to —
+your own disc or a legally obtained ISO — and the engine plays it through
+ScummVM. Graphics, audio, and the Bink cutscenes all run with no original
+runtime required and nothing extra to install, on Windows, macOS, Linux, the
+Raspberry Pi, and TV boxes — the same build reaching the screen already under
+your TV.
+
+But if you lost your disc, or you discover the game today and want to buy it,
+the path ends: there is no current authorized digital edition to purchase.
+Buying a used copy can get another disc into someone's hands, but it doesn't
+create a *new* sale — no revenue reaches the games' current commercial
+rightsholders, and no active retail channel registers the demand that could
+justify bringing these titles back.
 
 ## The larger goal
 
@@ -77,6 +93,10 @@ Preservation keeps these games from disappearing. This engine makes them
 playable again. An authorized digital edition could one day make them
 available to buy again. The first two are underway here; the third is a
 direction, not a promise.
+
+The point isn't a single old Scooby game running — it's a working commercial
+loop where authorized sales actually reach the rightsholders and demonstrate
+demand, so a successful release can justify bringing the next game back too.
 
 ***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
