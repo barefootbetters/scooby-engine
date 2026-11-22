@@ -5,6 +5,8 @@ title: Scooby-Doo ScummVM Engine
 
 # Scooby-Doo ScummVM Engine
 
+![The Mystery Inc. gang: Fred, Velma, Daphne, Shaggy, and Scooby-Doo](docs/assets/scooby-gang.png "width=320px")
+
 Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM adventure games](https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/) (2000–2003) in [ScummVM](https://www.scummvm.org/).
 
 **Phase 1 — Format Research** is underway. The goal is a contributed engine accepted into ScummVM mainline.
