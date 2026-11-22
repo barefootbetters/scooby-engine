@@ -5,11 +5,10 @@ title: "Strategy note — distribution & compatibility layer"
 
 # Strategy note: the distribution + compatibility layer (and the licensing it needs)
 
-> **Status:** Strategy framework for Jeff — it captures a direction and **decides
+> **Status:** A strategy framework — it captures a direction and **decides
 > nothing**. Layer 1 (the engine) proceeds regardless; Layer 2 (the storefront)
-> gates entirely on licensing. **Kept off the public site on purpose** (see the
-> last section). **Date:** 2026-11-22. **Author:** Jeff (with AI assistance; a
-> draft for his judgment, not a commitment).
+> gates entirely on licensing. **Date:** 2026-11-22. **Author:** Jeff (with AI
+> assistance).
 
 ## The problem, in one picture
 
@@ -141,9 +140,6 @@ A framework, not a commitment. **Layer 1 (the engine) continues regardless.**
 Layer 2 (the storefront) is gated entirely on the rights work above; nothing here
 commits the project to it, and no licensing contact has been made.
 
-It is deliberately **excluded from the public GitHub Pages site** (see
-`_config.yml`): a monetization plan that names prospective licensors — and admits
-how much the model needs them — is competitive intelligence and weakens any future
-negotiating position. It still renders on the Access-gated engineering wiki for
-internal reference. The source repo is public, so for genuinely confidential
-material the home is the private `scooby-engine-private` repo, not this file.
+This note is published openly as the project's thinking-out-loud. Genuinely
+confidential specifics — deal terms, named contacts, numbers — belong in the
+private `scooby-engine-private` repo, not here.
