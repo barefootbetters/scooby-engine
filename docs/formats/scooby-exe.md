@@ -3244,7 +3244,44 @@ overrides reset, event, save, load and arrive.
 | `0x418650`/`0x4186B0` | Veranda save / load: `Entrances`, `WellClicks` |
 | `0x433360` / `0x433460` | String compare: true on equal / true on not equal (the WP-077 polarity trap) |
 
-Only the WFR (WP-083), the group's largest class, now remains.
+The WFR, the group's largest class, is below (WP-083) — the last of group 8.
+
+##### Phantom's Wizard's Rule Room (WP-083)
+
+Traced 2026-11-22 for [WP-083](../work-packets/WP-083-wfr.md); the game's largest
+class (1022 lines) and the last of Phantom's group-8 (Upstairs) rooms. Showdown
+has no such room. With it, **every game class in Phantom's audit is ported.**
+
+`ROOM_P30_WFR` (`0x41BEA0`, vtable `0x45EE7C`) is the wizard's Simon-says potion
+game. The wizard sets a rule — a number on a two-digit counter and a run of
+coloured ingredients (Red, Green, Blue, Pink, Yellow, Brown) he DANCEs in turn
+while the gang WATCHes; the player repeats it by clicking. A right run plays
+`Wizards_Rule.Correct%i_1_NARRATOR` and advances; a wrong one plays
+`Wizards_Rule.Incorrect[/2/3]_1_NARRATOR` (one of three) and
+`Knights.Glass_Breaks.1` and spends a difficulty-scaled life. Each lit colour
+plays `Wizards_Rule.<Colour>` and `WFR.Potion_%i`. Out of lives, or the run
+finished, returns the gang to `ROOM_P24_Wizards_Bedroom`, where the wizard's
+clue is given (WP-081).
+
+The ingredients, Scooby and the wizard are a WFR animated sub-class (`0x41BAC0`,
+vtable `0x45EE54`) whose mode (`+0x5C`) plays `ANIM_WFR_<name><suffix>`
+(`0x41BC80`): the idle, `TURN_DANCE`, `TURN_WATCH`, `DANCE<n>` or `WATCH`. The
+spinner the original drives off a scene's fractional playback position
+(`0x4358D0`) over a position→ingredient table (`0x46C5B0`); the fork drives it on
+a tick counter over the same table (the Maria-game idiom, WP-064).
+
+| Address | What |
+|---|---|
+| `0x41BEA0` | WFR constructor (music `Wizards_Rule.Music`, no opening) |
+| `0x45EE7C` vs `0x45E5FC` | Vtable diff: overrides the destructor, tick, enter, reset, claim and the +0x24 leave builder |
+| `0x41C3A0` (+0x04) | tick: the Simon run — DANCE the colours, repeat by click, Correct/Incorrect, the counter, exit to the bedroom |
+| `0x41C0C0` (+0x0C) | enter: assert the placements (6 bottles, wizard, Scooby, 2 counter numbers), build the difficulty-scaled lives, start the music |
+| `0x41C350` (+0x08) | reset: zero the run and the wired objects |
+| `0x41CF50` (+0x18) | claim: classify every `OBJ_WFR_*` / `ANIM_WFR_*` placement; the colours are clickable |
+| `0x41BF30` (+0x24) | leave builder: a transition-movie variant (movie `0xb`) by `isClueOwner(WIZARD)` |
+| `0x41BAC0` / `0x45EE54` | WFR animated sub-class (ingredients, Scooby, wizard); mode `+0x5C` |
+| `0x41BC80` | sub-class mode → `ANIM_WFR_<name>` + {``, `TURN_DANCE`, `TURN_WATCH`, `DANCE<n>`, `WATCH`} |
+| `0x46C5B0` | Position → ingredient (0-5), 6 a gap |
 
 ##### Movies (WP-022)
 
