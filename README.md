@@ -4,10 +4,14 @@ Reverse-engineering and engine implementation project to run
 [The Learning Company's *Scooby-Doo* CD-ROM adventure games][mobygames]
 (2000–2003) in [ScummVM](https://www.scummvm.org/).
 
-**Status: Phase 1 — Format Research** · [Progress site →][pages]
+***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
 [mobygames]: https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/
 [pages]: https://github.barefootbetters.com/scooby-engine/
+
+- ▶ **Play it** — [Download & build instructions](docs/reference/download-and-install.md)
+- 📋 **What works** — [Engine status & supported titles](docs/reference/scummvm-wiki-scooby.md)
+- 🍴 **Why a fork** — [Why the engine is a ScummVM fork](docs/reference/why-forked-scummvm.md)
 
 ---
 
@@ -15,57 +19,65 @@ Reverse-engineering and engine implementation project to run
 
 | Title | Year | Developer | Status |
 |---|---|---|---|
-| *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph | 🔬 Primary RE target |
-| *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph | ✅ Same engine and formats as Showdown (Gen 1) |
-| *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph | ✅ Same engine lineage (Gen 2, `MMFW` archives) |
-| *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | ImageBuilder Software | ✅ Same engine lineage (Gen 3, inherited TerraGlyph code) |
+| *Scooby-Doo! Showdown in Ghost Town* | 2000 | TerraGlyph | ✅ Playable (preview, `ADGF_TESTING`) — complete, start to credits |
+| *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph | 🚧 In development (Gen 1, same engine) — most rooms ported |
+| *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph | 🔎 Detected only (Gen 2, `MMFW` archives not yet read) |
+| *Scooby-Doo! Case File #1: The Glowing Bug Man* | 2002 | ImageBuilder Software | 🔎 Detected only (Gen 3, inherited TerraGlyph code) |
 | *Scooby-Doo! Case File #2: The Scary Stone Dragon* | 2003 | Unknown | ❌ Excluded: a different engine, shared with a *Powerpuff Girls* title (WP-005) |
+
+Per-title status moves as the work does; the
+[status page](docs/reference/scummvm-wiki-scooby.md) is the live, authoritative version.
 
 ---
 
 ## What lives here
 
-```
-docs/               Research documentation and format specs
-  01-VISION.md      Project vision, phases, feasibility assessment
-  02-SCUMMVM-INTEGRATION.md  ScummVM API contract for the engine
-  formats/          Reverse-engineered file format specs
-    tgifile-art.md    Graphics archive (144 MB, two-level index confirmed)
-    audio-archives.md Music / SFX / Voice .dat archives
-    scooby-exe.md     Main executable (Ghidra + decompdecomp analysis plan)
-  work-packets/     Units of work (WP-011: Case File #1 decompdecomp collaboration)
-tools/              Python scripts for format probing and asset extraction
-```
+This repo holds the **research, docs and tooling**. The **engine code** lives in
+the ScummVM fork at [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm)
+under `engines/scooby/` (branch `scooby-engine`).
 
-Engine code lives in the ScummVM fork at
-[barefootbetters/scummvm](https://github.com/barefootbetters/scummvm)
-under `engines/scooby/` — created in Phase 2.
+```
+docs/               Research, specs, and the work-packet governance
+  01-VISION.md      Project vision, phases, scope
+  02-SCUMMVM-INTEGRATION.md  ScummVM API contract + acceptance gates
+  formats/          Reverse-engineered file-format specs (art, audio, exe)
+  work-packets/     Units of work (WP-NNN) + the work index
+  reference/        Install guide, status page, build notes, decisions
+tools/              Python format-probing / extraction + fork helpers (PowerShell)
+```
 
 ---
 
-## Current findings
+## Status
 
-| File | Status |
-|---|---|
-| `TGIFILE.ART` | ✅ Two-level index confirmed (69 groups, 453 assets). Payload compression under investigation. |
-| `Music.dat` / `Sfx.dat` / `Voice.dat` | ✅ 12-byte header confirmed. Index table + codec TBD. |
-| `BK.XXX` | ✅ Bink video — handled by ScummVM's built-in decoder. |
-| `object.ini` | ✅ Plain Windows INI (1,405 lines). No decoding needed. |
-| `Scooby.eng` | ✅ Plain-text string table. No decoding needed. |
-| `Scooby.exe` | 🔬 Ghidra analysis pending. |
-| Case File #1 executable | 🚧 decompdecomp collaboration under way, complementary to Ghidra. Access received 2026-11-11; collaborator-reported figures stay preliminary until a local build measures them. See [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md). |
+*Showdown in Ghost Town* is ported end to end and reaches the end credits on a
+testing build; *Phantom of the Knight* is most of the way through its room port.
+The engine reads the original discs directly — graphics, audio and the Bink
+cutscenes all play through ScummVM, with no original runtime required — and it is
+distributed as a **fork** of ScummVM rather than upstreamed
+([why](docs/reference/why-forked-scummvm.md)).
+
+Rather than restate a snapshot that goes stale, this README points to the live
+sources:
+
+- **Play / build it** — [Download & Install](docs/reference/download-and-install.md)
+- **What works, per title, and the data files each game needs** — [status page](docs/reference/scummvm-wiki-scooby.md)
+- **Where the work is right now** — the [progress site][pages] and the
+  [work index](docs/work-packets/WORK_INDEX.md)
 
 ---
 
 ## Development phases
 
-- **Phase 1 — Format Research** ← *current*
-- Phase 2 — ScummVM Engine Scaffold
-- Phase 3 — Resource Loading
-- Phase 4 — Game Logic
-- Phase 5 — Polish & Upstream PR
+- Phase 1 — Format Research ✅
+- Phase 2 — ScummVM Engine Scaffold ✅
+- Phase 3 — Resource Loading ✅
+- Phase 4 — Game Logic — ✅ *Showdown* · 🚧 *Phantom*
+- Phase 5 — Polish & distribution (as a fork) — *Showdown* closeout complete
 
-See [docs/01-VISION.md](docs/01-VISION.md) for full phase exit criteria.
+See [docs/01-VISION.md](docs/01-VISION.md) for full phase exit criteria, and
+[Why the engine is a ScummVM fork](docs/reference/why-forked-scummvm.md) for the
+distribution decision.
 
 ---
 
@@ -80,8 +92,9 @@ Players supply their own discs or legally obtained ISOs.
 
 ## Contributing
 
-This is a personal research project. It isn't taking general code
-contributions yet; that changes once an engine scaffold exists in Phase 2.
-Reverse-engineering collaboration is by arrangement: the Case File #1
+This is a personal research project. The engine scaffold exists and the Gen 1
+titles are playable, but it isn't taking general code contributions yet.
+Reverse-engineering collaboration is by arrangement — the Case File #1
 executable work in [WP-011](docs/work-packets/WP-011-casefile-decompdecomp.md)
-is one example.
+is one example. Build or gameplay problems go on the
+[fork's issue tracker](https://github.com/barefootbetters/scummvm/issues).
