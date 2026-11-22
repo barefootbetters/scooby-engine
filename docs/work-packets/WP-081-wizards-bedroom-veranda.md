@@ -24,7 +24,7 @@ the rooms draw, but the wizard's bedroom does nothing with the wizard or the
 maze-map scroll, and the veranda's well gives no line.
 
 The fourth and last group-8 sub-bullet, `ROOM_P30_WFR` (the Wizard's Rule Room,
-the game's largest class at 1022 lines), is **its own packet** — WP-082 — and is
+the game's largest class at 1022 lines), is **its own packet** — WP-083 — and is
 **not** in scope here.
 
 ## Background
@@ -50,7 +50,7 @@ confirms the mechanic):
 
 Both rooms already have their `room_setup` entry (music; neither has an opening
 scene), so no `room_setup` edit is expected. This continues the Upstairs group;
-only the WFR (WP-082) then remains.
+only the WFR (WP-083) then remains.
 
 ## Scope
 
@@ -68,7 +68,7 @@ only the WFR (WP-082) then remains.
 - **A `script` check** against an independent reference, on both titles
   (Showdown has neither room).
 
-**Out of scope:** `ROOM_P30_WFR` (WP-082). No change to a sibling room class is
+**Out of scope:** `ROOM_P30_WFR` (WP-083). No change to a sibling room class is
 expected.
 
 ## Exit criteria
@@ -137,7 +137,7 @@ office's `arrive`, the below-balcony door's save/load), and the string-compare
 polarity (the WP-077 trap) was pinned by decompiling both helpers (`0x433360`
 true on equal, `0x433460` on not equal). The from-WFR arming path (the clue,
 GIVES and the armed accusation) fires only on the return from `ROOM_P30_WFR`,
-which is not yet ported (WP-082); the self-test verifies the wiring, and the
+which is not yet ported (WP-083); the self-test verifies the wiring, and the
 identical `Global.Thank_You_` → `ROOM_Suspect_Chooser` idiom is exercised live by
 the dining room (WP-063) and the arenas (WP-069).
 
@@ -147,7 +147,7 @@ See [scooby-exe → the wizard's bedroom and veranda](../formats/scooby-exe.md#p
 
 - Third packet of the audit's group 8 (Upstairs). The WFR (the Wizard's Rule
   Room), the audit's fourth sub-bullet and the game's largest class, is split
-  off to WP-082.
+  off to WP-083.
 - The bedroom's accusation is the same idiom as the dining room (WP-063) and the
   arenas (WP-069): the suspect GIVES, and when idle the exit handler takes the
   gang to `ROOM_Suspect_Chooser` with `Global.Thank_You_`.

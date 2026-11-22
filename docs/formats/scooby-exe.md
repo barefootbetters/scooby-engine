@@ -3180,7 +3180,7 @@ smallest classes.
 | `0x4098B0` | Wrong-item lines: an echo room (`+0x29`) takes the `_Echo_` variants, Fred stays silent |
 
 This continues the Upstairs group; the wizard's bedroom and the veranda follow in
-WP-081, and the WFR (the Wizard's Rule Room, the group's largest class) in WP-082.
+WP-081, and the WFR (the Wizard's Rule Room, the group's largest class) in WP-083.
 
 ##### Phantom's wizard's bedroom and veranda (WP-081)
 
@@ -3195,7 +3195,7 @@ room's accusation (`meetSuspect` `0x40A8B0`, the clue at game vtable `+0x44`,
 `act("GIVES")` `0x4061F0`, the `ROOM_Suspect_Chooser` / `Global.Thank_You_` exit),
 the post office's `arrive`, and the below-balcony door's save/load. Engine ==
 reference passes line for line. The WFR (`ROOM_P30_WFR`), the group's largest
-class, is split off to WP-082.
+class, is split off to WP-083.
 
 **The bedroom** (`ROOM_P24_Wizards_Bedroom`, `0x42CCF0`, vtable `0x45F444`, music
 `1`, no opening) overrides tick, reset, enter and claim; it keeps no save state of
@@ -3244,7 +3244,7 @@ overrides reset, event, save, load and arrive.
 | `0x418650`/`0x4186B0` | Veranda save / load: `Entrances`, `WellClicks` |
 | `0x433360` / `0x433460` | String compare: true on equal / true on not equal (the WP-077 polarity trap) |
 
-Only the WFR (WP-082), the group's largest class, now remains.
+Only the WFR (WP-083), the group's largest class, now remains.
 
 ##### Movies (WP-022)
 
