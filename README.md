@@ -69,6 +69,10 @@ CD may no longer have a computer that can read it: they have to find another
 machine or an external optical drive, preserve the disc data, and only then
 face the obsolete Windows runtime. The optical media itself has become part of
 the problem — owning the CD is no longer the same as having usable game data.
+And the runtime obsolescence isn't guesswork: the original `Scooby.exe` is a
+DirectX 7 program whose own error strings name DirectDraw, DirectSound, and
+CD-ROM access as hard requirements ([Scooby.exe format spec](docs/formats/scooby-exe.md))
+— the exact interfaces that bound the game to a PC environment now gone.
 
 Lose the CD and it gets worse: there is no current authorized digital edition
 to simply buy again. A used copy can replace the physical disc, but it
@@ -83,6 +87,8 @@ play through ScummVM with no original runtime and nothing extra to install, on
 Windows, macOS, Linux, the Raspberry Pi, and TV boxes. Authorized digital
 distribution would fix the purchase problem. Both are needed to restore what
 players actually want: **Buy → Play.**
+
+**The technical path can be repaired. The retail path is still broken.**
 
 ## The larger goal
 
