@@ -73,8 +73,8 @@ truthful co-authored history intact.
   touches no shared ScummVM file.
 - **Staying current with upstream.** We periodically merge
   `scummvm/scummvm` master into `scooby-engine`. Because the engine is
-  self-contained, these merges are conflict-free; a fork-sync helper automates
-  the fetch-merge-build-push cycle with a compile check.
+  self-contained, these merges are conflict-free; `tools/Update-Fork.ps1`
+  automates the fetch-merge-build-push cycle with a compile check.
 - **Engine status.** *Showdown* is declared `ADGF_TESTING`; *Phantom* is still
   `ADGF_UNSTABLE` while its room port finishes. The mechanical ScummVM
   integration (the ten acceptance gates) is met — see
