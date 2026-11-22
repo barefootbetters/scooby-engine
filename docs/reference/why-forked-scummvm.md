@@ -89,3 +89,5 @@ truthful co-authored history intact.
 - [ScummVM Integration Contract §12 — Upstream PR checklist](../02-SCUMMVM-INTEGRATION.md#12-upstream-pr-checklist)
   — the mechanical gates and the authorship clause that blocks a PR.
 - Upstream's [`AI-GUIDELINES.md`](https://github.com/scummvm/scummvm/blob/master/AI-GUIDELINES.md).
+- [Engine decision log](../ai/DECISIONS.md) — the fork decision reaffirmed
+  2026-11-21 after a collaborator argued for upstreaming.
