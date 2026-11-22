@@ -24,14 +24,15 @@ point-and-click adventure engine used by the Scooby-Doo CD-ROM games
 re-packed assets — and plays the Bink cutscenes through ScummVM's own
 `Video::BinkDecoder` (the disc's `binkw32.dll` is never loaded).
 
-Engine id: `scooby`. The engine is **in development** (`ADGF_UNSTABLE`); it is
-hidden unless unstable games are enabled.
+Engine id: `scooby`. *Showdown* is declared `ADGF_TESTING` (shown in the
+launcher, flagged as needing testing); *Phantom* remains `ADGF_UNSTABLE`
+(hidden unless unstable games are enabled) while its room port finishes.
 
 ## Supported titles
 
 | Title | Game id | Generation | Status |
 |---|---|---|---|
-| Scooby-Doo! Showdown in Ghost Town | `showdown` | Gen 1 | In development — all rooms ported; **a suspect/clue-board soft-lock currently blocks completion** (WP-079, fix pending) |
+| Scooby-Doo! Showdown in Ghost Town | `showdown` | Gen 1 | **Testing** (`ADGF_TESTING`) — all rooms ported; the suspect/clue-board soft-lock is **fixed** (WP-080, fork PR #5 merged 2026-11-21); full release-verification playthrough on the fixed build in progress |
 | Scooby-Doo! Phantom of the Knight | `phantomknight` | Gen 1 | In development — room port in progress |
 | Scooby-Doo! Jinx at the Sphinx | `jinxsphinx` | Gen 2 | Detected only — unsupported (MMFW archive reader not implemented) |
 | Scooby-Doo! Case File #1: The Glowing Bug Man | `casefile1` | Gen 3 | Detected only — unsupported |
@@ -75,25 +76,29 @@ thumbnails, dates, play time). The engine declares
 `kSupportsLoadingDuringRuntime` and `kSupportsSavingDuringRuntime` (saving
 pauses while a scene or an exit transition is playing).
 
-> Note: the save/load cycle has not yet been release-verified — WP-079's live
-> playthrough has not been run (the suspect-board soft-lock, found by source
-> audit, blocks a full run until it is fixed). Save-state support is declared by
-> the MetaEngine as above but not yet exercised end-to-end.
+> Note: the save/load cycle is being release-verified on the fixed build
+> (WP-082). The suspect-board soft-lock that previously blocked a full run is
+> resolved (WP-080). Save-state support is declared by the MetaEngine as above;
+> end-to-end save→quit→reload verification is folded into the fixed-build
+> playthrough.
 
 ## Known limitations
 
-- **Suspect/clue board soft-lock (open blocker).** Opening the suspects-and-clues
-  board from the toolbar magnifying glass currently traps the player: its back
-  exit does not respond and there is no keyboard/mouse escape. Found by source
-  audit during the *Showdown* closeout (WP-079); fix pending (WP-080). Until it
-  lands, *Showdown* is not completable once the board is opened.
 - **Gen 1 only.** Gen 2 (Jinx, Activity Challenge) and Gen 3 (Case File #1)
   are detected but unsupported.
 - **No horizontal scrolling yet.** Rooms wider than the 640×480 screen
   (e.g. 1,920-pixel rooms) currently show only their left 640 pixels.
-- **In development.** The engine is `ADGF_UNSTABLE`; expect rough edges until
-  it is promoted to `ADGF_TESTING` and a full playthrough is release-verified.
+- **Testing status.** *Showdown* is `ADGF_TESTING` — believed complete and
+  playable start to finish (the suspect/clue-board soft-lock that previously
+  trapped the player was fixed in WP-080), but still being release-verified by
+  full playthrough; expect rough edges. *Phantom* is `ADGF_UNSTABLE` (room port
+  in progress).
 - **English Windows discs** are what the detection entries cover.
+
+> *Previously-blocking defect, now resolved:* opening the suspects-and-clues
+> board from the toolbar magnifier used to trap the player (its back exit was
+> never wired to a click). Fixed in WP-080 (fork PR #5, merged 2026-11-21): the
+> board's back exit now dispatches to `leaveBy()`.
 
 ## Detection — per-variant MD5s
 
