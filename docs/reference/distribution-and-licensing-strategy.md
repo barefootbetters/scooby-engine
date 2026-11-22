@@ -11,6 +11,51 @@ title: "Strategy note — distribution & compatibility layer"
 > last section). **Date:** 2026-11-22. **Author:** Jeff (with AI assistance; a
 > draft for his judgment, not a commitment).
 
+## The problem, in one picture
+
+```mermaid
+flowchart TD
+    P["Player sees an old title<br/>and is ready to pay"]
+    P --> Q{"Is there an authorized<br/>storefront to buy it?"}
+
+    Q -->|"No — out of print"| K["💿 Used disc (eBay, garage sale)<br/>— the game may still be accessible"]
+    Q -->|"No — out of print"| A["🗄️ Internet Archive<br/>disc image"]
+
+    K -.-> M["❌ $0 FROM THIS SALE<br/>to the game's rights holders"]
+    A -.-> M
+
+    subgraph FIX["What's missing — the authorized commercial link"]
+      B["🛒 See it → Want it → Buy it →<br/>Download it → Play it"]
+      B --> R["✅ A new sale reaches the current<br/>rights holder (and funds the studio)"]
+    end
+
+    Q -.->|"today: doesn't exist"| B
+
+    classDef bad fill:#ffe0ec,stroke:#cc2266,color:#660022;
+    classDef good fill:#e0f7e9,stroke:#22aa66,color:#064023;
+    class M bad;
+    class B,R good;
+```
+
+**The customer is not refusing to buy the game. The customer _cannot_ buy the
+game.**
+
+For an out-of-print title such as *Scooby-Doo! Showdown in Ghost Town*, a player
+may want the game, have money ready to spend, and still lack a current authorized
+digital storefront where a new copy can be purchased.
+
+Preservation can keep a game accessible. Compatibility software can make it run on
+modern hardware. What is missing is the **authorized commercial link** that lets
+the customer pay for the game and immediately play it.
+
+**Vision: See it → Want it → Buy it → Download it → Play it.**
+
+> **A note on precision.** The diagram says "$0 from this sale to the game's
+> rights holders," not "impossible to pay anyone." The original developer may no
+> longer be the entity entitled to sales revenue, while a current rights holder or
+> licensee could be. What's broken is specifically the **normal new-sale
+> transaction** — not the existence of a payee.
+
 ## The reframe
 
 The product may not be a retro "game console." It is the missing **distribution +
@@ -23,7 +68,7 @@ find a legitimate copy → determine Windows compatibility → obtain a disc/ima
 install → troubleshoot old dependencies → configure a compatibility layer →
 launch. **That gap is the opportunity.**
 
-Design goal: **See it → Want it → Buy it → Play it** — without the customer ever
+Design goal: **See it → Want it → Buy it → Download it → Play it** — without the customer ever
 needing to understand ScummVM, ISO mounting, Windows versions, Raspberry Pi
 setup, or engine internals.
 
