@@ -28,6 +28,10 @@ Engine id: `scooby`. *Showdown* is declared `ADGF_TESTING` (shown in the
 launcher, flagged as needing testing); *Phantom* remains `ADGF_UNSTABLE`
 (hidden unless unstable games are enabled) while its room port finishes.
 
+To see how the rooms connect, browse the
+[screen map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map)
+— the room navigation map, built from the engine's real exits.
+
 ## Supported titles
 
 | Title | Game id | Generation | Status |
