@@ -1,0 +1,78 @@
+%% Scooby engine — screen / room navigation map for *Showdown in Ghost Town*.
+%% Canonical source; the GitHub wiki Screenshots page embeds a copy in a
+%% ```mermaid fenced block. Edges are the engine's real exits, extracted from
+%% the engine itself (debugflags=script, debuglevel=3: checkAllExits / the menu
+%% and chase checks), fork scooby-engine @ d1a26e7. Node ids are the room's
+%% canonical ROOM_P** number; labels are the human room name.
+flowchart TD
+    %% ---------- Front end ----------
+    LAUNCH([ScummVM launcher]):::fe --> TITLE[Title Screen]:::fe
+    TITLE -->|intro plays| SIGNIN[Sign In]:::fe
+    SIGNIN -->|play| DIFF[Difficulty]:::fe
+    DIFF -->|Spooky / Spookier / Spooktacular| P01
+    MENU[Main Menu]:::fe -->|New Mystery| SIGNIN
+    MENU -->|Play = resume| P01
+    MENU -->|Options| OPT[Options]:::fe
+    OPT -->|exit| MENU
+    MENU -->|Quit| QUIT([Quit]):::fe
+    CREDITS[Credits]:::fe -->|end of game| SIGNIN
+
+    %% ---------- Ghost Town ----------
+    subgraph TOWN[Ghost Town]
+        direction TB
+        P01[Town Center]
+
+        %% Sheriff / Boot Hill arm
+        P01 <--> P03[Street 1]
+        P03 <--> P02[Sheriff's Office]
+        P02 <--> P07[Jail]
+        P03 <--> P08[Post Office]
+        P08 <--> P18[Tunnel - lit]
+        P14[Tunnel - dark] --> P08
+        P18 <--> P22[Boot Hill 2]
+        P22 <--> P21[Boot Hill 1]
+        P21 <--> P23[Boot Hill 3]
+
+        %% Railroad / store arm
+        P01 <--> P04[Street 2]
+        P04 <--> P09[Railroad Station]
+        P04 <--> P10[Front of General Store]
+
+        %% Saloon / Bank arm
+        P01 <--> P11[Street 3]
+        P11 <--> P12[Saloon]
+        P12 <--> P05[Stage]
+        P05 <--> P06[Stage Trapdoor]
+        P12 <--> P17[Hotel Hall]
+        P17 <--> P20[Hotel Room]
+        P12 --> P32[Pie Noon - minigame]
+        P11 <--> P13[Bank]
+        P13 <--> P16[Bank Vault]
+        P16 --> SAFE[Open Safe]
+        P19[Back Alley] <--> P16
+        P19 --> P15[General Store Interior]
+    end
+
+    %% Accusation screen, reached from the case rooms
+    P01 -. accuse .-> SUSP[Suspect Chooser]:::fe
+    SUSP -. back .-> P01
+
+    %% ---------- The chase ----------
+    P09 ==>|the chase begins| C1
+
+    subgraph CHASE["The chase — a branching mine-cart ride (B rooms are track switches)"]
+        direction LR
+        C1[C1]
+        B1[B1] -. switch .-> C4[C4 - oil can]
+        B3[B3 - Dig Site fork] -. switch .-> C2[C2]
+        B3 --> B2[B2]
+        B2 <--> B2C[B2 close-up]
+        B2 --> C3[C3]
+        B6[B6 - fork to C4] -. switch .-> C5[C5]
+        B6 --> B4[B4]
+        B4 -. switch .-> C6[C6]
+        B5[B5 - ranch] -. switch .-> C6
+        B5 <--> CORRAL[Horseshoe Corral]
+    end
+
+    classDef fe fill:#2b2b40,stroke:#8a8ab0,color:#eaeaf5;

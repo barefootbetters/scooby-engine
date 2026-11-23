@@ -11,6 +11,137 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-22 — Engine namespace rename: `scooby` → `terraglyph`
+
+**Context.** The engine's *prose* name has been "the TerraGlyph engine" since the
+2026-06 lineage finding ([VISION](../01-VISION.md)), but the ScummVM engine still
+ships under the identifier `scooby`: `engines/scooby/`, `namespace Scooby`, the
+plugin symbol `SCOOBY` / `ENABLE_SCOOBY`, `add_engine scooby`, and `scooby`-prefixed
+detection game IDs. Mony ([2026-11-22 email](../work-packets/WP-011-casefile-decompdecomp.md#reply-rename-to-terraglyph-decode-review-landed-2026-11-22))
+proposed renaming the engine `scooby` → `terraglyph`, noting a WIP engine already
+holds the `scooby` name upstream.
+
+**What was checked (Observed, 2026-11-22, via `gh`).**
+
+- Upstream **ScummVM PR [#8063](https://github.com/scummvm/scummvm/pull/8063) —
+  "SCOOBY: New engine for Scooby-Doo Mystery"** is open: a *different* game (the
+  1995 Acclaim platformer) claiming the `scooby` engine identifier upstream. Our
+  `scooby` collides with it in name on any future upstream path and in community /
+  search terms now.
+- **`terraglyph` is free upstream** — no `engines/terraglyph` on `scummvm/scummvm`
+  master, and no open upstream PR mentions it.
+
+**Decision (Jeff).** **Rename the ScummVM engine identity `scooby` → `terraglyph`**
+in the fork — directory, `namespace`, plugin / `ENABLE_` symbol, `add_engine` name,
+and detection game IDs — and update the forward-facing docs, public site and wiki
+to name the `terraglyph` engine. The name is not a Scooby coincidence: the engine
+spans the whole TerraGlyph Gen-1 catalog (Showdown, Phantom, 102 Dalmatians, Clue
+Jr., Little Mermaid II, …), so `terraglyph` is the accurate family name — and the
+one the project's prose already uses.
+
+**Scope boundary.**
+
+- **In:** the fork's engine identity + build / detection hooks; a clean rebuild and
+  a green gate walk to prove the rename; the forward-facing docs (VISION,
+  SCUMMVM-INTEGRATION, download-and-install, the strategy note, README, WORK_INDEX,
+  the ScummVM-wiki page) and the GitHub wiki.
+- **Out (for now):** the GitHub **repo name `scooby-engine`** and the Pages URL /
+  DNS (`github.barefootbetters.com/scooby-engine`). Those are our own namespace, not
+  in collision with upstream, and renaming them is a separate, higher-risk move Jeff
+  has not called for. Historical records (pre-flight logs, completed-WP session
+  logs) are left as the record of what the directory was called at the time; the
+  rename is noted where it load-bears, not retrofitted across the archive.
+
+**Tracked as:** a fork rename PR against `barefootbetters/scummvm` (link on open),
+with the docs / site / wiki following in `scooby-engine`. **No upstream action** —
+the [fork decision](../reference/why-forked-scummvm.md) is unchanged; this renames
+the engine only within the fork.
+
+## 2026-11-22 — Merged-PR survey on the precedent question; fork decision unchanged
+
+**Context.** Following up the [2026-11-21 reaffirmation](#2026-11-21--upstream-submission-reconsidered-after-collaborator-pushback-fork-decision-reaffirmed)
+(which asked Mony for specifics on accepted engines with genuinely similar
+provenance), Mony replied that recent ScummVM merges — "including ones for new
+engines" — explicitly mention AI assistance, that the rules are "really more
+vague suggestions than anything else," and that wording and framing matter. This
+is a checkable claim, so it was checked rather than taken on his word or on our
+prior reading.
+
+**Observed** (surveyed 2026-11-22 via `gh` against `scummvm/scummvm` merged PRs):
+
+- **AI _assistance_, disclosed, does merge** — Mony is right on that narrow
+  point. PR [#8084](https://github.com/scummvm/scummvm/pull/8084) (nickknissen,
+  DIRECTOR fixes, merged 2026-11-18) states plainly: *"I used Claude and Codex to
+  investigate the causes … write the patches and prepare the commits. I have
+  reviewed every change and tested it."* So AI disclosure is not disqualifying.
+  But it is a **bug-fix to an existing engine by a contributor who stands as
+  sole author** — the permitted lane — and the disclosure is prose in the PR
+  body; no `Co-Authored-By:` AI trailer in the commits.
+- **The recently merged _new engines_ are human-authored, not AI.** SNATCHER
+  ([#8029](https://github.com/scummvm/scummvm/pull/8029), athrxx, merged
+  2026-11-15) advertises *"This engine is completely AI free."* HAROLD/BCB
+  ([#7989](https://github.com/scummvm/scummvm/pull/7989), Scorpeg, merged
+  2026-10-22) is a human decompilation with no AI mention. Neither carries AI
+  co-author trailers.
+- **No surveyed merge pairs a _new engine_ with _AI authorship_** — our case.
+  The guidelines' distinction (AI-assisted work by a member who authors, vs. an
+  engine authored by agents) is holding in practice, not dissolving.
+
+**Bearing on the decision.** This **confirms Hold at fork.** The permissive
+precedent is for assisted authorship — a lane this engine is not in; the
+comparable precedent (an AI-_authored_ new engine, disclosed and accepted) still
+does not appear. "Framing matters" cuts the other way here: framing an
+agent-authored engine as member-assisted authorship is exactly the "appearing
+more capable than you are" misrepresentation the ban clause targets. The decision
+is unchanged and the door stays open on the same terms — a specific merged PR
+showing an AI-authored new engine would still reopen it.
+
+**No outward action taken.** The survey was read-only; nothing posted upstream.
+
+## 2026-11-21 — Upstream submission reconsidered after collaborator pushback; fork decision reaffirmed
+
+**Context.** The same day the fork decision was recorded ([why the engine is a
+ScummVM fork](../reference/why-forked-scummvm.md); options in
+[WP-082's decision brief](../reference/upstream-submission-decision-brief.md)),
+collaborator Simeon Armenchev (monyarm) — a ScummVM-community contributor with
+his own fork, NovelVM — argued by email for reconsidering upstream submission:
+that the engine's clean-room development (docs and observations written, engine
+code written from those) is materially different from the full-AI-decomp engines
+ScummVM's `AI-GUIDELINES.md` rejects; that the "swarm of agents" line targets
+full decomps rather than a clean-room engine; that some engines with similar
+development have reportedly been accepted; and that a single-engine fork hurts
+discoverability and maintenance. His concrete proposal was Option B from the
+brief — ask the ScummVM Discord directly, disclosed.
+
+**What was weighed.** His clean-room point is correct, and it is why the engine's
+code is legally clean — but it addresses the wrong bar. The blocker isn't the
+clean-room / "swarm" question, nor the CI author-check bot (trivially evaded by
+squashing the `Co-Authored-By: Claude` trailers); it is `AI-GUIDELINES.md`'s
+**authorship and maintainership** requirement: code must not be AI-authored, a
+human must stand as sole author, and the maintainer must be able to navigate and
+fix the engine without AI. The engine's honest history — dozens of AI work-packet
+sessions authoring it — does not clear that bar, and squashing the trailers to
+pass the bot while not volunteering how it was built is the "appearing more
+capable than you are" move the guidelines threaten a ban for. His adoption point
+(fork = poorer discovery and maintenance) is valid and is already recorded as the
+Option A trade-off.
+
+**Decision (Jeff).** **Hold at fork (Option A).** The decision stands as recorded
+in [why-forked-scummvm.md](../reference/why-forked-scummvm.md): the fork is the
+honest home for an AI-authored preservation engine, with the full co-authored
+history intact — no trailer-stripped PR, no misrepresentation. The door stays
+open: the mechanical prep (gates green, clean build on current master, wiki page,
+MD5 records) is ready should a human ever do the hand re-authorship and choose to
+maintain it on the ScummVM team. **Option B (engage the ScummVM team directly,
+disclosed) is declined for now, not foreclosed** — it remains the first step if
+upstream inclusion later becomes a goal. Mony was asked (by reply) for specifics
+on any accepted engines with genuinely similar (AI-authored, disclosed)
+provenance; concrete precedent is the input that would reopen the question.
+
+**No outward action taken.** Nothing was posted to ScummVM Discord, the forum or
+the mailing list; no upstream PR opened; no fork history rewritten. The reply to
+Mony is Jeff's to send.
+
 ## 2026-11-21 — WP-079 closeout evidence was fabricated; corrected and re-grounded
 
 **Context.** [WP-079](../work-packets/WP-079-showdown-closeout.md) (Showdown

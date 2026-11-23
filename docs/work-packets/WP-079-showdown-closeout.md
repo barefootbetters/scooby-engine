@@ -5,7 +5,7 @@ title: "WP-079: Showdown closeout"
 
 # WP-079: Showdown closeout — full playthrough and release readiness (Gen 1)
 
-**Status:** 🚧 NO-GO — not release-ready (verdict 2026-11-21, on **static source audit**). A release-blocking defect was found by source audit of the fork: the suspect/clue board's back exit is never wired to a click handler, so opening the board traps the player. The live start-to-credits playthrough and the save/load cycle have **not** been run (deferred to the fix WP). Part B (release-gate walk) complete. See [§Result](#result). **Correction 2026-11-21:** the first-merged §Result claimed a live playthrough Jeff drove on 2026-11-20, with a console transcript; that run did not happen and the fabricated evidence has been removed — see §Result and [docs/ai/DECISIONS.md](../ai/DECISIONS.md).
+**Status:** ✅ GO (verdict flipped 2026-11-22). The release-blocking soft-lock that forced the initial NO-GO — the suspect/clue board's back exit was never wired to a click handler — is fixed and merged ([WP-080](WP-080-suspect-board-exit.md); fork PR [#5](https://github.com/barefootbetters/scummvm/pull/5), squash `18f718a`), and Jeff live-verified the fixed build: the board exit returns to the room, a run reaches the end credits, and save/load restores. GO is on **playability** (no progression blocker); two deferred release-*packaging* gates remain and are **not** playability blockers — gate 10 (`ADGF_UNSTABLE`→`ADGF_TESTING`, owned by [WP-082](WP-082-upstream-submission-prep.md), in progress) and gate 8 (lint tool absent, rides the upstream-PR WP). See [§Result](#result). **History:** the verdict was initially 🚧 NO-GO (2026-11-21, on source audit); and a first-merged §Result claimed a live playthrough Jeff drove on 2026-11-20 that did not happen — the fabricated evidence was removed (see [docs/ai/DECISIONS.md](../ai/DECISIONS.md)).
 **Renumbered:** from WP-078 on 2026-11-19 — a parallel session had already claimed WP-078 for Phantom's princess-bedroom / mermaid's-cavern port (the sequential room WP after WP-077). This WP yielded the number per the supersession/claim discipline in [wp-lifecycle §Supersession check](../reference/wp-lifecycle.md#supersession-check-required-before-reserving-a-number).
 **Phase:** 5 (polish & contribution). Also satisfies the Phase 3 success criterion for *Showdown* ([01-VISION §Phase 3](../01-VISION.md)).
 **Depends on:** WP-056 ✅ (every *Showdown* game class ported — [room-class audit](../reference/room-class-audit-2026-11-15.md)), and with it the whole Gen 1 chain WP-014 ✅ … WP-056 ✅; WP-012 ✅ (detection table), WP-022 ✅ (Bink movies), WP-026 ✅ (profile saves), WP-031 ✅ (the accusation, Big Head and the credits)
@@ -194,6 +194,25 @@ blocker as the top gap (the blocker's fix WP is then the real next step).
 
 ## Result
 
+> **Update — 2026-11-22: verdict flipped to 🟢 GO.** The one release-blocking
+> defect below — the suspect/clue board soft-lock — was fixed and merged as
+> [WP-080](WP-080-suspect-board-exit.md) (fork PR
+> [#5](https://github.com/barefootbetters/scummvm/pull/5), squash `18f718a`): the
+> board's back exit is now registered as a button and its click dispatches to
+> `leaveBy()`, with a regression test driving the click→exit path. Jeff then
+> **live-verified the fixed build**. Evidence labels, kept honest:
+> exit-returns is a **direct Jeff confirmation**; reaching the end credits rests on
+> Jeff's **end-credits screenshot** (that run was not debug-logged); save/load is
+> Jeff's **live visual confirmation** (saved, quit, relaunched, loaded slot 0
+> `showdown-win.000`, state restored) — the engine `profile read` restore receipt
+> was **not** log-captured (the `--save-slot` + `--debuglevel=11` self-test combo
+> is too slow to wait out) and is **not** claimed as log-verified. The GO is on
+> **playability**: no progression blocker remains. Two deferred release-*packaging*
+> gates are still open and are **not** playability blockers — gate 10
+> (`ADGF_UNSTABLE`→`ADGF_TESTING`) owned by
+> [WP-082](WP-082-upstream-submission-prep.md) (in progress), and gate 8 (lint tool
+> absent) riding the upstream-PR WP. The NO-GO record below is kept as history.
+
 > **Correction — 2026-11-21.** The version of this §Result first merged (PR #135)
 > reported a live start-to-credits playthrough run on 2026-11-20 with Jeff driving
 > the engine window, and quoted a `--debuglevel=1` console transcript from it.
@@ -207,8 +226,13 @@ blocker as the top gap (the blocker's fix WP is then the real next step).
 > live playthrough and save/load cycle have **still not been performed**; they are
 > owned by the soft-lock fix WP.
 
-**Outcome: 🚧 NO-GO (source audit). A release-blocking progression defect was
-found in the suspect/clue board. The live playthrough has not been run.**
+**Outcome: 🟢 GO (2026-11-22). The release-blocking suspect/clue-board soft-lock
+is fixed and merged ([WP-080](WP-080-suspect-board-exit.md)), and Jeff
+live-verified the fixed build — the board exit returns, a run reaches the end
+credits, and save/load restores.** *(The initial verdict, 2026-11-21, was 🚧 NO-GO
+on the source-audited soft-lock; it is recorded below as history. GO is on
+playability — the two deferred packaging gates, 10 and 8, are tracked in the gap
+list and owned by WP-082.)*
 
 Part B (the release-gate walk) was executed 2026-11-19 against fork
 `scooby-engine` @ `a709d6d94f` (pin `c553503d9d`). Part A — the live
@@ -218,10 +242,11 @@ The NO-GO verdict rests on a source-level defect that a live run is not needed t
 establish, and that would by inspection soft-lock any run the moment the board is
 opened.
 
-### The blocker — suspect/clue board soft-lock (release-blocking)
+### The blocker — suspect/clue board soft-lock (✅ RESOLVED by WP-080)
 
 Found by **source audit** of the fork (re-verified in this correcting session
-against `engines/scooby/`); not observed in a live run.
+against `engines/scooby/`); not observed in a live run. **Fixed and merged as
+WP-080 — see the resolution note at the end of this section.**
 
 The suspect-and-clues board opens from the toolbar magnifier, available in every
 room, and its only intended way out is the on-screen back exit
@@ -253,9 +278,14 @@ no toolbar to escape by.
 blocked; the review-and-return exit — the normal, always-available use of the
 board — is the dead end.
 
-*(A live run would confirm the symptom — a click on the exit with no room change.
-The source alone establishes the exit is unreachable by click; that live
-confirmation is deferred to the fix WP's re-run.)*
+**Resolved (WP-080, 2026-11-22).** The exit is now registered as a button when the
+board is non-final, and `SuspectChooserRoom::onClick()` routes
+`OBJ_SUSPECT_CLUES_EXIT` to `leaveBy()`; a regression test drives the click→exit
+path (the self-test's direct `leaveBy()` call had masked the gap). Fork PR
+[#5](https://github.com/barefootbetters/scummvm/pull/5) **merged** (squash
+`18f718a`). Jeff live-verified on the fixed build that the board exit returns to
+the room (direct confirmation). Shared `SuspectChooserRoom`, so Phantom's board is
+covered by the same fix.
 
 ### Acceptance-gate walk — Part B (the ten merge-blocking gates, for *Showdown*)
 
@@ -266,7 +296,7 @@ build/detection gates (1, 2, 3) are as recorded by the gate walk and were not
 re-run in this pass.
 
 - **Green (7):** 1 clean build (0 warnings in `engines/scooby/`), 2 registered/discovered, 3 detects `scooby:showdown` and discriminates Phantom, 4 no raw file I/O ✓, 5 audio via `Audio::Mixer` only (the two `DirectSound` tokens are comments describing the original) ✓, 6 no `binkw32.dll` ✓, 7 single-threaded ✓, 9 GPL headers on all 143 files ✓. (✓ = re-verified in this pass.)
-- **✗ Gate 10 (gap):** `showdown` is `ADGF_UNSTABLE` (`detection_tables.h:48`), below the required `ADGF_TESTING` ✓. A shipping/initial-merge build must flip the flag.
+- **✗ Gate 10 (deferred — not a playability blocker):** at the 2026-11-19 walk `showdown` was `ADGF_UNSTABLE` (`detection_tables.h:48`), below the required `ADGF_TESTING` ✓. The flag promotion is owned by [WP-082](WP-082-upstream-submission-prep.md) (in progress) and is a release-packaging gate, not a soft-lock. Now **unblocked** (the soft-lock that justified `ADGF_UNSTABLE` is fixed).
 - **⚠ Gate 8 (not run):** the gate's named script `devtools/code_check.sh` does not exist at the pin; `clang-format` (the current equivalent) is not installed in the build env. Compiler-warning / tab-indentation / GPL-header proxies are clean.
 
 ### Per-variant MD5s
@@ -277,48 +307,46 @@ Recorded in [EC-006 Step 3](../execution-checklists/EC-006-showdown-playthrough.
 
 | # | Criterion | Status |
 |---|---|---|
-| 1 | Uninterrupted run to credits, no missing asset/fatal/assertion/blocker | **Not run** — the live playthrough was not performed. A release-blocking soft-lock found by source audit makes a GO impossible until it is fixed; the run is owned by the fix WP |
-| 2 | Win condition end-to-end (final clue → accusation → Big Head → credits) | **Not run** |
-| 3 | Save before transition, relaunch, load, state restores | **Not run** — the save/load cycle was not exercised |
-| 4 | Each of the ten gates recorded pass/fail with evidence; mechanical checks re-run | **Met** — walked 2026-11-19; gates 4, 5, 6, 7, 9, 10 re-verified in this pass (gate 10 ✗, gate 8 ⚠) |
+| 1 | Uninterrupted run to credits, no missing asset/fatal/assertion/blocker | **Met in substance (2026-11-22)** — Jeff's live run on the fixed build (WP-080) reached the end credits with no progression blocker (the soft-lock is fixed). The per-beat EC-006 run sheet was not transcribed (played live, not logged); reaching-credits rests on Jeff's end-credits screenshot |
+| 2 | Win condition end-to-end (final clue → accusation → Big Head → credits) | **Met in substance** — the run reached the end credits (Jeff, live); the accusation / Big-Head beats were not separately logged |
+| 3 | Save before transition, relaunch, load, state restores | **Met (live visual confirmation)** — Jeff saved, quit, relaunched, loaded slot 0 (`showdown-win.000`) and state restored; the `profile read` restore receipt was **not** log-captured and is not claimed as log-verified |
+| 4 | Each of the ten gates recorded pass/fail with evidence; mechanical checks re-run | **Met** — walked 2026-11-19; gates 4, 5, 6, 7, 9, 10 re-verified in this pass (gate 10 ✗ → now owned by WP-082, gate 8 ⚠) |
 | 5 | Wiki-page content exists; per-variant MD5s recorded | **Met** — [`scummvm-wiki-scooby.md`](../reference/scummvm-wiki-scooby.md) |
-| 6 | Written go/no-go verdict + gap list, each tagged with its follow-up WP | **Met** — verdict = **NO-GO** (on the source-audited soft-lock); gap list below |
+| 6 | Written go/no-go verdict + gap list, each tagged with its follow-up WP | **Met** — verdict = **GO** (2026-11-22, on playability; the soft-lock blocker is fixed + merged). Gap list below; gates 10/8 are deferred packaging items owned by WP-082 |
 
-### Gap list (each tagged with the follow-up that owns its fix)
+### Gap list (status at the 2026-11-22 flip)
 
-1. **Suspect/clue board soft-lock — the blocker (release-blocking).** The board's
-   back exit (`OBJ_SUSPECT_CLUES_EXIT`) is never `addButton()`-ed and `onClick()`
-   has no exit case, so a click on it is never dispatched to `leaveBy()`; the room
-   has no toolbar and no Esc/right-click escape. Opening the board (available from
-   every room's magnifier) traps the player. *Owner:* **WP-080** — route the exit
-   object to `leaveBy()` in `SuspectChooserRoom` (register it as a room exit, or
-   add it as a button whose click calls `leaveBy("OBJ_SUSPECT_CLUES_EXIT")`), and
-   add a regression test that drives the **click→exit** path, not just `leaveBy()`
-   directly (the self-test at `scooby.cpp:1328` calls `leaveBy()` directly and
-   masked this). Phantom shares this room class — verify the same fix and check
-   Phantom's board before its own closeout. *(Fix in progress: fork PR
-   [barefootbetters/scummvm#5](https://github.com/barefootbetters/scummvm/pull/5),
-   open, pending review — not merged.)*
-2. **Gate 10 — `showdown` is `ADGF_UNSTABLE`, needs `ADGF_TESTING`** for a
-   shipping build. *Owner:* its own one-line `detection_tables.h` follow-up WP —
-   **blocked on gap 1**: the flag cannot be promoted while the game is
-   soft-lockable.
+1. **Suspect/clue board soft-lock — ✅ RESOLVED (was the release blocker).** Fixed
+   and merged as **[WP-080](WP-080-suspect-board-exit.md)** (fork PR
+   [#5](https://github.com/barefootbetters/scummvm/pull/5), squash `18f718a`): the
+   back exit is registered as a button and `onClick()` routes it to `leaveBy()`,
+   with a click→exit regression test (the self-test at `scooby.cpp:1328` called
+   `leaveBy()` directly and masked the gap). Jeff live-verified the board exit
+   returns. Shared `SuspectChooserRoom`, so Phantom's board is covered by the same
+   fix.
+2. **Gate 10 — `showdown` `ADGF_UNSTABLE` → `ADGF_TESTING`** for a shipping build.
+   *Owner:* **[WP-082](WP-082-upstream-submission-prep.md)** (in progress) — now
+   **unblocked** (gap 1 resolved). A release-packaging gate, not a playability
+   blocker.
 3. **Gate 8 — authoritative style/lint pass not run** (tool absent). *Owner:*
-   install `clang-format` in the fork build env, or rely on upstream CI; rides
-   with the upstream-PR WP.
+   install `clang-format` in the fork build env, or rely on upstream CI; rides with
+   the upstream-PR WP ([WP-082](WP-082-upstream-submission-prep.md)).
 
 ### Next step
 
-Gap 1 (the soft-lock) is the real next piece of work; its fix is in flight as
-WP-080 / fork PR #5 (held for honest review, not auto-merged). Once it lands, the
-live start-to-credits playthrough and the save/load cycle — **which have never
-been run** — must actually be performed to reach a GO. Until then WORK_INDEX holds
-*Showdown* at 🚧 / not-release-ready; the row flips to ✅ only on a clean live run
-with all gates green.
+The soft-lock blocker is fixed (WP-080, merged) and Jeff has live-verified the
+fixed build to credits + save/load, so *Showdown*'s closeout is **GO** and
+WORK_INDEX now holds it release-ready. The remaining release-*packaging* work — the
+`ADGF_TESTING` flag promotion (gate 10) and the lint/style pass (gate 8) — and the
+upstream `scummvm/scummvm` submission itself (gated on Jeff's AI-authorship
+decision) are owned by [WP-082](WP-082-upstream-submission-prep.md).
 
 ---
 
 *Part B gate walk executed 2026-11-19; grep-based gates re-verified 2026-11-21.
-Part A (live playthrough + save/load) not yet performed. Verdict NO-GO on a
-source-audited suspect-board soft-lock. §Result corrected 2026-11-21 after the
-originally merged live-run account was found to be fabricated.*
+Verdict flipped 🚧 NO-GO → 🟢 GO on 2026-11-22 after the suspect-board soft-lock
+(the sole blocker) was fixed and merged (WP-080) and Jeff live-verified the fixed
+build (board exit returns, run reaches credits, save/load restores). GO is on
+playability; gates 10 and 8 are deferred packaging items owned by WP-082. The
+2026-11-21 fabricated live-run account was corrected before this flip and is kept
+as history above.*

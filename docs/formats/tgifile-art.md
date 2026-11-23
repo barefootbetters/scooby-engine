@@ -5,7 +5,7 @@ title: "Format Spec: TGIFILE.ART"
 
 # Format Spec: `TGIFILE.ART`
 
-**Status:** Payload decoded (WP-002, 2026-11-13) and cross-checked against the loader, sequence player and renderer in `Scooby.exe` (WP-001, 2026-11-13). Every image in the file decodes: 453 object resources and 69 room backgrounds, 9,111 cels. The header descriptors, the full name table, sequence records, mask roles and room names are now resolved. Open: room-block word `0x10`, the placement field at `+0x88`, and a few never-populated room tables. *Phantom of the Knight*'s file passes the same checks (WP-006, 2026-11-13).  
+**Status:** Payload decoded (WP-002, 2026-11-13) and cross-checked against the loader, sequence player and renderer in `Scooby.exe` (WP-001, 2026-11-13). Every image in the file decodes: 453 object resources and 69 room backgrounds, 9,111 cels. The header descriptors, the full name table, sequence records, mask roles and room names are now resolved. The last open room-block items — word `0x10`, the placement field at `+0x88`, and the never-populated `0xB0`/`0xB8` tables — are closed: an independent decompilation trace of the room loader (`0x43B080`) and placement walker (`0x435DC0`) by M. Armenchev (2026-11-22) corroborates the traced-reader results here and shows the placement relocation routine is a no-op (see [Scene blocks](#scene-blocks)). *Phantom of the Knight*'s file passes the same checks (WP-006, 2026-11-13).  
 **Engine generation:** **Gen 1** (Showdown 2000, Phantom 2001). Phantom verified by WP-006 (2026-11-13): the same layout, every check in `--verify`, and the same loader and renderer code. See [Cross-title verification](#cross-title-verification-2026-06).  
 **Source disc:** *Scooby-Doo! Showdown in Ghost Town* (2000, The Learning Company)  
 **Sample file:** `scooby\TGIFILE.ART` on the Showdown disc  
@@ -285,7 +285,7 @@ Offset  Size  Type      Field
 0x0A    2     uint16LE  scene ID: 0x9000 + 0x10 × index on every block
 0x0C    2     uint16LE  width (640; 1920 on scenes 19 and 51)
 0x0E    2     uint16LE  height (480 on every block)
-0x10    2     uint16LE  2 on 59 blocks, 1 on 10 (meaning unknown; no reader found)
+0x10    2     uint16LE  2 on 59 blocks, 1 on 10 — authoring-tool data, no reader (the relocator starts at +0x80; see below)
 0x80    4 × 10          layer slots: offset of a frame record, or 0
 0xA8    4     uint32LE  cel count (1 on every block)
 0xAC    4     uint32LE  offset of the cel table (u32 offsets)
@@ -305,6 +305,19 @@ The room loader (`0x43B080`) converts every offset above to a pointer,
 including each cel's mask offsets, so all offsets are relative to the block.
 The words at `0x00`–`0x7F` other than those listed are zero on every block.
 
+**Relocation passes (external trace, M. Armenchev, 2026-11-22).** An
+independent decompilation of the loader and the placement walker
+(`0x435DC0`) — corroborating the traced-reader results on this page, though
+derived from a separate disassembly rather than re-run through
+`probe_art.py` — enumerates the fix-up passes and confirms what the engine
+touches. Relocation begins at `+0x80`; everything in a scene block is a
+block-relative offset fixed up in place. The passes are the 10 layer slots
+(`+0x80`), the cel table (`+0xA8/+0xAC`), the `+0xB0/+0xB4` table, the
+`+0xB8/+0xBC` object table, and the placement list (`+0xC0/+0xC4`). The
+engine only ever dereferences `+0x80`, `+0xC0` and `+0xC4`. So **word
+`+0x10` has no reader**: it sits below where relocation starts and no traced
+code dereferences it — authoring-tool data, not consulted at runtime.
+
 - **Layers.** Each non-zero slot at `0x80` is a frame record (the same
   layout as table 1 of an object resource). `0x435DC0` creates one sprite
   per used slot, at depth `-110000 + 10000 × slot`, so layer 0 is the
@@ -317,7 +330,10 @@ The words at `0x00`–`0x7F` other than those listed are zero on every block.
   unless the byte at `+9` is set. **`0xB8` table:** each entry is relocated
   like a whole object resource (`0x43B6C0`), so a room can embed its own
   objects. Both are empty in every room of Showdown and of Phantom
-  (WP-006), so no shipped Gen 1 data shows their payload.
+  (WP-006), so no shipped Gen 1 data shows their payload. The external
+  trace (M. Armenchev, 2026-11-22) confirms both passes have real
+  relocation code, not a stub — so their emptiness is a property of the
+  shipped data, not an unfinished decode on our side.
 
 A placement record is 148 bytes:
 
@@ -339,6 +355,12 @@ a per-object constant: it is the same everywhere an object is placed, it
 differs between all 300 placed objects, and it runs from 4 to 456. It is
 not the OBJ id (Daphne's is 353). No traced handler reads it.
 (WP-002 read the three `u16` values from `+0x84` as x, y and depth.)
+
+The external trace (M. Armenchev, 2026-11-22) strengthens this from "no
+reader found" to a structural fact: the loader's per-placement relocation
+routine (`0x43B940`) is `ret 4`, a no-op. So **no field in a placement
+record is ever fixed up as a pointer** — `+0x88` is confirmed opaque
+per-object data, not an unrelocated offset.
 
 The background cel starts at `0xD8 + 148 × count`. This rule holds on all 69
 blocks, since every background decodes and ends where its mask chunk begins.
@@ -825,21 +847,30 @@ records and ANIM ids, the room-block tables at `0x80`–`0xC4`, the roles of
 the two masks, the name-table "metadata" (not a field), and background
 transparency (opaque).
 
+Closed by the external relocation trace (M. Armenchev, 2026-11-22;
+corroborating but derived from a separate disassembly, not re-run through
+`probe_art.py` — see [Scene blocks](#scene-blocks)):
+
+- **Room-block word `0x10`** (2 on 59 blocks, 1 on 10; Phantom 2 on 43, 1
+  on 10). Relocation starts at `+0x80` and the engine never dereferences
+  `+0x10`. Authoring-tool data, not read at runtime.
+- **The placement field at `+0x88`.** The per-placement relocation routine
+  (`0x43B940`) is `ret 4`, a no-op, so no placement field is ever fixed up
+  as a pointer. `+0x88` is opaque per-object data, not an unrelocated
+  offset. (Still a unique per-object constant of unknown *meaning*, same
+  pattern in Phantom — but no longer an open structural question.)
+- **The room-block `0xB0` and `0xB8` tables.** Both relocation passes are
+  real code, not stubs, so our decode is complete. They are empty in every
+  Showdown and Phantom room, so their payload *format* stays unobservable —
+  a property of the shipped data, not of the decode.
+
 Still open:
 
-- Room-block word `0x10` (2 on 59 blocks, 1 on 10; Phantom 2 on 43, 1 on
-  10). No reader was found in the decompiled code.
-- The placement field at `+0x88`, a unique per-object constant that no
-  traced handler reads. Phantom has the same pattern. It is not the OBJ id,
-  the sorted-name rank or the `object.ini` section order in either title.
 - The `u16` at offset 6 of a sequence header (non-zero on 3 of 1,266) and
   the step's first `u32` (0 on every Showdown step, a likely x, y offset on
   two Phantom steps). The player does not read them.
 - Object table 2 (polygons). Its consumer was not traced. The per-step
   polygons are the ones the hit test uses.
-- The room-block `0xB0` and `0xB8` tables. The loader supports them, but
-  they are empty in every Showdown and Phantom room, so their payloads are
-  unknown.
 
 The decode itself has no open questions.
 
