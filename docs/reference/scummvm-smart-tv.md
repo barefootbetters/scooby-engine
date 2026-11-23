@@ -437,8 +437,8 @@ Samsung's old SamsungTV and Tizen ports were dropped, and there's no current
 native port. On Tizen and other TVs that only run web apps, the option is
 ScummVM's **web (Emscripten) version** of the standard app, opened in the TV's
 browser or packaged through the maker's developer mode. It runs demos and
-freeware, with weaker file access and speed than a native app, and no Scooby
-engine.
+freeware, with weaker file access and speed than a native app, and no
+TerraGlyph engine.
 
 ---
 
