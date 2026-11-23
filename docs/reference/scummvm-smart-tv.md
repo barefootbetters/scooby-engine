@@ -246,9 +246,27 @@ Apps → See all apps**.
 ### Add your game data
 
 - **USB stick (simplest):** a **FAT32 or exFAT** stick with the disc's
-  `\scooby\` folder (or the whole disc). In ScummVM, choose **Add Game…** and
-  pick that folder. Google TV has no file browser of its own, so ScummVM's own
-  folder picker on a USB stick is the easy route.
+  `\scooby\` folder (or every file on the disc). In ScummVM, choose **Add Game…**
+  and pick that folder. Google TV has no file browser of its own, so ScummVM's
+  own folder picker on a USB stick is the easy route.
+
+  **Copy the files, not a disc image.** The Scooby engine reads the game's files
+  from a plain folder. It can't open an `.iso` (or `.bin`/`.cue`) file, so a
+  disc image copied to the stick won't be detected. Unpack it first: on Windows,
+  double-click the `.iso` to mount it as a drive, then copy its `scooby` folder
+  to the stick. Check that the copy has the 42 `BK.NNN` cutscene files along with
+  the files on the [status page](scummvm-wiki-scooby.md#required-game-data-files).
+
+  **Stick size and FAT32.** FAT32 itself allows drives up to 2 TB, but
+  File Explorer's Format dialog offers FAT32 only on drives of 32 GB or less,
+  which is why bigger sticks usually come as exFAT. Windows 11 Insider builds
+  from August 2024 raised the command-line `format` limit to 2 TB, but not every
+  Windows install has that change. Where it doesn't, a free tool such as
+  [Rufus](https://rufus.ie/) formats a larger drive as FAT32. Any FAT32
+  file must be under 4 GB. *Showdown*'s largest file, `TGIFILE.ART`, is 145 MB
+  and the whole `\scooby\` folder is about 531 MB, so a 32 GB FAT32 stick is
+  plenty. For a larger drive, exFAT has no practical size limit. Google TV sets
+  generally read it, but that's not yet checked on the TCL 65Q77K.
 - **Over the network:** the standard ScummVM app can run a **local web server**
   (Global Options → Cloud → LAN) for uploading files from a browser. Our APK, as
   built on this page, doesn't include it (no SDL_net), so use a USB stick, or copy
