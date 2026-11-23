@@ -26,7 +26,12 @@ resourceDir = "ewiki/resources"
 theme = "ewiki"
 themesDir = "ewiki/themes"
 
-enableGitInfo = false
+# why: the header panel's "Last reviewed" line (layouts/partials/ewiki/metadata.html)
+# reads each page's last Git commit date and time from .Lastmod, so GitInfo is on.
+# The rendered time carries the commit's own zone, so two builds — and a UTC runner
+# vs. a local build — agree, and the determinism gate stays green. CI must check out
+# full history (ewiki.yml fetch-depth: 0) or .Lastmod falls back to the file mod time.
+enableGitInfo = true
 disableHugoGeneratorInject = true
 disableKinds = ["RSS", "sitemap", "taxonomy", "term", "robotsTXT"]
 pluralizeListTitles = false

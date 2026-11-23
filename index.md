@@ -5,9 +5,11 @@ title: Scooby-Doo ScummVM Engine
 
 # Scooby-Doo ScummVM Engine
 
+![The Mystery Inc. gang: Fred, Velma, Daphne, Shaggy, and Scooby-Doo](docs/assets/scooby-gang.png "width=320px")
+
 Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM adventure games](https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/) (2000–2003) in [ScummVM](https://www.scummvm.org/).
 
-**Phase 1 — Format Research** is underway. The goal is a contributed engine accepted into ScummVM mainline.
+***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** Format research (Phase 1) is complete, and the engine ships as a [ScummVM fork](docs/reference/why-forked-scummvm).
 
 ---
 
@@ -15,14 +17,14 @@ Reverse-engineering project to run [The Learning Company's *Scooby-Doo* CD-ROM a
 
 | Component | Status |
 |---|---|
-| `TGIFILE.ART` index | ✅ Confirmed — 69 groups, 453 assets, 8-byte `(start, end)` entries |
-| `TGIFILE.ART` payload | 🔬 F0-opcode pattern identified; decoder in progress |
-| Audio `.dat` header | ✅ Confirmed — 12-byte header; entry counts known |
-| Audio index + codec | 🔬 Index table location unresolved |
+| `TGIFILE.ART` index | ✅ Decoded ([WP-002](docs/formats/tgifile-art)) — 69 scene descriptors + 453 object descriptors |
+| `TGIFILE.ART` payload | ✅ Decoded ([WP-002](docs/formats/tgifile-art)) — RGB565 run-length "cels"; every image extracts |
+| Audio `.dat` header | ✅ Confirmed — shared 12-byte header; entry counts known |
+| Audio index + codec | ✅ Decoded ([WP-004](docs/formats/audio-archives)) — index at `index_offset`; uncompressed PCM |
 | `BK.XXX` Bink video | ✅ Handled by ScummVM's built-in decoder |
 | `object.ini` | ✅ Plain INI — 1,405 lines of game object definitions |
 | `Scooby.eng` | ✅ Plain-text string table |
-| `Scooby.exe` | ⏳ Ghidra analysis queued |
+| `Scooby.exe` | 🚧 Two tracks — focused Ghidra ([WP-001](docs/work-packets/WP-001-ghidra-session)) + decompdecomp on Case File #1 ([WP-011](docs/work-packets/WP-011-casefile-decompdecomp)) |
 | Case File #1 executable (decompdecomp) | 🚧 Access received; executable identity confirmed with the collaborator's copy; local build and capped trial next ([WP-011](docs/work-packets/WP-011-casefile-decompdecomp)) |
 
 Executable analysis now has two complementary tracks: focused Ghidra work on Showdown's `Scooby.exe`, and a decompdecomp-assisted, cooperative decompilation of the Case File #1 executable with an outside collaborator. Progress figures from that collaboration are collaborator-reported and preliminary until reproduced here. Case File #1's place in the lineage rests on string, RTTI and source-path evidence; Case File #2 runs a different engine (WP-005). All five titles' executables are Visual C++ 6.0 builds (corrected 2026-11-14 from an earlier Visual C++ 5.0 reading).
@@ -50,7 +52,7 @@ Executable analysis now has two complementary tracks: focused Ghidra work on Sho
 | *Scooby-Doo! Phantom of the Knight* | 2001 | TerraGlyph |
 | *Scooby-Doo! Jinx at the Sphinx* | 2001 | TerraGlyph |
 | *Scooby-Doo! Case File #1* | 2002 | Same lineage — Gen 3 (ImageBuilder Software, inherited TerraGlyph code) |
-| *Scooby-Doo! Case File #2* | 2003 | Gen 4 format break — engine-family verdict pending (WP-005) |
+| *Scooby-Doo! Case File #2* | 2003 | Different engine — excluded (shared with a *Powerpuff Girls* title; [WP-005](docs/work-packets/WP-005-engine-family-check)) |
 
 ---
 

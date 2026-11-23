@@ -36,7 +36,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # why: fetch-depth 0 (full history) so Hugo's GitInfo can resolve each
+      # page's last commit for the header's "Last reviewed" line (enableGitInfo
+      # in ewiki/hugo.toml). A shallow checkout has only HEAD, so .Lastmod would
+      # fall back to the runner's checkout time.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # why: private pages live in barefootbetters/scooby-engine-private and
       # render only on this Access-gated wiki (ewiki/hugo.toml, the _private
