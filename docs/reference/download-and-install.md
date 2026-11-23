@@ -69,8 +69,8 @@ To run it:
 Only *Showdown* is playable so far ([what you can play](#what-you-can-play)).
 Want to build it yourself, or run it on Linux, macOS or a Raspberry Pi? Use
 [Build from source](#build-from-source) below. On a **smart TV**, see
-[Installing ScummVM on a smart TV](scummvm-smart-tv.md) — including what plays
-directly on a Google TV set and why the Scooby titles still need the fork.
+[Installing ScummVM on a smart TV](scummvm-smart-tv.md), which builds our
+fork as an Android APK for a Google TV or other Android TV.
 
 ---
 
