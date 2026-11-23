@@ -13,14 +13,14 @@ the Scooby games:
 
 | Build | Where it comes from | Plays the Scooby games? |
 |---|---|---|
-| **Our build** | Compiled from our fork, [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch `scooby-engine`): standard ScummVM plus the Scooby engine | **Yes** |
-| **The standard ScummVM app** | Downloaded from [scummvm.org](https://www.scummvm.org/downloads/) or the Play Store | **No.** It plays the games ScummVM itself supports, but it has no Scooby engine |
+| **Our build** | Compiled from our fork, [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch `scooby-engine`): standard ScummVM plus the TerraGlyph engine | **Yes** |
+| **The standard ScummVM app** | Downloaded from [scummvm.org](https://www.scummvm.org/downloads/) or the Play Store | **No.** It plays the games ScummVM itself supports, but it has no TerraGlyph engine |
 
 We don't publish a ready-made TV download of our build yet (the only download is
 the [Windows preview](download-and-install.md#download-windows)). On a Google TV
 or other Android TV you **compile it yourself as an Android app (APK)** for the
 TV's processor, then install it on the TV. That's the main path on this page:
-[Build our APK](#build-our-apk-with-the-scooby-engine).
+[Build our APK](#build-our-apk-with-the-terraglyph-engine).
 
 > **You supply the games.** This project distributes no game data. You point
 > ScummVM at files you're entitled to: your own disc, or a legally obtained copy.
@@ -38,7 +38,7 @@ TV's processor, then install it on the TV. That's the main path on this page:
 
 | TV platform | How to get the Scooby games on it |
 |---|---|
-| **Google TV / Android TV / Fire TV** | [Build our APK](#build-our-apk-with-the-scooby-engine) for the TV's processor and sideload it |
+| **Google TV / Android TV / Fire TV** | [Build our APK](#build-our-apk-with-the-terraglyph-engine) for the TV's processor and sideload it |
 | **LG webOS** | No Scooby build yet. A community webOS package of the standard app exists ([webOS](#lg-webos)) |
 | **Samsung Tizen and other browser-only TVs** | No Scooby build. The standard app's web version runs some games ([other TVs](#samsung-tizen-and-other-tvs)) |
 
@@ -67,7 +67,7 @@ check before you build, connect with `adb` ([Prepare the TV](#prepare-the-tv)) a
 run `adb shell getprop ro.product.cpu.abilist`. If the list includes
 `arm64-v8a`, use the 64-bit build.
 
-### Build our APK (with the Scooby engine)
+### Build our APK (with the TerraGlyph engine)
 
 #### 1. Set up a build machine
 
@@ -152,13 +152,13 @@ git checkout scooby-engine
 #### 4. Configure
 
 ```bash
-./configure --host=android-arm64-v8a --disable-all-engines --enable-engine=scooby \
+./configure --host=android-arm64-v8a --disable-all-engines --enable-engine=terraglyph \
     --disable-debug --enable-release
 ```
 
 Swap the `--host` value for a [different processor](#pick-the-processor-type-abi).
-The Scooby engine is off by default, so `--enable-engine=scooby` is required.
-Check that `configure`'s engine summary lists Scooby before you build. Leaving
+The TerraGlyph engine is off by default, so `--enable-engine=terraglyph` is required.
+Check that `configure`'s engine summary lists TerraGlyph before you build. Leaving
 out `--disable-all-engines` builds every default engine as well, but see the
 next paragraph for why that doesn't get you a full ScummVM.
 
@@ -250,7 +250,7 @@ Apps → See all apps**.
   and pick that folder. Google TV has no file browser of its own, so ScummVM's
   own folder picker on a USB stick is the easy route.
 
-  **Copy the files, not a disc image.** The Scooby engine reads the game's files
+  **Copy the files, not a disc image.** The TerraGlyph engine reads the game's files
   from a plain folder. It can't open an `.iso` (or `.bin`/`.cue`) file, so a
   disc image copied to the stick won't be detected. Unpack it first: on Windows,
   double-click the `.iso` to mount it as a drive, then copy its `scooby` folder
@@ -272,7 +272,7 @@ Apps → See all apps**.
   built on this page, doesn't include it (no SDL_net). Use a USB stick, or
   [copy the game onto the TV](#keep-the-stick-in-or-copy-the-game-to-the-tv)
   with `adb push`.
-- The files the Scooby engine reads are listed on the
+- The files the TerraGlyph engine reads are listed on the
   [status page](scummvm-wiki-scooby.md#required-game-data-files).
 
 #### Keep the stick in, or copy the game to the TV
@@ -386,8 +386,8 @@ ScummVM 2026.3.0. Its author tested it on an LG OLED65B19LA (webOS 6.5.3). It
 installs through LG **Developer Mode**, **webOS Dev Manager**, `ares-install`, or
 the **webOS Homebrew Channel**. ScummVM itself doesn't need root.
 
-It has no Scooby engine. Because it's an SDL2 build, rebuilding it from our fork
-with `--enable-engine=scooby` should be possible in principle, but nobody has
+It has no TerraGlyph engine. Because it's an SDL2 build, rebuilding it from our fork
+with `--enable-engine=terraglyph` should be possible in principle, but nobody has
 tried it. Don't confuse this port with ScummVM's old
 [WebOS wiki page](https://wiki.scummvm.org/index.php/WebOS), which is the
 long-dead HP/Palm webOS.

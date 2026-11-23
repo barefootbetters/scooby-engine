@@ -1,9 +1,9 @@
 ---
 layout: default
-title: "Download and install the Scooby engine"
+title: "Download and install the TerraGlyph engine"
 ---
 
-# Download and install the Scooby engine
+# Download and install the TerraGlyph engine
 
 How to get our forked ScummVM — the one with the **Scooby** (TerraGlyph) engine —
 built and running on your computer, pointed at your own game discs.
@@ -119,7 +119,7 @@ SDL2 2.32.10, GNU Make 4.4.1).
    make -j$(nproc)
    ```
 
-   To build **only** the Scooby engine (fastest), use
+   To build **only** the TerraGlyph engine (fastest), use
    `./configure --disable-all-engines --enable-engine=terraglyph`.
 
 The build produces `scummvm.exe` in the build directory.
@@ -222,7 +222,7 @@ File build or gameplay issues on the fork's tracker:
 [barefootbetters/scummvm issues](https://github.com/barefootbetters/scummvm/issues).
 Include your OS, how you built it (platform + `configure` flags), the title and
 game id, and what you expected vs. what happened. Because this is a fork and not
-part of upstream ScummVM, do **not** file Scooby-engine issues on scummvm.org.
+part of upstream ScummVM, do **not** file TerraGlyph-engine issues on scummvm.org.
 
 ---
 
