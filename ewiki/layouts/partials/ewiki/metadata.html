@@ -13,9 +13,12 @@
   in hugo.toml), or from an explicit last_reviewed / last-reviewed front-matter
   value when a page sets one. The Git source needs the CI checkout's full
   history (ewiki.yml fetch-depth: 0); without it .Lastmod falls back to the
-  file's mod time. The rendered string carries the commit's own time zone, so
-  it is identical on a UTC runner and a local build — the determinism gate
-  (Invoke-WikiGates.ps1 gate 3) stays green.
+  file's mod time. The instant is converted to America/Los_Angeles and
+  formatted with the zone abbreviation (PST/PDT), not the commit's raw numeric
+  offset — a Git commit carries only the offset (-0800), so "MST" on .Lastmod
+  prints "-0800" on a runner; the named-zone conversion resolves it to "PST".
+  The instant and its rules are fixed, so it is identical on a UTC runner and a
+  local build — the determinism gate (Invoke-WikiGates.ps1 gate 3) stays green.
 */ -}}
 <dl class="metadata-panel">
   {{- with .Params.type -}}
@@ -41,6 +44,6 @@
   {{- if $reviewed -}}
     <dd>{{ $reviewed }}</dd>
   {{- else -}}
-    <dd>{{ .Lastmod | time.Format "2006-01-02 15:04 MST" }}</dd>
+    <dd>{{ (time.AsTime .Lastmod "America/Los_Angeles") | time.Format "2006-01-02 15:04 MST" }}</dd>
   {{- end -}}
 </dl>
