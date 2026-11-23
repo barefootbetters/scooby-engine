@@ -114,7 +114,7 @@ Add the WP's row in the correct Phase section of [WORK_INDEX](../work-packets/WO
 - [ ] All §Scope (In) bullets are concrete and testable; no "explore," "understand," or "see what's there" verbs
 - [ ] §Exit criteria are numbered, each one binary-checkable
 - [ ] §Targets generation(s) is filled in; not left at "TBD"
-- [ ] §Pre-flight required is answered Yes/No with reason (Yes if writing to `docs/formats/**` that locks a fact, modifying `engines/scooby/**`, committing tool scripts under `tools/**`, or claiming a generation classification)
+- [ ] §Pre-flight required is answered Yes/No with reason (Yes if writing to `docs/formats/**` that locks a fact, modifying `engines/terraglyph/**`, committing tool scripts under `tools/**`, or claiming a generation classification)
 
 If any item is unsatisfied, the draft is incomplete. Don't open pre-flight against a half-drafted WP — pre-flight's verdict isn't load-bearing if the WP itself isn't.
 
@@ -215,13 +215,13 @@ The loop has off-ramps (NOT READY pre-flight → §Abandonment if the blocker do
 ### 0. Triage (10 seconds)
 
 - **Trivial fix** — link rot, typo, status flip, docs hygiene that locks no fact: edit + `git commit` + `git push origin main` directly. No branch, no pre-flight, no session prompt, no PR. The "one WP per branch" rule has an explicit carve-out for this; see §Phase 3 Discipline. Forgetting the push is the failure mode here — GitHub Pages builds from `origin/main`, so an unpushed direct-to-main commit looks "done" locally but isn't visible to anyone.
-- **Substantive docs-only WP** — fact-locking work that produces no `engines/scooby/**` change. The committed surface is docs (`docs/formats/**`, `docs/work-packets/**`, `docs/reference/**`, `docs/sessions/**`) plus optionally small tool scripts under `tools/*.py` whose outputs are gitignored. Full loop *except* steps 5 (branch), 10 (PR), 11 (squash-merge). Commits go direct to `main` per the two-commit topology, with `git push origin main` after each (or batched at close — but never silently). Pre-flight + session prompt + scope-lock allowlist provide the discipline that branch + PR would otherwise add. WP-007 (four binaries' worth of strings/imports findings + two extraction scripts) and WP-003 (`tgifile-art.md` Findings expansion + spec correction) are this path's precedents.
-- **Substantive code WP** — touches `engines/scooby/**`, or commits non-trivial code that benefits from PR-surface review (cumulative architecture changes, binary file additions, > ~100 LOC of new tool code). Full loop including branch + PR + squash-merge.
-- **Scope check:** does the WP touch `engines/scooby/**`? If yes, step 1 fires against the scummvm fork. If no (docs-repo-only WP), step 1 is a no-op.
+- **Substantive docs-only WP** — fact-locking work that produces no `engines/terraglyph/**` change. The committed surface is docs (`docs/formats/**`, `docs/work-packets/**`, `docs/reference/**`, `docs/sessions/**`) plus optionally small tool scripts under `tools/*.py` whose outputs are gitignored. Full loop *except* steps 5 (branch), 10 (PR), 11 (squash-merge). Commits go direct to `main` per the two-commit topology, with `git push origin main` after each (or batched at close — but never silently). Pre-flight + session prompt + scope-lock allowlist provide the discipline that branch + PR would otherwise add. WP-007 (four binaries' worth of strings/imports findings + two extraction scripts) and WP-003 (`tgifile-art.md` Findings expansion + spec correction) are this path's precedents.
+- **Substantive code WP** — touches `engines/terraglyph/**`, or commits non-trivial code that benefits from PR-surface review (cumulative architecture changes, binary file additions, > ~100 LOC of new tool code). Full loop including branch + PR + squash-merge.
+- **Scope check:** does the WP touch `engines/terraglyph/**`? If yes, step 1 fires against the scummvm fork. If no (docs-repo-only WP), step 1 is a no-op.
 
 ### 1. Sync (conditional)
 
-For WPs touching `engines/scooby/**`: run [`tools/Sync-Fork.ps1`](../../tools/Sync-Fork.ps1) against the scummvm fork to bring local `main` level with `scummvm/scummvm` and rebase the feature branch on top.
+For WPs touching `engines/terraglyph/**`: run [`tools/Sync-Fork.ps1`](../../tools/Sync-Fork.ps1) against the scummvm fork to bring local `main` level with `scummvm/scummvm` and rebase the feature branch on top.
 
 For scooby-docs-repo-only WPs (every Phase 0–1 WP to date): `git switch main && git pull --ff-only origin main` against this repo. There is no upstream fork; the script does not apply.
 
@@ -245,7 +245,7 @@ This is one activity, not two ("review" + "apply suggestions"). Real review is i
 
 ### 5. Branch — a fork worktree (conditional — substantive code WPs only)
 
-Engine-code WPs land in `engines/scooby/**` on the **scummvm fork**, whose checkout at `C:\dev\scummvm` is a *single* working copy shared by every session. Switching its branch in place is how two sessions collide (the WP-075 collision, 2026-11-19). Don't `git switch` in that checkout — carve a dedicated worktree instead:
+Engine-code WPs land in `engines/terraglyph/**` on the **scummvm fork**, whose checkout at `C:\dev\scummvm` is a *single* working copy shared by every session. Switching its branch in place is how two sessions collide (the WP-075 collision, 2026-11-19). Don't `git switch` in that checkout — carve a dedicated worktree instead:
 
 ```pwsh
 tools\New-ForkWorktree.ps1 -Branch wp-NNN-<slug>

@@ -38,7 +38,7 @@ Pre-flight sits inside the broader WP lifecycle. See [wp-lifecycle](wp-lifecycle
 
 **Mandatory** for any WP that touches:
 
-- ScummVM engine source (`engines/scooby/**` once WP-010 lands)
+- ScummVM engine source (`engines/terraglyph/**` once WP-010 lands)
 - Format documentation under `docs/formats/**` that locks a fact
 - Tool scripts under `tools/**` that produce committed artifacts
 - A Ghidra session whose `.gpr` will be re-used by a later WP
@@ -77,7 +77,7 @@ Confirm every prereq WP listed in `WORK_INDEX` for `WP-XXX` is `✅ Done`. Read 
 ### Repo + disc state
 
 - [ ] Working tree clean (`git status --short` empty), HEAD on a named branch or `main`
-- [ ] **Engine-code WP (`engines/scooby/**`):** work happens in a dedicated fork worktree (`tools/New-ForkWorktree.ps1 -Branch <branch>`), not the shared `C:\dev\scummvm` checkout — forked from a freshly fetched `origin/scooby-engine`, with the base checkout left clean on `scooby-engine`. The branch name is the claim: `New-ForkWorktree.ps1` refuses if it already exists locally or on `origin`, catching a concurrent session before any work starts (the WP-075 collision, 2026-11-19).
+- [ ] **Engine-code WP (`engines/terraglyph/**`):** work happens in a dedicated fork worktree (`tools/New-ForkWorktree.ps1 -Branch <branch>`), not the shared `C:\dev\scummvm` checkout — forked from a freshly fetched `origin/scooby-engine`, with the base checkout left clean on `scooby-engine`. The branch name is the claim: `New-ForkWorktree.ps1` refuses if it already exists locally or on `origin`, catching a concurrent session before any work starts (the WP-075 collision, 2026-11-19).
 - [ ] Disc-on-hand for each target title is mounted / extracted to a known path; paths recorded below
 - [ ] If the WP re-uses a Ghidra `.gpr`: the file exists, the analysis state matches what the WP body assumes, and the file is not open in another Ghidra instance
 - [ ] If the WP re-uses prior tool output (e.g., a committed extract under `tools/samples/`): the input hash matches what the WP assumes
@@ -103,14 +103,14 @@ Anything not explicitly allowed is forbidden.
 **Forbidden (any change fails the WP):**
 
 - Game data (any binary from the discs) — copyright; **never commit**
-- `engines/scooby/**` if this WP is not an engine-code WP
+- `engines/terraglyph/**` if this WP is not an engine-code WP
 - `docs/formats/**` if this WP is not a format-decode WP
-- ScummVM upstream paths outside `engines/scooby/` (`base/`, `engines/scumm/`, etc.) — out of scope; upstream contributions are their own WP
+- ScummVM upstream paths outside `engines/terraglyph/` (`base/`, `engines/scumm/`, etc.) — out of scope; upstream contributions are their own WP
 
 **Exit check (must run before staging a commit):**
 
 ```pwsh
-# On a feature branch (ScummVM fork, engines/scooby work):
+# On a feature branch (ScummVM fork, engines/terraglyph work):
 git diff --name-only origin/main..HEAD
 
 # Committing directly to main (docs repo — WP status bumps, format-doc findings):
@@ -135,7 +135,7 @@ Common shapes for scooby WPs:
 - **Ghidra session drift** — re-using a `.gpr` whose annotations have been overwritten since the WP body was drafted. Mitigation: WP body cites the `.gpr` SHA-256 or export-commit SHA.
 - **Tool output non-determinism** — a script that depends on dict iteration order, a timestamp, or environment state. Mitigation: run the script twice, compare output hashes, before committing the artifact.
 - **Copyright leak** — any disc-extracted binary, screenshot, or audio sample staged for commit. Mitigation: review `git diff --cached --name-only` against the §Scope lock allowlist; nothing under `tools/extracts/` or similar ever commits.
-- **ScummVM upstream creep** — the WP "needs one small change" to a core ScummVM file outside `engines/scooby/`. Mitigation: stop; that's its own WP with its own upstream-contribution exit criteria.
+- **ScummVM upstream creep** — the WP "needs one small change" to a core ScummVM file outside `engines/terraglyph/`. Mitigation: stop; that's its own WP with its own upstream-contribution exit criteria.
 
 ### Verdict
 

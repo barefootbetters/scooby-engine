@@ -3,9 +3,9 @@ layout: default
 title: "Engine screenshots (our engine running)"
 ---
 
-# Engine screenshots — the Scooby engine running
+# Engine screenshots — the TerraGlyph engine running
 
-These are screen captures of **our `scooby` ScummVM engine actually running**
+These are screen captures of **our `terraglyph` ScummVM engine actually running**
 *Scooby-Doo! Showdown in Ghost Town* — not the original game. Each is the
 engine's own 640×480 output: a decoded `TGIFILE.ART` background with the gang and
 room objects composited as sprites, exactly as the engine draws them.
@@ -33,7 +33,7 @@ so no live mouse was needed:
 
 - **Build:** the fork engine `barefootbetters/scummvm` (branch `scooby-engine`,
   commit `d1a26e7`), built on MSYS2 UCRT64.
-- **Data:** a mounted *Showdown* disc (detected as `scooby:showdown`).
+- **Data:** a mounted *Showdown* disc (detected as `terraglyph:showdown`).
 - **Method:** the engine was launched once per room with a game-domain config of
   `start_room=<ROOM>` plus `test_script=wait 6000; shot <ROOM>; quit`, which dumps
   the engine's screen surface to `test_shots/<ROOM>.bmp`. Each BMP was converted

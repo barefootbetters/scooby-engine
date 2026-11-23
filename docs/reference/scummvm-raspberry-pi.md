@@ -9,7 +9,7 @@ How to get ScummVM onto a Raspberry Pi. There are two different jobs here:
 
 - **Developer build:** compile our fork,
   [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm), so you
-  can run and test the Scooby engine on the Pi.
+  can run and test the TerraGlyph engine on the Pi.
 - **User install:** install stock ScummVM from a package, to play games that
   upstream ScummVM already supports.
 
@@ -24,14 +24,14 @@ How to get ScummVM onto a Raspberry Pi. There are two different jobs here:
 
 | You want to... | Use | Notes |
 |---|---|---|
-| Develop or test the Scooby engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** On the [reference platform](#reference-platform-raspberry-pi-5) |
+| Develop or test the TerraGlyph engine | [Developer build](#developer-build-our-fork-from-source) | **Recommended for this project.** On the [reference platform](#reference-platform-raspberry-pi-5) |
 | Play games upstream ScummVM supports | [Flatpak](#flatpak-recommended) | The current upstream release (2026.4.0), the closest any package gets. 64-bit OS only |
 | Install quickly and an older version is fine | [`apt`](#apt-simplest) | 2.9.0 on Trixie, 2.7.0 on Bookworm. Both trail 2026.4.0 |
 | Run a recent release on a 32-bit OS | [Snap](#snap-32-bit-os) | 2026.2.0, `arm64` and `armhf` |
 | Build for a Pi too slow to compile on | [Cross-compile (legacy)](scummvm-raspberry-pi-cross-compile.md) | 32-bit only, Buster-era toolchain |
 
 Packages install upstream ScummVM, and none of them will ever include the
-Scooby engine before it's merged upstream. To run our engine, you need the
+TerraGlyph engine before it's merged upstream. To run our engine, you need the
 developer build.
 
 scummvm.org's own Pi binaries stopped at 2.7.0 (AppImages for Pi 3, 4 and
@@ -46,7 +46,7 @@ uname -m                 # aarch64 = 64-bit, armv7l = 32-bit
 ```
 
 Flatpak only ships an `aarch64` build. ScummVM itself also compiles on a 32-bit
-OS, but this project tests the Scooby engine on 64-bit Raspberry Pi OS only (see
+OS, but this project tests the TerraGlyph engine on 64-bit Raspberry Pi OS only (see
 the [reference platform](#reference-platform-raspberry-pi-5)). If the Pi prints
 `armv7l`, reinstall it with 64-bit Raspberry Pi OS, or use the Snap for a
 user install.
@@ -119,14 +119,14 @@ cd scummvm
 
 ```bash
 mkdir -p "$HOME/scummvm-dist"
-./configure --enable-engine=scooby --disable-debug --enable-release \
+./configure --enable-engine=terraglyph --disable-debug --enable-release \
     --prefix="$HOME/scummvm-dist"
 ```
 
-The [integration contract](../02-SCUMMVM-INTEGRATION.md) has the Scooby
+The [integration contract](../02-SCUMMVM-INTEGRATION.md) has the TerraGlyph
 engine's `configure.engine` declare it disabled by default until its first
-stable release. That means you have to pass `--enable-engine=scooby`. Until
-`engines/scooby/` is in the fork (Phase 2), leave that flag off.
+stable release. That means you have to pass `--enable-engine=terraglyph`. Until
+`engines/terraglyph/` is in the fork (Phase 2), leave that flag off.
 
 For debugging on the Pi, drop `--disable-debug --enable-release` to keep debug
 symbols.
@@ -156,17 +156,17 @@ If the build gets killed partway (out of memory), rerun with `make -j2`.
 `make install` copies the binary and its data files (themes, translations,
 engine data) into `~/scummvm-dist`.
 
-### 5. Verify the Scooby engine is in the build
+### 5. Verify the TerraGlyph engine is in the build
 
 Launching ScummVM doesn't prove the engine was compiled in. Check it:
 
 ```bash
 ~/scummvm-dist/bin/scummvm --version
-~/scummvm-dist/bin/scummvm --list-engines | grep -i scooby
+~/scummvm-dist/bin/scummvm --list-engines | grep -i terraglyph
 ```
 
-The second command should print the `scooby` engine line. If it prints nothing,
-the engine wasn't built. Rerun `./configure` with `--enable-engine=scooby` and
+The second command should print the `terraglyph` engine line. If it prints nothing,
+the engine wasn't built. Rerun `./configure` with `--enable-engine=terraglyph` and
 check that `configure`'s engine summary lists it.
 
 Then point detection at a game's data folder:
@@ -197,7 +197,7 @@ sudo apt install -y --no-install-recommends speech-dispatcher speech-dispatcher-
 
 ## User install: packaged ScummVM
 
-All three of these install upstream ScummVM, which doesn't include the Scooby
+All three of these install upstream ScummVM, which doesn't include the TerraGlyph
 engine.
 
 ### Flatpak (recommended)
@@ -332,7 +332,7 @@ table has the fixes (the `uhid` module, re-pairing, xpadneo).
 Point-and-click games use one cursor. A pad drives the virtual mouse, and the
 other pads stay idle.
 
-The Scooby engine follows that. The original games are single-player
+The TerraGlyph engine follows that. The original games are single-player
 point-and-click adventures, and the engine aims for faithful playback, not
 "improving" the games (see the
 [vision's non-goals](../01-VISION.md#non-goals)). So connecting several pads
@@ -381,7 +381,7 @@ only when every check passes.
 | # | Check | Pass when |
 |---|---|---|
 | 1 | `uname -m` | Prints `aarch64` |
-| 2 | `~/scummvm-dist/bin/scummvm --list-engines \| grep -i scooby` | Prints the `scooby` engine line |
+| 2 | `~/scummvm-dist/bin/scummvm --list-engines \| grep -i terraglyph` | Prints the `terraglyph` engine line |
 | 3 | `~/scummvm-dist/bin/scummvm --path=<Showdown data folder> --detect` | Lists *Showdown in Ghost Town* with its Scooby game id |
 | 4 | Add the game in the launcher and start it | It reaches the title screen, full screen on the TV |
 | 5 | Play past the intro | Video and audio play over HDMI, in sync, without stutter |
