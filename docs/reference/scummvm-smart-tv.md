@@ -26,9 +26,10 @@ TV's processor, then install it on the TV. That's the main path on this page:
 > ScummVM at files you're entitled to: your own disc, or a legally obtained copy.
 
 > **Checked 2026-11-22.** The build steps come from our fork's own Android build
-> files ([Sources](#sources)), which track ScummVM 2026.4. ScummVM has no official
-> TV support. On Android TV it was never a Play Store TV app, so every route here
-> is a sideload. **No build on this page has been tested on a TV yet.** Run the
+> files ([Sources](#sources)), which track ScummVM 2026.4, and were followed end to
+> end that day to build an arm64-v8a APK ([build record](#build-record)). ScummVM
+> has no official TV support. On Android TV it was never a Play Store TV app, so
+> every route here is a sideload. **The APK hasn't been run on a TV yet.** Run the
 > [TV smoke test](#tv-smoke-test) the first time.
 
 ---
@@ -83,18 +84,24 @@ You need:
   the Android 37 platform, and **NDK 23.2.8568313 exactly**. Our `configure`
   compares the NDK version with the one pinned in `dists/android/build.gradle`
   and stops if they differ.
-- **`git`, `make`, a C++ compiler for the build machine, and `pkg-config`.**
+- **Google's [Oboe](https://github.com/google/oboe) audio library, added to the
+  NDK.** Our Android audio code includes `oboe/Oboe.h` and links `-loboe`, but
+  neither the repo nor the NDK provides it, so `make` stops on that header
+  without it. (ScummVM's own release builds use a prebuilt toolchain that already
+  has it.) Building it takes about a minute: [step 2](#2-add-oboe-to-the-ndk).
+- **`git`, `make`, a C++ compiler for the build machine, `pkg-config`, `cmake`
+  and `ninja`.**
 
 On Ubuntu (in WSL), with the SDK command-line tools unzipped into
 `~/android-sdk/cmdline-tools/latest/`:
 
 ```bash
 sudo apt update
-sudo apt install -y --no-install-recommends openjdk-17-jdk git make build-essential pkg-config unzip
+sudo apt install -y --no-install-recommends openjdk-17-jdk git make build-essential \
+    pkg-config unzip cmake ninja-build
 
 export ANDROID_SDK_ROOT="$HOME/android-sdk"
 export ANDROID_NDK_ROOT="$ANDROID_SDK_ROOT/ndk/23.2.8568313"
-"$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses
 "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
     "platform-tools" "platforms;android-37" "ndk;23.2.8568313"
 ```
@@ -104,7 +111,37 @@ The command-line tools come from the "Command line tools only" downloads on
 `export` lines in `~/.bashrc` so later shells keep them. `configure` stops with
 "Please set ANDROID_SDK_ROOT" (or `ANDROID_NDK_ROOT`) if either is missing.
 
-#### 2. Get the source
+Current command-line tools (build 16111833 on 2026-11-22) print a notice that
+`sdkmanager` is deprecated in favour of a new `android sdk` command. `sdkmanager`
+still works and installs the packages above. It no longer needs a separate
+`--licenses` step. If the Android 37 platform doesn't install, Gradle downloads
+it during the first build.
+
+#### 2. Add Oboe to the NDK
+
+This builds Oboe as a static arm64-v8a library and copies it into the NDK's
+sysroot, where our build looks for it. For a 32-bit build, run it again with
+`-DANDROID_ABI=armeabi-v7a` and copy `liboboe.a` into
+`.../sysroot/usr/lib/arm-linux-androideabi/` instead.
+
+```bash
+git clone --depth 1 --branch 1.11.0 https://github.com/google/oboe.git ~/oboe
+cmake -S ~/oboe -B ~/oboe-build -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 \
+    -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+cmake --build ~/oboe-build
+
+sysroot="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+mkdir -p "$sysroot/usr/include/oboe"
+cp ~/oboe/include/oboe/*.h "$sysroot/usr/include/oboe/"
+cp ~/oboe-build/liboboe.a "$sysroot/usr/lib/aarch64-linux-android/"
+```
+
+Because it's static, Oboe ends up inside the app. The TV doesn't need anything
+extra.
+
+#### 3. Get the source
 
 ```bash
 git clone https://github.com/barefootbetters/scummvm.git
@@ -112,26 +149,47 @@ cd scummvm
 git checkout scooby-engine
 ```
 
-#### 3. Configure
+#### 4. Configure
 
 ```bash
-./configure --host=android-arm64-v8a --enable-engine=scooby --disable-debug --enable-release
+./configure --host=android-arm64-v8a --disable-all-engines --enable-engine=scooby \
+    --disable-debug --enable-release
 ```
 
 Swap the `--host` value for a [different processor](#pick-the-processor-type-abi).
 The Scooby engine is off by default, so `--enable-engine=scooby` is required.
-Check that `configure`'s engine summary lists Scooby before you build. For a
-faster, smaller build with only Scooby in it, add `--disable-all-engines` before
-`--enable-engine=scooby`.
+Check that `configure`'s engine summary lists Scooby before you build. Leaving
+out `--disable-all-engines` builds every default engine as well, but see the
+next paragraph for why that doesn't get you a full ScummVM.
 
-#### 4. Build the APK
+**This makes a Scooby build, not a full ScummVM.** `configure` looks for about
+thirty optional libraries built for Android, and a plain build machine has none
+of them: no Ogg Vorbis, FLAC, MP3, JPEG, PNG, FreeType, FluidSynth or SDL_net.
+Without them it switches off the engines that need them (26 on 2026-11-22,
+including Wintermute, Myst 3, The Longest Journey, Broken Sword 2.5, Nancy Drew
+and Thimbleweed Park), and the remaining engines can't play compressed audio or
+use TrueType menu fonts. The local web server is left out too. Cloud saves still
+work, through Android's own HTTP code.
+
+The Scooby games need none of those libraries: their audio is plain PCM and
+their video is Bink, both decoded by ScummVM itself. That's why the command
+above builds Scooby only: smaller and faster. Keep the standard ScummVM app for
+other games. The
+two install side by side ([below](#next-to-the-standard-app-or-instead-of-it)).
+ScummVM's own releases get the full feature set from a Docker toolchain that
+cross-compiles those libraries
+([scummvm/dockerized-bb](https://github.com/scummvm/dockerized-bb)). This page
+hasn't used it.
+
+#### 5. Build the APK
 
 ```bash
 make -j"$(nproc)"
 make androiddistdebug
 ```
 
-The APK is `debug/ScummVM-debug.apk`. The first run downloads Gradle and its
+The APK is `debug/ScummVM-debug.apk`: about 15 MB for the Scooby-only build
+(66 MB with every default engine). The first run downloads Gradle and its
 plugins, so it takes a while.
 
 The *debug* here is the APK's signing, not the C++ build: Gradle signs it with a
@@ -142,12 +200,16 @@ your own TV.
 A TV won't install an unsigned APK. Sign it first with your own key (the SDK's
 `apksigner`). You only need that to hand the APK to other people.
 
-#### Install conflict with the standard app
+#### Next to the standard app, or instead of it
 
-Our APK uses the same Android app id as the standard ScummVM app
-(`org.scummvm.scummvm`), signed with a different key. If the standard app is
-already on the TV, Android refuses to install ours over it. Uninstall the
-standard app first. Your ScummVM settings and saves go with it.
+The debug APK's app id is **`org.scummvm.scummvm.debug`**: the debug build type
+in `dists/android/build.gradle` adds a `.debug` suffix. That's a different app
+from the standard ScummVM (`org.scummvm.scummvm`), so both can be installed on
+the TV at once, each with its own settings and saves.
+
+The release APK keeps `org.scummvm.scummvm`. Signed with your key, it can't
+install over a standard app signed by ScummVM, so uninstall the standard app
+first (its settings and saves go with it).
 
 ### Prepare the TV
 
@@ -177,8 +239,9 @@ Accept the "Allow debugging?" prompt on the TV the first time. Without `adb`,
 copy the APK to a USB stick, or send it with **Send Files to TV**, and open it in
 the file manager.
 
-A sideloaded app may not show on the home row. Look under **Settings → Apps →
-See all apps**.
+The APK declares a TV launcher entry with its own banner, so it should show in
+the TV's apps list like any other TV app. If it doesn't, look under **Settings →
+Apps → See all apps**.
 
 ### Add your game data
 
@@ -186,8 +249,11 @@ See all apps**.
   `\scooby\` folder (or the whole disc). In ScummVM, choose **Add Game…** and
   pick that folder. Google TV has no file browser of its own, so ScummVM's own
   folder picker on a USB stick is the easy route.
-- **Over the network:** ScummVM can run a **local web server** (Global Options →
-  Cloud → LAN) that lets you upload files from a browser on your phone or PC.
+- **Over the network:** the standard ScummVM app can run a **local web server**
+  (Global Options → Cloud → LAN) for uploading files from a browser. Our APK, as
+  built on this page, doesn't include it (no SDL_net), so use a USB stick, or copy
+  the files over `adb push` to the TV's `Download` folder and add them from
+  there (not yet tried on a TV; ScummVM may ask for access to the folder first).
 - The files the Scooby engine reads are listed on the
   [status page](scummvm-wiki-scooby.md#required-game-data-files).
 
@@ -217,6 +283,26 @@ ro.product.cpu.abilist` settles it.
 The Scooby games are light: 2D art and Bink cutscenes, both decoded by ScummVM.
 A TV processor in this class should run them easily. That's an expectation, not
 a test result: check it with the smoke test below.
+
+### Build record
+
+The steps above, followed on 2026-11-22. Nothing here has run on a TV yet.
+
+| Item | Result |
+|---|---|
+| Build machine | Windows 11, WSL 3.0.5 with Ubuntu 26.04.1 LTS (x86_64) |
+| Toolchain | OpenJDK 17.0.21, Android command-line tools 16111833, NDK 23.2.8568313 (r23c), Oboe 1.11.0 |
+| Source | `barefootbetters/scummvm` branch `scooby-engine`, commit `e52f35c2ffd` (ScummVM 2026.4.1 base) |
+| Configure | `--host=android-arm64-v8a --disable-all-engines --enable-engine=scooby --disable-debug --enable-release`. Engine summary: Scooby-Doo (TerraGlyph) only |
+| Build time | 41 s for `make` plus `androiddistdebug` on 32 cores, after Gradle's first-run downloads |
+| APK | `ScummVM-debug.apk`, 14,738,976 bytes, SHA-256 `f1501a860b3b6d2fb8b926c1cc3bdd59b31fd2a1c6c1707df7ce77b18bc2cf4b` |
+| Native code | `lib/arm64-v8a/libscummvm.so` and `libloader.so` only. 64-bit ARM, Android 21+. Oboe and the C++ runtime are linked in; it needs only Android system libraries |
+| App | `org.scummvm.scummvm.debug`, version 2026.4.1, target SDK 37, TV launcher entry with banner, touchscreen not required |
+| Signature | Android Debug certificate; `apksigner verify` passes |
+
+The every-engine build from the same commit was 65,991,765 bytes, with the
+optional libraries and 26 engines missing as described in
+[step 4](#4-configure).
 
 ### TV smoke test
 
