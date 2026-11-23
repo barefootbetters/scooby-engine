@@ -5,11 +5,46 @@ title: "Engine decision log"
 
 # Engine decision log
 
-Product-level decisions for the TerraGlyph engine (`scooby-engine`). Studio-wide
+Product-level decisions for the TerraGlyph engine (`terraglyph-engine`). Studio-wide
 decisions live in `bb-studio-dashboard` `docs/ai/decision-log/`; this file holds
 the ones specific to this engine.
 
 ---
+
+## 2026-11-23 — Repo rename: `scooby-engine` → `terraglyph-engine`
+
+**Context.** With the engine identity rename complete and merged (fork
+[barefootbetters/scummvm#10](https://github.com/barefootbetters/scummvm/pull/10),
+forward docs [#184](https://github.com/barefootbetters/terraglyph-engine/pull/184),
+public wiki updated), the GitHub **repo name** `scooby-engine` was the last
+`scooby` identity left. The [2026-11-22 namespace-rename entry](#2026-11-22--engine-namespace-rename-scooby--terraglyph)
+deliberately held the repo name "out (for now)" as a separate, higher-risk move.
+Jeff has now called for it.
+
+**Decision (Jeff).** **Rename the GitHub repo `barefootbetters/scooby-engine` →
+`barefootbetters/terraglyph-engine`.** GitHub auto-redirects the old URLs (web,
+API, git remotes, raw, Pages path) during a grace period that ends if a new repo
+later takes the `scooby-engine` name, so forward-facing references are updated
+rather than left on the redirect.
+
+**Scope boundary — "forward-facing + local" (Jeff's choice).**
+
+- **In:** the repo name; the Pages `baseurl` (`/scooby-engine` → `/terraglyph-engine`,
+  else the live site's internal links break); forward-facing + operational references
+  to this repo's own URLs/paths (README, index, current reference docs, live tooling/
+  configs, `C:\dev\scooby-engine` → `C:\dev\terraglyph-engine`); the local checkout
+  folder + worktree re-pointing + remotes; and the corporate-memory map.
+- **Out / preserved:** the scummvm fork's integration **branch** `scooby-engine`
+  (a branch, not this repo); the separate **`scooby-engine-private`** repo; the
+  **`scooby-engine-ewiki.barefootbetters.com`** subdomain (a Cloudflare + DNS change,
+  same out-of-scope class as the Pages DNS); the **`C:\pcloud\scooby-engine`**
+  business-material folder (non-git); and the **historical records** (session logs,
+  completed-WP and pre-flight files) — left as the record of what things were called
+  at the time, consistent with the namespace-rename entry below.
+
+**Not foreclosed.** The ewiki subdomain and the pCloud folder can follow later if
+Jeff wants full consistency; both are deployment/DNS or business-material moves, not
+code, and were deliberately left for a separate call.
 
 ## 2026-11-22 — Engine namespace rename: `scooby` → `terraglyph`
 

@@ -58,5 +58,5 @@ Executable analysis now has two complementary tracks: focused Ghidra work on Sho
 
 ## Source
 
-Engine research: [barefootbetters/scooby-engine](https://github.com/barefootbetters/scooby-engine)  
-ScummVM fork (Phase 2+): [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) — `engines/scooby/`
+Engine research: [barefootbetters/terraglyph-engine](https://github.com/barefootbetters/terraglyph-engine)  
+ScummVM fork (Phase 2+): [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) — `engines/terraglyph/`

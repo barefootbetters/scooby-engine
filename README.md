@@ -111,11 +111,11 @@ demand, so a successful release can justify bringing the next game back too.
 ***Showdown in Ghost Town* is playable in preview; *Phantom of the Knight* is in development.** · [Progress site →][pages]
 
 [mobygames]: https://www.mobygames.com/game/scooby-doo-showdown-in-ghost-town/
-[pages]: https://github.barefootbetters.com/scooby-engine/
+[pages]: https://github.barefootbetters.com/terraglyph-engine/
 
 - ▶ **Play it** — [Download & build instructions](docs/reference/download-and-install.md)
-- 📸 **See it** — [Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots) (every room, captured from our engine running)
-- 🗺 **Screen map** — [room navigation map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map) built from the engine's real exits
+- 📸 **See it** — [Screenshots gallery](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots) (every room, captured from our engine running)
+- 🗺 **Screen map** — [room navigation map](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots#screen-map) built from the engine's real exits
 - 📋 **What works** — [Engine status & supported titles](docs/reference/scummvm-wiki-scooby.md)
 - 🍴 **Why a fork** — [Why the engine is a ScummVM fork](docs/reference/why-forked-scummvm.md)
 

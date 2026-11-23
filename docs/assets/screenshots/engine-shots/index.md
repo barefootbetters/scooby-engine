@@ -124,4 +124,4 @@ they sit apart from the gallery above:
 | `ROOM_Title_Screen.png` | The *Showdown in Ghost Town* title card |
 | `ROOM_Main_Menu.png` | The main menu (New Mystery / Sound / Quit / Play) |
 
-These feed the public [GitHub wiki Screenshots page](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots).
+These feed the public [GitHub wiki Screenshots page](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots).

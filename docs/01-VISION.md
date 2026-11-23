@@ -574,7 +574,7 @@ bundled with the engine — players supply their own.
 ## File Layout
 
 ```
-C:\dev\scooby-engine\     ← this project (engine research + docs)
+C:\dev\terraglyph-engine\     ← this project (engine research + docs)
 C:\dev\scummvm\           ← fork of scummvm/scummvm (engine implementation; base clone, kept clean on scooby-engine)
 C:\claude-worktrees\scummvm-*\  ← per-WP fork worktrees (one branch each; where engine WPs are worked — wp-lifecycle step 5)
 C:\pcloud\scooby-engine\  ← ISO images of original game discs (read-only)

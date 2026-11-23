@@ -229,7 +229,7 @@ This is a FORK of ScummVM, not the official release. Report issues at:
   https://github.com/barefootbetters/scummvm/issues
 
 Full instructions:
-  https://github.barefootbetters.com/scooby-engine/docs/reference/download-and-install/
+  https://github.barefootbetters.com/terraglyph-engine/docs/reference/download-and-install/
 
 ScummVM is licensed under the GNU GPL v3 (see COPYING.txt).
 Scooby-Doo is a trademark of Warner Bros. Entertainment Inc. This project is
@@ -286,8 +286,8 @@ Plays *Scooby-Doo! Showdown in Ghost Town* start to finish (testing status). *Ph
 
 **Run it:** unzip anywhere, run ``scummvm.exe``, click **Add Game...** -> your disc's ``\scooby\`` folder (or disc root), select *Showdown*, **Start**. Portable/self-contained (SDL2 + runtime DLLs bundled), 64-bit Windows, no install needed.
 
-- Full instructions: https://github.barefootbetters.com/scooby-engine/docs/reference/download-and-install/
-- Why this is a fork: https://github.barefootbetters.com/scooby-engine/docs/reference/why-forked-scummvm/
+- Full instructions: https://github.barefootbetters.com/terraglyph-engine/docs/reference/download-and-install/
+- Why this is a fork: https://github.barefootbetters.com/terraglyph-engine/docs/reference/why-forked-scummvm/
 - Report issues: https://github.com/barefootbetters/scummvm/issues
 
 ``$name.zip`` - SHA-256 ``$sha`` - built from ``$TagTarget`` @ ``$buildCommit``.
