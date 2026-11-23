@@ -269,11 +269,46 @@ Apps → See all apps**.
   generally read it, but that's not yet checked on the TCL 65Q77K.
 - **Over the network:** the standard ScummVM app can run a **local web server**
   (Global Options → Cloud → LAN) for uploading files from a browser. Our APK, as
-  built on this page, doesn't include it (no SDL_net), so use a USB stick, or copy
-  the files over `adb push` to the TV's `Download` folder and add them from
-  there (not yet tried on a TV; ScummVM may ask for access to the folder first).
+  built on this page, doesn't include it (no SDL_net). Use a USB stick, or
+  [copy the game onto the TV](#keep-the-stick-in-or-copy-the-game-to-the-tv)
+  with `adb push`.
 - The files the Scooby engine reads are listed on the
   [status page](scummvm-wiki-scooby.md#required-game-data-files).
+
+#### Keep the stick in, or copy the game to the TV
+
+ScummVM doesn't import a game. It reads the art, sound and cutscenes from the
+folder you added the whole time you play, so a game added from a USB stick needs
+the stick plugged in. Saves and settings are stored inside the app on the TV,
+not on the stick, so they survive either way.
+
+To play without the stick, copy the game onto the TV's built-in storage and add
+it from there:
+
+1. **Check for room.** The `\scooby\` folder is about 531 MB. Google TV sets have
+   fairly small built-in storage, so check **Settings → System → Storage** first.
+2. **Copy the folder.** Either:
+   - **On the TV:** install a file manager that can copy between folders, such as
+     **X-plore** or **File Commander**, from the Play Store. With the stick
+     plugged in, copy its `scooby` folder to built-in storage, for example into
+     **Download**.
+   - **From a PC with `adb`** (set up under [Install it on the TV](#install-it-on-the-tv)):
+
+     ```bash
+     adb push scooby /sdcard/Download/scooby
+     ```
+
+3. **Add it in ScummVM.** Choose **Add Game…**, go to built-in storage →
+   **Download** → `scooby`, and add it. Newer Android versions may ask you to
+   allow ScummVM access to the folder the first time. Allow it.
+4. **Unplug the stick.** ScummVM now reads the game from the TV.
+
+If you'd added the game from the stick before, remove that launcher entry (select
+it, then **Remove Game**) so you don't start the copy that's no longer there.
+
+Not yet tried on a TV. In particular, how ScummVM asks for folder access on the
+TCL's Android version is unchecked. If **Add Game…** can't see the Download
+folder, play from the stick.
 
 *Showdown in Ghost Town* shows in the launcher normally. *Phantom of the Knight*
 is still in development. Turn on **Show games marked as unstable** (Global
