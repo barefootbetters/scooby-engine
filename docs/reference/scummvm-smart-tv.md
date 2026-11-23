@@ -246,9 +246,16 @@ Apps → See all apps**.
 ### Add your game data
 
 - **USB stick (simplest):** a **FAT32 or exFAT** stick with the disc's
-  `\scooby\` folder (or the whole disc). In ScummVM, choose **Add Game…** and
-  pick that folder. Google TV has no file browser of its own, so ScummVM's own
-  folder picker on a USB stick is the easy route.
+  `\scooby\` folder (or every file on the disc). In ScummVM, choose **Add Game…**
+  and pick that folder. Google TV has no file browser of its own, so ScummVM's
+  own folder picker on a USB stick is the easy route.
+
+  **Copy the files, not a disc image.** The Scooby engine reads the game's files
+  from a plain folder. It can't open an `.iso` (or `.bin`/`.cue`) file, so a
+  disc image copied to the stick won't be detected. Unpack it first: on Windows,
+  double-click the `.iso` to mount it as a drive, then copy its `scooby` folder
+  to the stick. Check that the copy has the 42 `BK.NNN` cutscene files along with
+  the files on the [status page](scummvm-wiki-scooby.md#required-game-data-files).
 
   **Stick size and FAT32.** FAT32 itself allows drives up to 2 TB, but
   File Explorer's Format dialog offers FAT32 only on drives of 32 GB or less,
