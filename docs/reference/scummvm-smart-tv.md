@@ -120,9 +120,7 @@ it during the first build.
 #### 2. Add Oboe to the NDK
 
 This builds Oboe as a static arm64-v8a library and copies it into the NDK's
-sysroot, where our build looks for it. For a 32-bit build, run it again with
-`-DANDROID_ABI=armeabi-v7a` and copy `liboboe.a` into
-`.../sysroot/usr/lib/arm-linux-androideabi/` instead.
+sysroot, where our build looks for it. The 32-bit commands come after it.
 
 ```bash
 git clone --depth 1 --branch 1.11.0 https://github.com/google/oboe.git ~/oboe
@@ -136,6 +134,20 @@ sysroot="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 mkdir -p "$sysroot/usr/include/oboe"
 cp ~/oboe/include/oboe/*.h "$sysroot/usr/include/oboe/"
 cp ~/oboe-build/liboboe.a "$sysroot/usr/lib/aarch64-linux-android/"
+```
+
+For a 32-bit (`android-arm-v7a`) build, build Oboe a second time for Android
+16 and copy it into the 32-bit library folder. Our 32-bit build supports
+Android 16 and up, so an Oboe built for Android 21 fails to link with
+`undefined symbol: __vsprintf_chk`.
+
+```bash
+cmake -S ~/oboe -B ~/oboe-build-v7a -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+    -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=android-16 \
+    -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+cmake --build ~/oboe-build-v7a
+cp ~/oboe-build-v7a/liboboe.a "$sysroot/usr/lib/arm-linux-androideabi/"
 ```
 
 Because it's static, Oboe ends up inside the app. The TV doesn't need anything
@@ -191,6 +203,11 @@ make androiddistdebug
 The APK is `debug/ScummVM-debug.apk`: about 15 MB for the Scooby-only build
 (66 MB with every default engine). The first run downloads Gradle and its
 plugins, so it takes a while.
+
+To build the other processor type in the same folder, run `configure` with the
+other `--host`, then `make clean` before `make`. Each build overwrites
+`debug/ScummVM-debug.apk`, so copy the first APK somewhere else before you start
+the second.
 
 The *debug* here is the APK's signing, not the C++ build: Gradle signs it with a
 local debug key, so it installs on a TV as it is. That's the right APK for
@@ -352,6 +369,20 @@ The steps above, followed on 2026-11-22. Nothing here has run on a TV yet.
 | Native code | `lib/arm64-v8a/libscummvm.so` and `libloader.so` only. 64-bit ARM, Android 21+. Oboe and the C++ runtime are linked in; it needs only Android system libraries |
 | App | `org.scummvm.scummvm.debug`, version 2026.4.1, target SDK 37, TV launcher entry with banner, touchscreen not required |
 | Signature | Android Debug certificate; `apksigner verify` passes |
+
+The 32-bit build, made on 2026-11-23 from the same commit and toolchain (Oboe
+built for Android 16 as described in [step 2](#2-add-oboe-to-the-ndk)):
+
+| Item | Result |
+|---|---|
+| Configure | `--host=android-arm-v7a --disable-all-engines --enable-engine=scooby --disable-debug --enable-release`. Engine summary: Scooby-Doo (TerraGlyph) only |
+| Build time | 53 s for `make clean`, `make` and `androiddistdebug` |
+| APK | `ScummVM-debug.apk`, 14,537,120 bytes, SHA-256 `59588745bb183bc4cf445f54bb0a2744d1d86035348a89a227b81e4ef9f95607` |
+| Native code | `lib/armeabi-v7a/libscummvm.so` and `libloader.so` only. 32-bit ARM with NEON, Android 16+ |
+| App | `org.scummvm.scummvm.debug`, version 2026.4.1, target SDK 37 |
+| Signature | Android Debug certificate; `apksigner verify` passes |
+
+Both APKs use the same app id, so a TV holds one or the other, not both.
 
 The every-engine build from the same commit was 65,991,765 bytes, with the
 optional libraries and 26 engines missing as described in
