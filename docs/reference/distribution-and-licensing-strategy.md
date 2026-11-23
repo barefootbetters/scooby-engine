@@ -83,7 +83,7 @@ legitimate supply.
 
 ScummVM already solves the *compatibility* half: one engine runs on Windows,
 macOS, Linux, Raspberry Pi, **Android TV, and Apple TV** — the screens already
-under people's televisions. The `scooby` engine extends that to these titles.
+under people's televisions. The `terraglyph` engine extends that to these titles.
 
 ## Two layers — keep them separate
 

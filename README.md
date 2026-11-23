@@ -162,7 +162,7 @@ sources:
 
 This repo holds the **research, docs and tooling**. The **engine code** lives in
 the ScummVM fork at [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm)
-under `engines/scooby/` (branch `scooby-engine`).
+under `engines/terraglyph/` (branch `scooby-engine`).
 
 ```
 docs/               Research, specs, and the work-packet governance
