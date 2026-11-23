@@ -6,15 +6,15 @@ title: "ScummVM Integration Contract"
 # ScummVM Integration Contract
 
 **Status:** Scaffold — sections populated as Phase 2 implementation lands
-**ScummVM version pin:** `c553503d9d433726b22b43b3a6a0a86fd00125e9` (`scummvm/scummvm` `master`, 2026-11-13, "SCUMM: Hotspot highlighting with object names"). This is the base of the fork's `scooby-engine` branch ([barefootbetters/scummvm](https://github.com/barefootbetters/scummvm/tree/scooby-engine/engines/scooby)), pinned by [WP-010](work-packets/WP-010-scummvm-scaffold.md). Signatures below are checked against this commit.
-**Engine location:** `engines/scooby/` (within the ScummVM fork)
+**ScummVM version pin:** `c553503d9d433726b22b43b3a6a0a86fd00125e9` (`scummvm/scummvm` `master`, 2026-11-13, "SCUMM: Hotspot highlighting with object names"). This is the base of the fork's `scooby-engine` branch ([barefootbetters/scummvm](https://github.com/barefootbetters/scummvm/tree/scooby-engine/engines/terraglyph)), pinned by [WP-010](work-packets/WP-010-scummvm-scaffold.md). Signatures below are checked against this commit.
+**Engine location:** `engines/terraglyph/` (within the ScummVM fork)
 **Vision doc reference:** [`docs/01-VISION.md`](01-VISION.md) — "Engine Contract (ScummVM Requirements)" section is the high-altitude principles; this doc owns the concrete API surface.
 
 ---
 
 ## What this doc is
 
-The `scooby` engine must conform to ScummVM's engine architecture and
+The `terraglyph` engine must conform to ScummVM's engine architecture and
 integration model — not as a general reimplementation, but as a
 ScummVM-compatible engine module. This document enumerates the concrete
 integration points: which classes to subclass, which APIs to call, which
@@ -53,9 +53,9 @@ a PR unless every one of these is true:
 
 **Upstream reference:** `engines/engine.h`, `engines/engine.cpp`. See ScummVM wiki [HOWTO-Add a new engine](https://wiki.scummvm.org/index.php?title=HOWTO-Add_a_new_engine).
 
-**Acceptance criterion:** `ScoobyEngine::run()` drives a cooperative event-pumping loop (calling `_system->getEventManager()->pollEvent()` each frame), returns `Common::kNoError` on clean exit, and contains no platform-specific surfaces or windowing calls. `syncSoundSettings()` is called once on startup (constructor or top of `run()`, per the engine's preference) before any audio plays, so the user's ScummVM volume preferences take effect on the first frame.
+**Acceptance criterion:** `TerraglyphEngine::run()` drives a cooperative event-pumping loop (calling `_system->getEventManager()->pollEvent()` each frame), returns `Common::kNoError` on clean exit, and contains no platform-specific surfaces or windowing calls. `syncSoundSettings()` is called once on startup (constructor or top of `run()`, per the engine's preference) before any audio plays, so the user's ScummVM volume preferences take effect on the first frame.
 
-**Implementation notes:** WP-010 scaffold (2026-11-13): `ScoobyEngine::run()` sets up 640 × 480 RGB565 with `initGraphics()`, returns `kUnsupportedColorMode` if the backend cannot provide it, calls `syncSoundSettings()`, then pumps events through a `Graphics::FrameLimiter` at 60 fps until `shouldQuit()`.
+**Implementation notes:** WP-010 scaffold (2026-11-13): `TerraglyphEngine::run()` sets up 640 × 480 RGB565 with `initGraphics()`, returns `kUnsupportedColorMode` if the backend cannot provide it, calls `syncSoundSettings()`, then pumps events through a `Graphics::FrameLimiter` at 60 fps until `shouldQuit()`.
 
 ---
 
@@ -67,7 +67,7 @@ a PR unless every one of these is true:
 
 **Acceptance criterion:** The ScummVM launcher's "Add Game" dialog discovers a mounted *Showdown* disc without prompting the user to identify it manually.
 
-**Implementation notes:** WP-010 and WP-012 (2026-11-14). `ScoobyMetaEngineDetection` derives from `AdvancedMetaEngineDetection<Scooby::ScoobyGameDescription>` and `ScoobyMetaEngine` from `AdvancedMetaEngine<Scooby::ScoobyGameDescription>`, so `createInstance()` receives the extended description (§3) and passes it to the engine. Detection was checked with `scummvm --detect --path=<disc root>` on each mounted ISO. That is the same advanced-detector code the "Add Game" dialog runs, but the dialog itself was not clicked through.
+**Implementation notes:** WP-010 and WP-012 (2026-11-14). `TerraglyphMetaEngineDetection` derives from `AdvancedMetaEngineDetection<Terraglyph::TerraglyphGameDescription>` and `TerraglyphMetaEngine` from `AdvancedMetaEngine<Terraglyph::TerraglyphGameDescription>`, so `createInstance()` receives the extended description (§3) and passes it to the engine. Detection was checked with `scummvm --detect --path=<disc root>` on each mounted ISO. That is the same advanced-detector code the "Add Game" dialog runs, but the dialog itself was not clicked through.
 
 ---
 
@@ -95,17 +95,17 @@ Match on file presence, size and MD5. The MD5 covers the first 5,000 bytes, the 
 **Implementation notes:** WP-012 (2026-11-14). `detection.h` declares:
 
 ```cpp
-enum ScoobyGeneration { kGen1 = 1, kGen2 = 2, kGen3 = 3 };
+enum TerraglyphGeneration { kGen1 = 1, kGen2 = 2, kGen3 = 3 };
 
-struct ScoobyGameDescription {
+struct TerraglyphGameDescription {
 	AD_GAME_DESCRIPTION_HELPERS(desc);
 
 	ADGameDescription desc;
-	ScoobyGeneration generation;
+	TerraglyphGeneration generation;
 };
 ```
 
-The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` has five entries (the fifth added after WP-013):
+The engine reads it with `TerraglyphEngine::getGeneration()`. `detection_tables.h` has five entries (the fifth added after WP-013):
 
 | Game id | Title | Generation | Flag |
 |---|---|---|---|
@@ -118,7 +118,7 @@ The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` h
 - **Game ids.** `phantom` and `jinx` are already used by MADS (*Return of the Phantom*) and Glk/Adrift. Two engines with the same id make a bare id on the command line ambiguous, so the entries use `phantomknight` and `jinxsphinx`. `activity` is SCUMM's (*Putt-Putt & Fatty Bear's Activity Pack*), hence `activitychallenge`.
 - **Flags.** Gen 1 is `ADGF_UNSTABLE` while it is being built. Gen 2 and Gen 3 are detected but `ADGF_UNSUPPORTED`, so the launcher refuses to start them until their archive readers exist. Moving an entry to a playable flag is a Phase 3 or Phase 5 change, not a table restructure.
 - **Directories.** `_maxScanDepth = 3` and `_directoryGlobs` = `scooby`, `jinx`, `museum`, `scripts and resources`. Matching is by base name. The disc root works for all five titles. *Activity Challenge*'s three signature files are at the root, so it needs no glob. For Showdown and Phantom the `\scooby\` directory alone also works. Jinx and Case File #1 keep their signature files in two directories, so they need the root.
-- **Values.** Sizes and MD5s are in the fork's [`detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/detection_tables.h). The sizes match the [`tools/exes/` identity tables](../tools/exes/README.md#currently-cached).
+- **Values.** Sizes and MD5s are in the fork's [`detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/terraglyph/detection_tables.h). The sizes match the [`tools/exes/` identity tables](../tools/exes/README.md#currently-cached).
 
 ---
 
@@ -128,9 +128,9 @@ The engine reads it with `ScoobyEngine::getGeneration()`. `detection_tables.h` h
 
 **Upstream reference:** `common/file.h`, `common/archive.h`, `common/fs.h`. `SearchMan` for path resolution.
 
-**Acceptance criterion:** A `grep -E '(fopen|std::ifstream|CreateFile[AW]?)' engines/scooby/` returns no matches outside comments. (`Common::File::open()` is permitted — only direct OS file APIs are banned.) The `TGIFILE.ART` parser opens its archive via `Common::File::open(name)` and exposes individual assets as `Common::SeekableReadStream`.
+**Acceptance criterion:** A `grep -E '(fopen|std::ifstream|CreateFile[AW]?)' engines/terraglyph/` returns no matches outside comments. (`Common::File::open()` is permitted — only direct OS file APIs are banned.) The `TGIFILE.ART` parser opens its archive via `Common::File::open(name)` and exposes individual assets as `Common::SeekableReadStream`.
 
-**Implementation notes:** WP-014 (2026-11-14). `Scooby::ArtArchive` (`engines/scooby/art_archive.{h,cpp}`) is a `Common::Archive` over the Gen 1 `TGIFILE.ART`.
+**Implementation notes:** WP-014 (2026-11-14). `Terraglyph::ArtArchive` (`engines/terraglyph/art_archive.{h,cpp}`) is a `Common::Archive` over the Gen 1 `TGIFILE.ART`.
 
 - **Index.** The index is the room and object sector descriptors plus the name table ([tgifile-art §Header layout](formats/tgifile-art.md#header-layout)). The "asset entry table" this note first named turned out not to be offsets.
 - **Members.** Room and object names are the members, looked up case-insensitively. Both titles' names are unique even ignoring case.
@@ -155,16 +155,16 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 **Implementation notes:** WP-015 (2026-11-14).
 
 - **Screen.** The engine asks for 640 × 480 RGB565 (`initGraphics()`) and returns `kUnsupportedColorMode` if the backend can't provide it. It draws into its own `Graphics::Surface` and hands that to `copyRectToScreen()`. There are no per-platform paths.
-- **Decoding.** `Scooby::Cel` (`engines/scooby/cel.{h,cpp}`) decodes one cel from a room or object block into 16-bit words plus a coverage map: transparent, opaque (mask A) or translucent (mask B). It handles RLE (big-endian words), raw (little-endian) and solid cels. Every run, offset and mask span is checked against the block and the image.
+- **Decoding.** `Terraglyph::Cel` (`engines/terraglyph/cel.{h,cpp}`) decodes one cel from a room or object block into 16-bit words plus a coverage map: transparent, opaque (mask A) or translucent (mask B). It handles RLE (big-endian words), raw (little-endian) and solid cels. Every run, offset and mask span is checked against the block and the image.
 - **Drawing.** `drawRoomLayers()` draws each used layer slot's frame record in the opaque pass. Translucent (mask B) blending waits for sprites, since backgrounds have no mask B.
 - **Checked on both Gen 1 titles.**
   - Every cel's pixels and coverage match `probe_art.py` (MD5 per cel): 9,111 in Showdown, 5,810 in Phantom.
   - The screen after drawing room 0 matches the probe's composite pixel for pixel.
 - **Wide rooms.** Rooms 1,920 pixels wide show their left 640 pixels; scrolling is not done yet.
-- **Whole rooms (WP-016, 2026-11-14).** `Scooby::RoomRenderer` (`engines/scooby/room.{h,cpp}`) builds a room as the original sets it up on entry. It creates the layer sprites, then one sprite per placement at step 0 of its sequence, in the traced sprite tree. Placement kinds come from `object.ini`, which is read through `Common::INIFile`. It paints back to front into a room-sized RGB565 surface. `Cel::draw()` copies opaque pixels and blends translucent ones with the original 565 blitter's formula and tables ([tgifile-art §Cel format](formats/tgifile-art.md#cel-format)).
+- **Whole rooms (WP-016, 2026-11-14).** `Terraglyph::RoomRenderer` (`engines/terraglyph/room.{h,cpp}`) builds a room as the original sets it up on entry. It creates the layer sprites, then one sprite per placement at step 0 of its sequence, in the traced sprite tree. Placement kinds come from `object.ini`, which is read through `Common::INIFile`. It paints back to front into a room-sized RGB565 surface. `Cel::draw()` copies opaque pixels and blends translucent ones with the original 565 blitter's formula and tables ([tgifile-art §Cel format](formats/tgifile-art.md#cel-format)).
   - For all 69 Showdown and 53 Phantom rooms, the draw order and room surface (MD5) match an exact 565 model.
   - An optional `start_room` key in the game's config domain picks the first room. It is a test convenience to revisit before Phase 5.
-- **Animation (WP-017, 2026-11-14).** `Scooby::Room` keeps the sprite tree it builds on entry, and each placed sprite plays its sequence with the original player.
+- **Animation (WP-017, 2026-11-14).** `Terraglyph::Room` keeps the sprite tree it builds on entry, and each placed sprite plays its sequence with the original player.
   - The engine loop runs `elapsed_ms × 36 / 1000` game ticks from `OSystem::getMillis()`, as `0x435BC0` does, and redraws when a step changes.
   - Cels are decoded once per room and cached.
   - All 122 rooms match a reference model at tick 0 and tick 37.
@@ -174,7 +174,7 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
   - The cursor is drawn in software as an `OBJ_CURSOR` sprite at the mouse, playing the hovered object's rollover or `ANIM_CURSORARROW`. There is no `CursorMan` cursor, so translucent cursor edges blend like any sprite.
   - Clicking an exit loads `destinationroom=` directly.
 - **The inventory and the toolbar (WP-023, 2026-11-14).**
-  - `Scooby::Inventory` lasts the whole game. On each room entry it adds the toolbar to the room's sprite tree, as root sprites the engine owns. The toolbar is the van and what it tows, placed relative to their parents.
+  - `Terraglyph::Inventory` lasts the whole game. On each room entry it adds the toolbar to the room's sprite tree, as root sprites the engine owns. The toolbar is the van and what it tows, placed relative to their parents.
   - The game cursor (an item in use, or the arrow) is the cursor the sprite shows when the hovered object has no rollover.
   - Clicks reach the inventory as the original's do, in its tick order: the toolbar first, then the room's objects, then the game's wrong-item check.
 
@@ -190,10 +190,10 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
 
 **Implementation notes:** WP-019 (2026-11-14). The Gen 1 audio is uncompressed PCM ([audio-archives](formats/audio-archives.md)), so the engine needs no new decoder and no licensed code.
 
-- **`Scooby::SoundArchive`** (`engines/scooby/sound_archive.{h,cpp}`) reads one `.dat` file.
+- **`Terraglyph::SoundArchive`** (`engines/terraglyph/sound_archive.{h,cpp}`) reads one `.dat` file.
   - It checks the header, the name index and every clip header against the file.
   - A clip opens with `Audio::makeRawStream()`, as 16-bit little-endian signed (or 8-bit unsigned) samples, mono or stereo. The stream is a sub-stream of its own `Common::File` that starts on the sector after the clip header.
-- **`Scooby::Sound`** looks names up in `Sfx.dat`, `Voice.dat`, then `Music.dat`, the original's order (`0x434DC0`).
+- **`Terraglyph::Sound`** looks names up in `Sfx.dat`, `Voice.dat`, then `Music.dat`, the original's order (`0x434DC0`).
   - Each file plays on its own mixer type: `kSFXSoundType`, `kSpeechSoundType` and `kMusicSoundType`. So the ScummVM volume sliders apply per file.
   - The clip's volume byte (a percentage) becomes the channel volume.
   - Clips with the loop flag wrap in `makeLoopingAudioStream`. Pan is 0 on every clip, so the balance stays centred.
@@ -221,7 +221,7 @@ The grep in the acceptance criterion finds nothing in `engines/scooby/` at fork 
   - **The ghost's scare** (state `0x12`) now stops the line the character was saying before its `Global.Scared` line, as `0x405190` does (`0x434CB0` on `+0x7C`).
   - **A room's unload** now stops the effects and voice lines, not the music, as `0x435CD0` does (`0x434E10`). Without it, earlier rooms' lines filled the four streams during the checks, which run faster than real time, and the open safe's scene played nothing.
 - Live, in Phantom's Souvenir Shop with `ghost_chance=1`, the room's music playing: `Ghost_Appears`, then Daphne's, Fred's and Velma's scared lines together. Shaggy's found no stream, as in the original. There is no Scooby line on that disc.
-- **Checks** (Scooby-only build, 0 warnings in `engines/scooby/`), against WP-056's run:
+- **Checks** (TerraGlyph-only build, 0 warnings in `engines/terraglyph/`), against WP-056's run:
   - the chase check matches its reference (Showdown 214 lines, Phantom 7);
   - the room check is identical (69 and 53 rooms);
   - the other script checks are identical but for the clue the profile check imports, which comes from the clock-seeded random source.
@@ -242,7 +242,7 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 **Implementation notes:** WP-022 (2026-11-14).
 
 - **The files.** Every Gen 1 movie is `BK.NNN` in the game folder, Bink `BIKi` at 640 × 480: 42 on Showdown, 56 on Phantom. `Video::BinkDecoder` decodes all of them, and the disc's `binkw32.dll` is never loaded.
-- **`ScoobyEngine::playMovie()`** (`engines/scooby/movie.cpp`) plays one blocking, as the original's main loop does.
+- **`TerraglyphEngine::playMovie()`** (`engines/terraglyph/movie.cpp`) plays one blocking, as the original's main loop does.
   - It opens the file, sets the output to the screen's RGB565 with `setOutputPixelFormat()`, and plays the movie's sound on `kSFXSoundType`.
   - It copies each frame when `needsUpdate()` says so, and ends at `endOfVideo()`, on quit, or on a skip.
   - The engine's own sounds stop first, as the original's do.
@@ -263,7 +263,7 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 
 **Implementation notes:** WP-026 (2026-11-14). The original has no slots. It keeps one profile per player, an INI `<name>.sav` it writes as it plays ([scooby-exe](formats/scooby-exe.md#the-player-profile-wp-026)). A ScummVM save holds that profile's text, so the format is the original's.
 
-- **Writing** (`engines/scooby/profile.cpp`). `saveGameStream()` builds the profile: `Game` (`StartRoom`, `MovieHistory0`–`74`, `Suspect0`–`4`), `Exits`, `Clickables` and `Inventory`, by the original's rules. The stream holds a magic `SCBY`, a version, and the INI text.
+- **Writing** (`engines/terraglyph/profile.cpp`). `saveGameStream()` builds the profile: `Game` (`StartRoom`, `MovieHistory0`–`74`, `Suspect0`–`4`), `Exits`, `Clickables` and `Inventory`, by the original's rules. The stream holds a magic `SCBY`, a version, and the INI text.
 - **Reading.** `loadGameStream()` reads it back by the original's rules, then shows `StartRoom`. Keys the engine doesn't model yet, such as the story's flags, are kept as read, so they survive a save. An original `.sav` reads the same way.
 - **Flags.** The metaengine declares `kSupportsListSaves`, `kSupportsDeleteSave`, `kSupportsLoadingDuringStartup` and `kSavesUseExtendedFormat` with meta info, thumbnails, dates and play time. The engine declares `kSupportsLoadingDuringRuntime` and `kSupportsSavingDuringRuntime`. Saving waits while a scene or an exit plays.
 - **The console's `profile`** prints the profile a save would hold.
@@ -276,9 +276,9 @@ Which sounds play when, beyond the exit scenes (room music, ambience), is room c
 
 **Upstream reference:** `common/debug.h`, `common/debug-channels.h`.
 
-**Acceptance criterion:** At minimum these channels exist: `resource` (file loading), `graphics` (rendering), `audio` (mixer routing), `script` (`object.ini` interpretation), `input` (event handling). `scummvm --debugflags=resource scooby:showdown` produces meaningful output.
+**Acceptance criterion:** At minimum these channels exist: `resource` (file loading), `graphics` (rendering), `audio` (mixer routing), `script` (`object.ini` interpretation), `input` (event handling). `scummvm --debugflags=resource terraglyph:showdown` produces meaningful output.
 
-**Implementation notes:** WP-010 (2026-11-13). The channels are declared in `engines/scooby/detection.h` (enum) and `detection.cpp` (table). WP-001 used the same names as Ghidra label prefixes ([`wp001-labels.txt`](../tools/ghidra-scripts/wp001-labels.txt)).
+**Implementation notes:** WP-010 (2026-11-13). The channels are declared in `engines/terraglyph/detection.h` (enum) and `detection.cpp` (table). WP-001 used the same names as Ghidra label prefixes ([`wp001-labels.txt`](../tools/ghidra-scripts/wp001-labels.txt)).
 
 | Id | Enum | Name | Covers |
 |---|---|---|---|
@@ -303,24 +303,24 @@ With `start_room` and `start_items`, it runs a live test minimized, so it doesn'
 
 ## 10. Build system integration
 
-**Requirement:** Three files in `engines/scooby/` participate in ScummVM's build:
+**Requirement:** Three files in `engines/terraglyph/` participate in ScummVM's build:
 
 - `module.mk` — make rules listing every `.o` the engine produces; must include both `detection.cpp` and the engine sources as separate compilation units
 - `configure.engine` — engine declaration (name, optional dependencies, default state). For a fresh `ADGF_TESTING` engine, default state should be **disabled** — users opt in explicitly. Flipping to default-enabled is a later change once the engine has shipped at least one stable release.
 - `POTFILES` — lists source files that contain user-visible translatable strings (e.g. `metaengine.cpp`, `detection.cpp` if they have `_("…")` calls). If the engine has no translatable strings at all (likely for English-only edutainment titles), `POTFILES` can be an empty file or omitted; do not invent placeholder entries.
 
-**Detection/engine split requirement:** Detection code (`MetaEngineDetection`) must live in `detection.cpp` and be linked independently from the engine code (`ScoobyEngine`). This is mandatory in current ScummVM — the detection plugin loads without the full engine at game-scan time. Do not put engine logic in `detection.cpp` and do not put detection table data in `scooby.cpp`.
+**Detection/engine split requirement:** Detection code (`MetaEngineDetection`) must live in `detection.cpp` and be linked independently from the engine code (`TerraglyphEngine`). This is mandatory in current ScummVM — the detection plugin loads without the full engine at game-scan time. Do not put engine logic in `detection.cpp` and do not put detection table data in `scooby.cpp`.
 
 **Upstream reference:** any existing engine's `module.mk` (e.g. `engines/sci/module.mk`), `configure.engine`. ScummVM's `configure` script picks these up automatically when the directory exists.
 
-**Acceptance criterion:** `./configure --enable-engine=scooby && make` produces a `scummvm` binary that includes the engine. `./configure --disable-engine=scooby && make` produces one that omits it cleanly. No platform-specific build hacks.
+**Acceptance criterion:** `./configure --enable-engine=terraglyph && make` produces a `scummvm` binary that includes the engine. `./configure --disable-engine=terraglyph && make` produces one that omits it cleanly. No platform-specific build hacks.
 
 **Implementation notes:** WP-010 (2026-11-13), at the pin, with MSYS2 UCRT64 (g++ 16.2.0, SDL2 2.32.10, GNU Make 4.4.1). The toolchain is chosen for Phase 2–5. Both builds ran out of tree:
 
-- `configure --disable-all-engines --enable-engine=scooby && make -j32`: configure lists only `Scooby-Doo (TerraGlyph)` as builtin, and the four `engines/scooby/*.o` compile with no warnings. `scummvm.exe --list-engines` shows `scooby`, and `--list-debugflags=scooby` shows the five §9 channels.
-- `configure --disable-engine=scooby && make -j32` (the default engine set, 38 minutes): configure lists scooby under "Engines Skipped". `scummvm.exe --list-engines` lists 97 engines without it. Only `engines/scooby/detection.o` is compiled, because at the pin configure builds detection for every engine by default ("building detection features for all engines... yes"). That is the detection/engine split working: detection compiles and links without `scooby.o`, `console.o` or `metaengine.o`.
+- `configure --disable-all-engines --enable-engine=terraglyph && make -j32`: configure lists only `TerraGlyph` as builtin, and the four `engines/terraglyph/*.o` compile with no warnings. `scummvm.exe --list-engines` shows `terraglyph`, and `--list-debugflags=terraglyph` shows the five §9 channels.
+- `configure --disable-engine=terraglyph && make -j32` (the default engine set, 38 minutes): configure lists terraglyph under "Engines Skipped". `scummvm.exe --list-engines` lists 97 engines without it. Only `engines/terraglyph/detection.o` is compiled, because at the pin configure builds detection for every engine by default ("building detection features for all engines... yes"). That is the detection/engine split working: detection compiles and links without `scooby.o`, `console.o` or `metaengine.o`.
 
-`configure.engine` is `add_engine scooby "Scooby-Doo (TerraGlyph)" no "" "" "highres 16bit" ""`: off by default, and it needs the 640 × 480 and 16-bit features. `module.mk` puts `scooby.o`, `console.o` and `metaengine.o` in `MODULE_OBJS` and `detection.o` in `DETECT_OBJS`. There is no `POTFILES` because there are no translatable strings yet.
+`configure.engine` is `add_engine terraglyph "TerraGlyph" no "" "" "highres 16bit" ""`: off by default, and it needs the 640 × 480 and 16-bit features. `module.mk` puts `scooby.o`, `console.o` and `metaengine.o` in `MODULE_OBJS` and `detection.o` in `DETECT_OBJS`. There is no `POTFILES` because there are no translatable strings yet.
 
 ---
 
@@ -346,7 +346,7 @@ The PR submitted to `scummvm/scummvm` (Phase 5 deliverable) must satisfy:
 - [ ] ScummVM wiki page exists at `https://wiki.scummvm.org/index.php/Scooby` describing: supported titles, known limitations, game-data file list, save-state support status
 - [ ] Required game data files documented (so players know what to point ScummVM at)
 - [ ] MD5 hashes recorded for every detected variant
-- [ ] Commit messages follow ScummVM's convention (`SCOOBY: <subsystem>: <description>`)
+- [ ] Commit messages follow ScummVM's convention (`TERRAGLYPH: <subsystem>: <description>`)
 - [ ] No copyrighted game data, no decoded asset blobs, no `binkw32.dll` in the PR
 - [ ] Engine builds on the three reference platforms (Win/macOS/Linux) in ScummVM's CI
 - [ ] Complies with upstream's [`AI-GUIDELINES.md`](https://github.com/scummvm/scummvm/blob/master/AI-GUIDELINES.md) (present at the pin; recorded 2026-11-13, WP-010). It requires:

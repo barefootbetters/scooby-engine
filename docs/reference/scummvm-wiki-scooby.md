@@ -18,13 +18,13 @@ title: "ScummVM wiki page — Scooby (draft)"
 
 ## Scooby-Doo (TerraGlyph)
 
-The **scooby** engine reimplements the TerraGlyph Interactive Studios
+The **terraglyph** engine reimplements the TerraGlyph Interactive Studios
 point-and-click adventure engine used by the Scooby-Doo CD-ROM games
 (Gen 1). It reads the original discs' data directly — no fan patches, no
 re-packed assets — and plays the Bink cutscenes through ScummVM's own
 `Video::BinkDecoder` (the disc's `binkw32.dll` is never loaded).
 
-Engine id: `scooby`. *Showdown* is declared `ADGF_TESTING` (shown in the
+Engine id: `terraglyph`. *Showdown* is declared `ADGF_TESTING` (shown in the
 launcher, flagged as needing testing); *Phantom* remains `ADGF_UNSTABLE`
 (hidden unless unstable games are enabled) while its room port finishes.
 
@@ -104,7 +104,7 @@ pauses while a scene or an exit transition is playing).
 
 Detection MD5 is over the first 5,000 bytes (the ScummVM advanced-detector
 default); sizes are whole-file. From
-[`engines/scooby/detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/scooby/detection_tables.h).
+[`engines/terraglyph/detection_tables.h`](https://github.com/barefootbetters/scummvm/blob/scooby-engine/engines/terraglyph/detection_tables.h).
 
 | Game id | File | Size (bytes) | MD5 (first 5000 B) |
 |---|---|---|---|

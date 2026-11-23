@@ -5,7 +5,7 @@ title: "Vision — Scooby-Doo ScummVM Engine"
 
 # Vision: ScummVM Engine for The Learning Company Scooby-Doo Games
 
-**Project:** `scooby` engine for ScummVM
+**Project:** `terraglyph` engine for ScummVM
 **Status:** Pre-development — format research
 **Started:** 2026-06
 
@@ -221,7 +221,7 @@ reuse. This is the strongest possible engine-family signal.
   `KnightsTable`, `PieNoon` and skiing mini-games around a campfire hub.
   Evidence: [scooby-exe §Activity Challenge](formats/scooby-exe.md#activity-challenge-wp-013).
 
-**Implementation implication:** the `scooby` ScummVM engine covers one
+**Implementation implication:** the `terraglyph` ScummVM engine covers one
 engine lineage with format-version-aware adapters: **three** archive
 parsers (`TGIFILE.ART`, `MMFW` for Gen 2 and 3) and two config parsers
 (INI, XML). These are adapters, not separate engines. The detection table
@@ -338,7 +338,7 @@ collaborator's work on Case File #1
 
 ## Engine Contract (ScummVM Requirements)
 
-The `scooby` engine must conform to ScummVM conventions:
+The `terraglyph` engine must conform to ScummVM conventions:
 
 - **Stateless per-frame rendering.** No reliance on OS-managed surfaces; the ScummVM compositor owns the screen.
 - **Centralized event loop** via `Engine::run()`. No threaded I/O or hidden update loops.
@@ -466,7 +466,7 @@ Fail condition: inability to extract any visual asset from `TGIFILE.ART` blocks 
 
 Work items:
 - Fork `scummvm/scummvm` into `C:\www\scummvm\`.
-- Create `engines/scooby/` from ScummVM's engine template.
+- Create `engines/terraglyph/` from ScummVM's engine template.
 - Implement game detection via ScummVM's `ADGameDescription` table.
 - Wire up the event loop, graphics surface, and debug logging (define channels for resource loading, rendering, input, and script).
 

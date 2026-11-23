@@ -3,7 +3,7 @@ layout: default
 title: "Work Index — Scooby-Doo ScummVM Engine"
 ---
 
-# scooby — Work Index
+# terraglyph — Work Index
 
 > Master ordered ledger of work packets (WPs) and execution checklists (ECs).
 > Each WP is one unit of work with a goal, dependencies, and exit criteria.

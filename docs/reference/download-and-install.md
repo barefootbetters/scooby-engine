@@ -79,8 +79,8 @@ fork as an Android APK for a Google TV or other Android TV.
 Three platforms below, plus the **Raspberry Pi**, which has its own detailed
 page: [Installing ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md)
 (use its [Developer build](scummvm-raspberry-pi.md#developer-build-our-fork-from-source)
-section). The Scooby engine is declared **disabled by default**, so every build
-below passes `--enable-engine=scooby` explicitly.
+section). The TerraGlyph engine is declared **disabled by default**, so every build
+below passes `--enable-engine=terraglyph` explicitly.
 
 ### Get the source (all platforms)
 
@@ -91,7 +91,7 @@ git checkout scooby-engine
 ```
 
 The `scooby-engine` branch is the fork's integration branch; it tracks upstream
-ScummVM (kept current by a periodic merge) plus `engines/scooby/`.
+ScummVM (kept current by a periodic merge) plus `engines/terraglyph/`.
 
 ### Windows (MSYS2 / UCRT64)
 
@@ -108,19 +108,19 @@ SDL2 2.32.10, GNU Make 4.4.1).
        mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-SDL2_net
    ```
 
-   A Scooby-only build needs little beyond SDL2 (its audio is PCM and its video
+   A TerraGlyph-only build needs little beyond SDL2 (its audio is PCM and its video
    is Bink, both handled by ScummVM's built-in decoders). For a full-featured
    build, add the optional media libraries from ScummVM's
    [Windows compiling guide](https://wiki.scummvm.org/index.php/Compiling_ScummVM/MSYS2).
 3. From the cloned `scummvm` directory, in the UCRT64 shell:
 
    ```bash
-   ./configure --enable-engine=scooby --disable-debug --enable-release
+   ./configure --enable-engine=terraglyph --disable-debug --enable-release
    make -j$(nproc)
    ```
 
    To build **only** the Scooby engine (fastest), use
-   `./configure --disable-all-engines --enable-engine=scooby`.
+   `./configure --disable-all-engines --enable-engine=terraglyph`.
 
 The build produces `scummvm.exe` in the build directory.
 
@@ -134,7 +134,7 @@ sudo apt install -y --no-install-recommends \
 # optional media/feature libraries (see the Pi page's step 1 for the full list):
 #   libogg-dev libvorbis-dev libflac-dev libmad0-dev libpng-dev libtheora-dev ...
 
-./configure --enable-engine=scooby --disable-debug --enable-release
+./configure --enable-engine=terraglyph --disable-debug --enable-release
 make -j"$(nproc)"
 ```
 
@@ -148,7 +148,7 @@ Install [Homebrew](https://brew.sh/), then:
 
 ```bash
 brew install sdl2 sdl2_net freetype
-./configure --enable-engine=scooby --disable-debug --enable-release
+./configure --enable-engine=terraglyph --disable-debug --enable-release
 make -j"$(sysctl -n hw.ncpu)"
 ```
 
@@ -164,12 +164,12 @@ Launching ScummVM doesn't prove the engine compiled in. Check it (adjust the pat
 to your built binary):
 
 ```bash
-./scummvm --list-engines | grep -i scooby
+./scummvm --list-engines | grep -i terraglyph
 ```
 
-It should print the `scooby` engine line. If it prints nothing, the engine wasn't
-built — rerun `./configure` with `--enable-engine=scooby` and confirm its engine
-summary lists Scooby.
+It should print the `terraglyph` engine line. If it prints nothing, the engine wasn't
+built — rerun `./configure` with `--enable-engine=terraglyph` and confirm its engine
+summary lists TerraGlyph.
 
 Then point detection at a game folder:
 
@@ -230,7 +230,7 @@ part of upstream ScummVM, do **not** file Scooby-engine issues on scummvm.org.
 
 - Fork: [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch `scooby-engine`).
 - [Why the engine is a ScummVM fork](why-forked-scummvm.md) — the fork vs. upstream decision.
-- [Scooby engine status & limitations](scummvm-wiki-scooby.md) — supported titles, data files, MD5s, known limits.
+- [TerraGlyph engine status & limitations](scummvm-wiki-scooby.md) — supported titles, data files, MD5s, known limits.
 - [Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots) — every room, captured from our engine running.
 - [Screen map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map) — room navigation map built from the engine's real exits.
 - [Installing ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md) — the Pi developer build + controllers.
