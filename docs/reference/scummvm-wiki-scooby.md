@@ -29,9 +29,9 @@ launcher, flagged as needing testing); *Phantom* remains `ADGF_UNSTABLE`
 (hidden unless unstable games are enabled) while its room port finishes.
 
 To see it running, browse the
-[Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots)
+[Screenshots gallery](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots)
 — every room, captured from our engine — or the
-[screen map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map)
+[screen map](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots#screen-map)
 for how the rooms connect, built from the engine's real exits.
 
 ## Supported titles
