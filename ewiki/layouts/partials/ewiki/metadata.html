@@ -1,0 +1,46 @@
+{{- /*
+  why: the engineering wiki's header panel, modeled on Legendary Arena's
+  (apps/wiki-viewer/layouts/partials/ewiki/metadata.html) so the two studio
+  wikis read alike: Type, Status, Tags, Last reviewed. This is the sanctioned
+  metadata.html extension point (Test-EwikiTheme.ps1 $ExtensionPoints), so it
+  overrides the theme default without shadowing a core file. The container
+  dl.metadata-panel and its styling are core theme CSS (D-24782).
+
+  why: this repo's pages carry only layout+title front matter, so Type, Status
+  and Tags render only on a page that sets them — forward-compatible with LA's
+  field schema, a no-op on today's pages. "Last reviewed" always renders: from
+  the page's last Git commit date and time (.Lastmod, with enableGitInfo = true
+  in hugo.toml), or from an explicit last_reviewed / last-reviewed front-matter
+  value when a page sets one. The Git source needs the CI checkout's full
+  history (ewiki.yml fetch-depth: 0); without it .Lastmod falls back to the
+  file's mod time. The rendered string carries the commit's own time zone, so
+  it is identical on a UTC runner and a local build — the determinism gate
+  (Invoke-WikiGates.ps1 gate 3) stays green.
+*/ -}}
+<dl class="metadata-panel">
+  {{- with .Params.type -}}
+    <dt>Type</dt><dd>{{ . }}</dd>
+  {{- end -}}
+  {{- with .Params.status -}}
+    <dt>Status</dt><dd class="status status-{{ . }}">{{ . }}</dd>
+  {{- end -}}
+  {{- with .Params.tags -}}
+    <dt>Tags</dt>
+    <dd>
+      <ul class="tag-list">
+        {{- range . -}}
+          <li class="tag"><a href="/tags/#{{ . }}">{{ . }}</a></li>
+        {{- end -}}
+      </ul>
+    </dd>
+  {{- end -}}
+  {{- $reviewed := "" -}}
+  {{- with .Params.last_reviewed -}}{{ $reviewed = . }}{{- end -}}
+  {{- with index .Params "last-reviewed" -}}{{ $reviewed = . }}{{- end -}}
+  <dt>Last reviewed</dt>
+  {{- if $reviewed -}}
+    <dd>{{ $reviewed }}</dd>
+  {{- else -}}
+    <dd>{{ .Lastmod | time.Format "2006-01-02 15:04 MST" }}</dd>
+  {{- end -}}
+</dl>
