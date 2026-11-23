@@ -11,6 +11,52 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-22 — Engine namespace rename: `scooby` → `terraglyph`
+
+**Context.** The engine's *prose* name has been "the TerraGlyph engine" since the
+2026-06 lineage finding ([VISION](../01-VISION.md)), but the ScummVM engine still
+ships under the identifier `scooby`: `engines/scooby/`, `namespace Scooby`, the
+plugin symbol `SCOOBY` / `ENABLE_SCOOBY`, `add_engine scooby`, and `scooby`-prefixed
+detection game IDs. Mony ([2026-11-22 email](../work-packets/WP-011-casefile-decompdecomp.md#reply-rename-to-terraglyph-decode-review-landed-2026-11-22))
+proposed renaming the engine `scooby` → `terraglyph`, noting a WIP engine already
+holds the `scooby` name upstream.
+
+**What was checked (Observed, 2026-11-22, via `gh`).**
+
+- Upstream **ScummVM PR [#8063](https://github.com/scummvm/scummvm/pull/8063) —
+  "SCOOBY: New engine for Scooby-Doo Mystery"** is open: a *different* game (the
+  1995 Acclaim platformer) claiming the `scooby` engine identifier upstream. Our
+  `scooby` collides with it in name on any future upstream path and in community /
+  search terms now.
+- **`terraglyph` is free upstream** — no `engines/terraglyph` on `scummvm/scummvm`
+  master, and no open upstream PR mentions it.
+
+**Decision (Jeff).** **Rename the ScummVM engine identity `scooby` → `terraglyph`**
+in the fork — directory, `namespace`, plugin / `ENABLE_` symbol, `add_engine` name,
+and detection game IDs — and update the forward-facing docs, public site and wiki
+to name the `terraglyph` engine. The name is not a Scooby coincidence: the engine
+spans the whole TerraGlyph Gen-1 catalog (Showdown, Phantom, 102 Dalmatians, Clue
+Jr., Little Mermaid II, …), so `terraglyph` is the accurate family name — and the
+one the project's prose already uses.
+
+**Scope boundary.**
+
+- **In:** the fork's engine identity + build / detection hooks; a clean rebuild and
+  a green gate walk to prove the rename; the forward-facing docs (VISION,
+  SCUMMVM-INTEGRATION, download-and-install, the strategy note, README, WORK_INDEX,
+  the ScummVM-wiki page) and the GitHub wiki.
+- **Out (for now):** the GitHub **repo name `scooby-engine`** and the Pages URL /
+  DNS (`github.barefootbetters.com/scooby-engine`). Those are our own namespace, not
+  in collision with upstream, and renaming them is a separate, higher-risk move Jeff
+  has not called for. Historical records (pre-flight logs, completed-WP session
+  logs) are left as the record of what the directory was called at the time; the
+  rename is noted where it load-bears, not retrofitted across the archive.
+
+**Tracked as:** a fork rename PR against `barefootbetters/scummvm` (link on open),
+with the docs / site / wiki following in `scooby-engine`. **No upstream action** —
+the [fork decision](../reference/why-forked-scummvm.md) is unchanged; this renames
+the engine only within the fork.
+
 ## 2026-11-22 — Merged-PR survey on the precedent question; fork decision unchanged
 
 **Context.** Following up the [2026-11-21 reaffirmation](#2026-11-21--upstream-submission-reconsidered-after-collaborator-pushback-fork-decision-reaffirmed)

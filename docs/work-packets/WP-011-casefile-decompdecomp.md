@@ -490,6 +490,48 @@ A VISION provenance refinement (noting Jinx's ImageBuilder co-credit and the "`M
 
 The live MobyGames pages and Mony's room/email are not recorded.
 
+### Reply: rename to `terraglyph`, decode review landed (2026-11-22)
+
+Mony's 2026-11-22 email, three threads — all already actionable here:
+
+- **Decode review of `TGIFILE.ART` scene-block / placement (Reported, already
+  Observed and merged).** A close read of the room loader and placement walker: the
+  close field at `+0x10` is "not read by the engine," `+0x88` is "opaque per-object
+  data, not an unrelocated offset" (the placement relocation routine `0x43B940` is a
+  `ret 4` no-op), and the `+0xB0`/`+0xB8` tables are never populated — shipped data
+  doesn't use them (148-byte placement layout; room loader `0x43B080`, placement
+  walker `0x435DC0`; decoded code on his branch `showdown-at-ghost-town`,
+  `src/auto/text_0043A460.cpp` and `src/auto/text_00435DC0.cpp`). **Already
+  integrated** into [tgifile-art.md](../formats/tgifile-art.md) (cites M. Armenchev
+  2026-11-22; closes `+0x10`, `+0x88`, and the never-populated tables). Nothing
+  outstanding.
+- **"List the other `TGIFILE.ART` games in Target Games" (already satisfied).** The
+  [VISION Target Games](../01-VISION.md) section already lists the in-scope set, and
+  the non-Scooby Gen-1 confirmations (102 Dalmatians, Clue Jr., Little Mermaid II)
+  are recorded in this log. `TGIFILE.ART` is a Gen-1 format — among the Scooby
+  titles it is Showdown + Phantom, both already listed. No gap.
+- **Rename `scooby` → `terraglyph` (decision taken).** Mony's reason — a WIP engine
+  already holds the `scooby` name — checks out: upstream PR
+  [#8063](https://github.com/scummvm/scummvm/pull/8063) claims `scooby` for a
+  different game (the 1995 Acclaim platformer), and `terraglyph` is free upstream.
+  Jeff approved the rename; it is recorded in
+  [DECISIONS](../ai/DECISIONS.md#2026-11-22--engine-namespace-rename-scooby--terraglyph)
+  and tracked as a fork PR. The prose name was already "TerraGlyph"; this makes the
+  engine identifier match.
+
+**Drafted reply (Jeff's to send):**
+
+> Thanks, Mony — the placement decode is exactly what we needed, and it's already
+> folded into our TGIFILE.ART notes: `+0x10` close field not read at runtime,
+> `+0x88` opaque (with `0x43B940` confirmed a `ret 4` no-op), and the `+0xB0`/`+0xB8`
+> tables unused by the shipped data. Good calls on both suggestions too. The Target
+> Games list already carries the TGIFILE.ART titles (Showdown and Phantom on the
+> Scooby side, plus the non-Scooby Gen-1 ones we've since confirmed — 102
+> Dalmatians, Clue Jr., Little Mermaid II). And we're renaming the engine `scooby` →
+> `terraglyph`: you're right that the name's effectively taken — there's an open
+> upstream PR using `scooby` for the Acclaim platformer — and `terraglyph` fits the
+> whole Gen-1 catalog anyway, so it's the accurate name regardless of the collision.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -820,6 +862,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-21 | **MobyGames dev catalog reconciled (Observed, via Wayback — live site is Cloudflare bot-walled).** Two TerraGlyph entities: **L.P.** (Schaumburg IL, game dev, 11 games 1995–2001) and **Productions Limited** (Dublin IE, animation arm, 4 of the same for art). All 11 L.P. titles already in our map/Mony's once-over — **no new titles**. Key finding: **neither page credits Clue Jr. or Little Mermaid II**, both of which we verified ship `TGIFILE.ART` (2026-11-20) — so MobyGames **undercounts the engine footprint**; a TerraGlyph credit isn't the engine boundary, and binary evidence outranks it (validates Mony's PCGW/LaunchBox route). No Case File titles (both stop at 2001) — consistent with the 2002+ IBS handoff. Studio shipped DOS/Win/Mac/PS1/N64 across multiple engines → reinforces studio-level "TerraGlyph" naming. Scope unchanged. See [§MobyGames dev catalog reconciled](#mobygames-dev-catalog-reconciled-11-titles-two-entities-what-it-misses-2026-11-21). |
 | 2026-11-21 | **Correction (Observed): Case File #3 is Macromedia *Flash*, not Director** — reverses the 2026-06-03 "Confirmed Director" reading. Mony reported the engine is Flash (exe is a Flash player, data is `.swf`/mp3/wav/video, Ruffle runs it); verified against the disc on hand (`Scooby Doo! #3.iso`, SHA-1 `bc709817…b11`). The disc's single exe is a **TLC Windows installer** (version resource: "Scooby-Doo!(TM)", v4.1.07, The Learning Company — not an engine binary); the packed payload raw-scans to **456 `.swf` + 6 `.flv`** and 92 `FWS`/`CWS` SWF headers with **zero** Director markers. The 2026-06-03 reading misread the installer's metadata (Macromedia shipped both Director and Flash). Corrected in [VISION](../01-VISION.md) (5 places), [tools/exes/README](../../tools/exes/README.md), [WP-012](WP-012-detection-table.md) and this WP. **Out-of-scope conclusion unchanged** — but #3 is now out of scope *permanently* (ScummVM has no Flash engine; Ruffle already plays it), which voids the 2026-11-20 "#3 before #2" sequencing. See [§Correction: Case File #3 is Macromedia Flash](#correction-case-file-3-is-macromedia-flash-not-director-2026-11-21). |
 | 2026-11-21 | Collaborator email (**Reported**) + catalog grounding (**Observed, via Wayback**). Mony finds the Gen-2/3 **`MM*`** archive family on ImageBuilder's own pre-Scooby titles (anchor: *Arthur's Thinking Games*, 1999, via SteamDB), so `MMFW` may be **ImageBuilder's house format**, not a TerraGlyph reformat — either the Gen-2 games mix the two studios' tech or ImageBuilder brought its format when it took the engine over. MobyGames (Moby ID 3355) **credits ImageBuilder as a developer on both MMFW Scooby games — Jinx (Gen 2) and Case File #1 (Gen 3)** — while Gen 1 (`TGIFILE.ART`) is TerraGlyph-only, corroborating the hypothesis at the credit level. His other `MM*` candidates (Lion King II: Simba's Pride – Active Play 1998, Carmen Sandiego: Treasures of Knowledge 2001, Furby: Big Fun in Furbyland 2000) are all confirmed ImageBuilder titles. **Batman: Justice Unbalanced** = Case File #2's Trinket / OM++ engine (Reported) — another non-Scooby title on the *excluded* engine. He proposes an automated catalog-wide engine-fingerprint sweep (agent + MobyGames / Internet Archive + `7z`/`bchunk`/`mdf2iso`/`cabextract`/`unshield`). Extension-match ≠ `MMFW` magic: every ImageBuilder format claim stays **Reported** pending a disc scan; a VISION provenance refinement is parked until then. Scope unchanged. Reply drafted. See [§ImageBuilder's MM* format may predate Gen 2](#imagebuilders-mm-format-may-predate-gen-2-a-catalog-sweep-proposal-2026-11-21). |
+| 2026-11-22 | Collaborator email (**Reported**) — three threads, all already actionable. (1) **Decode review of `TGIFILE.ART` scene-block / placement**: close field `+0x10` not read at runtime, `+0x88` opaque (reloc routine `0x43B940` is `ret 4`), `+0xB0`/`+0xB8` tables never populated (148-byte layout; room loader `0x43B080`, walker `0x435DC0`; branch `showdown-at-ghost-town`). **Already integrated** into [tgifile-art.md](../formats/tgifile-art.md) (cites M. Armenchev 2026-11-22). (2) **List the TGIFILE.ART games in Target Games** — already satisfied ([VISION](../01-VISION.md)). (3) **Rename `scooby` → `terraglyph`** — a WIP engine already holds `scooby` upstream; verified (upstream PR [#8063](https://github.com/scummvm/scummvm/pull/8063) claims `scooby`; `terraglyph` free). **Decision taken by Jeff** — see [DECISIONS](../ai/DECISIONS.md#2026-11-22--engine-namespace-rename-scooby--terraglyph) and [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
