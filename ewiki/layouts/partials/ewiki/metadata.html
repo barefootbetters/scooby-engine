@@ -13,12 +13,15 @@
   in hugo.toml), or from an explicit last_reviewed / last-reviewed front-matter
   value when a page sets one. The Git source needs the CI checkout's full
   history (ewiki.yml fetch-depth: 0); without it .Lastmod falls back to the
-  file's mod time. The instant is converted to America/Los_Angeles and
-  formatted with the zone abbreviation (PST/PDT), not the commit's raw numeric
-  offset — a Git commit carries only the offset (-0800), so "MST" on .Lastmod
-  prints "-0800" on a runner; the named-zone conversion resolves it to "PST".
-  The instant and its rules are fixed, so it is identical on a UTC runner and a
-  local build — the determinism gate (Invoke-WikiGates.ps1 gate 3) stays green.
+  file's mod time. A Git commit carries only a numeric UTC offset, no zone
+  name, so formatting with "MST" prints "-0800". Resolving that offset to a
+  name needs tz data, which the Hugo build binary on the CI runner lacks (it
+  silently no-ops, leaving "-0800"); only a machine with tz data would show
+  "PST". So the abbreviation is derived from the offset itself — Jeff authors
+  these commits in Pacific, so -0800 is PST and -0700 is PDT — which needs no
+  tz data and renders identically on the runner and locally. Any other offset
+  falls back to its numeric form. It is a pure string map, so the determinism
+  gate (Invoke-WikiGates.ps1 gate 3) stays green.
 */ -}}
 <dl class="metadata-panel">
   {{- with .Params.type -}}
@@ -44,6 +47,9 @@
   {{- if $reviewed -}}
     <dd>{{ $reviewed }}</dd>
   {{- else -}}
-    <dd>{{ (time.AsTime .Lastmod "America/Los_Angeles") | time.Format "2006-01-02 15:04 MST" }}</dd>
+    {{- $off := .Lastmod | time.Format "-0700" -}}
+    {{- $zone := $off -}}
+    {{- if eq $off "-0800" -}}{{ $zone = "PST" }}{{- else if eq $off "-0700" -}}{{ $zone = "PDT" }}{{- end -}}
+    <dd>{{ .Lastmod | time.Format "2006-01-02 15:04" }} {{ $zone }}</dd>
   {{- end -}}
 </dl>
