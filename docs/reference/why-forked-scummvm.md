@@ -69,7 +69,7 @@ truthful co-authored history intact.
 
 - **Distribution.** Builds come from our fork,
   [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm), branch
-  `scooby-engine`. The engine is self-contained under `engines/scooby/` and
+  `scooby-engine`. The engine is self-contained under `engines/terraglyph/` and
   touches no shared ScummVM file.
 - **Staying current with upstream.** We periodically merge
   `scummvm/scummvm` master into `scooby-engine`. Because the engine is

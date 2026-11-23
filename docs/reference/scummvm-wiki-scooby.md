@@ -1,12 +1,12 @@
 ---
 layout: default
-title: "ScummVM wiki page — Scooby (draft)"
+title: "ScummVM wiki page — Terraglyph (draft)"
 ---
 
-# ScummVM `Scooby` wiki-page content (draft)
+# ScummVM `Terraglyph` wiki-page content (draft)
 
 > **What this is.** The content for the ScummVM wiki page
-> `https://wiki.scummvm.org/index.php/Scooby`, authored here as a committed
+> `https://wiki.scummvm.org/index.php/Terraglyph`, authored here as a committed
 > repo doc. It is **not** posted upstream from this WP — publishing it rides
 > with the upstream-PR WP ([WP-079 §Out of scope](../work-packets/WP-079-showdown-closeout.md)).
 > Produced by [WP-079](../work-packets/WP-079-showdown-closeout.md) /
@@ -127,6 +127,6 @@ default); sizes are whole-file. From
 Full-file SHA-256 identity locks for the Gen 1 discs are in
 [`tools/exes/README`](../../tools/exes/README.md). Verified live on
 2026-11-19: `--detect` on a mounted Showdown disc (`H:\scooby`) returns
-`scooby:showdown`, and on a mounted Phantom disc (`G:\scooby`) returns
-`scooby:phantomknight` — the two Gen 1 discs are discriminated with no false
+`terraglyph:showdown`, and on a mounted Phantom disc (`G:\scooby`) returns
+`terraglyph:phantomknight` — the two Gen 1 discs are discriminated with no false
 positive, and an unrelated directory returns no game.
