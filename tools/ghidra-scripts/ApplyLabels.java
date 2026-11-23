@@ -8,9 +8,9 @@
 // Headless use (PowerShell), against a project that already holds an
 // analyzed Scooby.exe:
 //
-//   & "$env:GHIDRA_HOME\support\analyzeHeadless.bat" C:\dev\scooby-engine\ghidra scooby `
-//       -process Scooby.exe -noanalysis -scriptPath C:\dev\scooby-engine\tools\ghidra-scripts `
-//       -postScript ApplyLabels.java C:\dev\scooby-engine\tools\ghidra-scripts\wp001-labels.txt
+//   & "$env:GHIDRA_HOME\support\analyzeHeadless.bat" C:\dev\terraglyph-engine\ghidra scooby `
+//       -process Scooby.exe -noanalysis -scriptPath C:\dev\terraglyph-engine\tools\ghidra-scripts `
+//       -postScript ApplyLabels.java C:\dev\terraglyph-engine\tools\ghidra-scripts\wp001-labels.txt
 //
 //@category Scooby
 import ghidra.app.script.GhidraScript;

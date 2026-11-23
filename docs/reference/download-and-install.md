@@ -35,9 +35,9 @@ For the full picture of what works, see the engine's
 fork rather than upstream ScummVM, see
 [Why the engine is a ScummVM fork](why-forked-scummvm.md). To see what it looks
 like running, browse the
-[Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots)
+[Screenshots gallery](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots)
 — every room, captured from our engine — or the
-[screen map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map)
+[screen map](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots#screen-map)
 for how the rooms connect.
 
 ### Required game-data files
@@ -211,7 +211,7 @@ git pull origin scooby-engine
 ```
 
 (Maintainers syncing the fork itself with upstream use
-[`tools/Update-Fork.ps1`](https://github.com/barefootbetters/scooby-engine/blob/main/tools/Update-Fork.ps1)
+[`tools/Update-Fork.ps1`](https://github.com/barefootbetters/terraglyph-engine/blob/main/tools/Update-Fork.ps1)
 in the docs repo.)
 
 ---
@@ -231,8 +231,8 @@ part of upstream ScummVM, do **not** file Scooby-engine issues on scummvm.org.
 - Fork: [barefootbetters/scummvm](https://github.com/barefootbetters/scummvm) (branch `scooby-engine`).
 - [Why the engine is a ScummVM fork](why-forked-scummvm.md) — the fork vs. upstream decision.
 - [TerraGlyph engine status & limitations](scummvm-wiki-scooby.md) — supported titles, data files, MD5s, known limits.
-- [Screenshots gallery](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots) — every room, captured from our engine running.
-- [Screen map](https://github.com/barefootbetters/scooby-engine/wiki/Screenshots#screen-map) — room navigation map built from the engine's real exits.
+- [Screenshots gallery](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots) — every room, captured from our engine running.
+- [Screen map](https://github.com/barefootbetters/terraglyph-engine/wiki/Screenshots#screen-map) — room navigation map built from the engine's real exits.
 - [Installing ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md) — the Pi developer build + controllers.
 - ScummVM compiling guides: [MSYS2 (Windows)](https://wiki.scummvm.org/index.php/Compiling_ScummVM/MSYS2),
   [macOS](https://wiki.scummvm.org/index.php/Compiling_ScummVM/macOS),

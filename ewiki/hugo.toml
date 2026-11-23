@@ -115,9 +115,9 @@ pluralizeListTitles = false
 
 # The shared theme's params (bb-studio-ewiki-theme README, "Params").
 [params.ewiki]
-  repo = "barefootbetters/scooby-engine"
+  repo = "barefootbetters/terraglyph-engine"
   contentRoot = ""
-  localRoot = 'C:\dev\scooby-engine'
+  localRoot = 'C:\dev\terraglyph-engine'
   homeSource = "index.md"
   searchPlaceholder = "Search the Scooby wiki"
   searchLabel = "Search the Scooby-Doo engine wiki"
