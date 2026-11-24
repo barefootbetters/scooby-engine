@@ -270,15 +270,28 @@ first (its settings and saves go with it).
 
 1. **Turn on developer options.** **Settings → System → About**, then click the
    **Android TV OS build** row seven times.
+
+   ![The TCL's Settings → System → About screen, with the "Android TV OS Build" row highlighted — the row you click seven times to unlock developer options.](images/about-build-number.png)
+
 2. **Allow the install.** Either:
    - for `adb` from the build machine: **Settings → System → Developer
      options → USB debugging** (some sets call the network version **Network
      debugging** or **Wireless debugging**), or
    - for a file on the TV: install a file manager such as **X-plore** or
-     **Downloader by AFTVnews** from the Play Store, then allow it under
-     **Settings → Apps → Security & restrictions → Unknown sources**.
+     **Downloader by AFTVnews** from the Play Store, then allow it to install
+     apps. Older Android TVs have one **Settings → Apps → Security &
+     restrictions → Unknown sources** switch; Android 12 and later — including
+     the TCL 65Q77K's Android 14 — grant it **per app** instead, so the first
+     time the file manager tries to install you're sent to **Settings → Apps →
+     Special app access → Install unknown apps** to allow that one app.
 
 The menu names vary by TV maker and Android version.
+
+![Developer options on the TCL, scrolled to the DEBUGGING section: USB debugging is on, and Wireless debugging (also on, selected) shows its detail pane. The IP address and device name have been blurred.](images/developer-options.png)
+
+![The Wireless debugging "Pair with device" dialog showing a Wi-Fi pairing code. On Android 11 and later this "Pair device with pairing code" flow is the network-adb route; the TV's IP and port have been blurred.](images/wireless-debugging-pair.png)
+
+![The per-app "Install unknown apps" screen on Android 14 — each file manager is allowed to install apps individually, the modern replacement for the single "Unknown sources" switch.](images/install-unknown-apps.png)
 
 ### Install it on the TV
 
@@ -297,6 +310,8 @@ the file manager.
 The APK declares a TV launcher entry with its own banner, so it should show in
 the TV's apps list like any other TV app. If it doesn't, look under **Settings →
 Apps → See all apps**.
+
+![The installed app's info screen: "ScummVM (debug)", org.scummvm.scummvm.debug, version 2026.4.1, using 40.71 MB of internal shared storage. Reached through Settings → Apps → See all apps.](images/scummvm-app-info.png)
 
 ### Add your game data
 
@@ -531,6 +546,8 @@ on a TV that isn't the remote. ScummVM's on-screen virtual mouse is driven by an
 **analog stick**, so a plain D-pad remote can't move the pointer. Remapping the
 D-pad to the pointer was tried on the TCL 65Q77K and is unreliable. Pair a real
 pointer device instead:
+
+![The TCL's "Searching for accessories…" screen under Settings → Remotes & Accessories, which pairs a Bluetooth controller, mouse or keyboard.](images/pair-controller.png)
 
 | Device | USB ports | Notes |
 |---|---|---|
