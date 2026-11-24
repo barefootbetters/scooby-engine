@@ -287,6 +287,8 @@ first (its settings and saves go with it).
 
 The menu names vary by TV maker and Android version.
 
+![Developer options on the TCL after the seven taps: the "Enable developer options" master toggle is on, and "Stay awake" (keeps the screen on while charging) is enabled too.](images/developer-options-enabled.png)
+
 ![Developer options on the TCL, scrolled to the DEBUGGING section: USB debugging is on, and Wireless debugging (also on, selected) shows its detail pane. The IP address and device name have been blurred.](images/developer-options.png)
 
 ![The Wireless debugging "Pair with device" dialog showing a Wi-Fi pairing code. On Android 11 and later this "Pair device with pairing code" flow is the network-adb route; the TV's IP and port have been blurred.](images/wireless-debugging-pair.png)
