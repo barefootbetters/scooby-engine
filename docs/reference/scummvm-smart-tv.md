@@ -151,10 +151,10 @@ cp ~/oboe/include/oboe/*.h "$sysroot/usr/include/oboe/"
 cp ~/oboe-build/liboboe.a "$sysroot/usr/lib/aarch64-linux-android/"
 ```
 
-For a 32-bit (`android-arm-v7a`) build, build Oboe a second time for Android
-16 and copy it into the 32-bit library folder. Our 32-bit build supports
-Android 16 and up, so an Oboe built for Android 21 fails to link with
-`undefined symbol: __vsprintf_chk`.
+For a 32-bit (`android-arm-v7a`) build, build Oboe a second time against API
+level 16 and copy it into the 32-bit library folder. Our 32-bit build targets
+API level 16 (Android 4.1) and up, so an Oboe built against API 21 fails to link
+with `undefined symbol: __vsprintf_chk`.
 
 ```bash
 cmake -S ~/oboe -B ~/oboe-build-v7a -G Ninja \
@@ -165,7 +165,7 @@ cmake --build ~/oboe-build-v7a
 cp ~/oboe-build-v7a/liboboe.a "$sysroot/usr/lib/arm-linux-androideabi/"
 ```
 
-Building the 32-bit Oboe for Android 16 is what keeps it clear of the
+Building the 32-bit Oboe against API level 16 is what keeps it clear of the
 `__vsprintf_chk` link error. Disabling FORTIFY does the same job if you hit that
 symbol another way: add `-DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"`
 and the matching `-DCMAKE_CXX_FLAGS` to the `cmake -S ~/oboe ...` configure line.
@@ -375,9 +375,11 @@ it from there:
 If you'd added the game from the stick before, remove that launcher entry (select
 it, then **Remove Game**) so you don't start the copy that's no longer there.
 
-Not yet tried on a TV. In particular, how ScummVM asks for folder access on the
-TCL's Android version is unchecked. If **Add Game…** can't see the Download
-folder, play from the stick.
+Playing from internal storage is confirmed to work: *Showdown in Ghost Town* ran
+from the TCL 65Q77K's own internal storage (2026-11-24). What's not yet verified
+is this exact route on the TCL — copying into **Download** and granting access
+through ScummVM's **Add Game…** picker (the Storage Access Framework step). If
+**Add Game…** can't see the Download folder, play from the stick.
 
 *Showdown in Ghost Town* shows in the launcher normally. *Phantom of the Knight*
 is still in development. Turn on **Show games marked as unstable** (Global
@@ -415,6 +417,11 @@ played on this TV with a USB mouse** (2026-11-24). Results are in the
 The steps above, followed on 2026-11-22 (arm64-v8a) and 2026-11-23 (armeabi-v7a).
 The armeabi-v7a APK was then installed and played on a TCL 65Q77K (Google TV,
 Android 14) on 2026-11-24; the arm64-v8a build is still TV-untested.
+
+These builds predate the engine's rename. At commit `e52f35c2ffd` the engine's
+id was `scooby`, so the configure rows below read `--enable-engine=scooby`; it was
+later renamed to `terraglyph`, the id the [Configure step](#4-configure) above
+uses for current builds.
 
 | Item | Result |
 |---|---|
