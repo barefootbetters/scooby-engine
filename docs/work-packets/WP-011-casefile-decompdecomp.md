@@ -492,8 +492,10 @@ The live MobyGames pages and Mony's room/email are not recorded.
 
 ### Reply: rename to `terraglyph`, decode review landed (2026-11-22)
 
-Mony's 2026-11-22 email (three threads) plus the 2026-11-23 follow-ons (his
-Norwegian-detection PR and upstream-timing counsel) — all actionable here:
+Mony's 2026-11-22 email (three threads), the 2026-11-23 follow-ons (his
+Norwegian-detection PR and upstream-timing counsel), and his later 2026-11-23
+note (a fair catch that replies were being drafted here but not sent, plus an
+offer to do a cleanup/refactor PR) — all actionable here:
 
 - **Decode review of `TGIFILE.ART` scene-block / placement (Reported, already
   Observed and merged).** A close read of the room loader and placement walker: the
@@ -519,44 +521,69 @@ Norwegian-detection PR and upstream-timing counsel) — all actionable here:
   [DECISIONS](../ai/DECISIONS.md#2026-11-22--engine-namespace-rename-scooby--terraglyph)
   and tracked as a fork PR. The prose name was already "TerraGlyph"; this makes the
   engine identifier match.
-- **Norwegian Showdown detection PR (open, 2026-11-23).** Mony opened fork PR
+- **Norwegian Showdown detection (ported, 2026-11-23).** Mony opened fork PR
   [#8](https://github.com/barefootbetters/scummvm/pull/8) adding detection for the
   Norwegian retail Showdown — the localization he flagged on 2026-11-20 as absent
-  from the abandonware sites, so his disc is the only source for its hashes. In scope
-  (Showdown is the primary Gen-1 target) and exactly the kind of entry a detection
-  table would otherwise miss. **Next action: review and merge PR #8** (Jeff's call).
+  from the abandonware sites, so his disc is the only source for its hashes. #8 was
+  authored against the pre-rename `engines/scooby` path, so it can't merge after the
+  `scooby` → `terraglyph` rename. Reviewed (entry correct: `showdown` id, valid
+  `Common::NB_NOR`, fields mirror the English entry) and **ported onto
+  `engines/terraglyph` as fork PR [#11](https://github.com/barefootbetters/scummvm/pull/11)**,
+  Mony kept as the commit author; builds clean (`--enable-engine=terraglyph` links).
+  Hashes are Reported (his disc only), corroborated by his "detects and runs" since
+  the detector hashes the first 5000 bytes. **Next action: Jeff merges #11 and #8 is
+  closed in favor of it** — or, if Mony prefers, he re-pushes #8 onto the rename and
+  #11 is dropped (offered in the reply).
 - **Upstream-submission timing (agreed, 2026-11-23).** Mony's counsel: hold the
   ScummVM-upstream pitch until the Gen-1 games run end-to-end and the code is cleaned
   up (it's currently one flat folder, no subfolders). Agreed — engine first, upstream
   pitch later. His survey of recently landed AI-assisted engines (and the one bounced
   for unreadable commits / unclear messages) is the groundwork for when we make that
   case. Nothing to action now beyond keeping the pitch parked.
+- **Replies drafted-but-not-sent (fair catch, 2026-11-23).** Mony noted the repo
+  carried "here's how I'd reply" drafts that never went out as actual emails — a real
+  process gap on our side, not a tone problem on his. Fixed by sending the
+  consolidated reply below rather than parking another draft.
+- **Cleanup/refactor PR offer (accepted, 2026-11-23).** Mony offered a PR for folder
+  organization, matching ScummVM's layout, and splitting terraglyph-global vs
+  per-game code. Accepted: the folder/style alignment is exactly what's needed before
+  any upstream pitch and he's welcome to run with it; the terraglyph-global vs
+  per-game **split** is a larger structural call with engine work in flight, so its
+  timing is to be coordinated so it doesn't collide. (Jeff's call if he'd rather defer
+  the whole thing instead.)
 
-**Drafted reply (Jeff's to send):**
+**Reply (Jeff's to send — consolidated, supersedes the earlier unsent draft):**
 
-> Thanks, Mony — this is all genuinely useful.
+> Mony — fair hit, and that one's on me. I've been drafting replies into the repo and
+> not actually hitting send, which is a dumb way to run a collaboration. Fixed as of
+> this email.
 >
-> The loader/placement decode is exactly what we needed, and it's already folded into
-> our TGIFILE.ART notes: `+0x10` not read at runtime, `+0x88` opaque (with `0x43B940`
-> confirmed a `ret 4` no-op), and the `+0xB0`/`+0xB8` tables unused by the shipped
-> data — that closes the last open room-block questions.
+> Quick on all of it:
 >
-> I'm pulling your Norwegian Showdown detection PR in for review. A localization
-> that isn't on the abandonware sites is exactly the kind of entry we'd otherwise
-> miss, and your disc is the only source for those hashes — thanks for capturing it.
+> - Your Norwegian Showdown detection is in. One wrinkle: #8 was against the old
+>   `engines/scooby` path, and the engine got renamed `scooby` → `terraglyph` right
+>   after you opened it, so it couldn't merge clean. I rebased your exact entry onto
+>   `engines/terraglyph` and kept you as the commit author — it's PR #11, builds
+>   clean. Mind closing #8 in favor of it? Or if you'd rather re-push #8 onto the
+>   rename yourself, say the word and I'll drop #11 — your call, it's your
+>   contribution.
+> - Rename's done — you were right, `scooby`'s effectively taken upstream by the
+>   Acclaim platformer PR, and `terraglyph` fits the whole Gen-1 catalog anyway.
+> - On "the focus's been kinda out there" — agreed. The Warner/licensing material is a
+>   parked thinking-out-loud note, not where the work is. The work is the engine.
+>   Keeping it that way.
+> - The loader/placement decode is already folded into our TGIFILE.ART notes (credited
+>   to you): `+0x10` not read at runtime, `+0x88` opaque, `0x43B940` a `ret 4` no-op.
+>   That closed the last room-block unknowns — thank you.
 >
-> On the two suggestions: the engine's being renamed `scooby` → `terraglyph` (you're
-> right the name's effectively taken upstream by the Acclaim platformer PR, and
-> `terraglyph` fits the whole Gen-1 catalog anyway), and the Target Games list
-> already carries the TGIFILE.ART titles — Showdown and Phantom on the Scooby side,
-> plus the non-Scooby Gen-1 ones we've since confirmed (102 Dalmatians, Clue Jr.,
-> Little Mermaid II).
+> And yes, please do the cleanup/refactor PR. Matching ScummVM's folder layout is
+> exactly what we'll need before any upstream pitch, and you know that layout better
+> than we do — run with the folder/style alignment whenever suits you. The one piece
+> I'd want to sync on first is the terraglyph-global vs per-game split: that's a bigger
+> structural call and there's engine work in flight, so let's coordinate timing so it
+> doesn't collide. Everything else, go for it.
 >
-> And I'm with you on timing the upstream submission: no PR to ScummVM until the
-> Gen-1 games actually run end-to-end and the code's cleaned up, the single-folder
-> layout included. Your survey of the recent AI-assisted engines — the ones that
-> landed, and the one that got bounced for unreadable commits — is good ammunition
-> for when we make that case. No rush on it.
+> Thanks again — genuinely useful, all of it.
 
 ### First look at the repository (2026-11-11)
 
@@ -890,6 +917,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-21 | Collaborator email (**Reported**) + catalog grounding (**Observed, via Wayback**). Mony finds the Gen-2/3 **`MM*`** archive family on ImageBuilder's own pre-Scooby titles (anchor: *Arthur's Thinking Games*, 1999, via SteamDB), so `MMFW` may be **ImageBuilder's house format**, not a TerraGlyph reformat — either the Gen-2 games mix the two studios' tech or ImageBuilder brought its format when it took the engine over. MobyGames (Moby ID 3355) **credits ImageBuilder as a developer on both MMFW Scooby games — Jinx (Gen 2) and Case File #1 (Gen 3)** — while Gen 1 (`TGIFILE.ART`) is TerraGlyph-only, corroborating the hypothesis at the credit level. His other `MM*` candidates (Lion King II: Simba's Pride – Active Play 1998, Carmen Sandiego: Treasures of Knowledge 2001, Furby: Big Fun in Furbyland 2000) are all confirmed ImageBuilder titles. **Batman: Justice Unbalanced** = Case File #2's Trinket / OM++ engine (Reported) — another non-Scooby title on the *excluded* engine. He proposes an automated catalog-wide engine-fingerprint sweep (agent + MobyGames / Internet Archive + `7z`/`bchunk`/`mdf2iso`/`cabextract`/`unshield`). Extension-match ≠ `MMFW` magic: every ImageBuilder format claim stays **Reported** pending a disc scan; a VISION provenance refinement is parked until then. Scope unchanged. Reply drafted. See [§ImageBuilder's MM* format may predate Gen 2](#imagebuilders-mm-format-may-predate-gen-2-a-catalog-sweep-proposal-2026-11-21). |
 | 2026-11-22 | Collaborator email (**Reported**) — three threads, all already actionable. (1) **Decode review of `TGIFILE.ART` scene-block / placement**: close field `+0x10` not read at runtime, `+0x88` opaque (reloc routine `0x43B940` is `ret 4`), `+0xB0`/`+0xB8` tables never populated (148-byte layout; room loader `0x43B080`, walker `0x435DC0`; branch `showdown-at-ghost-town`). **Already integrated** into [tgifile-art.md](../formats/tgifile-art.md) (cites M. Armenchev 2026-11-22). (2) **List the TGIFILE.ART games in Target Games** — already satisfied ([VISION](../01-VISION.md)). (3) **Rename `scooby` → `terraglyph`** — a WIP engine already holds `scooby` upstream; verified (upstream PR [#8063](https://github.com/scummvm/scummvm/pull/8063) claims `scooby`; `terraglyph` free). **Decision taken by Jeff** — see [DECISIONS](../ai/DECISIONS.md#2026-11-22--engine-namespace-rename-scooby--terraglyph) and [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
 | 2026-11-23 | Collaborator thread follow-ons (**Reported**). (1) **Norwegian Showdown detection PR** — Mony opened fork PR [#8](https://github.com/barefootbetters/scummvm/pull/8) adding detection for the Norwegian retail Showdown (the localization flagged 2026-11-20 as absent from the abandonware sites; his disc is the only hash source). In scope (Showdown is the primary Gen-1 target); **next action: review/merge PR #8** (Jeff's call). (2) **Upstream-submission timing** — his counsel to hold the ScummVM-upstream pitch until the Gen-1 games run end-to-end and the code is cleaned up (one flat folder now); **agreed** — engine first, pitch parked. His AI-assisted-engine precedent survey is groundwork for that case. Reply finalized — see [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
+| 2026-11-23 | Norwegian detection **ported** + later collaborator note answered. (1) **Fork PR [#11](https://github.com/barefootbetters/scummvm/pull/11)** re-applies Mony's Norwegian Showdown entry onto `engines/terraglyph` (PR #8 was against the pre-rename `engines/scooby` path and couldn't merge); entry reviewed (`showdown` id, valid `Common::NB_NOR`, fields mirror English), Mony kept as commit author, builds clean. **Next: Jeff merges #11, #8 closed in favor of it** — or Mony re-pushes #8 and #11 drops (offered). Hashes Reported (his disc only), corroborated by detect-and-run (first-5000-byte MD5). (2) **Replies drafted-but-not-sent** — Mony's fair catch that the repo carried unsent reply drafts; corrected by actually sending the consolidated reply, not parking another draft. (3) **Cleanup/refactor PR offer accepted** — folder/ScummVM-style alignment welcome anytime; terraglyph-global vs per-game split's timing to be coordinated (engine work in flight). Reply consolidated and sent — see [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
