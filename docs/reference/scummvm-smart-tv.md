@@ -25,12 +25,15 @@ TV's processor, then install it on the TV. That's the main path on this page:
 > **You supply the games.** This project distributes no game data. You point
 > ScummVM at files you're entitled to: your own disc, or a legally obtained copy.
 
-> **Checked 2026-11-22.** The build steps come from our fork's own Android build
-> files ([Sources](#sources)), which track ScummVM 2026.4, and were followed end to
-> end that day to build an arm64-v8a APK ([build record](#build-record)). ScummVM
-> has no official TV support. On Android TV it was never a Play Store TV app, so
-> every route here is a sideload. **The APK hasn't been run on a TV yet.** Run the
-> [TV smoke test](#tv-smoke-test) the first time.
+> **Checked 2026-11-22; first run on a TV 2026-11-24.** The build steps come from
+> our fork's own Android build files ([Sources](#sources)), which track ScummVM
+> 2026.4, and were followed end to end to build arm64-v8a and armeabi-v7a APKs
+> ([build record](#build-record)). ScummVM has no official TV support. On Android
+> TV it was never a Play Store TV app, so every route here is a sideload. **The
+> armeabi-v7a build has now been built, installed and played on a real TV** — a
+> TCL 65Q77K (Google TV, Android 14), with a USB mouse ([smoke test](#tv-smoke-test)).
+> Many Google TV sets are 32-bit only, so
+> **[check the TV's ABI](#pick-the-processor-type-abi) before you build.**
 
 ---
 
@@ -56,16 +59,28 @@ accepts these four:
 
 | `--host=` value | Processor | Use it for |
 |---|---|---|
-| `android-arm64-v8a` | 64-bit ARM | **Most current TVs**, including the [TCL 65Q77K](#your-tv-the-tcl-65q77k). Start here |
-| `android-arm-v7a` | 32-bit ARM | Older or low-end TVs and Fire TV Sticks, or a TV whose Android is 32-bit even on a 64-bit chip |
+| `android-arm64-v8a` | 64-bit ARM | **Most current TVs** — use it if `getprop` lists `arm64-v8a` (below) |
+| `android-arm-v7a` | 32-bit ARM | Older or low-end TVs and Fire TV Sticks, or a TV whose Android is 32-bit even on a 64-bit chip, like the [TCL 65Q77K](#your-tv-the-tcl-65q77k) |
 | `android-x86_64` | 64-bit Intel/AMD | Rare on TVs. Mainly the Android emulator |
 | `android-x86` | 32-bit Intel/AMD | Rare on TVs |
 
-If the TV refuses to install the 64-bit APK, or it installs but opens to a white
-screen, the TV's Android is probably 32-bit. Rebuild with `android-arm-v7a`. To
-check before you build, connect with `adb` ([Prepare the TV](#prepare-the-tv)) and
-run `adb shell getprop ro.product.cpu.abilist`. If the list includes
-`arm64-v8a`, use the 64-bit build.
+**Check the ABI before you build — many TVs are 32-bit only.** Plenty of Google
+TV / Android TV sets, including MediaTek-based models like the
+[TCL 65Q77K](#your-tv-the-tcl-65q77k), run a **32-bit (armeabi-v7a) Android even
+on a 64-bit chip**. A 64-bit APK won't install on them — `adb install` fails with
+`INSTALL_FAILED_NO_MATCHING_ABIS`. Connect with `adb`
+([Prepare the TV](#prepare-the-tv)) and run:
+
+```bash
+adb shell getprop ro.product.cpu.abilist
+```
+
+- If the list includes `arm64-v8a`, build `--host=android-arm64-v8a` (the default below).
+- If it's `armeabi-v7a,armeabi` only — with an empty `ro.product.cpu.abilist64` —
+  build `--host=android-arm-v7a`.
+
+A 64-bit APK that installs but opens to a white screen is the other sign of a
+32-bit TV; rebuild for `android-arm-v7a`.
 
 ### Build our APK (with the TerraGlyph engine)
 
@@ -150,6 +165,11 @@ cmake --build ~/oboe-build-v7a
 cp ~/oboe-build-v7a/liboboe.a "$sysroot/usr/lib/arm-linux-androideabi/"
 ```
 
+Building the 32-bit Oboe for Android 16 is what keeps it clear of the
+`__vsprintf_chk` link error. Disabling FORTIFY does the same job if you hit that
+symbol another way: add `-DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"`
+and the matching `-DCMAKE_CXX_FLAGS` to the `cmake -S ~/oboe ...` configure line.
+
 Because it's static, Oboe ends up inside the app. The TV doesn't need anything
 extra.
 
@@ -209,6 +229,24 @@ other `--host`, then `make clean` before `make`. Each build overwrites
 `debug/ScummVM-debug.apk`, so copy the first APK somewhere else before you start
 the second.
 
+**`make clean` isn't enough when you switch ABI.** `make`'s rule for
+`libloader.so` depends only on `loader.cpp`, so it keeps the stale copy from the
+previous ABI. The APK then installs but crashes on launch with
+`UnsatisfiedLinkError: ... is 64-bit instead of 32-bit` (or the reverse). Delete
+the library and the generated Android project before repackaging:
+
+```bash
+rm -f libloader.so && rm -rf android_project
+make androiddistdebug
+```
+
+To confirm an APK really is the ABI you meant, check its native library with
+`file`:
+
+```bash
+unzip -p debug/ScummVM-debug.apk 'lib/armeabi-v7a/libscummvm.so' | file -
+```
+
 The *debug* here is the APK's signing, not the C++ build: Gradle signs it with a
 local debug key, so it installs on a TV as it is. That's the right APK for
 your own TV.
@@ -262,6 +300,12 @@ Apps → See all apps**.
 
 ### Add your game data
 
+> **Use ScummVM's own *Add Game…* folder picker.** Recent ScummVM-for-Android
+> builds reach external storage through Android's Storage Access Framework: the
+> in-app picker ends with **Use this folder → Allow**, and that grant is what lets
+> the engine read the files. A path typed or pushed in outside that flow comes
+> back as **"Game data not found"** even when the files are right there.
+
 - **USB stick (simplest):** a **FAT32 or exFAT** stick with the disc's
   `\scooby\` folder (or every file on the disc). In ScummVM, choose **Add Game…**
   and pick that folder. Google TV has no file browser of its own, so ScummVM's
@@ -298,6 +342,14 @@ ScummVM doesn't import a game. It reads the art, sound and cutscenes from the
 folder you added the whole time you play, so a game added from a USB stick needs
 the stick plugged in. Saves and settings are stored inside the app on the TV,
 not on the stick, so they survive either way.
+
+**Copying the game to the TV also frees its USB ports.** Google TV sets often
+have only one or two, and a wired USB mouse wants one of them
+([Controls on a TV](#controls-on-a-tv)). With the game on internal storage the
+stick comes out after setup — it's then just a delivery and backup medium — and,
+paired with a Bluetooth controller or mouse, you can have a pointer and a
+keyboard with no cable plugged in at all. Copy the game once during setup and
+every input method can coexist.
 
 To play without the stick, copy the game onto the TV's built-in storage and add
 it from there:
@@ -345,18 +397,24 @@ your games the same way. It won't play the Scooby games.
 ### Your TV: the TCL 65Q77K
 
 The [TCL 65Q77K](https://www.displayspecifications.com/en/model/8c134688) runs
-**Google TV**, so it takes the APK above. Reviews put it on a MediaTek Pentonic
-700, a 64-bit chip, so build `android-arm64-v8a` first and fall back to
-`android-arm-v7a` if it won't install. `adb shell getprop
-ro.product.cpu.abilist` settles it.
+**Google TV** (it reports itself as "Smart TV Pro"), Android 14 (SDK 34), so it
+takes the APK above. Its chip is a MediaTek Pentonic 700, a 64-bit part — but its
+Android is **32-bit only**: `getprop ro.product.cpu.abilist` returns
+`armeabi-v7a,armeabi`, with an empty `ro.product.cpu.abilist64`. The 64-bit APK
+fails to install on it (`INSTALL_FAILED_NO_MATCHING_ABIS`), so build
+**`--host=android-arm-v7a`**, not arm64. The 64-bit chip doesn't help here; the
+OS image is what decides.
 
-The Scooby games are light: 2D art and Bink cutscenes, both decoded by ScummVM.
-A TV processor in this class should run them easily. That's an expectation, not
-a test result: check it with the smoke test below.
+The Scooby games are light — 2D art and Bink cutscenes, both decoded by ScummVM —
+and the armeabi-v7a build of *Showdown in Ghost Town* **built, installed and
+played on this TV with a USB mouse** (2026-11-24). Results are in the
+[build record](#build-record) and [smoke test](#tv-smoke-test) below.
 
 ### Build record
 
-The steps above, followed on 2026-11-22. Nothing here has run on a TV yet.
+The steps above, followed on 2026-11-22 (arm64-v8a) and 2026-11-23 (armeabi-v7a).
+The armeabi-v7a APK was then installed and played on a TCL 65Q77K (Google TV,
+Android 14) on 2026-11-24; the arm64-v8a build is still TV-untested.
 
 | Item | Result |
 |---|---|
@@ -400,10 +458,27 @@ support is done only when all of them pass.
 | 3 | Start ScummVM from **See all apps** | The launcher opens, full screen |
 | 4 | **Add Game…** on the USB stick's `\scooby\` folder | Detects *Showdown in Ghost Town* |
 | 5 | Start it and play past the intro | Bink video and audio play in sync, without stutter |
-| 6 | Use only the remote (or a Bluetooth mouse) | The cursor moves, clicks work, and the ScummVM menu opens |
+| 6 | Move the cursor with a Bluetooth controller or mouse (not the D-pad remote) | The cursor moves, clicks work, and the ScummVM menu opens |
 | 7 | Save, quit ScummVM, start it again, load | The game resumes where it was saved |
 
-Record the TV model, Android version, ABI and results here when it's been run.
+**Run on the TCL 65Q77K (Google TV, Android 14, armeabi-v7a), 2026-11-24:**
+checks 1–5 passed — the ABI matched, the APK installed, the launcher opened,
+*Showdown in Ghost Town* was detected from a USB stick, and it played past the
+intro with Bink video and audio in sync. Check 6 passed with a **USB mouse**; the
+D-pad remote on its own does not move the cursor
+([Controls on a TV](#controls-on-a-tv)). Check 7 (save and reload on the TV) isn't
+separately logged yet. Record other TVs' results here.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `adb install` fails with `INSTALL_FAILED_NO_MATCHING_ABIS` | APK built for the wrong CPU | Build `android-arm-v7a`; check `adb shell getprop ro.product.cpu.abilist` first |
+| Launch crash `UnsatisfiedLinkError: ... is 64-bit instead of 32-bit` | Stale `libloader.so` left from the previous ABI | `rm -f libloader.so && rm -rf android_project`, then repackage |
+| Link fails with `undefined symbol: __vsprintf_chk` | 32-bit Oboe built with FORTIFY on | Rebuild Oboe for `android-16` ([step 2](#2-add-oboe-to-the-ndk)), or with `-D_FORTIFY_SOURCE=0` |
+| `ERROR: JNI::initSurface failed!` | App launched while backgrounded, or the screensaver took the surface | Launch with the screen awake and ScummVM in the foreground |
+| `Error running game: Game data not found` | External path not granted through the Storage Access Framework | Add the game with the in-app **Add Game…** picker and allow access |
+| The remote won't move the cursor | A D-pad can't drive the analog-stick pointer | Use a Bluetooth controller or a mouse ([Controls on a TV](#controls-on-a-tv)) |
 
 ---
 
@@ -444,12 +519,23 @@ TerraGlyph engine.
 
 ## Controls on a TV
 
-- The **remote** drives ScummVM's menus with the arrows and OK.
-- A **Bluetooth mouse** (or air mouse) is the comfortable way to play
-  point-and-click games. A keyboard helps for naming saves. Both pair in the
-  TV's Bluetooth settings.
-- **Global Options → Keymaps** maps remote buttons to left click, right click,
-  skip and the menu. **Game Options → Keymaps** does the same for one game.
+These are point-and-click games, so you need something that moves a cursor — and
+on a TV that isn't the remote. ScummVM's on-screen virtual mouse is driven by an
+**analog stick**, so a plain D-pad remote can't move the pointer. Remapping the
+D-pad to the pointer was tried on the TCL 65Q77K and is unreliable. Pair a real
+pointer device instead:
+
+| Device | USB ports | Notes |
+|---|---|---|
+| **Bluetooth game controller** (recommended) | 0 | Left stick moves the pointer, **A** left-clicks, **B** right-clicks. No cable, no USB port |
+| **Bluetooth mouse** | 0 | The most direct point-and-click |
+| **Bluetooth keyboard + mouse** | 0 | The keyboard helps with naming saves |
+| **Wired USB mouse** | 1 | Works, but uses a port — see [freeing the USB ports](#keep-the-stick-in-or-copy-the-game-to-the-tv) |
+
+The **remote** is still fine for the launcher and ScummVM's menus (arrows and
+OK), just not for playing. **Global Options → Keymaps** maps controller or remote
+buttons to left click, right click, skip and the menu; **Game Options → Keymaps**
+does the same for one game.
 
 The Scooby games are single-player point-and-click, so one pointer is all they
 need. Herbs vs. Ailments' ewiki covers TV controllers in its
