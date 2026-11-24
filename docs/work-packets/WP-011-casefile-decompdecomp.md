@@ -585,6 +585,69 @@ offer to do a cleanup/refactor PR) — all actionable here:
 >
 > Thanks again — genuinely useful, all of it.
 
+### Reply: refactor plan and merge timing (2026-11-24)
+
+Jeff sent the consolidated reply above (2026-11-24). Mony replied the same day
+laying out his refactor plan — and scoping his own restraint, which is the
+right instinct:
+
+- **Folder split (doing now).** Keep most things at root; add `format/`,
+  `audio/`, `graphics/`; move rooms to `rooms/{game_name}` for single-game
+  screens, with shared screens directly in `rooms/`. **Remaining splitting and
+  dehardcoding deferred for discussion** — exactly the coordination asked for.
+- **Merge handshake.** He keeps his (forthcoming refactor) PR synced to the
+  `scooby-engine` branch and waits for Jeff's go to merge.
+- **`detection_tables.h` reorg after the refactor merges** — e.g. turning the
+  boilerplate into `#define`s (standard ScummVM shape). Fine.
+- **Comments.** He notes many are redundant, narrate raw hex addresses, or are
+  "clearly for the LLM." He'll trim lightly now, full pass later.
+
+**Timing is the load-bearing call, and the fork state decides it.** A
+`rooms/{game_name}` move rewrites include paths tree-wide — maximally
+conflict-prone. At the time of reply the fork had **open PR
+[#9](https://github.com/barefootbetters/scummvm/pull/9) (WP-083, a Phantom
+room)** and a steady room-by-room cadence on `scooby-engine` (WP-080, -081,
+-083). Merging the reorg mid-wave conflicts with every open room branch.
+**Position: hold the reorg for a deliberate pause — land it _first_ on a quiet
+branch and rebase the in-flight room WPs onto the new layout**, rather than
+merging it into a moving target. Comments: green-light trimming the
+hex-narration / LLM-oriented ones as he goes (a human reader, and eventually a
+ScummVM reviewer, gets nothing from them); dedicated pass later. Mony's
+now-merged Norwegian entry ([#11](https://github.com/barefootbetters/scummvm/pull/11))
+means his **#8 can close**; the refactor is a fresh PR.
+
+**Reply (Jeff's to send):**
+
+> Mony — the split sounds right. `format/` `audio/` `graphics/` at root and
+> `rooms/{game_name}` for single-game screens with shared ones in `rooms/` is a
+> clean line, and I'm glad you're parking the deeper splitting and dehardcoding
+> for us to talk through rather than doing it all at once.
+>
+> On timing the merge — that's the one piece I want to get right, because the
+> folder move rewrites include paths across the whole engine and there's active
+> room-by-room work in flight right now (WP-083's open, more Phantom rooms queued
+> behind it). If the reorg lands in the middle of that, every open room branch
+> conflicts. So rather than merge it into a moving target: keep your PR synced
+> like you said, and let's land the reorg at a deliberate pause — ideally it goes
+> in first on a quiet branch and the in-flight room WPs rebase onto the new
+> layout, not the other way around. I'll give you the go the moment the current
+> wave settles.
+>
+> `detection_tables.h` reorg after that, boilerplate into `#define`s — yep,
+> that's the usual ScummVM shape, go for it.
+>
+> And on the comments: you read that right, and please do trim as you go. The
+> ones that just narrate a hex address, or are obviously written at the model,
+> are exactly the ones to cut — a human reader (and eventually a ScummVM
+> reviewer) gets nothing from them. A dedicated pass later is fine; no need to
+> make it a project in itself now.
+>
+> One housekeeping note: your Norwegian detection entry is already merged (I
+> rebased it onto the renamed engine as #11), so #8 is safe to close — the
+> refactor will be its own PR.
+>
+> Thanks — this is the right shape for all of it.
+
 ### First look at the repository (2026-11-11)
 
 Read from a fresh clone of the collaborator's private repository (its first commit, `1114c89`), outside this checkout. Nothing was built yet. The evidence column uses the [§Evidence model](#evidence-model).
@@ -918,6 +981,7 @@ Plus a **trial metrics** table: attempted, matched, near miss, failed, cost, wal
 | 2026-11-22 | Collaborator email (**Reported**) — three threads, all already actionable. (1) **Decode review of `TGIFILE.ART` scene-block / placement**: close field `+0x10` not read at runtime, `+0x88` opaque (reloc routine `0x43B940` is `ret 4`), `+0xB0`/`+0xB8` tables never populated (148-byte layout; room loader `0x43B080`, walker `0x435DC0`; branch `showdown-at-ghost-town`). **Already integrated** into [tgifile-art.md](../formats/tgifile-art.md) (cites M. Armenchev 2026-11-22). (2) **List the TGIFILE.ART games in Target Games** — already satisfied ([VISION](../01-VISION.md)). (3) **Rename `scooby` → `terraglyph`** — a WIP engine already holds `scooby` upstream; verified (upstream PR [#8063](https://github.com/scummvm/scummvm/pull/8063) claims `scooby`; `terraglyph` free). **Decision taken by Jeff** — see [DECISIONS](../ai/DECISIONS.md#2026-11-22--engine-namespace-rename-scooby--terraglyph) and [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
 | 2026-11-23 | Collaborator thread follow-ons (**Reported**). (1) **Norwegian Showdown detection PR** — Mony opened fork PR [#8](https://github.com/barefootbetters/scummvm/pull/8) adding detection for the Norwegian retail Showdown (the localization flagged 2026-11-20 as absent from the abandonware sites; his disc is the only hash source). In scope (Showdown is the primary Gen-1 target); **next action: review/merge PR #8** (Jeff's call). (2) **Upstream-submission timing** — his counsel to hold the ScummVM-upstream pitch until the Gen-1 games run end-to-end and the code is cleaned up (one flat folder now); **agreed** — engine first, pitch parked. His AI-assisted-engine precedent survey is groundwork for that case. Reply finalized — see [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
 | 2026-11-23 | Norwegian detection **ported** + later collaborator note answered. (1) **Fork PR [#11](https://github.com/barefootbetters/scummvm/pull/11)** re-applies Mony's Norwegian Showdown entry onto `engines/terraglyph` (PR #8 was against the pre-rename `engines/scooby` path and couldn't merge); entry reviewed (`showdown` id, valid `Common::NB_NOR`, fields mirror English), Mony kept as commit author, builds clean. **Next: Jeff merges #11, #8 closed in favor of it** — or Mony re-pushes #8 and #11 drops (offered). Hashes Reported (his disc only), corroborated by detect-and-run (first-5000-byte MD5). (2) **Replies drafted-but-not-sent** — Mony's fair catch that the repo carried unsent reply drafts; corrected by actually sending the consolidated reply, not parking another draft. (3) **Cleanup/refactor PR offer accepted** — folder/ScummVM-style alignment welcome anytime; terraglyph-global vs per-game split's timing to be coordinated (engine work in flight). Reply consolidated and sent — see [§Reply](#reply-rename-to-terraglyph-decode-review-landed-2026-11-22). |
+| 2026-11-24 | Consolidated reply **sent** by Jeff; collaborator **refactor plan** returned (**Reported**). Mony's plan: folder split now (`format/` `audio/` `graphics/` at root, `rooms/{game_name}` for single-game screens / shared in `rooms/`), **deeper splitting + dehardcoding deferred for discussion**; he keeps his (forthcoming refactor) PR synced to `scooby-engine` and awaits Jeff's merge-go; `detection_tables.h` reorg (boilerplate → `#define`s) after that; light comment trim now (many redundant / hex-narration / "clearly for the LLM"), full pass later. **Position: hold the reorg for a deliberate pause** — the fork has open PR [#9](https://github.com/barefootbetters/scummvm/pull/9) (WP-083) and an active room-by-room cadence, so a tree-wide `rooms/` move collides mid-wave; land it first on a quiet branch and rebase in-flight WPs onto it. Comments: **green-light** trimming hex/LLM-oriented ones as he goes. #8 can **close** (superseded by merged #11). Reply drafted — see [§Reply: refactor plan and merge timing](#reply-refactor-plan-and-merge-timing-2026-11-24). |
 
 **Decision (Proposed, 2026-11-11): Evaluate decompdecomp as a complementary executable-analysis workflow for the Case File games, while keeping focused Ghidra analysis and the existing format-first research strategy.**
 
