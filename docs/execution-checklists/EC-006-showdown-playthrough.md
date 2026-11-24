@@ -96,16 +96,19 @@ playthrough from the board forward.
 
 ## Step 2 — Save/load cycle (time-box: 20 min)
 
-- [ ] Mid-run, save before a room transition: **not run** — no live run was performed.
-- [ ] Quit the engine fully; relaunch: **not run**.
-- [ ] Load the save; confirm room, inventory, clues and puzzle flags restore ([02-SCUMMVM-INTEGRATION §9](../02-SCUMMVM-INTEGRATION.md)): **not run**. The full save → quit → relaunch → load cycle moves to the blocker's fix WP, which performs the live run past the board.
+**Log-captured 2026-11-23** (loadtest.log, saveload.log — in the 2026-11-23 verification run). Supersedes the earlier "not run" status.
 
-> **Note for the live run:** save/load *is* scriptable headlessly once a
-> display is available — the `test_script` harness has `save N` / `load N`
-> verbs (`engines/scooby/scooby.cpp` `runTestScript()`), so the cycle can be a
-> `start_room=…; save 1; quit` run followed by a `load 1; shot` run with a
-> frame-compare, without solving any puzzle. It still needs the interactive
-> desktop that Step 0 established is missing from the headless context.
+- [x] Mid-run, save before a room transition: a mid-run profile in `ROOM_P12_Saloon` (4 exits taken, 9 clickable states) round-trips — `profile saved: 9635 bytes, StartRoom ROOM_P12_Saloon` → `player JEFF saved in slot 1: No error` (loadtest.log). A headless scripted `save 1` in `ROOM_P01_Town_Center` likewise logs `profile saved: 8770 bytes` → `test save 1: No error` (saveload.log).
+- [x] Quit the engine fully; relaunch: loadtest.log is a fresh engine process (launch 19:45:28) that reads a slot-1 profile written by an earlier process, and ends with a clean quit through the main menu (`quit: the line is over: quitting`).
+- [x] Load the save; confirm room, inventory, clues and puzzle flags restore ([02-SCUMMVM-INTEGRATION §9](../02-SCUMMVM-INTEGRATION.md)): the fresh launch restores the on-disk slot-1 profile mid-run — `profile read: StartRoom ROOM_P12_Saloon, 2 movies seen, 4 exits taken, 9 clickable states` with inventory `profile read: 0 snacks, slots` — i.e. room, inventory and progression state (exits taken, clickable states) restore from the persisted profile. The scripted `load 1` in Town Center likewise logs `test load 1: No error` (saveload.log). *Caveat:* the mid-run restore is driven through the game's Sign In "load existing player" path, and the profile records progression as counts (exits taken / clickable states), not a per-flag diff; it is not a ScummVM `--save-slot` menu load.
+
+> **Note (now satisfied):** save/load *is* scriptable headlessly — the
+> `test_script` harness has `save N` / `load N` verbs
+> (`engines/scooby/scooby.cpp` `runTestScript()`). The 2026-11-23 run above used
+> exactly that path for the Town Center round-trip (saveload.log) and the game's
+> own Sign In load for the mid-run Saloon restore (loadtest.log). When this sheet
+> was first written the cycle was **not run** — it needed an interactive desktop
+> the headless context lacked; that gap is now closed.
 
 ## Step 3 — Acceptance-gate walk (time-box: 45 min)
 
