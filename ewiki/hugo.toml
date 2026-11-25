@@ -75,6 +75,16 @@ pluralizeListTitles = false
   target = "content/private"
   files = ["**.md", "**/*.md"]
 
+# why: images a private page shows (a diagram's static SVG, say) are mounted as
+# assets, the same way docs/ images are, so the theme's image hook finds a
+# private page's relative image. Like the pages, they come only from the
+# private checkout, so they publish only on this Access-gated wiki. Without
+# the checkout the source is absent and nothing mounts.
+[[module.mounts]]
+  source = "_private/private"
+  target = "assets/private"
+  files = ["**/*.{png,jpg,jpeg,gif,svg,webp,avif}"]
+
 [[module.mounts]]
   source = "index.md"
   target = "content/_home-source.md"
