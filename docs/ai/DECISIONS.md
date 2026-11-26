@@ -11,6 +11,36 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-26 — Public naming: the packaged edition targets Google TV
+
+**Context.** The studio's plan for a ready-to-run (packaged) edition of the engine
+went TV-first on 2026-11-22: Google TV / Android TV as the primary consumer
+platform, Windows as the reference development platform. Until Jeff committed to
+it, that platform naming stayed off the public pages. Since then the engine has
+reached a real TV: the fork was built as an armeabi-v7a APK, sideloaded onto a
+TCL 65Q77K (Google TV, Android 14), and *Showdown in Ghost Town* was played on it
+from the TV's own storage on 2026-11-24 ([smart-TV guide §TV smoke test](../reference/scummvm-smart-tv.md#tv-smoke-test)).
+*Showdown*'s closeout, [WP-079](../work-packets/WP-079-showdown-closeout.md), has
+been **GO** since 2026-11-22.
+
+**Decision (Jeff, 2026-11-26).** Asked whether the public studio site may say the
+packaged edition is aimed at Google TV, Jeff answered: "Yes, say Google TV." The
+studio's [TerraGlyph page](https://studio.barefootbetters.com/terraglyph-engine/)
+may now say the ready-to-run edition is aimed at **Google TV / Android TV**.
+
+**Scope boundary.**
+
+- **In:** naming Google TV / Android TV as the packaged edition's target on public
+  surfaces, claimed only as far as the [smart-TV guide](../reference/scummvm-smart-tv.md)
+  supports: it has been sideloaded and played on a Google TV, and it is not on
+  Google Play.
+- **Out (stays private):** prices, the packaged edition's working product name,
+  and the deal mechanics (licensing, royalties, economics). No Google Play launch
+  date or promise.
+
+**Tracked as:** the studio page update, [barefootbetters/bb-studio-www#7](https://github.com/barefootbetters/bb-studio-www/pull/7), and the
+internal commercial strategy's public/private split, updated to match.
+
 ## 2026-11-23 — Repo rename: `scooby-engine` → `terraglyph-engine`
 
 **Context.** With the engine identity rename complete and merged (fork
