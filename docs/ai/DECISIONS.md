@@ -11,6 +11,51 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-26 — WP-085 decisions (input, test-package hosting, advanced mode)
+
+**Context.** [WP-085](../work-packets/WP-085-tv-app-pipeline.md), the Google
+TV app pipeline, had four open decisions after D0 ("Pipeline first (a)").
+Microsoft Copilot had proposed alternatives for three of them: D-pad-required
+input, GitHub Releases hosting, and the advanced mode in the Play build behind
+an Advanced Settings switch. Each decision was put to Jeff with WP-085's
+recommendation and Copilot's proposal side by side. Jeff picked from the
+options offered, so each answer below quotes the label he chose.
+
+**Decisions (Jeff, 2026-11-26).**
+
+- **D1, app identity:** answered; the name and package id are tracked
+  privately, under the
+  [2026-11-26 naming decision](#2026-11-26--public-naming-the-packaged-edition-targets-google-tv).
+- **D2, input for the Play release:** "Gamepad required (Rec)". The app
+  declares a game controller required (TV-GP), with keyboard and mouse
+  supported. Copilot's D-pad-required proposal wasn't taken. Jeff, on the TCL
+  65Q77K: "The D-pad can move the pointer, just that it's missing small fine
+  tune movement needed to click a button or object." Until that fine control
+  exists, a D-pad-only game isn't playable. The remote still has to navigate
+  the library and menus.
+- **D3, test-package hosting:** "Split, own repo (Rec)". Freely redistributable
+  game data (the *Beneath a Steel Sky* freeware, readme intact) goes on
+  **GitHub Releases in a dedicated repo**, not the engine repos. Licensed data
+  goes on **Cloudflare behind Access**, never on GitHub Releases, which are
+  public. Adopted from Copilot either way: the downloader takes any HTTPS URL
+  from the manifest and hard-codes no host.
+- **D4, advanced mode:** "Test builds only (Rec)". The package-download mode
+  isn't in the v1 Play build.
+
+**Scope boundary.**
+
+- **In:** WP-085's input requirement, test-package hosting and manifest shape,
+  and whether the advanced mode ships in the Play build.
+- **Out (not decided here):** the dedicated repo's name and its creation (set
+  at WP-085's pre-flight, created on Jeff's go); building the Access-protected
+  host, which waits until licensed data needs it; the D-pad-only pointer,
+  which stays the open remote-first item; the app's icon and banner; and
+  WP-084's own D0 and D3–D5.
+
+**Tracked as:** [WP-085 §Decisions](../work-packets/WP-085-tv-app-pipeline.md#decisions-for-jeff)
+and [EC-008](../execution-checklists/EC-008-tv-app-pipeline.md). WP-085 is
+ready for pre-flight.
+
 ## 2026-11-26 — Ship the free Google TV app first
 
 **Context.** The engine's Google TV work has two possible first goals: get an

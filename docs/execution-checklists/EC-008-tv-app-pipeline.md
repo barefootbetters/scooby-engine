@@ -45,10 +45,14 @@ or a screenshot captured during the run. No capture, no check.
 
 ## Step 3 — Milestone 3: test packages (time-box: 1:30)
 
-- [ ] Advanced mode is hidden by default and opens by the agreed gesture.
-- [ ] Manifest fetched from the test endpoint; packages listed.
-- [ ] BASS package: download, SHA-256 verified, extracted, detected, launched
-      (logged).
+- [ ] Advanced mode is hidden by default in a test build and opens by the
+      agreed gesture; a Play-configured build doesn't include it (D4).
+- [ ] Manifest fetched over HTTPS; packages listed.
+- [ ] BASS package: downloaded from the URL its manifest entry gives (GitHub
+      Releases in the dedicated test-package repo, per D3), SHA-256 verified,
+      extracted, detected, launched (logged).
+- [ ] Host independence: point the BASS entry's URL at a second HTTPS host
+      and it downloads and verifies, with no app change (logged).
 - [ ] A package with a deliberately wrong SHA-256 is refused (logged).
 - [ ] Remove: game files and library entry gone, saves kept (logged).
 - [ ] Diagnostics: engine version, detection results, log export.
