@@ -5,7 +5,8 @@ title: "WP-085: Google TV app pipeline"
 
 # WP-085: Google TV app pipeline — library, import, test packages and updates
 
-**Status:** 📝 Drafted. Not blocked on any rights holder: it distributes no
+**Status:** 📝 Drafted · **ready for pre-flight** (D0–D4 answered
+2026-11-26). Not blocked on any rights holder: it distributes no
 game, and tests only with legally obtained data. **Built first:** Jeff chose
 "Pipeline first (a)" on 2026-11-26, so this app ships to Google Play through
 [WP-084](WP-084-google-tv-first-release.md) once it's done
@@ -93,7 +94,9 @@ verified by sideloading; the Google Play release is a separate step.
 2. The library is ScummVM's launcher (grid view), not a new UI, for v1.
 3. Input: Bluetooth keyboard and mouse work throughout; a gamepad works
    throughout (left stick moves the pointer); the TV remote reaches and
-   launches games in the library. Each recorded as pass/gap on the TCL.
+   launches games in the library. Each recorded as pass/gap on the TCL. The
+   Play release declares a gamepad required ([D2](#decisions-for-jeff);
+   WP-084 §6 sets the manifest); keyboard and mouse stay supported.
 
 **Milestone 2 — importing a legally obtained game.**
 4. On the TCL, test each import route and record which work: the system file
@@ -104,9 +107,12 @@ verified by sideloading; the Google Play release is a separate step.
 
 **Milestone 3 — authorized test packages (an advanced mode).**
 6. A hidden advanced mode (off by default) that lists packages from a
-   manifest fetched over HTTPS from a studio-controlled URL.
+   manifest fetched over HTTPS. **Test builds only** ([D4](#decisions-for-jeff)):
+   the Play build doesn't include it.
 7. Each package is a zip of **game data only**. The manifest gives its id,
-   version, size and SHA-256. The app downloads to a temporary folder,
+   version, size, SHA-256 and **download URL**. The downloader takes any HTTPS
+   URL from the manifest and hard-codes no host, so packages can move between
+   hosts without an app change ([D3](#decisions-for-jeff)). The app downloads to a temporary folder,
    **refuses any file whose SHA-256 doesn't match**, extracts into app-specific
    storage (not the bundled-assets path, which `updateStartSettings` prunes),
    runs ScummVM's add/detection, and shows it in the library.
@@ -152,10 +158,10 @@ verified by sideloading; the Google Play release is a separate step.
 | # | Decision | Recommendation |
 |---|---|---|
 | D0 | **How this WP relates to WP-084 and the logged "free Google TV app first" decision.** (a) WP-085 comes first and WP-084 becomes the store release of this app; (b) WP-084 ships first as planned and WP-085 follows; (c) WP-085 replaces WP-084 | **Answered 2026-11-26 — (a).** Jeff: "Pipeline first (a)". WP-084 is re-scoped as this app's Google Play release |
-| D1 | App identity (tracked privately, not in this public WP) | Choose the package id as permanent: once published on Play it can't change, and this app may become the shared runtime other apps detect by that id (see [Notes](#notes)) |
-| D2 | **Input requirement for a Play release.** Gamepad required (meets TV-GP), keyboard and mouse supported; or mouse required (no TV-quality exemption; risks TV review) | Gamepad required for Play; keyboard and mouse supported and tested now |
-| D3 | Where test packages are hosted | A studio-controlled HTTPS endpoint behind Cloudflare Access, so only authorized devices can fetch packages |
-| D4 | Whether advanced mode ships in the Play build or only in test builds | Test builds only for v1; decide later |
+| D1 | App identity (tracked privately, not in this public WP) | **Answered 2026-11-26; tracked privately.** The package id is treated as permanent: once published on Play it can't change, and this app may become the shared runtime other apps detect by that id (see [Notes](#notes)) |
+| D2 | **Input requirement for a Play release.** Gamepad required (meets TV-GP), keyboard and mouse supported; D-pad required (Copilot's proposal; the D-pad moves ScummVM's pointer today but lacks the fine movement needed to click a button or object, per Jeff on the TCL, 2026-11-26); or mouse required (no TV-quality exemption; risks TV review) | **Answered 2026-11-26.** Jeff: "Gamepad required (Rec)". Gamepad required for Play; keyboard and mouse supported and tested now. The D-pad-only pointer stays out of scope |
+| D3 | Where test packages are hosted | **Answered 2026-11-26.** Jeff: "Split, own repo (Rec)". Freely redistributable packages (the BASS freeware, readme intact) go on **GitHub Releases in a dedicated repo**, which keeps game data out of the engine repos; anything licensed goes on **Cloudflare behind Access**. The downloader is host-independent (§Scope 7). WP-085 hosts only BASS, so the Access host isn't built here: it's set up when licensed data first needs it |
+| D4 | Whether advanced mode ships in the Play build or only in test builds | **Answered 2026-11-26.** Jeff: "Test builds only (Rec)". Test builds only for v1; revisit after the first Play release |
 
 ## Dependencies
 
@@ -169,7 +175,10 @@ verified by sideloading; the Google Play release is a separate step.
     license allows free distribution, so it may be a hosted test package.
   - Jeff's own *Showdown in Ghost Town* disc data, for TerraGlyph. Used only
     on Jeff's devices, **never hosted where anyone else can download it**.
-- A manifest and package host per D3.
+- A manifest and package host per D3: a dedicated GitHub repo whose releases
+  hold the BASS test package (its name is set at pre-flight; it's created on
+  Jeff's go, never by a session on its own). Never *Showdown* or any other
+  licensed data on GitHub Releases, because they're public.
 
 ## Execution
 
@@ -182,7 +191,7 @@ verified by sideloading; the Google Play release is a separate step.
 
 ## Exit criteria
 
-1. [ ] D0–D4 answered.
+1. [x] D0–D4 answered (2026-11-26; [§Decisions](#decisions-for-jeff)).
 2. [ ] Milestone 1: the app installs on the TCL with its own identity, shows
    the library, and launches a game; keyboard, mouse, gamepad and remote
    results recorded.
