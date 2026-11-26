@@ -3,25 +3,29 @@ layout: default
 title: "WP-084: First Google TV release (Beneath a Steel Sky)"
 ---
 
-# WP-084: First Google TV release — a standalone build with *Beneath a Steel Sky*
+# WP-084: First Google TV release — the app on Google Play with *Beneath a Steel Sky*
 
-**Status:** 📝 Drafted · ⏸ **Blocked on Gate 0.** No implementation starts
-until Revolution Software has confirmed the distribution, or Jeff has decided
-to proceed on the freeware license alone ([§Gate 0](#gate-0--distribution-terms-blocking)).
+**Status:** 📝 Drafted · ⏸ **Blocked on [WP-085](WP-085-tv-app-pipeline.md)
+and Gate 0.** Re-scoped 2026-11-26 (Jeff: "Pipeline first (a)"): this WP is
+now the Google Play release of the WP-085 app, with BASS bundled. No
+implementation starts until WP-085 is done and Revolution Software has
+confirmed the distribution, or Jeff has decided to proceed on the freeware
+license alone ([§Gate 0](#gate-0--distribution-terms-blocking)).
 **Phase:** 5 (polish & distribution).
-**Depends on:** WP-079 ✅ (the fork's TV build path proven: an APK built,
-sideloaded and played on the TCL 65Q77K, per the
+**Depends on:** [WP-085](WP-085-tv-app-pipeline.md) (the app: library, import,
+test packages, updates); WP-079 ✅ (the fork's TV build path proven: an APK
+built, sideloaded and played on the TCL 65Q77K, per the
 [smart-TV guide](../reference/scummvm-smart-tv.md#tv-smoke-test)); Gate 0.
 **Unblocks:** the Google Play publishing path a licensed TerraGlyph title will
 reuse: account, signing, App Bundle, the install-time asset pack, TV review and
 the GPL source release.
 **Companion EC:** [EC-007](../execution-checklists/EC-007-google-tv-first-release.md).
-**Pre-flight required:** **Yes.** It changes the fork outside
-`engines/terraglyph/` for the first time (the Android backend and build
-configuration), and it claims a release-readiness posture.
+**Pre-flight required:** **Yes.** It changes the fork's Android backend and
+build configuration (on top of WP-085's changes), and it claims a
+release-readiness posture.
 **Targets generation(s):** none. No TerraGlyph engine code changes; the game
-runs on ScummVM's Revolution `sky` engine. TerraGlyph is compiled in, dormant,
-only if [D2](#decisions-for-jeff) says so.
+runs on ScummVM's Revolution `sky` engine. TerraGlyph is compiled in, as in
+WP-085.
 **Estimated effort:** about 2–3 working days of build and test, plus the
 14-day Play closed test (wall-clock, if the developer account is personal).
 
@@ -29,16 +33,20 @@ only if [D2](#decisions-for-jeff) says so.
 
 ## Goal
 
-Ship one free, complete, playable adventure as a standalone Google TV / Android
-TV app built from our ScummVM fork. The app installs from Google Play, starts
-straight into *Beneath a Steel Sky* (BASS), plays end to end with a Bluetooth
-gamepad, saves and restores, quits cleanly to the TV home screen, and carries
-every license notice and a corresponding-source release. **Done means someone
-can find the app on their Google TV, install it and play the game without a
-computer.**
+Publish the [WP-085](WP-085-tv-app-pipeline.md) app on Google Play, free, with
+one complete, playable adventure bundled: *Beneath a Steel Sky* (BASS). The
+app installs from Google Play, shows BASS in its library ready to play, plays
+it end to end with a Bluetooth gamepad, saves and restores, returns cleanly to
+the TV home screen, and carries every license notice and a
+corresponding-source release. **Done means someone can find the app on their
+Google TV, install it and play the game without a computer.**
 
 ## Background
 
+- **Decided priority and sequencing.** Shipping the free app before any paid
+  distribution, and building WP-085 before this WP, are Jeff's
+  [2026-11-26 decision](../ai/DECISIONS.md#2026-11-26--ship-the-free-google-tv-app-first).
+  It doesn't clear Gate 0.
 - **Why a freeware classic first.** Licensed TerraGlyph titles are gated on
   rights that aren't in hand. The ScummVM freeware classics let the publishing
   path be built and proven now. The candidate comparison (BASS, *Flight of the
@@ -125,24 +133,24 @@ this WP):
 
 ### In scope
 
-1. **Build configuration** on a fork branch `wp-084-google-tv-first-release`:
-   `--enable-engine=sky` (plus `terraglyph` if D2), `--enable-release`,
-   both armeabi-v7a and arm64-v8a in one App Bundle, 16 KB-aligned.
-2. **App identity:** our own `applicationId`, app name, launcher icon, the
-   320×180 TV banner containing the name, and version code, all per
-   [D1](#decisions-for-jeff). No "ScummVM" product name; "Powered by ScummVM"
-   in the about text.
+1. **Release build** of the WP-085 app on a fork branch
+   `wp-084-google-tv-first-release`: `--enable-release`, both armeabi-v7a and
+   arm64-v8a in one App Bundle, 16 KB-aligned.
+2. **App identity:** WP-085's (per [D1](#decisions-for-jeff)), with the
+   Play-specific pieces added here: release version code, "Powered by
+   ScummVM" in the about text and listing, no "ScummVM" product name.
 3. **Bundled game:** the ScummVM freeware download `bass-cd-1.2.zip`
    (66.2 MiB, SHA-256
    `53209b9400eab6fd7fa71518b2f357c8de75cfeaa5ba57024575ab79cc974593`),
    unmodified, with its readme, under `GAMES_BUNDLE_DIRECTORY`.
-4. **Direct launch:** on every start, open BASS directly, not the launcher;
-   on the first run after an install or update, add the bundled game and then
-   start it (today `updateStartSettings` adds games and stops at the launcher).
-   Quitting the game exits the app to the TV home screen.
-5. **Single-game posture:** no route to ScummVM's launcher in normal use
-   (no "Return to launcher", no add-game UI), so the app is one game, not a
-   general ScummVM front end.
+4. **BASS ready on first open:** on the first run after install, the bundled
+   game is added (`updateStartSettings`) and is selected in the library, so
+   one button press starts it. *(Re-scoped 2026-11-26: replaces the earlier
+   direct-launch item.)*
+5. **The library stays.** The app is WP-085's multi-game app: library, import
+   and updates are kept, not hidden; whether its advanced mode ships in the
+   Play build is WP-085's D4. *(Re-scoped 2026-11-26: replaces the earlier
+   single-game posture.)*
 6. **Controller-first TV input:** declare the app as requiring a gamepad
    (`android.hardware.gamepad` `required="true"`, TV-GP) and verify that every
    function, including ScummVM's control panel and save/load dialogs, works
@@ -170,9 +178,10 @@ this WP):
 
 ### Out of scope
 
-- **Paid distribution, in-app purchases, Play Billing, a storefront or a
-  multi-game launcher.** A later WP, after the commercial licensing route is
-  settled; Play Billing can't be linked into the GPL runtime.
+- **Paid distribution, in-app purchases, Play Billing or a storefront.** A
+  later WP, after the commercial licensing route is settled; Play Billing
+  can't be linked into the GPL runtime. (The multi-game library itself is
+  WP-085's.)
 - **D-pad-only pointer control** (playing with the TV remote alone). The
   remote-first requirement stays open for a later WP; this release declares a
   gamepad required.
@@ -190,7 +199,7 @@ this WP):
 |---|---|---|
 | D0 | Gate 0: send the outreach, or proceed on the license alone | Send it; wait a reasonable time for a reply |
 | D1 | App name, package id, icon and banner (tracked privately; not in this public WP) | — |
-| D2 | Compile TerraGlyph in, dormant? | Yes: it proves the exact release build later TerraGlyph titles ship in, at a cost of a few MB |
+| D2 | ~~Compile TerraGlyph in, dormant?~~ Settled by the re-scope: WP-085's app compiles it in | — |
 | D3 | Personal or organization Play developer account | Organization (D-U-N-S) if the studio account is the long-term publisher; a personal account adds the 12-tester / 14-day closed test |
 | D4 | Let Google generate the app signing key, or supply our own | Supply our own, kept offline, so builds published elsewhere can share the signature |
 | D5 | Target audience / rating stance | 13+ (the App Store rates BASS 13+); outside Play's Families program |
@@ -214,13 +223,10 @@ this WP):
    downloads.scummvm.org, check the SHA-256 above, unpack to a staging folder
    outside both repos, and confirm `sky.dsk` / `sky.dnr` match a v0.0372 CD
    detection entry and the readme is present. Never commit game data.
-3. **Backend change for direct launch** (Android Java/C++ only): default the
-   start target to the bundled game when the launching intent carries none;
-   sequence the first-run add before the start; hide the launcher route.
-   Smallest change that works; each behaviour covered by a test or a logged
-   device check.
-4. **App identity and manifest:** `applicationId`, name, icon, banner,
-   `gamepad` required.
+3. **First-open behaviour:** after the first-run add, BASS is selected in the
+   library (smallest change that works; logged device check).
+4. **Manifest for Play:** `gamepad` required, release version code; the
+   rest of the app identity comes from WP-085.
 5. **Build:** `configure` for both ABIs, `make androidfatbundlerelease
    GAMES_BUNDLE_DIRECTORY=<staging>` (or the equivalent sequence from
    `build-release.sh`); confirm 16 KB alignment of the arm64 libraries.
@@ -240,13 +246,14 @@ this WP):
    recorded).
 4. [ ] The bundled game is byte-identical to `bass-cd-1.2.zip` (SHA-256
    recorded) and its readme ships unchanged.
-5. [ ] On the TCL, a fresh install from the bundle starts BASS directly on the
-   first run and on every later run, with no launcher shown (logged).
+5. [ ] On the TCL, a fresh install from the bundle opens the library with BASS
+   added and selected; one button press starts it (logged).
 6. [ ] A full playthrough reaches the end credits using only a Bluetooth
    gamepad (log plus screenshots from the run).
 7. [ ] Save from the control panel → quit → relaunch → restore resumes the
    saved position (logged).
-8. [ ] Back from the game reaches the TV home screen; quitting exits the app.
+8. [ ] Back reaches the TV home screen from the library (TV-DB); quitting the
+   game returns to the library.
 9. [ ] The licenses screen shows every text in scope 7 and the source URL.
 10. [ ] The corresponding-source release is published at a permanent URL and
     `BUILDING.md` reproduces the AAB's native libraries from the tag.
@@ -277,14 +284,14 @@ this WP):
   this public WP carries no product name, price or Google Play launch date.
   The app is free because the game's license requires it.
 - **What carries over to TerraGlyph titles:** the account, signing, App
-  Bundle with an install-time asset pack, TV review, direct launch, the
-  licenses screen and the source release. **What doesn't:** game-data rights,
-  Bink video and TerraGlyph's own input, and the remote-only pointer.
-- **Fork maintenance.** This is the fork's first change outside
-  `engines/terraglyph/`; keep it small and isolated so upstream merges stay
-  clean.
-- **Possible re-scope.** [WP-085](WP-085-tv-app-pipeline.md) (drafted
-  2026-11-26) plans a multi-game app: library, import, verified test packages,
-  updates. If Jeff picks its D0 option (a), this WP becomes the store release
-  of that app, and scope items 4–5 (direct launch, single-game posture) and
-  the gamepad-only input give way to WP-085's design.
+  Bundle with an install-time asset pack, TV review, the licenses screen and
+  the source release. **What doesn't:** game-data rights, Bink video and
+  TerraGlyph's own input, and the remote-only pointer.
+- **Fork maintenance.** The fork's changes outside `engines/terraglyph/` start
+  in WP-085; keep this WP's additions small and isolated so upstream merges
+  stay clean.
+- **Re-scoped 2026-11-26.** Jeff chose "Pipeline first (a)" (WP-085's D0):
+  WP-085 builds the multi-game app first, and this WP is its Google Play
+  release. Scope items 4–5 changed from direct launch and a single-game posture
+  to "BASS ready on first open" and "the library stays"; the
+  [decision entry](../ai/DECISIONS.md#2026-11-26--ship-the-free-google-tv-app-first) records the sequencing.

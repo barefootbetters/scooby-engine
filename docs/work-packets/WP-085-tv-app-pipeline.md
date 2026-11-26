@@ -6,9 +6,10 @@ title: "WP-085: Google TV app pipeline"
 # WP-085: Google TV app pipeline — library, import, test packages and updates
 
 **Status:** 📝 Drafted. Not blocked on any rights holder: it distributes no
-game, and tests only with legally obtained data. **Its relationship to
-[WP-084](WP-084-google-tv-first-release.md) is an open question for Jeff**
-([§Decisions](#decisions-for-jeff)).
+game, and tests only with legally obtained data. **Built first:** Jeff chose
+"Pipeline first (a)" on 2026-11-26, so this app ships to Google Play through
+[WP-084](WP-084-google-tv-first-release.md) once it's done
+([D0](#decisions-for-jeff)).
 **Phase:** 5 (polish & distribution).
 **Depends on:** WP-079 ✅ (the fork's TV build path proven on the TCL 65Q77K,
 per the [smart-TV guide](../reference/scummvm-smart-tv.md#tv-smoke-test)).
@@ -40,9 +41,10 @@ verified by sideloading; the Google Play release is a separate step.
 - **Where this comes from.** Microsoft Copilot's 2026-11-26 recommendation,
   relayed by Jeff: build the delivery pipeline first and choose the first
   shipped game later. It follows the
-  [decision to ship a free Google TV app first](../ai/DECISIONS.md) (pending
-  merge as of this draft) and WP-084, which planned a single-game app; this WP
-  plans a multi-game app. See [§Decisions](#decisions-for-jeff).
+  [decision to ship a free Google TV app first](../ai/DECISIONS.md#2026-11-26--ship-the-free-google-tv-app-first)
+  and WP-084, which first planned a single-game app; this WP plans a
+  multi-game app, and Jeff's D0 answer puts it first, with WP-084 re-scoped as
+  its Play release. See [§Decisions](#decisions-for-jeff).
 - **What ScummVM's Android port already provides**
   (`origin/scooby-engine` `ff490ad9449f`):
   - **The library:** ScummVM's launcher (list and grid views) with detection,
@@ -131,9 +133,10 @@ verified by sideloading; the Google Play release is a separate step.
 
 - **Any Google Play release, price or listing.** WP-084 (or its successor,
   per D0) owns store publishing; commercial terms are tracked privately.
-- **Selling or unlocking games in the app (Play Billing).** Needs its own
+- **Any commercial system: in-app purchases, payment processing, commercial
+  licensing integration, a custom storefront.** A later phase, with its own
   architecture and license review: Play Billing can't be linked into the GPL
-  runtime.
+  runtime. WP-085 is one app with one runtime; no separate runtime install.
 - **Downloading executable code** of any kind, including test engine builds.
   Play policy forbids it; test builds use Play's testing tracks.
 - **Distributing any game without the rights holder's permission.** Test
@@ -148,7 +151,7 @@ verified by sideloading; the Google Play release is a separate step.
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D0 | **How this WP relates to WP-084 and the logged "free Google TV app first" decision.** (a) WP-085 comes first and WP-084 becomes the store release of this app (its single-game, no-launcher scope dropped); (b) WP-084 ships first as planned and WP-085 follows; (c) WP-085 replaces WP-084 | (a): the multi-game app is what later releases need, and WP-084's Play work carries over unchanged |
+| D0 | **How this WP relates to WP-084 and the logged "free Google TV app first" decision.** (a) WP-085 comes first and WP-084 becomes the store release of this app; (b) WP-084 ships first as planned and WP-085 follows; (c) WP-085 replaces WP-084 | **Answered 2026-11-26 — (a).** Jeff: "Pipeline first (a)". WP-084 is re-scoped as this app's Google Play release |
 | D1 | App identity (tracked privately, not in this public WP) | — |
 | D2 | **Input requirement for a Play release.** Gamepad required (meets TV-GP), keyboard and mouse supported; or mouse required (no TV-quality exemption; risks TV review) | Gamepad required for Play; keyboard and mouse supported and tested now |
 | D3 | Where test packages are hosted | A studio-controlled HTTPS endpoint behind Cloudflare Access, so only authorized devices can fetch packages |
