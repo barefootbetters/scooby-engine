@@ -179,6 +179,21 @@ pre code { background: transparent; padding: 0; }
 
 .sidebar a[aria-current="page"] { font-weight: 600; color: var(--color-fg); }
 
+/* sidebarCollapsible (v1.3.0): each section is a <details>; the summary
+   keeps the section heading's look and its marker is the open/closed cue. */
+.sidebar-group > summary {
+  cursor: pointer;
+  margin-top: 0.9rem;
+}
+.sidebar-group > summary::marker { color: var(--color-muted); }
+.sidebar-group[open] > summary { margin-bottom: 0.4rem; }
+.sidebar-group > .sidebar-list { margin-left: 0.9rem; }
+.sidebar-count {
+  color: var(--color-muted);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 .content { min-width: 0; }
 
 /* why: a bare URL used as link text, or a long path in inline code, has no
@@ -450,7 +465,18 @@ blockquote > p:last-child { margin-bottom: 0; }
 
 .wiki-audio audio { width: 100%; }
 
-.wiki-audio figcaption {
+.wiki-video { margin: 1rem 0; }
+
+/* why: the video shortcode's player fills the content column and keeps the
+   clip's proportions, so a wide video never overflows a phone. */
+.wiki-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wiki-audio figcaption,
+.wiki-video figcaption {
   color: var(--color-muted);
   font-size: 0.85em;
   margin-top: 0.25rem;

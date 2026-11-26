@@ -4,7 +4,7 @@ Vendors one version of the ewiki theme into a wiki's themes/ewiki folder and
 writes its manifest.
 
 .DESCRIPTION
-Run from a clone of barefootbetters/ewiki-theme (this script finds the clone
+Run from a clone of barefootbetters/bb-studio-ewiki-theme (this script finds the clone
 from its own location). It extracts the theme at -Version with
 `git -c core.autocrlf=false archive`, using the fixed pathspec
 `layouts assets tools theme.toml README.md`, so CHANGELOG.md, docs/,
@@ -64,7 +64,7 @@ function Invoke-ThemeGit {
     param([string] $Repository, [string[]] $Arguments)
     $output = & git -C $Repository @Arguments 2>&1
     if ($LASTEXITCODE -ne 0) {
-        throw "Sync-EwikiTheme.ps1: 'git $($Arguments -join ' ')' failed in $Repository with: $output. Check that $Repository is a clone of barefootbetters/ewiki-theme and that the version exists there."
+        throw "Sync-EwikiTheme.ps1: 'git $($Arguments -join ' ')' failed in $Repository with: $output. Check that $Repository is a clone of barefootbetters/bb-studio-ewiki-theme and that the version exists there."
     }
     return $output
 }
@@ -211,7 +211,7 @@ function Invoke-ThemeSync {
     #>
     $repository = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
     if (-not (Test-Path -LiteralPath (Join-Path $repository 'theme.toml'))) {
-        throw "Sync-EwikiTheme.ps1: $repository has no theme.toml, so this copy of the script isn't running from a theme clone. Run tools/Sync-EwikiTheme.ps1 from a clone of barefootbetters/ewiki-theme, not from a vendored copy."
+        throw "Sync-EwikiTheme.ps1: $repository has no theme.toml, so this copy of the script isn't running from a theme clone. Run tools/Sync-EwikiTheme.ps1 from a clone of barefootbetters/bb-studio-ewiki-theme, not from a vendored copy."
     }
     $resolved = Resolve-ThemeVersion $repository $Version
     $targetPath = [System.IO.Path]::GetFullPath($Target, (Get-Location).Path)

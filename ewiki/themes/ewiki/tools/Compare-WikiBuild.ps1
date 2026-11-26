@@ -4,16 +4,19 @@ Compares two builds of a wiki: the page set, every link and image in <main>,
 and the visible text.
 
 .DESCRIPTION
-Run it on a wiki's build before and after a theme migration.
+Run it on a wiki's build before and after a theme migration, or before and
+after a theme upgrade.
 
 - Page set: any difference in index.html paths fails.
 - Links are enumerated from the baseline's <main>. Each is paired with the
   candidate link on the same page with the same link text and occurrence
-  index. Links the baseline can't have are left out of the candidate first:
-  heading anchors (a.heading-anchor), the table of contents (nav.toc) and the
-  breadcrumbs (nav.crumbs). Inside details.editing-this-page, whose wording
-  may change, the page's multiset of link targets is compared instead, link
-  text ignored: every baseline target must appear in the candidate as often.
+  index. The theme's own navigation is left out of both builds first: heading
+  anchors (a.heading-anchor), the table of contents (nav.toc) and the
+  breadcrumbs (nav.crumbs). A pre-theme baseline has none of them; a themed
+  baseline (an upgrade) has them all. Inside details.editing-this-page, whose
+  wording may change, the page's multiset of link targets is compared
+  instead, link text ignored: every baseline target must appear in the
+  candidate as often.
 - Images: each baseline <img src> in <main> is paired by page, alt text and
   occurrence index, with no allowed difference.
 - Targets: a local href is compared as a page (lowercased, trailing slash,
@@ -493,6 +496,22 @@ function Compare-PageText {
     }
 }
 
+function Remove-ThemeNavigation {
+    <#
+    .SYNOPSIS
+    Removes the theme's own links from <main>: the table of contents
+    (nav.toc), the breadcrumbs (nav.crumbs) and heading anchors
+    (a.heading-anchor).
+    .PARAMETER Html
+    The <main> HTML outside the editing footer.
+    #>
+    param([string] $Html)
+    foreach ($navigation in @('class="?toc\b', 'class="?crumbs\b')) {
+        $Html = (Split-Element $Html 'nav' $navigation).Outside
+    }
+    return [regex]::Replace($Html, "<a\b(?=[^>]*\bclass=""?heading-anchor\b)$TagBody>\s*</a>", '')
+}
+
 function Compare-Page {
     <#
     .SYNOPSIS
@@ -505,12 +524,11 @@ function Compare-Page {
     $candidateMain = Get-MainHtml (Join-Path $Candidate $Page)
     $baselineParts = Split-Element $baselineMain 'details' 'class="?editing-this-page'
     $candidateParts = Split-Element $candidateMain 'details' 'class="?editing-this-page'
-    $candidateBody = $candidateParts.Outside
-    foreach ($navigation in @('class="?toc\b', 'class="?crumbs\b')) {
-        $candidateBody = (Split-Element $candidateBody 'nav' $navigation).Outside
-    }
-    $candidateBody = [regex]::Replace($candidateBody, "<a\b(?=[^>]*\bclass=""?heading-anchor\b)$TagBody>\s*</a>", '')
-    Compare-PageLink $Page @(Get-Link $baselineParts.Outside) @(Get-Link $candidateBody)
+    # why: both sides lose the theme's navigation. A pre-theme baseline has
+    # none, so nothing changes for it; a themed baseline (a theme upgrade)
+    # would otherwise report every breadcrumb, TOC entry and heading anchor as
+    # having no partner (v1.2.2).
+    Compare-PageLink $Page @(Get-Link (Remove-ThemeNavigation $baselineParts.Outside)) @(Get-Link (Remove-ThemeNavigation $candidateParts.Outside))
     Compare-FooterTarget $Page @(Get-Link $baselineParts.Inside) @(Get-Link $candidateParts.Inside)
     Compare-PageImage $Page @(Get-Image $baselineMain) @(Get-Image $candidateMain)
     Compare-PageText $Page $baselineMain $candidateMain

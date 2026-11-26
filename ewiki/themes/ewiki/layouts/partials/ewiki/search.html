@@ -21,7 +21,14 @@
   clean. The shortcuts bail while the reader is typing in another field, so
   keystrokes are never trapped; the stub itself is exempt, since it is the
   search entry.
+
+  why: params.ewiki.searchOpenFilters (v1.3.0, unset by default) names the
+  filter groups that start open, passed to PagefindUI as openFilters. Unset,
+  Pagefind's own default holds: a group starts open only when it is the one
+  filter and has six or fewer values. html/template writes the list as a
+  JSON array in this script context.
 */ -}}
+{{- $openFilters := index (site.Params.ewiki | default dict) "searchopenfilters" -}}
 <script data-wiki-search>
   (function () {
     var pagefindLoadPromise = null;
@@ -47,7 +54,8 @@
             new PagefindUI({
               element: '#wiki-search',
               showSubResults: true,
-              resetStyles: false
+              resetStyles: false{{ with $openFilters }},
+              openFilters: {{ . }}{{ end }}
             });
             // why: PagefindUI appends its UI into #wiki-search instead of
             // replacing the stub, so the header showed two search boxes after

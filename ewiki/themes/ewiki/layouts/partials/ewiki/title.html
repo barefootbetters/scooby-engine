@@ -5,9 +5,10 @@
   carry no front matter, and this keeps them named in the title bar, the
   sidebar and lists.
 
-  Input: a page. Returns the full title. Lists, the sidebar and breadcrumbs
-  strip params.ewiki.titlePrefix themselves (H's "Herbs vs. Ailments: "); the
-  page's own H1 and <title> keep the full text.
+  Input: a page. Returns the full title. Lists, the sidebar, breadcrumbs and
+  include-section captions take ewiki/short-title.html instead, which strips
+  params.ewiki.titlePrefix (H's "Herbs vs. Ailments: "); the page's own H1
+  and <title> keep the full text.
 */ -}}
 {{- $title := .Title -}}
 {{- if not $title -}}

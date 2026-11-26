@@ -12,7 +12,8 @@ The gates of the engine's wiki-viewer.yml, in its order:
    *.html and *.css.
 4. Pagefind: `npx --yes pagefind@1.5.2 --site <output>`.
 5. JS-free: every `<script` in the rendered HTML is the sanctioned
-   `<script data-wiki-search` loader, and the Pagefind bundle exists.
+   `<script data-wiki-search` loader, or carries a marker the wiki allowed
+   with -AllowedScript, and the Pagefind bundle exists.
 
 It prints each gate's numbers and exits 1 on the first failure.
 
@@ -36,8 +37,21 @@ source files; a hard-coded number is a static floor that goes stale.
 .PARAMETER PanicOnWarning
 Pass --panicOnWarning to hugo, so a warning (a broken link) fails the build.
 
+.PARAMETER AllowedScript
+Since v1.2.0. The data- attribute names, such as data-wiki-mermaid, that mark
+a script the wiki adds through head-end or body-end. Gate 5 also accepts a
+`<script` tag carrying one of them anywhere in its opening tag, quoted or not
+(`<script type=module data-wiki-mermaid>` after --minify), and counts each
+marker apart from the Pagefind loader. A marker matches a whole attribute
+name: data-wiki-mermaid doesn't accept data-wiki-mermaid-x. Entries may also
+be comma-separated, since `pwsh -File` passes `a,b` as one string. Without it,
+gate 5 accepts only the Pagefind loader, as before v1.2.0.
+
 .EXAMPLE
 pwsh -File themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -PanicOnWarning
+
+.EXAMPLE
+pwsh -File themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -PanicOnWarning -AllowedScript data-wiki-mermaid
 #>
 [CmdletBinding()]
 param(
@@ -50,7 +64,9 @@ param(
 
     [int] $ExpectedPageCount = -1,
 
-    [switch] $PanicOnWarning
+    [switch] $PanicOnWarning,
+
+    [string[]] $AllowedScript = @()
 )
 
 Set-StrictMode -Version Latest
@@ -200,19 +216,77 @@ function Test-JavaScriptFree {
     param([pscustomobject] $Settings)
     $total = 0
     $sanctioned = 0
+    $allowed = [ordered]@{}
+    foreach ($marker in $Settings.AllowedScript) {
+        $allowed[$marker] = 0
+    }
     foreach ($file in (Get-ChildItem -LiteralPath $Settings.PublishPath -Recurse -File -Filter '*.html')) {
         $html = [System.IO.File]::ReadAllText($file.FullName)
         $total += [regex]::Matches($html, '<script').Count
         $sanctioned += [regex]::Matches($html, '<script data-wiki-search').Count
+        if ($allowed.Count -eq 0) {
+            continue
+        }
+        # why: an opening tag is matched case-sensitively, like the total, so
+        # a tag counted here is always one of the total's. Quoted attribute
+        # values may hold '>' or a marker's text, so they're skipped whole and
+        # emptied before a marker is looked for among the attribute names.
+        foreach ($tag in [regex]::Matches($html, '<script(?=[\s>])(?<attributes>(?:[^>"'']|"[^"]*"|''[^'']*'')*)>')) {
+            if ($tag.Value.StartsWith('<script data-wiki-search')) {
+                continue
+            }
+            $attributeNames = $tag.Groups['attributes'].Value -replace '"[^"]*"|''[^'']*''', '""'
+            foreach ($marker in @($allowed.Keys)) {
+                if ($attributeNames -match ('(?i)(?<=\s)' + [regex]::Escape($marker) + '(?=[\s=/]|$)')) {
+                    $allowed[$marker]++
+                    break
+                }
+            }
+        }
     }
-    Write-Host "Rendered HTML script tags: $total; sanctioned data-wiki-search loaders: $sanctioned."
-    if ($total -ne $sanctioned) {
-        Stop-WithGateFailure "JS-free gate failed: $total script tag(s) in rendered HTML, but only $sanctioned are the data-wiki-search Pagefind loader (D-24293). Remove the other script, or gate it in the wiki's own extension partial."
+    $allowedCounts = ($allowed.Keys | ForEach-Object { "; allowed $_ scripts: $($allowed[$_])" }) -join ''
+    $allowedTotal = ($allowed.Values | Measure-Object -Sum).Sum
+    $allowedNames = @($allowed.Keys) -join ', '
+    Write-Host "Rendered HTML script tags: $total; sanctioned data-wiki-search loaders: $sanctioned$allowedCounts."
+    if ($total -ne $sanctioned + $allowedTotal) {
+        if ($allowed.Count -eq 0) {
+            Stop-WithGateFailure "JS-free gate failed: $total script tag(s) in rendered HTML, but only $sanctioned are the data-wiki-search Pagefind loader (D-24293). Remove the other script, or gate it in the wiki's own extension partial."
+        }
+        Stop-WithGateFailure "JS-free gate failed: $total script tag(s) in rendered HTML, but only $sanctioned are the data-wiki-search Pagefind loader (D-24293) and $allowedTotal carry a marker allowed by -AllowedScript ($allowedNames). Remove the other script, or give it one of those markers as an attribute of its own in its opening tag."
     }
     if (-not (Test-Path -LiteralPath (Join-Path $Settings.PublishPath 'pagefind/pagefind-ui.js'))) {
         Stop-WithGateFailure "JS-free gate failed: $($Settings.PublishPath)/pagefind/pagefind-ui.js is missing, so the Pagefind gate produced no search bundle. Check that gate's output."
     }
-    Write-Host "JS-free gate passed: all $total script tag(s) are the sanctioned Pagefind loader, and the Pagefind bundle is present."
+    if ($allowed.Count -eq 0) {
+        Write-Host "JS-free gate passed: all $total script tag(s) are the sanctioned Pagefind loader, and the Pagefind bundle is present."
+    }
+    else {
+        Write-Host "JS-free gate passed: all $total script tag(s) are the sanctioned Pagefind loader or carry a marker allowed by -AllowedScript ($allowedNames), and the Pagefind bundle is present."
+    }
+}
+
+function Get-AllowedScriptMarker {
+    <#
+    .SYNOPSIS
+    Returns the -AllowedScript markers, split on commas and checked to be
+    data- attribute names.
+    #>
+    $markers = [System.Collections.Generic.List[string]]::new()
+    foreach ($entry in $AllowedScript) {
+        foreach ($marker in ($entry -split ',')) {
+            $marker = $marker.Trim()
+            if ($marker -eq '') {
+                continue
+            }
+            if ($marker -cnotmatch '^data-[a-z0-9][a-z0-9._-]*$') {
+                throw "Invoke-WikiGates.ps1: the -AllowedScript marker '$marker' isn't a data- attribute name. Pass the attribute the wiki's script carries in its opening tag, in lowercase, such as data-wiki-mermaid."
+            }
+            if (-not $markers.Contains($marker)) {
+                $markers.Add($marker)
+            }
+        }
+    }
+    return , $markers.ToArray()
 }
 
 function Invoke-WikiGateRun {
@@ -227,10 +301,11 @@ function Invoke-WikiGateRun {
     }
     $contentPath = if ($ContentDir) { [System.IO.Path]::GetFullPath($ContentDir, (Get-Location).Path) } else { Join-Path $sitePath 'content' }
     $settings = [pscustomobject]@{
-        SitePath    = $sitePath
-        ConfigPath  = $configPath
-        ContentPath = $contentPath
-        PublishPath = Get-PublishPath $sitePath $configPath
+        SitePath      = $sitePath
+        ConfigPath    = $configPath
+        ContentPath   = $contentPath
+        PublishPath   = Get-PublishPath $sitePath $configPath
+        AllowedScript = Get-AllowedScriptMarker
     }
     Invoke-HugoBuild $settings
     Write-Host 'Build gate passed: hugo built the site.'

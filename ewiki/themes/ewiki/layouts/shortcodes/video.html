@@ -1,0 +1,48 @@
+{{- /*
+  Video player shortcode (v1.5.0): a native player for a hosted clip, the
+  video counterpart of `audio`.
+
+  Usage:
+    {{< video src="https://media.example.com/video/clip.mp4" poster="https://media.example.com/video/clip.jpg" caption="Assembly, 42 seconds" >}}
+
+  why: `unsafe = false` drops a raw <video> tag written in Markdown, but not
+  shortcode output, so a shortcode is the sanctioned way to emit a player, as
+  it is for audio. A native <video controls> draws the browser's own
+  controls with no script element, so the JS-free gate holds. No autoplay:
+  the reader starts the clip. preload="metadata" fetches only enough to show
+  the duration (and, with no poster, the first frame); playsinline keeps an
+  iPhone from forcing full screen.
+
+  why: a shortcode rather than a branch in the image render hook, so the hook
+  stays about images (content-relative lookup, the missing-image warning) and
+  a video carries a caption the way audio does. `src` passes through
+  unchanged: a full URL or a `/`-rooted path the wiki serves, since video
+  bytes belong on the wiki's media host, not in its repo.
+
+  why: the <source> type comes from the extension before any query string,
+  .mp4 or .webm; any other leaves type off and the browser sniffs the file.
+  The caption is the figure's figcaption and the player's aria-label, so a
+  screen reader names the player. Output is static, so two builds match.
+
+  Params:
+    src     (required): the video's URL.
+    poster  (optional): the still shown before play.
+    caption (optional): a short label under the player.
+*/ -}}
+{{- $src := .Get "src" -}}
+{{- if not $src -}}
+  {{- errorf "video shortcode at %s is missing its src parameter. Add src=\"<video file URL>\"." .Position -}}
+{{- end -}}
+{{- $poster := .Get "poster" -}}
+{{- $caption := .Get "caption" -}}
+{{- $extension := lower (path.Ext (index (split $src "?") 0)) -}}
+{{- $type := index (dict ".mp4" "video/mp4" ".webm" "video/webm") $extension -}}
+<figure class="wiki-video">
+  <video controls playsinline preload="metadata"{{ with $poster }} poster="{{ . }}"{{ end }}{{ with $caption }} aria-label="{{ . }}"{{ end }}>
+    <source src="{{ $src }}"{{ with $type }} type="{{ . }}"{{ end }}>
+    Your browser does not support the video element. <a href="{{ $src }}">Download the video</a>.
+  </video>
+  {{- with $caption }}
+  <figcaption>{{ . }}</figcaption>
+  {{- end }}
+</figure>

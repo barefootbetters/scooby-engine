@@ -22,15 +22,13 @@
 */ -}}
 {{- $page := . -}}
 {{- $ewiki := site.Params.ewiki | default dict -}}
-{{- $repo := index $ewiki "repo" -}}
-{{- $branch := index $ewiki "branch" | default "main" -}}
 {{- $localRoot := index $ewiki "localroot" | default "" -}}
 {{- $separator := cond (strings.Contains $localRoot `\`) `\` "/" -}}
-{{- $repoPath := partial "ewiki/repo-path.html" $page -}}
-{{- $blobBase := printf "https://github.com/%s/blob/%s" $repo $branch -}}
-{{- $editBase := printf "https://github.com/%s/edit/%s" $repo $branch -}}
-{{- $canonical := index $page.Params "canonical-source" -}}
-{{- $canonicalRepo := index $page.Params "canonical-source-repo" -}}
+{{- /*
+  why: the owner file and its GitHub URLs come from ewiki/source-file.html,
+  which the include-section caption shares, so both name the same file.
+*/ -}}
+{{- $source := partial "ewiki/source-file.html" $page -}}
 {{- /*
   why: a full local path is shown only when it is knowable: the page's own
   file, or a canonical doc in this same repo. A cross-repo canonical doc lives
@@ -38,45 +36,41 @@
   form. An empty localRoot drops the local path everywhere.
 */ -}}
 {{- $localPath := "" -}}
-{{- $sourcePath := $repoPath -}}
-{{- if $canonical -}}{{- $sourcePath = $canonical -}}{{- end -}}
-{{- if and $localRoot (not $canonicalRepo) -}}
-  {{- $localPath = printf "%s%s%s" $localRoot $separator (replace $sourcePath "/" $separator) -}}
+{{- if and $localRoot (not $source.otherRepo) -}}
+  {{- $localPath = printf "%s%s%s" $localRoot $separator (replace $source.path "/" $separator) -}}
 {{- end -}}
 <details class="editing-this-page">
   <summary>Editing this page</summary>
   <div class="editing-this-page-body">
-    {{- if $canonicalRepo }}
-    {{- $canonicalBlob := printf "https://github.com/%s/blob/main/%s" $canonicalRepo $canonical }}
-    {{- $canonicalEdit := printf "https://github.com/%s/edit/main/%s" $canonicalRepo $canonical }}
+    {{- if $source.otherRepo }}
     <p>
       This page is built from
-      <a href="{{ $canonicalBlob }}"><code>{{ $canonical }}</code></a> in the
-      <code>{{ $canonicalRepo }}</code> repo, which owns its text.
+      <a href="{{ $source.blob }}"><code>{{ $source.path }}</code></a> in the
+      <code>{{ $source.repo }}</code> repo, which owns its text.
     </p>
     <p>
       <strong>Fast path:</strong>
-      <a href="{{ $canonicalEdit }}">✏️ Edit the canonical doc on GitHub</a>.
+      <a href="{{ $source.edit }}">✏️ Edit the canonical doc on GitHub</a>.
     </p>
-    {{- else if $canonical }}
+    {{- else if $source.canonical }}
     <p>
       This page is built from
-      {{ with $localPath }}<code>{{ . }}</code> ({{ end }}<a href="{{ $blobBase }}/{{ $canonical }}">view on GitHub</a>{{ with $localPath }}){{ end }},
+      {{ with $localPath }}<code>{{ . }}</code> ({{ end }}<a href="{{ $source.blob }}">view on GitHub</a>{{ with $localPath }}){{ end }},
       which owns its text.
     </p>
     <p>
       <strong>Fast path:</strong>
-      <a href="{{ $editBase }}/{{ $canonical }}">✏️ Edit the canonical doc on GitHub</a>.
+      <a href="{{ $source.edit }}">✏️ Edit the canonical doc on GitHub</a>.
     </p>
     {{- else }}
     <p>
       The editable source for this page is
-      {{ with $localPath }}<code>{{ . }}</code> ({{ end }}<a href="{{ $blobBase }}/{{ $repoPath }}">view on GitHub</a>{{ with $localPath }}){{ end }}.
+      {{ with $localPath }}<code>{{ . }}</code> ({{ end }}<a href="{{ $source.blob }}">view on GitHub</a>{{ with $localPath }}){{ end }}.
       That is the file to edit in a local clone.
     </p>
     <p>
       <strong>Fast path:</strong> fix this page in your browser, no clone:
-      <a href="{{ $editBase }}/{{ $repoPath }}">✏️ Edit <code>{{ $repoPath }}</code> on GitHub</a>.
+      <a href="{{ $source.edit }}">✏️ Edit <code>{{ $source.path }}</code> on GitHub</a>.
     </p>
     {{- end }}
     {{- /*
@@ -93,6 +87,22 @@
       the owner page it names (<code>include-section</code>). Edit the text
       there; the caption links to it. This page's own file holds only the
       <code>include-section</code> lines that choose which sections appear.
+    </p>
+    {{- end }}
+    {{- /*
+      why: an ewiki-guide block (v1.4.0) is rendered from the theme's own
+      authoring guide, which ships in the vendored theme. Its text is edited
+      in the theme repo and reaches this wiki with a theme upgrade, never in
+      this wiki's vendored copy. Detected the same way as include-section.
+    */}}
+    {{- if findRE `\{\{[<%][ \t]*ewiki-guide` $page.RawContent 1 }}
+    <p>
+      <strong>Parts of this page come from the theme's guide.</strong> Each
+      <strong>Linked section</strong> block naming the ewiki theme's guide is
+      rendered from the theme's authoring guide (<code>ewiki-guide</code>).
+      Edit it in the theme repo, barefootbetters/bb-studio-ewiki-theme; this
+      wiki picks up the change when it upgrades the theme. Never edit the
+      vendored copy under <code>themes/ewiki/</code>.
     </p>
     {{- end }}
     {{- partial "ewiki/editing-extra.html" $page }}
