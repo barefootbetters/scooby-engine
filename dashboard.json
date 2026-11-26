@@ -91,7 +91,7 @@
       "title": "Google TV app pipeline (WP-085)",
       "status": "active",
       "doneWhen": "All four milestones are verified on the TV, and the app downloads no executable code.",
-      "note": "Drafted, and built first (decided 2026-11-26)."
+      "note": "Drafted and ready for pre-flight; built first (decided 2026-11-26)."
     },
     {
       "id": "tv-release",
@@ -154,6 +154,14 @@
     ]
   },
   "sources": {
+    "workIndex": {
+      "path": "docs/work-packets/WORK_INDEX.md",
+      "format": "table"
+    },
+    "decisionLog": {
+      "kind": "dated-headings",
+      "path": "docs/ai/DECISIONS.md"
+    },
     "gitActivity": {
       "branch": "main",
       "commits": 50
@@ -164,19 +172,19 @@
       "id": "overview",
       "title": "Overview",
       "abbreviation": "Ov",
-      "panels": ["focus", "milestones", "git-activity"]
+      "panels": ["focus", "milestones", "work-queue", "git-activity"]
     },
     {
       "id": "plan",
       "title": "Plan",
       "abbreviation": "Pl",
-      "panels": ["vision", "milestones", "parking-lot"]
+      "panels": ["vision", "milestones", "parking-lot", "decisions"]
     },
     {
       "id": "activity",
       "title": "Activity",
       "abbreviation": "Ac",
-      "panels": ["git-activity"]
+      "panels": ["git-activity", "work-queue"]
     }
   ]
 }
