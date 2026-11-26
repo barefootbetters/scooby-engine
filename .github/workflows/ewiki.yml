@@ -107,7 +107,7 @@ jobs:
       # upgrading the theme, re-sync the tag and paste its release-notes digest.
       - name: Check the vendored theme against its pinned digest
         env:
-          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # bb-studio-ewiki-theme v1.1.1
+          PINNED_DIGEST: a4b239f94b6719a07e24e180f0162ce1372fd93fdf55eba8714c0fed3617bd9e   # bb-studio-ewiki-theme v1.5.1
         run: |
           set -e
           manifest_digest=$(tr -d '\r' < ewiki/themes/ewiki/.theme-manifest.txt | sha256sum | cut -d' ' -f1)
@@ -127,7 +127,7 @@ jobs:
       - name: Check the vendored theme copy and core shadows
         shell: pwsh
         env:
-          PINNED_DIGEST: bd54922ec4ff32d1bcb065289cfd2888ff41c15089b36d219b0f3b5467130a36   # bb-studio-ewiki-theme v1.1.1
+          PINNED_DIGEST: a4b239f94b6719a07e24e180f0162ce1372fd93fdf55eba8714c0fed3617bd9e   # bb-studio-ewiki-theme v1.5.1
         run: pwsh -File ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 -Site . -Config ewiki/hugo.toml -ExpectedManifestSha256 $env:PINNED_DIGEST
 
       # why: the theme's five gates (build with --panicOnWarning, page count,

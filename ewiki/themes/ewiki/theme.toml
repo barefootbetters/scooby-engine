@@ -3,7 +3,7 @@
 name = "ewiki"
 license = "Proprietary"
 description = "The shared hand-rolled wiki theme for the Barefoot Betters ewikis: one core, a closed set of extension points, and no JavaScript beyond the Pagefind search loader."
-homepage = "https://github.com/barefootbetters/ewiki-theme"
+homepage = "https://github.com/barefootbetters/bb-studio-ewiki-theme"
 tags = ["wiki", "documentation", "no-javascript"]
 features = ["table of contents", "heading anchors", "skip link", "breadcrumbs", "dark mode", "Pagefind search"]
 

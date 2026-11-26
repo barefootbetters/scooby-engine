@@ -26,7 +26,6 @@
     page counts don't change.
   */ -}}
   {{- $ewiki := site.Params.ewiki | default dict -}}
-  {{- $prefix := index $ewiki "titleprefix" | default "" -}}
   {{- $sectionReadme := false -}}
   {{- if isset $ewiki "sectionreadme" -}}{{- $sectionReadme = index $ewiki "sectionreadme" -}}{{- end -}}
   {{- $readme := false -}}
@@ -54,7 +53,7 @@
         {{- with .Sections }}
         <ul class="page-list section-list">
           {{- range .ByWeight }}
-          <li><a href="{{ .RelPermalink }}">{{ strings.TrimPrefix $prefix (partial "ewiki/title.html" .) }}</a> <small class="muted">{{ len .RegularPagesRecursive }} pages</small></li>
+          <li><a href="{{ .RelPermalink }}">{{ partial "ewiki/short-title.html" . }}</a> <small class="muted">{{ len .RegularPagesRecursive }} pages</small></li>
           {{- end }}
         </ul>
         {{- end }}
@@ -66,7 +65,7 @@
         {{- with $pages }}
         <ul class="page-list">
           {{- range . }}
-          <li><a href="{{ .RelPermalink }}">{{ strings.TrimPrefix $prefix (partial "ewiki/title.html" .) }}</a></li>
+          <li><a href="{{ .RelPermalink }}">{{ partial "ewiki/short-title.html" . }}</a></li>
           {{- end }}
         </ul>
         {{- end }}

@@ -15,11 +15,49 @@ What every wiki gets from the core:
 - dark mode, from the reader's `prefers-color-scheme`
 - one link resolver that turns GitHub-style relative links into wiki pages
 - an "Editing this page" footer built from params
-- the `include-section`, `audio`, `audio-inline` and `swatch` shortcodes
+- the `include-section`, `ewiki-guide`, `audio`, `audio-inline`, `video` and
+  `swatch` shortcodes
+- the authoring guide, one copy every wiki shows sections of
 
 The core emits no JavaScript except the Pagefind loader,
 `<script data-wiki-search>`, and only when search is on (D-24293). It never
 reads the clock, so two builds of a wiki are byte-identical.
+
+## Quick start
+
+Four rules cover most of it:
+
+- **This repo is the only copy of the core.** A wiki vendors a tagged copy
+  under `themes/ewiki/` and never edits it or shadows a core file: its CI
+  fails both. A change lands here, ships in a tag, and each wiki re-syncs.
+- **A wiki's own behavior stays in the wiki,** behind an extension point:
+  six partials, a brand file and a site file. Its colors, its sidebar, its
+  metadata schema and its Mermaid loader all live there, never in the core.
+- **Write links for GitHub,** relative to the linking file. The link hook
+  turns each one into a wiki page, a published image or a GitHub URL.
+- **The build is strict.** Under `-PanicOnWarning`, a broken link, a missing
+  image or raw HTML fails it; an unmarked script fails the JS-free gate, and
+  two builds that differ fail determinism. The PR goes red before anything
+  deploys.
+
+Common tasks:
+
+| To | Do this | More |
+|---|---|---|
+| Put the theme in a wiki | `Sync-EwikiTheme.ps1 -Version <tag> -Target themes/ewiki`, set `theme = "ewiki"`, copy the site config, and pin the printed digest in CI | [Install](#install) |
+| Point the wiki at its repo | `repo`, `branch` and `contentRoot` under `[params.ewiki]` in the wiki's `hugo.toml` | [Params](#params) |
+| Write a page | The author's guide to formatting, links, images, shortcodes and what fails the build. It ships in the theme; a wiki's own authoring page shows its sections with `ewiki-guide` and adds its own parts | [Ewiki Authoring](https://github.com/barefootbetters/bb-studio-ewiki-theme/blob/main/assets/ewiki-guide/ewiki-authoring.md) |
+| Show a section of the authoring guide | `ewiki-guide section="<heading-anchor>"` on the wiki's own authoring page | [Shortcodes](#shortcodes) |
+| Link to a page | `[Status](../ai/STATUS.md)`: a relative path, with the file name's case exact | [How links resolve](#how-links-resolve) |
+| Show another page's section | `include-section page="<path or slug>" section="<heading-anchor>"`; a missing page or heading fails the build | [Shortcodes](#shortcodes) |
+| Show an image | Mount the content root's images at `assets/<contentRoot>`, then `![what it shows](images/file.png)` relative to the note | [Site config the wiki owns](#site-config-the-wiki-owns) |
+| Let a reader open an image full size | Wrap it in a link to its own file: `[![alt](path)](path)` | [How links resolve](#how-links-resolve) |
+| Change the colors | Every token, light and dark, in the wiki's `assets/css/ewiki-brand.css` | [The CSS order](#the-css-order) |
+| Change the sidebar, metadata panel or footer | A same-named partial in the wiki's `layouts/partials/ewiki/` | [Extension points](#extension-points) |
+| Draw a diagram | The core ships none. The wiki adds a code-block hook and a loader through `body-end`, marks the script with a `data-` attribute, keeps `codeFences` on, and passes `-AllowedScript` to the gates | [Extension points](#extension-points) |
+| Preview locally | In a wiki, its own preview command (Hugo Extended 0.161.1, `http://localhost:1313`). Here: Sync `-Version HEAD` into `exampleSite/themes/ewiki`, then `hugo server --source exampleSite` | [The tools](#the-tools) |
+| Fix a red build | A manifest or digest mismatch means the vendored copy was edited: re-sync. A shadow means a core file was overridden: move it to an extension point. A gate names the page and what's wrong | [The vendored copy is read-only](#the-vendored-copy-is-read-only) |
+| Upgrade a wiki | Re-sync with the new tag, replace the pinned digest, run the gates and `Compare-WikiBuild.ps1` | [Upgrading](#upgrading) |
 
 ## Install
 
@@ -31,7 +69,7 @@ for this private repo (D-24728).
 2. Vendor it:
 
    ```pwsh
-   pwsh -File ../ewiki-theme/tools/Sync-EwikiTheme.ps1 -Version v1.0.0 -Target themes/ewiki
+   pwsh -File ../bb-studio-ewiki-theme/tools/Sync-EwikiTheme.ps1 -Version v1.0.0 -Target themes/ewiki
    ```
 
    Sync extracts `layouts assets tools theme.toml README.md` at that tag with
@@ -69,6 +107,12 @@ disableKinds = ["RSS", "sitemap"]   # add "taxonomy", "term" for a one-page tags
     endLevel = 4
 ```
 
+`codeFences = false` also switches off code-block render hooks on Hugo
+0.161.1: a fenced block renders as a plain `<pre><code>`, and the wiki's
+`render-codeblock-mermaid.html` (or any code-block hook) never runs. A wiki
+with such a hook leaves `codeFences` at its default, `true`. Herbs' builds
+are byte-identical with highlighting on.
+
 A wiki whose content root holds images mounts them at
 `assets/<contentRoot>`, so the render hooks can find each one by its
 content-relative path. Herbs' `docs/` mount is the model:
@@ -95,24 +139,31 @@ Set under `[params.ewiki]`. Defaults are applied in the templates.
 | `search` | bool | `true` | Render the Pagefind stub and loader |
 | `searchPlaceholder` | string | `"Search the wiki"` | Stub placeholder |
 | `searchLabel` | string | `"Search the wiki"` | Stub aria-label |
-| `titlePrefix` | string | `""` | Prefix stripped from titles in lists, the sidebar and breadcrumbs |
+| `titlePrefix` | string | `""` | Prefix stripped from titles in lists, the sidebar, breadcrumbs and include-section captions; the page's own H1 and `<title>` keep it |
+| `titlePrefixCapitalize` | bool | `false` | Since v1.2.0. Where `titlePrefix` was stripped, uppercase the first letter of what's left (`"Herbs vs. Ailments: the river module"` lists as `"The river module"`). A title without the prefix keeps its case |
 | `logo` | string | `""` | Asset path of the header logo; omitted when empty |
 | `toc` | bool | `true` | Render the table of contents |
 | `tocMinHeadings` | int | `3` | Minimum h2-h4 count before the TOC renders |
 | `breadcrumbs` | bool | `true` | Render breadcrumbs (never on the home page) |
 | `headingAnchors` | bool | `true` | Render heading anchor links |
 | `editingFooter` | bool | `true` | Render "Editing this page" |
-| `sectionReadme` | bool | `false` | Since v1.1.0. A section whose `_index.md` has no body text (or that has none) shows its folders `README.md` as its landing text, and leaves that README out of its page list |
+| `sectionReadme` | bool | `false` | Since v1.1.0. A section whose `_index.md` has no body text (or that has none) shows its folder's `README.md` as its landing text, and leaves that README out of its page list |
 | `folderLinks` | string | `"github"` | Since v1.1.0. `"section"` sends a link ending in `/` that names a rendered section to that section page; any other folder link still goes to GitHub |
+| `sidebarCollapsible` | bool | `false` | Since v1.3.0. The default sidebar's sections become collapsible groups (`<details class="sidebar-group">`), each with a count of its pages, and only the one holding the current page starts open. Plain HTML, no script. A wiki with its own sidebar can call the core partial `ewiki/sidebar-sections.html` to get the same groups, or wrap its own lists in `details.sidebar-group` with a `summary.sidebar-section` for the same look |
+| `searchFilters` | bool | `false` | Since v1.3.0. Every regular page carries hidden Pagefind filter values, so search shows Kind (the page's top-level section), Status (its `status:` field) and Tag (its tags) checkboxes beside the results. Leave it off on a wiki that writes its own `data-pagefind-filter` spans |
+| `searchOpenFilters` | list | unset | Since v1.3.0. Filter groups that start open in the search panel, such as `["Kind"]`. Unset, Pagefind opens a group only when it is the one filter and has six or fewer values |
 
 Page params the core reads:
 
 - `links_from: repo-root`: the page's links are written from the repository
   root (a generated inventory), so none is looked up as a page.
 - `canonical-source` (and optional `canonical-source-repo`): the page mirrors
-  a document that owns its text; the footer sends the editor there.
+  a document that owns its text; the footer, and the caption on any section
+  another page shows from it with `include-section`, send the editor there.
 - `sortByWeight`, `sortByFile`: on a section's `_index.md`, sort its page list
   by `weight` or by file name instead of by title.
+- `status`, `tags`: the Status and Tag search filters, when
+  `searchFilters` is on.
 
 ## How links resolve
 
@@ -140,6 +191,48 @@ are numbered as in `render-link.html`; the first match wins:
 A path that climbs out of the content root (`../...`) is never looked up as a
 page; it goes to GitHub.
 
+## Shortcodes
+
+Each is static output with no script, so it keeps both guarantees. A missing
+required parameter fails the build with an error naming the page.
+
+- **`include-section`** shows another page's section in place, rendered from
+  the owner on every build, so a fact is written once and can't drift:
+
+  ```
+  {{< include-section page="../hubs/project-home.md" section="the-eight-branches" >}}
+  ```
+
+  `page` is the owner, written the way a link to it is: first relative to
+  the including page's folder, then from the content root, with `.md`
+  optional. `section` is the owner heading's GitHub-style anchor (or its
+  `{#custom-id}`). The block runs to the next heading of the same or higher
+  level and leaves the heading out. A missing page or heading, a nested
+  include, or an empty section fails the build. Search indexes the text once,
+  on the owner.
+- **`ewiki-guide`** shows a section of the theme's authoring guide,
+  `assets/ewiki-guide/ewiki-authoring.md`, which ships in the vendored theme,
+  so every wiki shows the one copy at its own release instead of copying it:
+
+  ```
+  {{< ewiki-guide section="audio" >}}
+  ```
+
+  `section` is the guide heading's anchor, cut the way `include-section`
+  cuts one, under the same **Linked section** caption. The caption links the
+  published guide and the guide's file at the release named in
+  `themes/ewiki/THEME-VERSION`. The guide's in-page links point at the
+  published guide, and its shortcode examples show as syntax. A missing or
+  ambiguous anchor, or an empty section, fails the build. The text is
+  indexed on the including page.
+- **`audio`** (`src`, optional `caption`) and **`audio-inline`** (`src`, for a
+  table cell) emit a native `<audio controls>` player.
+- **`video`** (`src`, optional `poster` and `caption`) emits a native
+  `<video controls>` player sized to the column, with no autoplay. Host the
+  clip somewhere that answers range requests (R2 does), or Safari and iOS
+  may not play it.
+- **`swatch`** (a CSS colour) draws an inline colour box.
+
 ## Extension points
 
 A wiki overrides these by placing a same-named file in its own `layouts/` or
@@ -166,7 +259,10 @@ layout paths or through a module mount. `Test-EwikiTheme.ps1` fails if it
 does. A change to a core file goes to this repo, then a re-sync.
 
 A script element added through `head-end` or `body-end` is the wiki's own to
-gate; the theme's one-script guarantee covers core output only.
+gate; the theme's one-script guarantee covers core output only. The wiki marks
+it with a `data-` attribute of its own (herbs' `data-wiki-mermaid`) and names
+that attribute in `Invoke-WikiGates.ps1 -AllowedScript`, so the JS-free gate
+still fails on any other script.
 
 ## The CSS order
 
@@ -195,7 +291,10 @@ Three checks keep a vendored copy from drifting:
   outside `themes/ewiki/`, in its workflow. An edit plus a regenerated
   manifest still fails.
 - **The shadow check.** `Test-EwikiTheme.ps1` fails on any consumer file that
-  shadows a core file.
+  shadows a core file. It reads the site's layouts from one TOML config
+  (`hugo.toml`, or `-Config`; YAML and JSON aren't supported), so it also
+  fails a site with a `config/` folder or a config that sets `layoutDir` or
+  `assetDir`: either would move files out of its sight.
 
 Before it runs the vendored checker, the wiki's CI verifies the manifest and
 the checker from outside, with plain shell, so an edited checker can't certify
@@ -220,14 +319,22 @@ All four are vendored under `themes/ewiki/tools/` and run with `pwsh` 7.
   checks the vendored copy against its manifest and the pinned digest, and
   checks the site for core shadows. It is self-contained, so the shell check
   above covers it.
-- **`Invoke-WikiGates.ps1 -Site <dir> [-Config <file>] [-ContentDir <dir>] [-ExpectedPageCount <n>] [-PanicOnWarning]`**
+- **`Invoke-WikiGates.ps1 -Site <dir> [-Config <file>] [-ContentDir <dir>] [-ExpectedPageCount <n>] [-PanicOnWarning] [-AllowedScript <data-attr>[,...]]`**
   runs the engine ewiki's five build gates: the build, page-count equality,
-  two-build determinism, the Pagefind index (`pagefind` 1.5.2) and the
-  JS-free scan.
+  two-build determinism, the Pagefind index (`pagefind` 1.5.2, run through
+  `npx`, so Node 22+ must be on `PATH`) and the JS-free scan. The scan
+  accepts only the Pagefind loader, `<script data-wiki-search>`, unless
+  `-AllowedScript` (since v1.2.0) names `data-` attributes: then a `<script>` carrying one of them anywhere in its
+  opening tag, quoted or not, passes too, and each is counted apart from the
+  loader. A marker matches the whole attribute name, so `data-wiki-mermaid`
+  doesn't accept `data-wiki-mermaid-x`.
 - **`Compare-WikiBuild.ps1 -Baseline <public> -Candidate <public>`** compares
   two builds of a wiki: the page set, every link and image in `<main>`, and
   the visible text. A migration packet runs it against the wiki's own
-  pre-migration build.
+  pre-migration build; an upgrade runs it against the previous themed build.
+  The theme's breadcrumbs, table of contents and heading anchors are left out
+  of both builds before links are paired (since v1.2.2; before, a themed
+  baseline reported each of them as having no partner).
 
 `-Site` is the Hugo project directory (`hugo --source`). `-Config` defaults to
 `<Site>/hugo.toml`; mounts resolve against `-Site`, as Hugo resolves them. The

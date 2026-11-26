@@ -1,0 +1,39 @@
+{{- /*
+  why: one answer to "which file owns this page's text, and where is it on
+  GitHub", shared by the "Editing this page" footer and the include-section
+  caption, so the two can't send an editor to different files.
+
+  By default the owner is the page's own file in params.ewiki.repo, at
+  params.ewiki.branch. A mirror page names the document that owns its text
+  in front matter (canonical-source, D-24304), optionally in another repo
+  (canonical-source-repo, D-24310, read at main, the branch the footer has
+  always used for it).
+
+  Input: a page. Returns a dict:
+    path      the owner's path in its repo (canonical-source, else the
+              page's repo path)
+    repo      owner/name of the repo holding it
+    canonical true when the page sets canonical-source
+    otherRepo true when the page sets canonical-source-repo
+    blob      the file's GitHub view URL
+    edit      the file's GitHub edit URL
+*/ -}}
+{{- $ewiki := site.Params.ewiki | default dict -}}
+{{- $repo := index $ewiki "repo" -}}
+{{- $branch := index $ewiki "branch" | default "main" -}}
+{{- $path := partial "ewiki/repo-path.html" . -}}
+{{- $canonical := index .Params "canonical-source" -}}
+{{- $canonicalRepo := index .Params "canonical-source-repo" -}}
+{{- with $canonical -}}{{- $path = . -}}{{- end -}}
+{{- with $canonicalRepo -}}
+  {{- $repo = . -}}
+  {{- $branch = "main" -}}
+{{- end -}}
+{{- return dict
+  "path" $path
+  "repo" $repo
+  "canonical" (not (not $canonical))
+  "otherRepo" (not (not $canonicalRepo))
+  "blob" (printf "https://github.com/%s/blob/%s/%s" $repo $branch $path)
+  "edit" (printf "https://github.com/%s/edit/%s/%s" $repo $branch $path)
+-}}

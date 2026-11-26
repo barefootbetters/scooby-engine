@@ -247,7 +247,7 @@ function Test-VendoredFile {
             Add-Failure $file 'This vendored file is missing. Re-sync the theme with tools/Sync-EwikiTheme.ps1; never delete vendored files by hand.'
         }
         elseif ((Get-NormalizedFileHash $file) -ne $Entries[$relativePath]) {
-            Add-Failure $file 'This vendored file differs from the manifest. Revert the edit and make the change in barefootbetters/ewiki-theme, then re-sync.'
+            Add-Failure $file 'This vendored file differs from the manifest. Revert the edit and make the change in barefootbetters/bb-studio-ewiki-theme, then re-sync.'
         }
     }
     foreach ($relativePath in $actual) {
@@ -336,7 +336,7 @@ function Get-LayoutShadowReason {
         return $null
     }
     if ($Core.Contains($normalized)) {
-        return "It shadows the core theme file $normalized. Remove it, and move the change into barefootbetters/ewiki-theme or an extension point."
+        return "It shadows the core theme file $normalized. Remove it, and move the change into barefootbetters/bb-studio-ewiki-theme or an extension point."
     }
     if ($segments.Count -eq 1) {
         if ($name -match $ShadowKindPattern) {
