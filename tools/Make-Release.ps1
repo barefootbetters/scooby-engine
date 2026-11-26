@@ -9,16 +9,16 @@
 
         1. Creates a throwaway worktree of the scummvm fork at the chosen ref
            (default origin/scooby-engine), so the base checkout is untouched.
-        2. Builds a Scooby-only RELEASE binary (MSYS2 UCRT64). Fails on any
-           warning in engines/scooby/.
+        2. Builds a TerraGlyph-only RELEASE binary (MSYS2 UCRT64). Fails on any
+           warning in engines/terraglyph/.
         3. Runs `make install` to collect the runtime data files (themes, fonts,
            translations, ...).
         4. Assembles a flat, portable folder: scummvm.exe + its full recursive
            UCRT64 DLL closure (discovered with ldd, not hardcoded) + the data
            files + COPYING + a README.
         5. TESTS the portable build on a sanitized PATH (MSYS2 removed): it must
-           run, must list the `scooby` engine, and — if you pass -DiscPath — must
-           detect `scooby:showdown`. The script stops if any check fails; no
+           run, must list the `terraglyph` engine, and — if you pass -DiscPath — must
+           detect `terraglyph:showdown`. The script stops if any check fails; no
            untested binary is packaged.
         6. Zips it (top-level folder) and records the SHA-256.
         7. Creates the GitHub Release (a DRAFT by default; pass -Publish to make
@@ -48,7 +48,7 @@
 
 .PARAMETER DiscPath
     Optional path to a mounted Showdown disc (e.g. H:\scooby). If given, the test
-    step also asserts detection of scooby:showdown.
+    step also asserts detection of terraglyph:showdown.
 
 .PARAMETER Jobs
     Parallel build jobs (default: logical CPU count).
@@ -141,10 +141,10 @@ try {
     Write-Ok "Worktree at $wt (commit $buildCommit)."
 
     # --- 2. Release build ------------------------------------------------------
-    Write-Step "Building Scooby-only RELEASE binary (UCRT64, -j$Jobs)..."
+    Write-Step "Building TerraGlyph-only RELEASE binary (UCRT64, -j$Jobs)..."
     $wtUnix = ConvertTo-Unix $wt
     $buildCmd = "cd '$wtUnix' && rm -rf build-release && mkdir build-release && cd build-release && " +
-                "../configure --disable-all-engines --enable-engine=scooby --enable-release --disable-debug > build.log 2>&1 && " +
+                "../configure --disable-all-engines --enable-engine=terraglyph --enable-release --disable-debug > build.log 2>&1 && " +
                 "make -j$Jobs >> build.log 2>&1"
     & $msys2 -lc $buildCmd
     if ($LASTEXITCODE -ne 0) {
@@ -152,12 +152,12 @@ try {
     }
     $exe = Join-Path $wt 'build-release\scummvm.exe'
     if (-not (Test-Path $exe)) { Fail "Build reported success but scummvm.exe is missing." }
-    $engWarn = Select-String -Path (Join-Path $wt 'build-release\build.log') -Pattern 'engines/scooby/.*(warning|error):' -ErrorAction SilentlyContinue
+    $engWarn = Select-String -Path (Join-Path $wt 'build-release\build.log') -Pattern 'engines/terraglyph/.*(warning|error):' -ErrorAction SilentlyContinue
     if ($engWarn) {
         $engWarn | ForEach-Object { Write-Warn $_.Line }
-        Fail "engines/scooby produced warnings/errors — not shipping. Fix them and re-run."
+        Fail "engines/terraglyph produced warnings/errors — not shipping. Fix them and re-run."
     }
-    Write-Ok "Built clean (0 warnings in engines/scooby)."
+    Write-Ok "Built clean (0 warnings in engines/terraglyph)."
 
     # --- 3. make install to collect data files --------------------------------
     Write-Step "Collecting runtime data files (make install)..."
@@ -248,14 +248,14 @@ ScummVM project.
         Fail "Portable build failed to run on a clean PATH (missing a bundled DLL?). Output:`n$ver"
     }
     $engines = & cmd /c "set `"PATH=$cleanPath`" && `"$testExe`" --list-engines 2>&1"
-    if (-not ($engines -match 'scooby')) { Fail "The scooby engine is not in the build (--list-engines)." }
-    Write-Ok "Runs on a clean PATH; scooby engine present."
+    if (-not ($engines -match 'terraglyph')) { Fail "The terraglyph engine is not in the build (--list-engines)." }
+    Write-Ok "Runs on a clean PATH; terraglyph engine present."
     if ($DiscPath) {
         $detect = & cmd /c "set `"PATH=$cleanPath`" && `"$testExe`" --path=`"$DiscPath`" --detect 2>&1"
-        if (-not ($detect -match 'scooby:showdown')) {
-            Fail "Did not detect scooby:showdown at $DiscPath. Output:`n$detect"
+        if (-not ($detect -match 'terraglyph:showdown')) {
+            Fail "Did not detect terraglyph:showdown at $DiscPath. Output:`n$detect"
         }
-        Write-Ok "Detects scooby:showdown at $DiscPath."
+        Write-Ok "Detects terraglyph:showdown at $DiscPath."
     } else {
         Write-Warn "No -DiscPath given; skipped the detection check."
     }

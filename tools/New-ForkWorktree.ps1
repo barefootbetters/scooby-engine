@@ -128,6 +128,6 @@ Write-Host ""
 Write-Host "Next:" -ForegroundColor Cyan
 Write-Host "    cd '$dir'"
 Write-Host "    # build OUT OF TREE, in a dir of this worktree's own (don't reuse the base checkout's build):"
-Write-Host "    #   mkdir build-scooby; cd build-scooby; ../configure --disable-all-engines --enable-engine=scooby && make -j"
+Write-Host "    #   mkdir build-terraglyph; cd build-terraglyph; ../configure --disable-all-engines --enable-engine=terraglyph && make -j"
 Write-Host "    # when done (pushed / merged):"
 Write-Host "    #   tools\Remove-ForkWorktree.ps1 -Branch $Branch -DeleteBranch"
