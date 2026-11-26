@@ -610,9 +610,9 @@ support is done only when all of them pass.
 **Run on the TCL 65Q77K (Google TV, Android 14, armeabi-v7a), 2026-11-24:**
 checks 1–5 passed — the ABI matched, the APK installed, the launcher opened,
 *Showdown in Ghost Town* was detected from a USB stick, and it played past the
-intro with Bink video and audio in sync. Check 6 passed with a **USB mouse**; the
-D-pad remote on its own does not move the cursor
-([Controls on a TV](#controls-on-a-tv)). Check 7 (save and reload on the TV) isn't
+intro with Bink video and audio in sync. Check 6 passed with a **USB mouse**. The
+D-pad remote on its own moves the cursor, but not finely enough to click a
+button or object ([Controls on a TV](#controls-on-a-tv)). Check 7 (save and reload on the TV) isn't
 separately logged yet. Record other TVs' results here.
 
 ### Troubleshooting
@@ -626,7 +626,7 @@ separately logged yet. Record other TVs' results here.
 | Link fails with `undefined symbol: __vsprintf_chk` | 32-bit Oboe built with FORTIFY on | Rebuild Oboe for `android-16` ([step 2](#2-add-oboe-to-the-ndk)), or with `-D_FORTIFY_SOURCE=0` |
 | `ERROR: JNI::initSurface failed!` | App launched while backgrounded, or the screensaver took the surface | Launch with the screen awake and ScummVM in the foreground |
 | `Error running game: Game data not found` | External path not granted through the Storage Access Framework | Add the game with the in-app **Add Game…** picker and allow access |
-| The remote won't move the cursor | A D-pad can't drive the analog-stick pointer | Use a Bluetooth controller or a mouse ([Controls on a TV](#controls-on-a-tv)) |
+| The remote moves the cursor but can't land it on a button or object | The D-pad has no fine pointer movement yet | Use a Bluetooth controller or a mouse ([Controls on a TV](#controls-on-a-tv)) |
 
 ---
 
@@ -667,11 +667,11 @@ TerraGlyph engine.
 
 ## Controls on a TV
 
-These are point-and-click games, so you need something that moves a cursor — and
-on a TV that isn't the remote. ScummVM's on-screen virtual mouse is driven by an
-**analog stick**, so a plain D-pad remote can't move the pointer. Remapping the
-D-pad to the pointer was tried on the TCL 65Q77K and is unreliable. Pair a real
-pointer device instead:
+These are point-and-click games, so you need something that moves a cursor
+precisely, and on a TV that isn't the remote yet. On the TCL 65Q77K the D-pad
+**can move the pointer**, but it lacks the small, fine movement needed to click
+a button or object (Jeff, 2026-11-26). Fine D-pad control is the open
+remote-first item. Until it exists, pair a real pointer device:
 
 ![The TCL's "Searching for accessories…" screen under Settings → Remotes & Accessories, which pairs a Bluetooth controller, mouse or keyboard.](images/pair-controller.png)
 
