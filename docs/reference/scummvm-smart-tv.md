@@ -68,8 +68,8 @@ accepts these four:
 TV / Android TV sets, including MediaTek-based models like the
 [TCL 65Q77K](#your-tv-the-tcl-65q77k), run a **32-bit (armeabi-v7a) Android even
 on a 64-bit chip**. A 64-bit APK won't install on them — `adb install` fails with
-`INSTALL_FAILED_NO_MATCHING_ABIS`. Connect with `adb`
-([Prepare the TV](#prepare-the-tv)) and run:
+`INSTALL_FAILED_NO_MATCHING_ABIS`. [Connect with `adb`](#connect-adb-over-the-network)
+and run:
 
 ```bash
 adb shell getprop ro.product.cpu.abilist
@@ -276,7 +276,8 @@ first (its settings and saves go with it).
 2. **Allow the install.** Either:
    - for `adb` from the build machine: **Settings → System → Developer
      options → USB debugging** (some sets call the network version **Network
-     debugging** or **Wireless debugging**), or
+     debugging** or **Wireless debugging**), then
+     [connect over the network](#connect-adb-over-the-network), or
    - for a file on the TV: install a file manager such as **X-plore** or
      **Downloader by AFTVnews** from the Play Store, then allow it to install
      apps. Older Android TVs have one **Settings → Apps → Security &
@@ -295,19 +296,87 @@ The menu names vary by TV maker and Android version.
 
 ![The per-app "Install unknown apps" screen on Android 14 — each file manager is allowed to install apps individually, the modern replacement for the single "Unknown sources" switch.](images/install-unknown-apps.png)
 
-### Install it on the TV
+### Connect `adb` over the network
 
-From the build machine, on the same network as the TV (the TV's IP address is
-under **Settings → Network & Internet**):
+The PC and the TV must be on the same network. The TV's IP address is under
+**Settings → Network & Internet**. The commands below are the same in WSL,
+Linux, macOS and Windows PowerShell; in WSL, either put
+`$ANDROID_SDK_ROOT/platform-tools` on your `PATH` or type the full path to `adb`.
+
+A Google TV offers two network routes, and the TCL 65Q77K accepts both (checked
+2026-11-26):
+
+| Route | Port | First time |
+|---|---|---|
+| **Wireless debugging** (Android 11 and later) | A random port that changes when Wireless debugging is turned off and on, or the TV restarts | Pair once with a six-digit code |
+| **Network debugging** (the older route) | `5555` | Accept the "Allow debugging?" prompt on the TV |
+
+The older route is one command, if the TV answers on 5555:
 
 ```bash
-"$ANDROID_SDK_ROOT/platform-tools/adb" connect <tv-ip-address>:5555
-"$ANDROID_SDK_ROOT/platform-tools/adb" install -r debug/ScummVM-debug.apk
+adb connect <tv-ip>:5555
 ```
 
-Accept the "Allow debugging?" prompt on the TV the first time. Without `adb`,
-copy the APK to a USB stick, or send it with **Send Files to TV**, and open it in
-the file manager.
+Wireless debugging is the route Android itself now documents. Pair once, then
+connect:
+
+1. **Open the pairing dialog.** On the TV: **Developer options → Wireless
+   debugging → Pair device with pairing code**. It shows an `IP address & port`
+   and a six-digit code (the [screenshot above](#prepare-the-tv)).
+2. **Pair, while the dialog is still open:**
+
+   ```bash
+   adb pair <tv-ip>:<pairing-port> <six-digit-code>
+   ```
+
+3. **Connect, on a different port.** The pairing port is only for pairing. The
+   connect port is the `IP address & port` on the main **Wireless debugging**
+   screen, not in the pairing dialog:
+
+   ```bash
+   adb connect <tv-ip>:<connect-port>
+   ```
+
+If you can't read the ports off the TV, `adb mdns services` lists them. On the
+TCL it shows three entries, all at the TV's IP:
+
+```text
+adb-<serial>            _adb._tcp               <tv-ip>:5555
+adb-<serial>-<id>       _adb-tls-connect._tcp   <tv-ip>:<connect-port>
+adb-<serial>-<id>       _adb-tls-pairing._tcp   <tv-ip>:<pairing-port>
+```
+
+**After the first pairing, don't pair again.** The PC stays trusted. When the
+`adb` server starts, it finds the TV through mDNS and reconnects on its own, even
+though the ports have changed: `adb devices` lists it as
+`adb-<serial>-<id>._adb-tls-connect._tcp`, and no `connect` is needed. Running
+`adb pair` against the already-paired TCL failed twice on 2026-11-26 with
+`error: protocol fault (couldn't read status message): No error` while the TV was
+already connected. So when `pair` fails, run `adb devices` first. If the TV isn't
+listed, close the pairing dialog, open it again for a fresh code, and retry.
+
+**Connected twice?** With both routes up, `adb devices` lists the TV twice, and
+plain `adb install` or `adb shell` stops with `more than one device/emulator`.
+Name one with `-s` (`adb -s <tv-ip>:5555 install …`), or drop one with
+`adb disconnect <tv-ip>:5555`.
+
+**Reading the TV's model.** `adb shell getprop ro.product.model` doesn't give the
+retail model on the TCL: it returns `Smart TV Pro`, with product `G08_4K_US`
+(`ro.product.name`) and chip `mt5896` (`ro.boot.hardware`). The retail number
+(65Q77K) is on the sticker on the back of the TV. `adb shell getprop
+ro.product.cpu.abilist` is the property that matters for the build
+([pick the ABI](#pick-the-processor-type-abi)).
+
+### Install it on the TV
+
+With `adb` [connected](#connect-adb-over-the-network):
+
+```bash
+adb install -r debug/ScummVM-debug.apk
+```
+
+Without `adb`, copy the APK to a USB stick, or send it with **Send Files to
+TV**, and open it in the file manager.
 
 The APK declares a TV launcher entry with its own banner, so it should show in
 the TV's apps list like any other TV app. If it doesn't, look under **Settings →
@@ -378,7 +447,7 @@ it from there:
      **X-plore** or **File Commander**, from the Play Store. With the stick
      plugged in, copy its `scooby` folder to built-in storage, for example into
      **Download**.
-   - **From a PC with `adb`** (set up under [Install it on the TV](#install-it-on-the-tv)):
+   - **From a PC with `adb`** (set up under [Connect `adb` over the network](#connect-adb-over-the-network)):
 
      ```bash
      adb push scooby /sdcard/Download/scooby
@@ -497,6 +566,8 @@ separately logged yet. Record other TVs' results here.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `adb pair` fails with `protocol fault (couldn't read status message)` | Seen when the PC was already paired and connected; a closed pairing dialog is the other likely cause | Run `adb devices` first. If the TV isn't listed, reopen the pairing dialog for a fresh code ([Connect `adb`](#connect-adb-over-the-network)) |
+| `adb` stops with `more than one device/emulator` | The TV is connected on both port 5555 and Wireless debugging | Add `-s <serial>` from `adb devices`, or `adb disconnect <tv-ip>:5555` |
 | `adb install` fails with `INSTALL_FAILED_NO_MATCHING_ABIS` | APK built for the wrong CPU | Build `android-arm-v7a`; check `adb shell getprop ro.product.cpu.abilist` first |
 | Launch crash `UnsatisfiedLinkError: ... is 64-bit instead of 32-bit` | Stale `libloader.so` left from the previous ABI | `rm -f libloader.so && rm -rf android_project`, then repackage |
 | Link fails with `undefined symbol: __vsprintf_chk` | 32-bit Oboe built with FORTIFY on | Rebuild Oboe for `android-16` ([step 2](#2-add-oboe-to-the-ndk)), or with `-D_FORTIFY_SOURCE=0` |
