@@ -41,6 +41,7 @@ Executable analysis now has two complementary tracks: focused Ghidra work on Sho
 - [Case File #1 decompdecomp Collaboration (WP-011)](docs/work-packets/WP-011-casefile-decompdecomp) — cooperative decompilation trial, evidence model, repository boundaries
 - [Setting Up decompdecomp on Windows](docs/reference/decompdecomp-setup) — install, compiler, Ghidra, spend cap, local build check, joining the Case File #1 room
 - [Installing ScummVM on the Raspberry Pi](docs/reference/scummvm-raspberry-pi) — the developer build of our fork, plus packaged installs
+- [Hotspot Magnet Plan](docs/reference/hotspot-magnet-plan) — D-pad hotspot-to-hotspot navigation for TV remotes (planning)
 
 ---
 
