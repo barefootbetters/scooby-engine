@@ -2,7 +2,13 @@
 # served at scooby-engine-ewiki.barefootbetters.com behind Cloudflare Access.
 # The Markdown in this repo stays the only place notes are written; this site
 # never holds a copy. Build from the repo root:
-#   hugo --config ewiki/hugo.toml --minify --panicOnWarning
+#   hugo --config ewiki/hugo.toml --minify
+# or, to run the same gates CI runs, see the "Build and gate the site" step in
+# .github/workflows/ewiki.yml.
+#
+# why: not --panicOnWarning. About 50 pages use raw HTML (mostly <br> in
+# tables), which unsafe = false below drops with a warning, so a strict build
+# fails. CI runs the gates without -PanicOnWarning for the same reason.
 #
 # It is a superset of the public GitHub Pages site (Jekyll, _config.yml): the
 # same root and docs/ pages, plus the tools/ READMEs Jekyll excludes, with the

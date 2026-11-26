@@ -130,8 +130,10 @@ jobs:
           PINNED_DIGEST: a4b239f94b6719a07e24e180f0162ce1372fd93fdf55eba8714c0fed3617bd9e   # bb-studio-ewiki-theme v1.5.1
         run: pwsh -File ewiki/themes/ewiki/tools/Test-EwikiTheme.ps1 -Site . -Config ewiki/hugo.toml -ExpectedManifestSha256 $env:PINNED_DIGEST
 
-      # why: the theme's five gates (build with --panicOnWarning, page count,
-      # determinism, Pagefind 1.5.2, JS-free). The page count is computed from
+      # why: the theme's five gates (build, page count, determinism, Pagefind
+      # 1.5.2, JS-free). The build runs without -PanicOnWarning: about 50 pages
+      # use raw HTML (mostly <br> in tables) that the build drops with a
+      # warning, so a strict build would fail. The page count is computed from
       # the allow-list so it never goes stale: one page per allow-listed
       # Markdown file, one list page per top-level folder holding one, and the
       # home page. The regex mirrors the mount `files` list in ewiki/hugo.toml;
