@@ -13,6 +13,8 @@ title: "Work Index — Scooby-Doo ScummVM Engine"
 >
 > **Status vocabulary (closed set):**
 > ✅ Done · 🚧 In Progress · 📝 Drafted (WP file authored, not yet started) · 📦 Queued (deps met, WP file not yet authored) · ⏸ Blocked (dep unmet) · 🔮 Placeholder (forward-looking, intentionally not authored)
+>
+> When a milestone changes status, update `dashboard.json` at the repo root (the studio dashboard reads it).
 
 ---
 

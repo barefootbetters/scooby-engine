@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "id": "terraglyph-engine",
+    "name": "TerraGlyph Engine for ScummVM",
+    "tagline": "The Learning Company's Scooby-Doo CD-ROM adventures, playable again through ScummVM",
+    "accent": "#1565c0",
+    "repository": "https://github.com/barefootbetters/terraglyph-engine",
+    "links": [
+      {
+        "label": "Studio page",
+        "url": "https://studio.barefootbetters.com/terraglyph-engine/",
+        "abbreviation": "St"
+      },
+      {
+        "label": "Public site",
+        "url": "https://github.barefootbetters.com/terraglyph-engine/",
+        "abbreviation": "Ps"
+      },
+      {
+        "label": "Engine fork",
+        "url": "https://github.com/barefootbetters/scummvm",
+        "abbreviation": "Fk"
+      },
+      {
+        "label": "Engineering wiki",
+        "url": "https://scooby-engine-ewiki.barefootbetters.com/",
+        "abbreviation": "Wi"
+      }
+    ]
+  },
+  "focus": {
+    "label": "Current work",
+    "milestone": "tv-pipeline",
+    "headline": "Google TV app pipeline (WP-085): library, game import, test packages and updates",
+    "doneWhen": "On the TV: the app installs with its own identity, imports a legally obtained game, installs a hash-verified test package, and keeps games and saves through updates.",
+    "updated": "2026-11-26"
+  },
+  "workstreams": [
+    { "id": "engine", "label": "Engine" },
+    { "id": "tv", "label": "Google TV" }
+  ],
+  "milestones": [
+    {
+      "id": "format-research",
+      "phase": 1,
+      "workstream": "engine",
+      "title": "Format research",
+      "status": "done",
+      "doneWhen": "A game image decodes, the art archive is documented, the audio codec is named, and the engine-family question is answered.",
+      "done": "2026-11-13"
+    },
+    {
+      "id": "scaffold",
+      "phase": 2,
+      "workstream": "engine",
+      "title": "ScummVM engine scaffold and game detection",
+      "status": "done",
+      "doneWhen": "The engine builds against the pinned ScummVM and recognises the four in-scope discs.",
+      "done": "2026-11-14"
+    },
+    {
+      "id": "showdown-port",
+      "phase": 4,
+      "workstream": "engine",
+      "title": "Showdown in Ghost Town: every game class ported",
+      "status": "done",
+      "done": "2026-11-16"
+    },
+    {
+      "id": "phantom-port",
+      "phase": 4,
+      "workstream": "engine",
+      "title": "Phantom of the Knight: every game class ported",
+      "status": "done",
+      "done": "2026-11-22"
+    },
+    {
+      "id": "showdown-closeout",
+      "phase": 5,
+      "workstream": "engine",
+      "title": "Showdown closeout and release readiness",
+      "status": "done",
+      "doneWhen": "A full playthrough reaches the credits and save and load work.",
+      "done": "2026-11-22"
+    },
+    {
+      "id": "tv-pipeline",
+      "phase": 5,
+      "workstream": "tv",
+      "title": "Google TV app pipeline (WP-085)",
+      "status": "active",
+      "doneWhen": "All four milestones are verified on the TV, and the app downloads no executable code.",
+      "note": "Drafted, and built first (decided 2026-11-26)."
+    },
+    {
+      "id": "tv-release",
+      "phase": 5,
+      "workstream": "tv",
+      "title": "Free Google Play release (WP-084)",
+      "status": "blocked",
+      "note": "Waits on WP-085 and on Gate 0 for the bundled freeware game."
+    },
+    {
+      "id": "jinx",
+      "phase": 5,
+      "workstream": "engine",
+      "title": "Jinx at the Sphinx (generation 2)",
+      "status": "later",
+      "doneWhen": "The second-generation archive container is read and the game plays."
+    },
+    {
+      "id": "case-file-1",
+      "phase": 5,
+      "workstream": "engine",
+      "title": "Case File #1 (generation 3, stretch)",
+      "status": "later"
+    }
+  ],
+  "parkingLot": [
+    {
+      "item": "Shared runtime with separate game-data apps",
+      "why": "An architecture investigation; it would build on the TV app.",
+      "unlocksAt": "tv-pipeline"
+    },
+    {
+      "item": "Paid distribution",
+      "why": "The free app ships first (decided 2026-11-26).",
+      "unlocksAt": "tv-release"
+    },
+    {
+      "item": "Activity Challenge support",
+      "why": "It runs the second-generation engine; its mini-games join a tier only by decision.",
+      "unlocksAt": "jinx"
+    },
+    {
+      "item": "Upstream ScummVM submission",
+      "why": "Held at the fork (decided 2026-11-21); declined for now, not foreclosed."
+    }
+  ],
+  "vision": {
+    "tagline": "Owning an old game shouldn't require owning an old computer.",
+    "intro": "A ScummVM engine that reads the original game data directly, so players can use their own discs on hardware they own today.",
+    "sections": [
+      {
+        "heading": "Non-goals",
+        "items": [
+          { "text": "Bundling or redistributing copyrighted game data. Players supply their own discs." },
+          { "text": "Modding, rebalancing or changing the games. The goal is faithful playback." },
+          { "text": "Supporting platforms ScummVM doesn't already support." },
+          { "text": "A standalone reimplementation outside ScummVM." }
+        ]
+      }
+    ]
+  },
+  "sources": {
+    "gitActivity": {
+      "branch": "main",
+      "commits": 50
+    }
+  },
+  "pages": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "abbreviation": "Ov",
+      "panels": ["focus", "milestones", "git-activity"]
+    },
+    {
+      "id": "plan",
+      "title": "Plan",
+      "abbreviation": "Pl",
+      "panels": ["vision", "milestones", "parking-lot"]
+    },
+    {
+      "id": "activity",
+      "title": "Activity",
+      "abbreviation": "Ac",
+      "panels": ["git-activity"]
+    }
+  ]
+}

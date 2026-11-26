@@ -45,6 +45,8 @@ exclude:
   # theme vendored under ewiki/themes/) must never render on this public site.
   - ewiki/
   - tools/
+  # The studio dashboard's project file; the dashboard reads it from the repo.
+  - dashboard.json
   - "*.iso"
   - "*.ART"
   - "*.dat"
