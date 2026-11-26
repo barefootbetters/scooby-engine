@@ -152,7 +152,7 @@ verified by sideloading; the Google Play release is a separate step.
 | # | Decision | Recommendation |
 |---|---|---|
 | D0 | **How this WP relates to WP-084 and the logged "free Google TV app first" decision.** (a) WP-085 comes first and WP-084 becomes the store release of this app; (b) WP-084 ships first as planned and WP-085 follows; (c) WP-085 replaces WP-084 | **Answered 2026-11-26 — (a).** Jeff: "Pipeline first (a)". WP-084 is re-scoped as this app's Google Play release |
-| D1 | App identity (tracked privately, not in this public WP) | — |
+| D1 | App identity (tracked privately, not in this public WP) | Choose the package id as permanent: once published on Play it can't change, and this app may become the shared runtime other apps detect by that id (see [Notes](#notes)) |
 | D2 | **Input requirement for a Play release.** Gamepad required (meets TV-GP), keyboard and mouse supported; or mouse required (no TV-quality exemption; risks TV review) | Gamepad required for Play; keyboard and mouse supported and tested now |
 | D3 | Where test packages are hosted | A studio-controlled HTTPS endpoint behind Cloudflare Access, so only authorized devices can fetch packages |
 | D4 | Whether advanced mode ships in the Play build or only in test builds | Test builds only for v1; decide later |
@@ -216,3 +216,10 @@ verified by sideloading; the Google Play release is a separate step.
 - **What carries over to licensed titles:** all of it. The verified package
   route is how licensed game data could reach a device under a rights holder's
   terms; Play Asset Delivery stays the route for data shipped with the app.
+- **This app may become a shared runtime.** A later investigation (the 🔮
+  "shared runtime and separate game-data apps" row in
+  [WORK_INDEX](WORK_INDEX.md)) looks at games distributed as their own
+  data-only apps that hand their data to this app. Nothing in WP-085's scope
+  changes for it, but two choices made here should leave it open: a permanent
+  package id (D1), and keeping the game-folder access on ScummVM's existing
+  `SAFFSTree` path, which can already read a folder another app grants it.
