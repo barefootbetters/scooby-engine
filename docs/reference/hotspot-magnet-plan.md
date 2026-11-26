@@ -365,8 +365,9 @@ without modifying the original game assets. Phase 1 is valuable on its own.
 #### 7.5 Testing environments
 
 - Windows development (keyboard D-pad simulation).
-- Sony Bravia / Google TV, standard remote (setup:
-  [ScummVM on smart TVs](scummvm-smart-tv.md)).
+- Smart TV with its standard remote (setup:
+  [ScummVM on smart TVs](scummvm-smart-tv.md)): the TCL 65Q77K (Google TV)
+  now, then the Sony Bravia XBR-75X81CH next.
 - Raspberry Pi with a D-pad controller (setup:
   [ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md)).
 
@@ -543,7 +544,7 @@ documentation updates.
 #### 12.1 Test environments
 
 - Windows development environment.
-- Sony Bravia / Google TV.
+- Smart TV: TCL 65Q77K (Google TV) now; Sony Bravia XBR-75X81CH next.
 - Raspberry Pi.
 
 #### 12.2 Navigation tests
