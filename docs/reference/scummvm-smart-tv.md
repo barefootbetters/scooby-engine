@@ -82,6 +82,10 @@ adb shell getprop ro.product.cpu.abilist
 A 64-bit APK that installs but opens to a white screen is the other sign of a
 32-bit TV; rebuild for `android-arm-v7a`.
 
+For your own TV, build the one ABI it lists. A Google Play release needs both
+arm64-v8a and armeabi-v7a, with the 64-bit libraries 16 KB-aligned, and our
+build already meets that rule ([16 KB pages](#google-play-16-kb-pages)).
+
 ### Build our APK (with the TerraGlyph engine)
 
 #### 1. Set up a build machine
@@ -520,6 +524,7 @@ uses for current builds.
 | Native code | `lib/arm64-v8a/libscummvm.so` and `libloader.so` only. 64-bit ARM, Android 21+. Oboe and the C++ runtime are linked in; it needs only Android system libraries |
 | App | `org.scummvm.scummvm.debug`, version 2026.4.1, target SDK 37, TV launcher entry with banner, touchscreen not required |
 | Signature | Android Debug certificate; `apksigner verify` passes |
+| 16 KB pages | Ready: every `LOAD` segment of both libraries is 16 KB-aligned (`0x4000`), and `zipalign -c -P 16` passes. Checked 2026-11-26 ([16 KB pages](#google-play-16-kb-pages)) |
 
 The 32-bit build, made on 2026-11-23 from the same commit and toolchain (Oboe
 built for Android 16 as described in [step 2](#2-add-oboe-to-the-ndk)):
@@ -532,12 +537,60 @@ built for Android 16 as described in [step 2](#2-add-oboe-to-the-ndk)):
 | Native code | `lib/armeabi-v7a/libscummvm.so` and `libloader.so` only. 32-bit ARM with NEON, Android 16+ |
 | App | `org.scummvm.scummvm.debug`, version 2026.4.1, target SDK 37 |
 | Signature | Android Debug certificate; `apksigner verify` passes |
+| 16 KB pages | Same result as the 64-bit build: `0x4000` alignment, and `zipalign -c -P 16` passes. Checked 2026-11-26 |
 
 Both APKs use the same app id, so a TV holds one or the other, not both.
 
 The every-engine build from the same commit was 65,991,765 bytes, with the
 optional libraries and 26 engines missing as described in
 [step 4](#4-configure).
+
+### Google Play: 16 KB pages
+
+A sideload doesn't need this, but a Google Play release does. Since
+2026-08-01, a Google TV or Android TV app with native code must ship 64-bit
+(arm64-v8a) libraries **alongside** its 32-bit (armeabi-v7a) ones. The 64-bit
+libraries must also work on devices with 16 KB memory pages
+([Google, August 2025](https://android-developers.googleblog.com/2025/08/64-bit-app-compatibility-for-google-tv-android-tv.html);
+[TV app quality](https://developer.android.com/docs/quality-guidelines/tv-app-quality),
+TV-G6). Play still delivers the 32-bit build to 32-bit-only TVs like the
+[TCL 65Q77K](#your-tv-the-tcl-65q77k), so a Play release carries both.
+
+**Our build already meets the 16 KB rule.** ScummVM's `configure` links every
+Android build with `-Wl,-z,max-page-size=16384`, whatever the NDK version
+(upstream commit
+[`fd3410ddd84`](https://github.com/scummvm/scummvm/commit/fd3410ddd84),
+"ANDROID: Align sections on 16K", 2024-11-02), and our fork keeps it. The
+APK stores its native libraries compressed, so Android extracts them at
+install, and there's no zip alignment to get wrong.
+
+Checked on 2026-11-26 against both APKs in the [build record](#build-record),
+matched by SHA-256:
+
+| APK | `LOAD` segment alignment (`libscummvm.so`, `libloader.so`) | Libraries in the APK | `zipalign -c -P 16` |
+|---|---|---|---|
+| arm64-v8a, `f1501a86…` | `0x4000` (16 KB), every segment | Compressed | Passes |
+| armeabi-v7a, `59588745…` | `0x4000` (16 KB), every segment | Compressed | Passes |
+
+A rebuild of the arm64-v8a APK from `e52f35c2ffd` the same day came out the
+same size (14,738,976 bytes), and its `config.mk` carries the flag.
+
+To check an APK yourself, with the exports from [step 1](#1-set-up-a-build-machine)
+set:
+
+```bash
+rd="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
+unzip -o -q debug/ScummVM-debug.apk 'lib/*' -d /tmp/apk-libs
+for so in /tmp/apk-libs/lib/*/*.so; do echo "$so"; "$rd" -lW "$so" | grep LOAD; done
+"$ANDROID_SDK_ROOT"/build-tools/*/zipalign -c -P 16 -v 4 debug/ScummVM-debug.apk | tail -1
+```
+
+Every `LOAD` line should end in `0x4000`, and `zipalign` should print
+`Verification successful`. An alignment of `0x1000` means the library was
+linked for 4 KB pages only.
+
+The alignment is done. A Play release still needs an App Bundle carrying both
+ABIs, a release signing key, and a store listing, and none of those exists yet.
 
 ### TV smoke test
 
@@ -658,6 +711,15 @@ note.
   Android compiling page blocks automated reads, so the build steps above come
   from the build files, not the wiki.
 - [ScummVM downloads](https://www.scummvm.org/downloads/): the standard APKs.
+- Google Play's 64-bit and 16 KB rules for TV, read 2026-11-26:
+  [64-bit app compatibility for Google TV and Android TV](https://android-developers.googleblog.com/2025/08/64-bit-app-compatibility-for-google-tv-android-tv.html)
+  (Android Developers Blog, August 2025),
+  [TV app quality](https://developer.android.com/docs/quality-guidelines/tv-app-quality)
+  (criterion TV-G6, which since May 2026 includes 16 KB pages), and
+  [Support 16 KB page sizes](https://developer.android.com/guide/practices/page-sizes).
+- ScummVM's 16 KB link flag: upstream commit
+  [`fd3410ddd84`](https://github.com/scummvm/scummvm/commit/fd3410ddd84)
+  ("ANDROID: Align sections on 16K", 2024-11-02).
 - ScummVM tracker and forums on TVs:
   [the dropped Play Store TV listing](https://bugs.scummvm.org/ticket/11932) and
   [64-bit APK install and white-screen reports](https://forums.scummvm.org/viewtopic.php?p=62545).
