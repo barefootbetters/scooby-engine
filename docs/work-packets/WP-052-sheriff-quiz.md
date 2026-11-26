@@ -18,11 +18,19 @@ title: "WP-052: Showdown's Sheriff's quiz"
 
 The reference is `wp053_ref.py`: WP-051's, plus the quiz, written from the trace before the engine ran. It reads the placements from the art, and which sounds are on the disc from the sound archives' indexes. It never runs the engine. At `script` level 3 the chase check now logs 184 lines on Showdown: the earlier 177 and 7 for the quiz. On Phantom both print the one line saying there is no chase. The first run matched all 184, and so did the run of the committed build.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**Entry.** The notebook is a sprite at depth 0, on `PAGE1`, looping. The four answers are requires objects at depth 10, on `ANSWERS1A`–`D`, stopped on step 0. The exit to Street 1 is there. The page's five sounds are found. 100 questions drawn: none page 3 or 6.<br>**The reading.** On tick 1 the page is read on step 1. Then each answer is read on its step 1, the rest on step 0, with input held. Then input is free, and everything is on step 0.<br>**The hover.** B hovered is on step 1 with its sound and a countdown of 8 after its first tick. It is read on tick 10, and again 73 ticks after it ends. The page hovered goes on step 1; nothing hovered, everything goes back to step 0.<br>**The answers.** Page 1's C is right: step 2, one of `RIGHT_1`–`3`, the page answered, a new one drawn. Over, page 4: the answers become `OBJ_SHERIFF_ANSWERS4`. Page 4's A is wrong: `WRONG_1.1`, then nothing (the exe's `Ewan.` line isn't on the disc), then `ROOM_P03_Street1`. `SheriffPuzzle` stays unset, and the page is kept.<br>**The last page.** At each level, level + 2 right brings page 3, whose answers draw nothing. It is read, then Street 1, and `SheriffPuzzle` is set on leaving.<br>**The keys.** A new game writes `CurrentQuestion=-1`; a missing one reads 0. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from profiles in the original's form:<br>**Page 1.** It is read with its four answers. Hovering B lights it up and repeats its line. Clicking C plays `RIGHT_1`, then the next page (5) is read.<br>**Page 4.** Clicking A plays `WRONG_1.1`, then Street 1. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. On Phantom the earlier checks are identical to WP-051's run. On Showdown only the profile check differs: it writes the 16 new keys (427 to 443) and reads 16 back on import (449 to 465), plus its `CluesFound1`, random each run. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`d59a4e001d`](https://github.com/barefootbetters/scummvm/commit/d59a4e001d) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **Entry.** The notebook is a sprite at depth 0, on `PAGE1`, looping. The four answers are requires objects at depth 10, on `ANSWERS1A`–`D`, stopped on step 0. The exit to Street 1 is there. The page's five sounds are found. 100 questions drawn: none page 3 or 6.
+   - **The reading.** On tick 1 the page is read on step 1. Then each answer is read on its step 1, the rest on step 0, with input held. Then input is free, and everything is on step 0.
+   - **The hover.** B hovered is on step 1 with its sound and a countdown of 8 after its first tick. It is read on tick 10, and again 73 ticks after it ends. The page hovered goes on step 1; nothing hovered, everything goes back to step 0.
+   - **The answers.** Page 1's C is right: step 2, one of `RIGHT_1`–`3`, the page answered, a new one drawn. Over, page 4: the answers become `OBJ_SHERIFF_ANSWERS4`. Page 4's A is wrong: `WRONG_1.1`, then nothing (the exe's `Ewan.` line isn't on the disc), then `ROOM_P03_Street1`. `SheriffPuzzle` stays unset, and the page is kept.
+   - **The last page.** At each level, level + 2 right brings page 3, whose answers draw nothing. It is read, then Street 1, and `SheriffPuzzle` is set on leaving.
+   - **The keys.** A new game writes `CurrentQuestion=-1`; a missing one reads 0.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from profiles in the original's form:
+   - **Page 1.** It is read with its four answers. Hovering B lights it up and repeats its line. Clicking C plays `RIGHT_1`, then the next page (5) is read.
+   - **Page 4.** Clicking A plays `WRONG_1.1`, then Street 1.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

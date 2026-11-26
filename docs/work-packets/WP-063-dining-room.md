@@ -20,11 +20,25 @@ The reference is `wp064_ref.py`: WP-062's, plus the dining room, written from th
 
 The first run matched all 57 lines on Phantom and all 220 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Placements.** The class builds the burger, the mug and hotspots 2–4 under the second layer, which this room doesn't have, so they attach to the root. The burger is an inventory object at depth 1, hidden until Maria's game is won. The mug is an exit at depth 1000 to `ROOM_P31_KST`. The hotspots are clickables at depths 10000, 1 and 2. Hotspot 1 is as the default path builds it.<br>**Entry.** The first visit asks for movie 35 into `ROOM_Maria` and sets `MariaMoviePlayed`; Maria isn't met. After, she is met, one snack is needed, and nothing plays. With her game won, `Dining_Room.350A_` holds input and she gives one of her own clues; back again, no second scene.<br>**Her clue:** `350A_`, her `GIVES`, then `Global.Thank_You_` and `ROOM_Suspect_Chooser`.<br>**A click on Maria** with the arrow: before her game is won, to `ROOM_Maria`; after, nothing.<br>**Hotspot 2** scares all five (state `0x11`).<br>**Idle:** Velma's `GLASSES` and `Global.1000A2_`, input free. Maria's idle line is the base one until her game is won, then `1010I1_`, `1010I3_` and `1010I4_`; Fred's stays the base one.<br>**The profile:** a new game's `MariaMoviePlayed=No`; `Yes` after a visit, and read back.<br>Showdown prints that it has no dining room. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The first visit:** movie 35 (32 s), then `ROOM_Maria`.<br>**Her game won:** on entry Maria said `350A_` and gave `MARIA_KEYS`; then `Global.Thank_You_`, and the suspects and clues opened on her clue.<br>**A click on Maria** before her game is won took the gang to `ROOM_Maria`. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms), so the new claim kinds leave every room as it was.<br>**Showdown:** its other checks are identical to WP-062's run.<br>**Phantom:** its checks differ only by the dining room's new profile key and the drawbridge's random keys.<br>Fork commit [`aa1723370a`](https://github.com/barefootbetters/scummvm/commit/aa1723370a) (9 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Placements.** The class builds the burger, the mug and hotspots 2–4 under the second layer, which this room doesn't have, so they attach to the root. The burger is an inventory object at depth 1, hidden until Maria's game is won. The mug is an exit at depth 1000 to `ROOM_P31_KST`. The hotspots are clickables at depths 10000, 1 and 2. Hotspot 1 is as the default path builds it.
+   - **Entry.** The first visit asks for movie 35 into `ROOM_Maria` and sets `MariaMoviePlayed`; Maria isn't met. After, she is met, one snack is needed, and nothing plays. With her game won, `Dining_Room.350A_` holds input and she gives one of her own clues; back again, no second scene.
+   - **Her clue:** `350A_`, her `GIVES`, then `Global.Thank_You_` and `ROOM_Suspect_Chooser`.
+   - **A click on Maria** with the arrow: before her game is won, to `ROOM_Maria`; after, nothing.
+   - **Hotspot 2** scares all five (state `0x11`).
+   - **Idle:** Velma's `GLASSES` and `Global.1000A2_`, input free. Maria's idle line is the base one until her game is won, then `1010I1_`, `1010I3_` and `1010I4_`; Fred's stays the base one.
+   - **The profile:** a new game's `MariaMoviePlayed=No`; `Yes` after a visit, and read back.
+   - Showdown prints that it has no dining room.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The first visit:** movie 35 (32 s), then `ROOM_Maria`.
+   - **Her game won:** on entry Maria said `350A_` and gave `MARIA_KEYS`; then `Global.Thank_You_`, and the suspects and clues opened on her clue.
+   - **A click on Maria** before her game is won took the gang to `ROOM_Maria`.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms), so the new claim kinds leave every room as it was.
+   - **Showdown:** its other checks are identical to WP-062's run.
+   - **Phantom:** its checks differ only by the dining room's new profile key and the drawbridge's random keys.
+   - Fork commit [`aa1723370a`](https://github.com/barefootbetters/scummvm/commit/aa1723370a) (9 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

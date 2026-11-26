@@ -29,11 +29,23 @@ rooms — the two are meaningless apart. The later group-7 rooms
 (`ROOM_P23_Maze_Center`, `ROOM_P44_Fountain_Closeup`, `ROOM_P22_Well_In_Maze`,
 `ROOM_P27_Below_Balcony` and its door) stay separate later packets.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** `ROOM_Hedge_Maze` gets `HedgeMazeRoom`, `ROOM_Maze_Map` gets `MazeMapRoom`.<br>**The clips:** `Hedge_Maze.Music` and the nine `Hedge_Maze.Unicycle_*` sfx found; the idle `Hedge_Maze.240A_`/`240A1_` found (by prefix), `240A2_` not.<br>**The moves:** back/front/R/L with their dir code, step, Start/End clips and passage/wall anims.<br>**The grid:** the per-level cell tables (20, 32 and 60 cells), the path tables, the `+0x440` patch cell.<br>**The starts:** the start cell from the garden, below the balcony and the centre (two cases), and the garden-exit cells.<br>**The map:** the four markers jump to the garden, well, centre and below the balcony.<br>Showdown prints that it has no hedge maze. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The maze** draws with the unicycle and the current cell's passages (cell 24 mask 15, all four open); `Hedge_Maze.Music` loops.<br>**Riding** a direction rode to the adjacent cell and played the Start/End unicycle clips (back → cell 23, left → cell 13).<br>**The map** draws its four location markers; clicking the garden marker jumped to `ROOM_P06_Garden`. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).<br>The other checks match the prior run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`).<br>Fork commit [`9a0897017d`](https://github.com/barefootbetters/scummvm/commit/9a0897017d) (9 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** `ROOM_Hedge_Maze` gets `HedgeMazeRoom`, `ROOM_Maze_Map` gets `MazeMapRoom`.
+   - **The clips:** `Hedge_Maze.Music` and the nine `Hedge_Maze.Unicycle_*` sfx found; the idle `Hedge_Maze.240A_`/`240A1_` found (by prefix), `240A2_` not.
+   - **The moves:** back/front/R/L with their dir code, step, Start/End clips and passage/wall anims.
+   - **The grid:** the per-level cell tables (20, 32 and 60 cells), the path tables, the `+0x440` patch cell.
+   - **The starts:** the start cell from the garden, below the balcony and the centre (two cases), and the garden-exit cells.
+   - **The map:** the four markers jump to the garden, well, centre and below the balcony.
+   - Showdown prints that it has no hedge maze.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The maze** draws with the unicycle and the current cell's passages (cell 24 mask 15, all four open); `Hedge_Maze.Music` loops.
+   - **Riding** a direction rode to the adjacent cell and played the Start/End unicycle clips (back → cell 23, left → cell 13).
+   - **The map** draws its four location markers; clicking the garden marker jumped to `ROOM_P06_Garden`.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).
+   - The other checks match the prior run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`).
+   - Fork commit [`9a0897017d`](https://github.com/barefootbetters/scummvm/commit/9a0897017d) (9 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

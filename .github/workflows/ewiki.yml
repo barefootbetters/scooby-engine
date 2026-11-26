@@ -147,7 +147,7 @@ jobs:
           $private = @(if (Test-Path _private/private) { Get-ChildItem _private/private -Recurse -File -Filter *.md })
           if ($private.Count) { $expected += $private.Count + 1 }
           Write-Host "Expected pages: $($pages.Count) Markdown files + $($sections.Count) section lists + 1 home + $($private.Count) private (+1 list if any) = $expected."
-          pwsh -File ewiki/themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -Config ewiki/hugo.toml -ExpectedPageCount $expected
+          pwsh -File ewiki/themes/ewiki/tools/Invoke-WikiGates.ps1 -Site . -Config ewiki/hugo.toml -ExpectedPageCount $expected -PanicOnWarning
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Deploys only from main, and only once the Cloudflare secrets exist.

@@ -20,11 +20,21 @@ The reference is `wp067_ref.py`: WP-065's, plus Ewan's quiz, written from the tr
 
 The first run differed on one line, and the check was wrong. To ask page 4 it set the question and ticked, as the Sheriff's check does; but Ewan's class has no "next page" step to set a page up, so the board stayed on the page already drawn. The check now enters the room on page 4. The second run matched all 82 lines on Phantom and all 223 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Entry** on page 1: the board shown and stopped at depth 0; the four answers as requires objects at depth 10; the eraser hidden at depth 100. The page's five sounds; the way back to the kitchen. With the opening unplayed, nothing is read. 100 drawn questions: never page 2 or 5.<br>**Reading:** the page lit (board step 1) with its sound, then each answer lit with its own; then free, input back.<br>**Hover:** an answer lit, said 37 ticks on, then again 73 ticks after its sound ends; the board likewise; nothing hovered, nothing lit.<br>**A right answer** (page 1, B): pressed, a `RIGHT_` line, the eraser played once with `Ewan.Erase_Board`, input held. At tick 54 the eraser is done and hidden, and a new page is on the board. **A wrong one** (page 4, A): a `WRONG_1.` line, then `WRONG_2`, then the kitchen, with no puzzle.<br>**Won** at each level with level + 3 right: the board and answers hidden, the kitchen, and `EwanPuzzle` on leaving.<br>**The keys:** a new game's `CurrentQuestion=-1`; `Question11` read alone gives `CurrentQuestion=0`.<br>Showdown prints that it has no Ewan's quiz. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**Page 1:** the narrator's introduction skipped, the page and its answers read aloud on the board; B clicked, `RIGHT_2` and the eraser's sound.<br>**Won,** with pages 1 and 3 done: page 6's A (cheeseburger) right, then back in the kitchen, where `EwanPuzzle` gave Ewan's clue (`190B_`, `EWAN_K`). |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-065's run but for the clue name that varies by run. Phantom's differ only by the quiz's 13 new profile keys and the drawbridge's random keys.<br>Fork commit [`f3b98b08ca`](https://github.com/barefootbetters/scummvm/commit/f3b98b08ca) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Entry** on page 1: the board shown and stopped at depth 0; the four answers as requires objects at depth 10; the eraser hidden at depth 100. The page's five sounds; the way back to the kitchen. With the opening unplayed, nothing is read. 100 drawn questions: never page 2 or 5.
+   - **Reading:** the page lit (board step 1) with its sound, then each answer lit with its own; then free, input back.
+   - **Hover:** an answer lit, said 37 ticks on, then again 73 ticks after its sound ends; the board likewise; nothing hovered, nothing lit.
+   - **A right answer** (page 1, B): pressed, a `RIGHT_` line, the eraser played once with `Ewan.Erase_Board`, input held. At tick 54 the eraser is done and hidden, and a new page is on the board. **A wrong one** (page 4, A): a `WRONG_1.` line, then `WRONG_2`, then the kitchen, with no puzzle.
+   - **Won** at each level with level + 3 right: the board and answers hidden, the kitchen, and `EwanPuzzle` on leaving.
+   - **The keys:** a new game's `CurrentQuestion=-1`; `Question11` read alone gives `CurrentQuestion=0`.
+   - Showdown prints that it has no Ewan's quiz.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **Page 1:** the narrator's introduction skipped, the page and its answers read aloud on the board; B clicked, `RIGHT_2` and the eraser's sound.
+   - **Won,** with pages 1 and 3 done: page 6's A (cheeseburger) right, then back in the kitchen, where `EwanPuzzle` gave Ewan's clue (`190B_`, `EWAN_K`).
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-065's run but for the clue name that varies by run. Phantom's differ only by the quiz's 13 new profile keys and the drawbridge's random keys.
+   - Fork commit [`f3b98b08ca`](https://github.com/barefootbetters/scummvm/commit/f3b98b08ca) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

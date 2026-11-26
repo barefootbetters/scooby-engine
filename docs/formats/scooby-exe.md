@@ -6127,7 +6127,7 @@ On Showdown the front lane runs from −553 to 1017, well off the screen.
 
 | Address | What it does |
 |---|---|
-| `0x41C190` (+0x18) | Placements, none of them built:<br>- **Scooby's** give his row (`+0xD0`) and the ends of his walk (`+0xCC`, `+0xC8`).<br>- **The ghost's** give its row (`+0xE4`) and four places (`+0xD4`), sorted.<br>- **The gang's** give five start places (`+0xEC`, `+0x100`), by y (`0x41C880`).<br>Built:<br>- **`OBJ_PIE_NOON_OVERLAY`s** ending `FR`, `FL`, `BR`, `BL` are sprites under the first layer, looping.<br>- **`OBJ_PIE_NOON_CLOCK`** is a sprite under the first layer, stopped on step level × 15.<br>- **`ANIM_PIE_NOON_COUNTERNUMBERS`** is two sprites under no layer at depth 9999, looping, the left one the tens. A third is an error |
+| `0x41C190` (+0x18) | The placements and the sprites. See below |
 | `0x41B8E0` (+0x0C) | Entry, after the base entry. See below |
 | `0x41C130` (+0x10) | Leave, after the base leave: the places, the gang, Scooby and the counter forgotten |
 | `0x41BF10` (+0x04) | The tick, after the base tick. See below |
@@ -6136,6 +6136,18 @@ On Showdown the front lane runs from −553 to 1017, well off the screen.
 | `0x41CA90` | Tests a pie against the runners: Shaggy, Fred, Daphne, Velma |
 | `0x41CB50` | A snack (`0x407E00`), and the counter |
 | `0x41CD20` | Scooby may throw: lane 0's time is not below 0, and there is no chime |
+
+**Placements and sprites** (`0x41C190`). Placements, none of them built:
+
+- **Scooby's** give his row (`+0xD0`) and the ends of his walk (`+0xCC`, `+0xC8`).
+- **The ghost's** give its row (`+0xE4`) and four places (`+0xD4`), sorted.
+- **The gang's** give five start places (`+0xEC`, `+0x100`), by y (`0x41C880`).
+
+Built:
+
+- **`OBJ_PIE_NOON_OVERLAY`s** ending `FR`, `FL`, `BR`, `BL` are sprites under the first layer, looping.
+- **`OBJ_PIE_NOON_CLOCK`** is a sprite under the first layer, stopped on step level × 15.
+- **`ANIM_PIE_NOON_COUNTERNUMBERS`** is two sprites under no layer at depth 9999, looping, the left one the tens. A third is an error.
 
 **Entry** (`0x41B8E0`):
 1. **The slopes and the lanes** as above.

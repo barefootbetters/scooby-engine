@@ -18,11 +18,19 @@ title: "WP-031: The accusation and Big Head"
 
 The reference is `wp031_ref.py`, written from the trace. It reads the art and the sound indexes through the repo's probes, and never runs the engine. At `script` level 3 the engine drives both rooms through their classes and logs 14 lines; the reference prints the same 14 on each title, none different. The test game has Artie (Phantom: Wizard) as the villain, three clues in slots 0, 1 and 3, and pictures 1, 3 and 4 met.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ On both titles:<br>**The clue book.** The three clues sit at their slots' places with hotspots 1–3; the clue in slot 3 gets hotspot 3. Only the met suspects are buttons. With the final clue there is a final-clue button and hotspot 6, and the exit is gone.<br>**Cards and lines.** Every card and every Scrappy line match: the clues', the final clue's, and the suspects' (`Chuck`, `ICDouble`, `Artie`; Phantom `Ewan`, `Maria`, `Wizard`). The idle line comes on tick 361, and not with the final clue.<br>**The new clue.** It holds input until Scrappy names `CluesFound2`, which is empty here: the original's slot gap. The exit goes back to the first story room.<br>**The accusation.** All five suspects accused get the true villain's movie (Showdown 9, Phantom 17), then `720` for the villain and `730` for the others, on `BIG_HEAD_BG_P03` (`P16`), then the credits.<br>**Big Head.** Six lines with their partners and backgrounds. Showdown: Shaggy with Scooby, Artie, Velma, Fred with Daphne, Scooby with Shaggy, Daphne with Fred. Then the credits. |
-| 2. Live, Showdown | ✅ From an original-format profile (`start_profile`), through `test_script`, minimized:<br>**The clue book.** It opened in solve mode, and the map's card showed under the mouse.<br>**The accusation.** Artie's poster accused him. Movie 9 (6.5 s) played, then Big Head: Shaggy beside Scooby on the P03 ruins, then Velma's line showing Artie's archaeology class list (clue picture 7), then Fred with Daphne.<br>**The credits.** After six lines, Artie's movie 33 and movie 58, then the credits rolled. |
-| 3. Build and diff | ✅ Scooby-only build: 23 files, 0 errors, 0 warnings. The exit, click, inventory, hint, menu, Sign In, Options and Credits checks are identical to WP-030's run. The profile check now has 268 keys, as the other session reported for WP-029's head. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`1915a421fb`](https://github.com/barefootbetters/scummvm/commit/1915a421fb), on WP-029's `2de5b85eea`, stages its 10 files by name, inside `engines/scooby/`, and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ On both titles:
+   - **The clue book.** The three clues sit at their slots' places with hotspots 1–3; the clue in slot 3 gets hotspot 3. Only the met suspects are buttons. With the final clue there is a final-clue button and hotspot 6, and the exit is gone.
+   - **Cards and lines.** Every card and every Scrappy line match: the clues', the final clue's, and the suspects' (`Chuck`, `ICDouble`, `Artie`; Phantom `Ewan`, `Maria`, `Wizard`). The idle line comes on tick 361, and not with the final clue.
+   - **The new clue.** It holds input until Scrappy names `CluesFound2`, which is empty here: the original's slot gap. The exit goes back to the first story room.
+   - **The accusation.** All five suspects accused get the true villain's movie (Showdown 9, Phantom 17), then `720` for the villain and `730` for the others, on `BIG_HEAD_BG_P03` (`P16`), then the credits.
+   - **Big Head.** Six lines with their partners and backgrounds. Showdown: Shaggy with Scooby, Artie, Velma, Fred with Daphne, Scooby with Shaggy, Daphne with Fred. Then the credits.
+2. **Live, Showdown:** ✅ From an original-format profile (`start_profile`), through `test_script`, minimized:
+   - **The clue book.** It opened in solve mode, and the map's card showed under the mouse.
+   - **The accusation.** Artie's poster accused him. Movie 9 (6.5 s) played, then Big Head: Shaggy beside Scooby on the P03 ruins, then Velma's line showing Artie's archaeology class list (clue picture 7), then Fred with Daphne.
+   - **The credits.** After six lines, Artie's movie 33 and movie 58, then the credits rolled.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

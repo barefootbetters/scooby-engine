@@ -20,11 +20,30 @@ The reference is `wp062_ref.py`: WP-060's, plus the room of doors, its Jester an
 
 The first run differed on two lines, both the check's own: it called the code under test inside the same `format()` that printed its results, and C++ leaves argument order open. It also logged eight warnings from the engine's code: the Jester's thanks is an exit with no object, and the room asked `object.ini` for an empty section. The room now passes such an exit on. The second run matched all 42 lines on Phantom and all 218 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Clues.** The Jester's own is one of his three; as the villain, he gives a red herring not his own.<br>**Placements.** Until the duster is used, neither the dining room's door nor the Jester. Used: the door at depth −1000 and the Jester. Each walk-in by the room left.<br>**Jane's crying** and a scream on entry.<br>**The ways out:**<br>• to the armory, `140A_`, `140A1_` and `140A2_` all seen;<br>• to the throne room, first `160D1_`, with the crying stopped, then `140B_`, `140B1_` and `140B2_`;<br>• to the dining room, `140C_` and `140C1_`;<br>• back again, no scream.<br>**The locked door:** Velma tries it at tick 1, `Velma_Door_Locked` playing; at tick 160, `130B_` holds input.<br>**Idle chatter:** none while Jane cries; then all five.<br>**The Jester:** the first click meets him, with `220B_` on Big Head back here; later clicks give one of his lines. With the red ball found, he takes it (`TAKES_RED`) and talks `220D2_`, `220D4_`, `220D1_`, `220D3_`. With the plaque seen, `220E_`, `220E2_`, `220E4_`, `220E1_`, `220E3_`, `220E5_`, `220E6_` follow.<br>**All three balls:** `Global.Jester.Clue_`, his clue, then `Global.Thank_You_` and the suspects. With the crest solved, the room again through movie 57.<br>**The profile:** a new game's `Crying=Yes`.<br>Showdown prints that it has no room of doors. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The locked door:** the way to the dining room kept the gang; Velma tried the door with `Velma_Door_Locked`, then said `130B_`.<br>**The Jester,** from a profile with the duster used and the red ball found: he talked through the crest's four digits, and a click introduced him on Big Head. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).<br>**Showdown:** its other checks are identical to WP-060's run but for the imported clue name, which varies by run, so `giveClue`'s change to tables per title leaves Showdown as it was.<br>**Phantom:** its checks differ only by the room of doors' three new profile keys and the drawbridge's random keys.<br>Fork commit [`548d197118`](https://github.com/barefootbetters/scummvm/commit/548d197118) (8 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Clues.** The Jester's own is one of his three; as the villain, he gives a red herring not his own.
+   - **Placements.** Until the duster is used, neither the dining room's door nor the Jester. Used: the door at depth −1000 and the Jester. Each walk-in by the room left.
+   - **Jane's crying** and a scream on entry.
+   - **The ways out:**
+     - to the armory, `140A_`, `140A1_` and `140A2_` all seen;
+     - to the throne room, first `160D1_`, with the crying stopped, then `140B_`, `140B1_` and `140B2_`;
+     - to the dining room, `140C_` and `140C1_`;
+     - back again, no scream.
+   - **The locked door:** Velma tries it at tick 1, `Velma_Door_Locked` playing; at tick 160, `130B_` holds input.
+   - **Idle chatter:** none while Jane cries; then all five.
+   - **The Jester:** the first click meets him, with `220B_` on Big Head back here; later clicks give one of his lines. With the red ball found, he takes it (`TAKES_RED`) and talks `220D2_`, `220D4_`, `220D1_`, `220D3_`. With the plaque seen, `220E_`, `220E2_`, `220E4_`, `220E1_`, `220E3_`, `220E5_`, `220E6_` follow.
+   - **All three balls:** `Global.Jester.Clue_`, his clue, then `Global.Thank_You_` and the suspects. With the crest solved, the room again through movie 57.
+   - **The profile:** a new game's `Crying=Yes`.
+   - Showdown prints that it has no room of doors.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The locked door:** the way to the dining room kept the gang; Velma tried the door with `Velma_Door_Locked`, then said `130B_`.
+   - **The Jester,** from a profile with the duster used and the red ball found: he talked through the crest's four digits, and a click introduced him on Big Head.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).
+   - **Showdown:** its other checks are identical to WP-060's run but for the imported clue name, which varies by run, so `giveClue`'s change to tables per title leaves Showdown as it was.
+   - **Phantom:** its checks differ only by the room of doors' three new profile keys and the drawbridge's random keys.
+   - Fork commit [`548d197118`](https://github.com/barefootbetters/scummvm/commit/548d197118) (8 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

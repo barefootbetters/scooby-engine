@@ -20,11 +20,25 @@ The reference is `wp069_ref.py`: WP-067's, plus the armory and its slide, writte
 
 The first run matched all 94 lines on Phantom and all 225 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** both rooms get the armory's class.<br>**Placements:** in a new game the duster, the armour and the scratch are requires objects at depth 0; with the duster had, no duster.<br>**Entry:** without Jane screaming, each room plays `Kings_Armory.150_` the first time, holding input, and nothing after. Screaming, over 200 visits all five screams are drawn, and both `Intro_` and `Intro2_`. With the full bottle used, the armory leads to the slide; the slide stays.<br>**The duster:** Scooby takes it at tick 1 with `Scooby_Takes_Duster`, and it is hidden; at tick 43 it is in the toolbar and `150B_` holds input. Leaving at once gives it all the same.<br>**The scratch and armour:** the arrow on the scratch cycles `150C_`, `150C1_`, `150C2_`; on the armour, movie 44 back. The full bottle on either: movie 7 to the slide, the bottle out of its slot, the arrow back.<br>**The profile:** each room's `IntroDone` in its own section.<br>Showdown prints that it has no king's armory. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The duster:** a click on it, Scooby took it, and `150B_`.<br>**The full bottle** on the armour: movie 7, then the slide room with its intro.<br>**With the bottle used,** starting in the armory led straight to the slide. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-067's run. Phantom's differ in three ways:<br>• the setup check now shows both rooms' intro as their opening (`starts 100`, was none);<br>• the two rooms' `IntroDone` keys are new;<br>• the drawbridge's random keys and Ewan's random `CurrentQuestion` vary by run.<br>Fork commit [`db26ae4418`](https://github.com/barefootbetters/scummvm/commit/db26ae4418) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** both rooms get the armory's class.
+   - **Placements:** in a new game the duster, the armour and the scratch are requires objects at depth 0; with the duster had, no duster.
+   - **Entry:** without Jane screaming, each room plays `Kings_Armory.150_` the first time, holding input, and nothing after. Screaming, over 200 visits all five screams are drawn, and both `Intro_` and `Intro2_`. With the full bottle used, the armory leads to the slide; the slide stays.
+   - **The duster:** Scooby takes it at tick 1 with `Scooby_Takes_Duster`, and it is hidden; at tick 43 it is in the toolbar and `150B_` holds input. Leaving at once gives it all the same.
+   - **The scratch and armour:** the arrow on the scratch cycles `150C_`, `150C1_`, `150C2_`; on the armour, movie 44 back. The full bottle on either: movie 7 to the slide, the bottle out of its slot, the arrow back.
+   - **The profile:** each room's `IntroDone` in its own section.
+   - Showdown prints that it has no king's armory.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The duster:** a click on it, Scooby took it, and `150B_`.
+   - **The full bottle** on the armour: movie 7, then the slide room with its intro.
+   - **With the bottle used,** starting in the armory led straight to the slide.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-067's run. Phantom's differ in three ways:
+   - the setup check now shows both rooms' intro as their opening (`starts 100`, was none);
+   - the two rooms' `IntroDone` keys are new;
+   - the drawbridge's random keys and Ewan's random `CurrentQuestion` vary by run.
+   - Fork commit [`db26ae4418`](https://github.com/barefootbetters/scummvm/commit/db26ae4418) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

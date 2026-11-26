@@ -18,11 +18,19 @@ title: "WP-056: The ghost spot"
 
 The reference is `wp057_ref.py`: WP-055's, plus the ghost spot, written from the trace before the engine ran. It reads each title's start, pan, wrap and countdown from that title's own `Scooby.exe`, the placements and the background's size from the art, and whether the music is on the disc from the sound archives' indexes. It never runs the engine. At `script` level 3 the chase check now starts with six ghost spot lines on both titles: 214 lines on Showdown (the earlier 208 and 6), and 7 on Phantom (6 and the line saying there is no chase). The first clean run matched them all.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Both titles:<br>**The class.** `ROOM_Ghost_Spot` builds the ghost spot's.<br>**Entry.** Layer 0 at x −1280; the background 1920 × 480 on both; the countdown 396; input held; `Ghost_Spot.Music` playing. Scooby and Daphne at depths 1 and −1, hit by their cels, under the root. Shaggy, Velma and Fred as the default path builds them: depth 0, hit by their step polygon.<br>**The pan.** x −1280, −1274, −1274, −1268, … by tick; −98 after tick 395; on at tick 396 to Showdown's `ROOM_P01_Town_Center` or Phantom's `ROOM_P04_Town`, the toggle back at 0.<br>**A skip** after 10 ticks: on at tick 11, the toggle left at 1, so the next visit's background moves on its first tick.<br>**A click** while input is held is the skip key.<br>**The towns.** Showdown's is Town Center from every room. Phantom's is Below Balcony from its five castle rooms, else Town. |
-| 2. Live | ✅ Through `test_script`, minimized:<br>**Showdown.** In Street 3, with the ghost's chance at 1, a click on hotspot 2 calls the ghost. It plays out, and the ghost spot pans while the gang runs. Then Town Center, where Fred starts `Global.Ghost_SpotB_`. In a run started in the ghost spot, Escape after 3 seconds goes on at once to Town Center.<br>**Phantom.** Through the ghost spot to `ROOM_P04_Town`, where Daphne starts `Global.Ghost_Spot_`. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Phantom's other checks are identical to WP-055's run. On Showdown one line differs, the clue name the profile check imports (`SHERIFF_FEATHER` for `SHERIFF_SPURS`, as before WP-055). The room setup check now leaves the ghost spot after its 396 ticks rather than staying 400, so the random draws after it shift. Fork commit [`700fffa6a7`](https://github.com/barefootbetters/scummvm/commit/700fffa6a7) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Both titles:
+   - **The class.** `ROOM_Ghost_Spot` builds the ghost spot's.
+   - **Entry.** Layer 0 at x −1280; the background 1920 × 480 on both; the countdown 396; input held; `Ghost_Spot.Music` playing. Scooby and Daphne at depths 1 and −1, hit by their cels, under the root. Shaggy, Velma and Fred as the default path builds them: depth 0, hit by their step polygon.
+   - **The pan.** x −1280, −1274, −1274, −1268, … by tick; −98 after tick 395; on at tick 396 to Showdown's `ROOM_P01_Town_Center` or Phantom's `ROOM_P04_Town`, the toggle back at 0.
+   - **A skip** after 10 ticks: on at tick 11, the toggle left at 1, so the next visit's background moves on its first tick.
+   - **A click** while input is held is the skip key.
+   - **The towns.** Showdown's is Town Center from every room. Phantom's is Below Balcony from its five castle rooms, else Town.
+2. **Live:** ✅ Through `test_script`, minimized:
+   - **Showdown.** In Street 3, with the ghost's chance at 1, a click on hotspot 2 calls the ghost. It plays out, and the ghost spot pans while the gang runs. Then Town Center, where Fred starts `Global.Ghost_SpotB_`. In a run started in the ghost spot, Escape after 3 seconds goes on at once to Town Center.
+   - **Phantom.** Through the ghost spot to `ROOM_P04_Town`, where Daphne starts `Global.Ghost_Spot_`.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

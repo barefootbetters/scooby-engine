@@ -18,11 +18,18 @@ title: "WP-027: Room classes and the front end"
 
 The reference is `wp027_ref.py`, written from the trace. It reads the art and the sound indexes through the repo's probes, and never runs the engine. At `script` level 3 the engine drives the front end through its own room classes and logs 15 lines; the reference prints the same 15 on each title, none different.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ On both titles:<br>**The title.** It asks for movie 27, then 28, then shows. Layer 0 goes −638, −636, … 0, then −1278 on tick 321; on tick 324 the game goes to Sign In.<br>**The buttons.** Each of the four main-menu and three level-select buttons is hit by its polygon, has 3 steps, and shows frames 0, 1 and 2 at rest, under the mouse and pressed. Options and New Mystery bring the narrator's lines. The level buttons sound Shaggy's `Level_Select` lines.<br>**Where they go.** Play goes back to the game room, or to Sign In from the title. Options, New Mystery and Quit go to their rooms. The level buttons set levels 0–2, then movie 1 and `ROOM_P01_Town_Center` (Phantom: `ROOM_P01_Drawbridge`).<br>**The quit screen.** The eyes look at No (step 1) or Yes (step 2), and Scooby says `Quit_Screen.No_1_SCOOBY` or `…Yes_1_SCOOBY`; then back to the menu, or quit. |
-| 2. Live, Showdown | ✅ The input played through `test_script`, minimized.<br>**The title.** A cold start played movies 27 and 28 (3.7 s and 10.0 s), then the panning title. A click skipped it to Sign In.<br>**The menus.** From Town Center, the toolbar's quit button opened the main menu. Options lit up and the narrator explained it, once. Quit opened the quit screen, where No lit up. Scooby's No line ended back in the menu, and Play returned to Town Center.<br>**The level select.** Spooky played movie 1 (55.9 s) and opened Town Center. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory, hint and snack checks are identical to WP-026's run, and the room check is identical to WP-020's (69 and 53 rooms). The profile check matches its reference, with the level now written as `Difficulty`. Fork commit [`714e4cd7b7`](https://github.com/barefootbetters/scummvm/commit/714e4cd7b7) stages its 13 files by name, inside `engines/scooby/`, and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ On both titles:
+   - **The title.** It asks for movie 27, then 28, then shows. Layer 0 goes −638, −636, … 0, then −1278 on tick 321; on tick 324 the game goes to Sign In.
+   - **The buttons.** Each of the four main-menu and three level-select buttons is hit by its polygon, has 3 steps, and shows frames 0, 1 and 2 at rest, under the mouse and pressed. Options and New Mystery bring the narrator's lines. The level buttons sound Shaggy's `Level_Select` lines.
+   - **Where they go.** Play goes back to the game room, or to Sign In from the title. Options, New Mystery and Quit go to their rooms. The level buttons set levels 0–2, then movie 1 and `ROOM_P01_Town_Center` (Phantom: `ROOM_P01_Drawbridge`).
+   - **The quit screen.** The eyes look at No (step 1) or Yes (step 2), and Scooby says `Quit_Screen.No_1_SCOOBY` or `…Yes_1_SCOOBY`; then back to the menu, or quit.
+2. **Live, Showdown:** ✅ The input played through `test_script`, minimized.
+   - **The title.** A cold start played movies 27 and 28 (3.7 s and 10.0 s), then the panning title. A click skipped it to Sign In.
+   - **The menus.** From Town Center, the toolbar's quit button opened the main menu. Options lit up and the narrator explained it, once. Quit opened the quit screen, where No lit up. Scooby's No line ended back in the menu, and Play returned to Town Center.
+   - **The level select.** Spooky played movie 1 (55.9 s) and opened Town Center.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

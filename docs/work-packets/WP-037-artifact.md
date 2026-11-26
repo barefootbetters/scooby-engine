@@ -18,11 +18,20 @@ title: "WP-037: Showdown's artifact puzzle"
 
 The reference is `wp037_ref.py`: WP-036's, plus the puzzle, written from the trace before the engine ran. It reads each room's placements from the disc and the start tables straight from `Scooby.exe`, and never runs the engine. At `script` level 3 the chase check now logs 72 lines on Showdown, the earlier 56 and 16 for the puzzle; the reference prints the same 72, none different. On Phantom both print the one line saying there is no chase.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**The rooms.** All nine get the class. Each room's pieces, in build order, start where the level's table puts them, with their places from the placements, at depth 1, hit by their cels; the outline at depth 0; the artifact (5 steps) at depth 2, hidden; `Artifact.Intro_1_ICDOUBLE`.<br>**With the mouse, in Deer 09.** The open hand over a loose piece, the arrow elsewhere. A click picks piece 0 up at depth 185 (its y), the cursor hidden. Carried 15 to the right of its place it follows; at 5 and 5 it follows; the next tick it snaps in at depth 1, with a clink. Over a placed piece, the arrow, and a click does nothing.<br>**The drop.** Piece 1 dropped elsewhere goes back to its start with `Artifact.Wrong`.<br>**Exactly on its place.** Piece 2 carried exactly onto its place stays carried; the next click sends it back to its start.<br>**Built.** The ninth piece builds it: `ArtifactsBuilt` 1, `Artifact.Morph`, the artifact shown and playing; PiecePlaced 0-8 Yes; the morph over on tick 15, the close-up on tick 16. Back again, all nine in place.<br>**The keys.** They read back; a reset clears them. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from a profile in the original's form starting in ROOM_Artifact_Deer_09:<br>**The drop.** Piece 0 was picked up, carried with the cursor hidden, and dropped back.<br>**The puzzle.** All nine went in, each about 9 ticks after it was picked up, and the artifact was built on tick 312 and morphed.<br>**The close-up.** It loaded on tick 341, when the morph's sound was over. `260C3_` played and ICDouble gave IC_EYE_DOCTOR; then the suspects and clues. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings, on `9c9d3d91eb`. Phantom's earlier checks are identical to WP-036's run. Showdown's differ in only two ways: the profile check writes and imports `PiecePlaced0`-`14` for each of the nine rooms, 135 keys more each way; and the Street 1 check's clue is a different one of the Sheriff's three, which comes from `rand()`. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`3099c2557c`](https://github.com/barefootbetters/scummvm/commit/3099c2557c) stages its 5 files by name and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **The rooms.** All nine get the class. Each room's pieces, in build order, start where the level's table puts them, with their places from the placements, at depth 1, hit by their cels; the outline at depth 0; the artifact (5 steps) at depth 2, hidden; `Artifact.Intro_1_ICDOUBLE`.
+   - **With the mouse, in Deer 09.** The open hand over a loose piece, the arrow elsewhere. A click picks piece 0 up at depth 185 (its y), the cursor hidden. Carried 15 to the right of its place it follows; at 5 and 5 it follows; the next tick it snaps in at depth 1, with a clink. Over a placed piece, the arrow, and a click does nothing.
+   - **The drop.** Piece 1 dropped elsewhere goes back to its start with `Artifact.Wrong`.
+   - **Exactly on its place.** Piece 2 carried exactly onto its place stays carried; the next click sends it back to its start.
+   - **Built.** The ninth piece builds it: `ArtifactsBuilt` 1, `Artifact.Morph`, the artifact shown and playing; PiecePlaced 0-8 Yes; the morph over on tick 15, the close-up on tick 16. Back again, all nine in place.
+   - **The keys.** They read back; a reset clears them.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from a profile in the original's form starting in ROOM_Artifact_Deer_09:
+   - **The drop.** Piece 0 was picked up, carried with the cursor hidden, and dropped back.
+   - **The puzzle.** All nine went in, each about 9 ticks after it was picked up, and the artifact was built on tick 312 and morphed.
+   - **The close-up.** It loaded on tick 341, when the morph's sound was over. `260C3_` played and ICDouble gave IC_EYE_DOCTOR; then the suspects and clues.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

@@ -16,12 +16,18 @@ title: "WP-029: Room Setup and Town Center"
 
 ## Result (2026-11-14)
 
-| Exit criterion | Result |
-|---|---|
-| 1. Every room's music and opening | ✅ At `script` level 3 the engine enters each room from a fresh start and logs four things: the music clip playing, the opening, whether input is held, and the tick the opening starts. The reference, `wp029_ref.py`, reads the trace's output (each class constructor's call to `0x40B0F0`, with its strings read from the exe), `TGIFILE.ART`'s placements and the sound files' clip names. It never reads the engine's table. **0 differences in 69 Showdown and 53 Phantom rooms.** Every opening in the table has a first line someone in its room can say: 6 rooms in Showdown, 17 in Phantom. Each holds input and starts on tick 100. The variants rotate as traced. Showdown's group 2 alternating with group 3 plays `Group2_1` to `Group2_4`, then back to `_1`. Phantom's group 1 has seven variants, and when each clip ends the next one plays. |
-| 2. Town Center against the trace | ✅ From Street 1 after a new game, Fred walks in on `ANIM_FRED_ENDWALK_UL_A1`. The opening `Town_Center.100B_` holds input and starts on tick 100. Escape marks it played. Exits before a snack play `100A_`, `100A2_`, `100A3_`, then `100A_` again. The room stays, the toolbar opens and the snack box flashes. A snack for Scooby counts one, plays the snack-given line, and the next exit leaves for Street 3. The hanging sign is a clickable in layer 1 at depth 1; the sign a hidden requires object, likewise. Clicked, the hanging sign plays 13 steps; then the sign shows and `Town_Center.307_` plays. The sign clicked: input is held, Scooby takes it a tick later, and 50 ticks after that it is in slot 0, with `Town_Center.360C_`. The second hotspot's C state frightens Daphne, Scooby and Shaggy (state 17) on its step 7. `SignClicked` reads back. A visit after the sign is taken doesn't build it, and keeps the hanging sign hidden. Saved and loaded, all 69 rooms have a section, and Town Center's `OpeningPlayed=Yes`, `SnacksGiven=1` and `SignClicked=Yes` read back. Moans come every 5–14 seconds, and idle chatter after 25–54 seconds: `100B…` or `1100D_`. |
-| 3. Live, Showdown | ✅ `start_room=ROOM_P01_Town_Center`, driven by the engine's `test_script`, with real Escape key events (`key 27`):<br>• The opening held input and started on tick 100; Escape skipped it.<br>• The exit gave `Town_Center.100A_`, the toolbar came in, and the snack box flashed.<br>• Scooby ate the snack.<br>• The hanging sign came down, and Scooby carried the sign into the toolbar.<br>• The exit then walked the gang to Street 3, whose opening `Street_3.320A_` started on tick 100.<br>Nine frames were captured from the screen. |
-| 4. Build and regressions | ✅ Scooby-only build: 0 errors, 0 warnings in `engines/scooby/`. Fork commit [`2de5b85eea`](https://github.com/barefootbetters/scummvm/commit/2de5b85eea) is on WP-028/030's `7e184fcf1a`, inside `engines/scooby/`, and is pushed. Against that head, every earlier check's lines match on both titles: exits, clicks, inventory, hints and snacks, profile, menus, Sign In, Options and Credits, movies. The one exception is the profile's key count (Showdown 129 → 268, Phantom 128 → 234), since every room now writes its section. |
+**Exit criteria:**
+
+1. **Every room's music and opening:** ✅
+2. **Town Center against the trace:** ✅
+3. **Live, Showdown:** ✅ `start_room=ROOM_P01_Town_Center`, driven by the engine's `test_script`, with real Escape key events (`key 27`):
+   - The opening held input and started on tick 100; Escape skipped it.
+   - The exit gave `Town_Center.100A_`, the toolbar came in, and the snack box flashed.
+   - Scooby ate the snack.
+   - The hanging sign came down, and Scooby carried the sign into the toolbar.
+   - The exit then walked the gang to Street 3, whose opening `Street_3.320A_` started on tick 100.
+   - Nine frames were captured from the screen.
+4. **Build and regressions:** ✅
 
 **Deviations and gaps:**
 

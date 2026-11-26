@@ -20,11 +20,24 @@ The reference is `wp066_ref.py`: WP-064's, plus the kitchen, written from the tr
 
 The first run matched all 75 lines on Phantom and all 222 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Placements.** In a new game neither the grease nor the way to the storage room. With the quiz won and the screwdriver: the grease, a requires object at depth 0, and the way out at −1000. With the full bottle had, no grease.<br>**Walk-ins:** Daphne from the dining room; Fred and Daphne from the storage room; nobody from the town.<br>**Ewan on entry:** before his quiz, idle, hit by his step polygon. Won: `Kitchen.190B_` holds input, his own clue, and he is to give it. Given: he stirs at depth −1; with the screwdriver he sleeps; with the mirror used he stirs again.<br>**His clue:** `190B_`, his `GIVES`, `Global.Thank_You_` and the suspects.<br>**A click on him:** the first time, met, and Big Head with `Kitchen.190A_` on `BIG_HEAD_BG_P13`, on to `ROOM_Ewan`; after, straight to `ROOM_Ewan`. Won: `1010G_`, `1010G1_`, `1010G3_` and `1010G_` again, each holding the speech lock, freed after. Asleep: `190F_`, `190F1_`, `190F2_`, `190F_`, each blocking.<br>**The grease:** with the arrow, `190C_`. With the empty bottle input is held. Fred fetches it at tick 1, with `Get_Grease`; the grease hides, the bottle leaves its slot and the arrow is back. At tick 82 the full bottle, and `190G_`. Leaving at once gives the full bottle all the same.<br>**Hotspot 3** scares Daphne. The way to the storage room's movie is 8, and none with the screwdriver.<br>**The profile:** a new game's `EwanIntro=No`, and read back.<br>Showdown prints that it has no kitchen. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**His introduction:** a click on Ewan at the cauldron met him and started Big Head with `190A_` on `BIG_HEAD_BG_P13`, three lines, headed for `ROOM_Ewan`. The run ended during the third line, before the room changed.<br>**His clue,** with his quiz won: `190B_`, `EWAN_COUPON`, `Global.Thank_You_` and the suspects.<br>**The grease,** with the screwdriver had and the empty bottle in the toolbar: Fred fetched it with `Get_Grease`, the bottle filled, and Fred and Daphne said `190G_`. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-064's run but for the clue name that varies by run. Phantom's differ only by the kitchen's new profile key and the drawbridge's random keys.<br>Fork commit [`12d16950e8`](https://github.com/barefootbetters/scummvm/commit/12d16950e8) (9 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Placements.** In a new game neither the grease nor the way to the storage room. With the quiz won and the screwdriver: the grease, a requires object at depth 0, and the way out at −1000. With the full bottle had, no grease.
+   - **Walk-ins:** Daphne from the dining room; Fred and Daphne from the storage room; nobody from the town.
+   - **Ewan on entry:** before his quiz, idle, hit by his step polygon. Won: `Kitchen.190B_` holds input, his own clue, and he is to give it. Given: he stirs at depth −1; with the screwdriver he sleeps; with the mirror used he stirs again.
+   - **His clue:** `190B_`, his `GIVES`, `Global.Thank_You_` and the suspects.
+   - **A click on him:** the first time, met, and Big Head with `Kitchen.190A_` on `BIG_HEAD_BG_P13`, on to `ROOM_Ewan`; after, straight to `ROOM_Ewan`. Won: `1010G_`, `1010G1_`, `1010G3_` and `1010G_` again, each holding the speech lock, freed after. Asleep: `190F_`, `190F1_`, `190F2_`, `190F_`, each blocking.
+   - **The grease:** with the arrow, `190C_`. With the empty bottle input is held. Fred fetches it at tick 1, with `Get_Grease`; the grease hides, the bottle leaves its slot and the arrow is back. At tick 82 the full bottle, and `190G_`. Leaving at once gives the full bottle all the same.
+   - **Hotspot 3** scares Daphne. The way to the storage room's movie is 8, and none with the screwdriver.
+   - **The profile:** a new game's `EwanIntro=No`, and read back.
+   - Showdown prints that it has no kitchen.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **His introduction:** a click on Ewan at the cauldron met him and started Big Head with `190A_` on `BIG_HEAD_BG_P13`, three lines, headed for `ROOM_Ewan`. The run ended during the third line, before the room changed.
+   - **His clue,** with his quiz won: `190B_`, `EWAN_COUPON`, `Global.Thank_You_` and the suspects.
+   - **The grease,** with the screwdriver had and the empty bottle in the toolbar: Fred fetched it with `Get_Grease`, the bottle filled, and Fred and Daphne said `190G_`.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-064's run but for the clue name that varies by run. Phantom's differ only by the kitchen's new profile key and the drawbridge's random keys.
+   - Fork commit [`12d16950e8`](https://github.com/barefootbetters/scummvm/commit/12d16950e8) (9 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

@@ -31,11 +31,19 @@ centre, token-gated, and exits back to it) and the well is the most independent
 are the maze's interiors, delivered together as WP-074's pair was. The last
 group-7 packet (`ROOM_P27_Below_Balcony` and its door) stays separate.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** `ROOM_P23_Maze_Center` gets `MazeCenterRoom`, `ROOM_P44_Fountain_Closeup` gets `FountainCloseupRoom`, `ROOM_P22_Well_In_Maze` gets `WellInMazeRoom`.<br>**The clips (dotted, prefix for the voice lines):** the centre's water sfx (exact) at volume 90, the shears line (exact), and `Center_of_Maze.250B_`/`250X_`/`250X1_`/`250_`/`250C_` (prefix) found; the fountain's opening `Fountain.250D_`, its cycle, exit line, water, the doubled swim loop, the grab/lunge/eats found; the well's three lines found.<br>**The placements:** the centre's water (sprite, −1500), the shears (requires until taken), the token-gated way to the fountain; the fountain's piranha (idle/full), the tokens (requires), the exit, the grab; the well's yellow ball, the rope-gated climb.<br>**The state:** the centre's start flag from the garden (1) and the balcony (0), the `Entrances` save round-trip; the well's movies (ball 66/4, rope 59, return 54/57).<br>Showdown prints that it has no maze interior. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The centre** loads with the water sprite (`ANIM_P23_MAZE_CENTER_WATERA`, depth −1500) and music group 1; the hotspots, the shears, the token-gated `OBJ_P23_TO_P44` and the hedge-maze exits are all present.<br>**The fountain** plays its opening `Fountain.250D_` at tick 100, music group 1, with the piranha and the tokens placed.<br>**The well** sets `WellVisited` on entry (`well: …, visited`), music group 1, no opening, with the well, the Jester ball-target and the yellow ball present. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The room check is identical to WP-020's (69 and 53 rooms, 0 bad). The other checks match the prior run but for the usual per-run random keys (the imported clue name; the WP-069 arena pile's level-0 line, which is timing-sensitive and flips between runs). Fork commit [`d09a0a2af2`](https://github.com/barefootbetters/scummvm/commit/d09a0a2af2) (8 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** `ROOM_P23_Maze_Center` gets `MazeCenterRoom`, `ROOM_P44_Fountain_Closeup` gets `FountainCloseupRoom`, `ROOM_P22_Well_In_Maze` gets `WellInMazeRoom`.
+   - **The clips (dotted, prefix for the voice lines):** the centre's water sfx (exact) at volume 90, the shears line (exact), and `Center_of_Maze.250B_`/`250X_`/`250X1_`/`250_`/`250C_` (prefix) found; the fountain's opening `Fountain.250D_`, its cycle, exit line, water, the doubled swim loop, the grab/lunge/eats found; the well's three lines found.
+   - **The placements:** the centre's water (sprite, −1500), the shears (requires until taken), the token-gated way to the fountain; the fountain's piranha (idle/full), the tokens (requires), the exit, the grab; the well's yellow ball, the rope-gated climb.
+   - **The state:** the centre's start flag from the garden (1) and the balcony (0), the `Entrances` save round-trip; the well's movies (ball 66/4, rope 59, return 54/57).
+   - Showdown prints that it has no maze interior.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The centre** loads with the water sprite (`ANIM_P23_MAZE_CENTER_WATERA`, depth −1500) and music group 1; the hotspots, the shears, the token-gated `OBJ_P23_TO_P44` and the hedge-maze exits are all present.
+   - **The fountain** plays its opening `Fountain.250D_` at tick 100, music group 1, with the piranha and the tokens placed.
+   - **The well** sets `WellVisited` on entry (`well: …, visited`), music group 1, no opening, with the well, the Jester ball-target and the yellow ball present.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

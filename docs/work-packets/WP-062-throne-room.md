@@ -20,11 +20,27 @@ The reference is `wp063_ref.py`: WP-061's, plus the throne room, written from th
 
 The first run matched all 49 lines on Phantom and all 219 on Showdown, with no warnings. The live run then found one bug the check couldn't: the duster on Jane got the game's wrong-item line instead. The fork runs the game's update (`0x4098B0`) before the room's class, so the duster went back before the class looked. The class now takes that click, as the saloon's, the station's and the post office's take theirs. The check calls the class's click itself, so it didn't see the order; it matched again after the fix.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Placements.** The throne is a clickable at depth −1 until the three balls are found, then the requires object at depth 0, hidden once the ruby is used. The Jester only with the ruby taken and the balls not all found. The way to the secret passage at depth −1, the other exits at −1000.<br>**Entry.** The first visit asks for movie 18 back to the room, sets `JaneMoviePlayed` and stops `Screaming`. Velma walks in from the room of doors, Daphne from the first arena, Shaggy from the second; nobody from the secret passage.<br>**Jane and the duster.** With the arrow, nothing. With the duster, `Throne_Room.160E_` holds input, the duster leaves its slot (so it counts as used), and the cursor is the arrow.<br>**The third hotspot.** Clicked, it shows step 1 of its A on ticks 4–6, and the five are scared (state `0x11`).<br>**The throne.** Clicked without the balls, `160X_`. With them: the arrow, `160X_`; the ruby, movie 9 back to the room, the ruby out of its slot and the arrow back; then the throne hidden.<br>**The profile:** a new game's `JaneMoviePlayed=No`, `Entrances=0`; `Yes` after a visit, and read back.<br>Showdown prints that it has no throne room. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The first visit:** movie 18 played (96 s), then the throne room again, with no second movie.<br>**The duster:** given to Jane from the toolbar, it left its slot and Jane said `160E_`. The first try hit the open toolbar in front of her; the second got the wrong-item line (above); the third, after the fix, worked.<br>**The ruby,** with the three balls found: on the throne, movie 9, then the room again with the throne hidden. The same spot then hovers the way to the secret passage behind it. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).<br>**Showdown:** its other checks are identical to WP-061's run but for the imported clue name, which varies by run. So a clickable's call to the room with 0 leaves Showdown's classes as they were.<br>**Phantom:** its checks differ in three ways, all expected:<br>• the throne room's two new profile keys;<br>• the drawbridge's random keys;<br>• the setup check's throne room: a new game's first visit now asks for Jane's movie on its first tick, so its opening doesn't start there (`starts -1`, was 100).<br>Fork commit [`c9968b94a3`](https://github.com/barefootbetters/scummvm/commit/c9968b94a3) (8 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Placements.** The throne is a clickable at depth −1 until the three balls are found, then the requires object at depth 0, hidden once the ruby is used. The Jester only with the ruby taken and the balls not all found. The way to the secret passage at depth −1, the other exits at −1000.
+   - **Entry.** The first visit asks for movie 18 back to the room, sets `JaneMoviePlayed` and stops `Screaming`. Velma walks in from the room of doors, Daphne from the first arena, Shaggy from the second; nobody from the secret passage.
+   - **Jane and the duster.** With the arrow, nothing. With the duster, `Throne_Room.160E_` holds input, the duster leaves its slot (so it counts as used), and the cursor is the arrow.
+   - **The third hotspot.** Clicked, it shows step 1 of its A on ticks 4–6, and the five are scared (state `0x11`).
+   - **The throne.** Clicked without the balls, `160X_`. With them: the arrow, `160X_`; the ruby, movie 9 back to the room, the ruby out of its slot and the arrow back; then the throne hidden.
+   - **The profile:** a new game's `JaneMoviePlayed=No`, `Entrances=0`; `Yes` after a visit, and read back.
+   - Showdown prints that it has no throne room.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The first visit:** movie 18 played (96 s), then the throne room again, with no second movie.
+   - **The duster:** given to Jane from the toolbar, it left its slot and Jane said `160E_`. The first try hit the open toolbar in front of her; the second got the wrong-item line (above); the third, after the fix, worked.
+   - **The ruby,** with the three balls found: on the throne, movie 9, then the room again with the throne hidden. The same spot then hovers the way to the secret passage behind it.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).
+   - **Showdown:** its other checks are identical to WP-061's run but for the imported clue name, which varies by run. So a clickable's call to the room with 0 leaves Showdown's classes as they were.
+   - **Phantom:** its checks differ in three ways, all expected:
+     - the throne room's two new profile keys;
+     - the drawbridge's random keys;
+     - the setup check's throne room: a new game's first visit now asks for Jane's movie on its first tick, so its opening doesn't start there (`starts -1`, was 100).
+   - Fork commit [`c9968b94a3`](https://github.com/barefootbetters/scummvm/commit/c9968b94a3) (8 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

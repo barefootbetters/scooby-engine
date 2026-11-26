@@ -31,11 +31,21 @@ ran.
 
 The first run matched: 94 lines on Showdown and 93 on Phantom.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Both titles:<br>**Each character:** its cap (3600, Scooby 108, the narrator `0x2F7600`), its first countdown and the open hand.<br>**Every state change** with its tick, sequence, mode, line and next countdown: blinks, first idles with Velma's `P1` line, Scooby's missing BLINK and the donkey's, each stopped a tick, then back.<br>**Clicks:** the second idle, with Shaggy's `S1` line; the room's line with the speech lock (`P18_Tunnel_Lit.Idle.SCOOBY`, `P21_Mermaids_Cavern.Idle.…`); `Global.Idle.FRED` and `Global.Idle.VELMA` where the room has none; nothing for Gummy, the donkey or Brad, who have no line.<br>**The end:** each character's state and countdown, and the lock let go.<br>**Phantom's drawbridge:** `P01_Drawbridge.Idle.VELMA`, then `Global.Idle.VELMA` with the puzzle done. Fred gets `Global.Idle.FRED`. Showdown prints that it has no drawbridge. |
-| 2. Live | ✅ Through `test_script`, minimized:<br>**Showdown's lit tunnel:** Scooby's first idle and missing blink, and the others blinking, on their own. The open hand over Velma, Shaggy and Fred; a click on each played their second idle.<br>**Phantom's drawbridge:** five clicks on Velma. Two played her second idle. Three said `P01_Drawbridge.Idle.VELMA` with lip sync, each taking the speech lock and letting it go. Shaggy's first idle and the gang's blinks came on their own. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings.<br>**The room check** is identical to WP-058's run (69 and 53 rooms, 0 bad), and so to WP-020's.<br>**Every script check line** before the idle check is identical to the fork's run before this WP: 1720 on Showdown and 1047 on Phantom. The exceptions are random values that differ between any two runs: Showdown's first imported clue, and the drawbridge's colours in Phantom's profile check.<br>**Fork commit** [`87ef076bd6`](https://github.com/barefootbetters/scummvm/commit/87ef076bd6) (11 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Both titles:
+   - **Each character:** its cap (3600, Scooby 108, the narrator `0x2F7600`), its first countdown and the open hand.
+   - **Every state change** with its tick, sequence, mode, line and next countdown: blinks, first idles with Velma's `P1` line, Scooby's missing BLINK and the donkey's, each stopped a tick, then back.
+   - **Clicks:** the second idle, with Shaggy's `S1` line; the room's line with the speech lock (`P18_Tunnel_Lit.Idle.SCOOBY`, `P21_Mermaids_Cavern.Idle.…`); `Global.Idle.FRED` and `Global.Idle.VELMA` where the room has none; nothing for Gummy, the donkey or Brad, who have no line.
+   - **The end:** each character's state and countdown, and the lock let go.
+   - **Phantom's drawbridge:** `P01_Drawbridge.Idle.VELMA`, then `Global.Idle.VELMA` with the puzzle done. Fred gets `Global.Idle.FRED`. Showdown prints that it has no drawbridge.
+2. **Live:** ✅ Through `test_script`, minimized:
+   - **Showdown's lit tunnel:** Scooby's first idle and missing blink, and the others blinking, on their own. The open hand over Velma, Shaggy and Fred; a click on each played their second idle.
+   - **Phantom's drawbridge:** five clicks on Velma. Two played her second idle. Three said `P01_Drawbridge.Idle.VELMA` with lip sync, each taking the speech lock and letting it go. Shaggy's first idle and the gang's blinks came on their own.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings.
+   - **The room check** is identical to WP-058's run (69 and 53 rooms, 0 bad), and so to WP-020's.
+   - **Every script check line** before the idle check is identical to the fork's run before this WP: 1720 on Showdown and 1047 on Phantom. The exceptions are random values that differ between any two runs: Showdown's first imported clue, and the drawbridge's colours in Phantom's profile check.
+   - **Fork commit** [`87ef076bd6`](https://github.com/barefootbetters/scummvm/commit/87ef076bd6) (11 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

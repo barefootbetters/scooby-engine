@@ -20,11 +20,22 @@ The reference is `wp065_ref.py`: WP-063's, plus Maria's game, written from the t
 
 The first run matched all 67 lines on Phantom and all 221 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The items,** 40 draws at each level: 6, 8 and 10 of them. Each is drawn, weighs 2, 1 or 4 as a cup or plate, rests on a floor of 443–469 at x 20–619 and depth floor − 393, and the set always splits into two equal trays.<br>**The room:** Maria `HAPPY`, stopped on step 2 at depth −10; the way out to the dining room; the hour's timer.<br>**A throw** from (300, 200) at (4, 0): it lands at tick 32 at (428, 460), `Maria.Spin` while it flies and stopped a tick after, then `Maria.Floor.Cup`.<br>**The right wall:** x 639, its speed −6, `Maria.Bounce`; 633 the next tick.<br>**Carried:** taken with the cursor hidden and its offset kept, then let go at (360, 430). It is thrown at (4, −2), spinning forwards, with `Maria.Throw.Cup`, and the cursor shows again.<br>**Into the first tray** from (200, 120): it lands at tick 14 with `Maria.Place.Cup`. Maria is `EXCITED` on step 1 and the cup moves with the tray to (221, 170), at depth 1. She's done balancing a tick later, and `HAPPY` again at tick 50.<br>**The top item only:** of two in a tray, the bottom one can't be taken, and the top one goes back to depth 50.<br>**Tipped over** by 5: Maria goes to steps 1 and 0, then everything falls off at tick 3, back at its floor's depth, and she comes back to 2.<br>**Won** with every item in a tray: `MariaPuzzle` at once, input held; 73 ticks later the way back to `ROOM_P12_Dining_Room`.<br>Showdown prints that it has no Maria game. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized, with `random_seed` fixed, so two runs drew the same six items: a plate, three B cups and two C cups. The second run carried each to a tray in an order that kept the trays within 2 of each other. She tilted as each landed, from step 4 to 0 and back, and with 6 and 6 the game was won. Back in the dining room Maria gave her clue and the gang went to the suspects. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-063's run but for the clue name that varies by run, and Phantom's but for the drawbridge's random keys.<br>Fork commit [`83b49202d2`](https://github.com/barefootbetters/scummvm/commit/83b49202d2) (7 files staged by name) is pushed. Its item log line came after the check run; the room check and the live runs used the final build. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The items,** 40 draws at each level: 6, 8 and 10 of them. Each is drawn, weighs 2, 1 or 4 as a cup or plate, rests on a floor of 443–469 at x 20–619 and depth floor − 393, and the set always splits into two equal trays.
+   - **The room:** Maria `HAPPY`, stopped on step 2 at depth −10; the way out to the dining room; the hour's timer.
+   - **A throw** from (300, 200) at (4, 0): it lands at tick 32 at (428, 460), `Maria.Spin` while it flies and stopped a tick after, then `Maria.Floor.Cup`.
+   - **The right wall:** x 639, its speed −6, `Maria.Bounce`; 633 the next tick.
+   - **Carried:** taken with the cursor hidden and its offset kept, then let go at (360, 430). It is thrown at (4, −2), spinning forwards, with `Maria.Throw.Cup`, and the cursor shows again.
+   - **Into the first tray** from (200, 120): it lands at tick 14 with `Maria.Place.Cup`. Maria is `EXCITED` on step 1 and the cup moves with the tray to (221, 170), at depth 1. She's done balancing a tick later, and `HAPPY` again at tick 50.
+   - **The top item only:** of two in a tray, the bottom one can't be taken, and the top one goes back to depth 50.
+   - **Tipped over** by 5: Maria goes to steps 1 and 0, then everything falls off at tick 3, back at its floor's depth, and she comes back to 2.
+   - **Won** with every item in a tray: `MariaPuzzle` at once, input held; 73 ticks later the way back to `ROOM_P12_Dining_Room`.
+   - Showdown prints that it has no Maria game.
+2. **Live, Phantom:** ✅
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-063's run but for the clue name that varies by run, and Phantom's but for the drawbridge's random keys.
+   - Fork commit [`83b49202d2`](https://github.com/barefootbetters/scummvm/commit/83b49202d2) (7 files staged by name) is pushed. Its item log line came after the check run; the room check and the live runs used the final build.
 
 **Deviations and gaps:**
 

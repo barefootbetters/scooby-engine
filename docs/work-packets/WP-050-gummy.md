@@ -24,11 +24,19 @@ The first run matched 165. The odd line, the bells, came from two causes:
 
 The check ends each sound itself. It now lets each note's ring go before ending the note, as a real note outlasts its bell's swing. With those changes all 166 match.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**The tunes.** All nine match the trace's table: whistle, digits, the bells' notes and length.<br>**Entry.** Bell 1 is at depth 4 and the others at 10, clickables. Gummy is on his snore, stopped, a requires object hit by his cels. The donkey plays its idle once at depth 5. The opening is `Gummy_Puzzle.220B_`. The state is 0, Gummy will whistle again, the snore is 108, and the blink a multiple of 36 from 108 to 360.<br>**The whistle.** On tick 1 Gummy whistles `Gummy.Whistle1a`, with input held. Over, `220B2_` plays, held. Then state 3, and Gummy whistles again. The play-back goes `Gummy.Bell8` bell 5, `Bell7` bell 4, `Bell6` bell 3, `Bell5` bell 2, `Bell6` bell 3, the last ring bell 3's. Input is then free.<br>**The bells.** Bell 1, a wrong note, has Gummy whistle again at once, and the play-back repeats the whole tune. Bells 5, 4, 3, 2 and 3 then ring `Bell8`, `Bell7`, `Bell6`, `Bell5` and `Bell6`. With the last, `GummyPuzzle` is set, Gummy is met, the cursor is hidden, and the count is 71 after its tick. The station comes 74 ticks later.<br>**Gummy and the timers.** Clicking Gummy during the play-back does nothing; with the bells free, he whistles again. The snore comes 2 ticks after its count runs down (`Gummy.Snore`, his snore once), and the count goes back to 108. The blink plays the donkey's blink or idle once, with a new count. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from a profile in the original's form, repeated until the tune the clicks were for, `Gummy.Whistle1a`, came up (the fourth run):<br>**The whistle.** `220B_`, Gummy's whistle, `220B2_`, then the whistle and the play-back.<br>**A wrong bell.** Bell 1 brought the whistle again. In the play-back, the fifth note's ring waited for bell 3 to be free, then rang.<br>**The tune.** Bells 5, 4, 3, 2 and 3 rang it. The gang left for the railroad station 74 ticks later. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The earlier checks are identical to WP-049's run on both titles. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`ee1420a9c5`](https://github.com/barefootbetters/scummvm/commit/ee1420a9c5) (5 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **The tunes.** All nine match the trace's table: whistle, digits, the bells' notes and length.
+   - **Entry.** Bell 1 is at depth 4 and the others at 10, clickables. Gummy is on his snore, stopped, a requires object hit by his cels. The donkey plays its idle once at depth 5. The opening is `Gummy_Puzzle.220B_`. The state is 0, Gummy will whistle again, the snore is 108, and the blink a multiple of 36 from 108 to 360.
+   - **The whistle.** On tick 1 Gummy whistles `Gummy.Whistle1a`, with input held. Over, `220B2_` plays, held. Then state 3, and Gummy whistles again. The play-back goes `Gummy.Bell8` bell 5, `Bell7` bell 4, `Bell6` bell 3, `Bell5` bell 2, `Bell6` bell 3, the last ring bell 3's. Input is then free.
+   - **The bells.** Bell 1, a wrong note, has Gummy whistle again at once, and the play-back repeats the whole tune. Bells 5, 4, 3, 2 and 3 then ring `Bell8`, `Bell7`, `Bell6`, `Bell5` and `Bell6`. With the last, `GummyPuzzle` is set, Gummy is met, the cursor is hidden, and the count is 71 after its tick. The station comes 74 ticks later.
+   - **Gummy and the timers.** Clicking Gummy during the play-back does nothing; with the bells free, he whistles again. The snore comes 2 ticks after its count runs down (`Gummy.Snore`, his snore once), and the count goes back to 108. The blink plays the donkey's blink or idle once, with a new count.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from a profile in the original's form, repeated until the tune the clicks were for, `Gummy.Whistle1a`, came up (the fourth run):
+   - **The whistle.** `220B_`, Gummy's whistle, `220B2_`, then the whistle and the play-back.
+   - **A wrong bell.** Bell 1 brought the whistle again. In the play-back, the fifth note's ring waited for bell 3 to be free, then rang.
+   - **The tune.** Bells 5, 4, 3, 2 and 3 rang it. The gang left for the railroad station 74 ticks later.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

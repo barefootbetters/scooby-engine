@@ -24,11 +24,19 @@ The first run matched 173. The four other lines came from two causes, both in th
 
 The class and the reference didn't change. With the check rebuilt, all 177 match.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**Entry.** A render entity at depth −1001 under layer 0 holds the piano (depth −11), hotspots 2–8 and the keys (depth −1, the keys hidden) and the chandelier (depth −1, looping); the bull is a requires object in layer 0. The hotspots with keys (4, 5, 8) are on their `K`; 3–8 have no open hand. Artie is in state 14 as `OBJ_ARTIE_MASKED`, set `_3`; Daphne walks in. The opening is `Saloon.360A_`, the snacks needed 2.<br>**The exits,** gagged: each keeps the gang here with one of the four lines, held.<br>**The gag.** Artie clicked: Velma's `UNGAG_ARTIE` (55 steps) on tick 1. Her line on tick 19, Artie idle as `OBJ_ARTIE_3` and the moans off on tick 100, and on tick 166 `GAG_GONE_`, held, with the six open hands.<br>**The keys.** Each hotspot's click, its next state and the tick it stops; the three keys show at depth 1 with a `360G` line.<br>**The chains.** With three keys, then one, the exits keep the gang with the matching lines. Each key: ROOM_Artie, the chains on `A`, `B`, `C`, their sound on tick 36, and the saloon 71 + 3 × their steps ticks after entry, through movie 6 the last time. Back, Artie is `OBJ_ARTIE_2`, then `_1`, then free: a `360C` line, his clue, met, `GIVES` and the thanks.<br>**The piano, the bull, the moans, the stage, the keys saved:** the music group off while it plays its tune; `390A_`–`390A3_`, movie 5 and the pump handle; a moan on tick 37; `380A_`–`380A3_` by level; the keys written and read back. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from profiles in the original's form:<br>**The gag.** Artie clicked; Velma's line; `GAG_GONE_`, said by Artie, now ungagged.<br>**A key.** Hotspot 4 (on its `K`) clicked: it rests on `B` and `360G_` plays. The key clicked: ROOM_Artie, the chains and `Artie.Chains_A`, then the saloon again. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. On Phantom the earlier checks are identical to WP-050's run. On Showdown only the profile check differs: it writes the 11 new keys (416 to 427) and reads 23 back on import (426 to 449). The imported save has no saloon section, so those are the class's defaults for missing keys. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`d217d6c901`](https://github.com/barefootbetters/scummvm/commit/d217d6c901) (11 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **Entry.** A render entity at depth −1001 under layer 0 holds the piano (depth −11), hotspots 2–8 and the keys (depth −1, the keys hidden) and the chandelier (depth −1, looping); the bull is a requires object in layer 0. The hotspots with keys (4, 5, 8) are on their `K`; 3–8 have no open hand. Artie is in state 14 as `OBJ_ARTIE_MASKED`, set `_3`; Daphne walks in. The opening is `Saloon.360A_`, the snacks needed 2.
+   - **The exits,** gagged: each keeps the gang here with one of the four lines, held.
+   - **The gag.** Artie clicked: Velma's `UNGAG_ARTIE` (55 steps) on tick 1. Her line on tick 19, Artie idle as `OBJ_ARTIE_3` and the moans off on tick 100, and on tick 166 `GAG_GONE_`, held, with the six open hands.
+   - **The keys.** Each hotspot's click, its next state and the tick it stops; the three keys show at depth 1 with a `360G` line.
+   - **The chains.** With three keys, then one, the exits keep the gang with the matching lines. Each key: ROOM_Artie, the chains on `A`, `B`, `C`, their sound on tick 36, and the saloon 71 + 3 × their steps ticks after entry, through movie 6 the last time. Back, Artie is `OBJ_ARTIE_2`, then `_1`, then free: a `360C` line, his clue, met, `GIVES` and the thanks.
+   - **The piano, the bull, the moans, the stage, the keys saved:** the music group off while it plays its tune; `390A_`–`390A3_`, movie 5 and the pump handle; a moan on tick 37; `380A_`–`380A3_` by level; the keys written and read back.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from profiles in the original's form:
+   - **The gag.** Artie clicked; Velma's line; `GAG_GONE_`, said by Artie, now ungagged.
+   - **A key.** Hotspot 4 (on its `K`) clicked: it rests on `B` and `360G_` plays. The key clicked: ROOM_Artie, the chains and `Artie.Chains_A`, then the saloon again.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

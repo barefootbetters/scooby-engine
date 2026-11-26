@@ -18,11 +18,16 @@ title: "WP-030: Options and Credits"
 
 The reference is `wp030_ref.py`, written from the trace. It reads the art and the sound indexes through the repo's probes, and never runs the engine. It works the sliders in 32-bit floats where the slider keeps floats. At `script` level 3 the engine drives both rooms through their classes and logs 16 lines; the reference prints the same 16 on each title, none different.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ On both titles:<br>**The sliders.** The six markers are hidden and give three sliders: Showdown 363,232–551,232, 359,282–549,281 and 363,334–550,331. Volumes 256, 205 and 150 start the knobs at 1, 0.3359 and 0 (150 is under the original's 0.7 floor).<br>**Dragging.** Each slider is dragged twice through six points along and across its line, ending past its right or its left end. The value and the knob's place match at each point, and so do the volume and sample left on release (179 at the left end, 256 at the right). Phantom's sample is `Knights.Glass_Breaks.3`.<br>**Credits.** Each of the ten villains gets movie `0x21`–`0x31` and another name none. Movie 58 comes next. In Showdown, the TLC, WB and TGI texts (3600, 1555 and 5800 pixels) change parts at ticks 1977 and 2931 and end at 6006, then Sign In; the game ends with the player gone, `StartRoom` `ROOM_Difficulty` and all 75 movies seen. A skip at tick 40 reaches Sign In at tick 41 with the player kept. |
-| 2. Live, Showdown | ✅ The input played through `test_script`, minimized:<br>**Options.** The screen showed the three nails at 0.167 (ScummVM's default 192). The music nail was dragged by its head to 0.699 (volume 233), and the sounds nail past its left end (179, with the splat). Both volumes were in the config file afterwards.<br>**Credits.** The TLC logo and text rolled while Shaggy and Scooby said `Credits.1100A2_`'s four lines; Escape went to Sign In. |
-| 3. Build and diff | ✅ Scooby-only build: 19 files, 0 errors, 0 warnings. The exit, click, inventory, hint, profile, menu and Sign In checks are identical to WP-028's run, and the room check to WP-020's (69 and 53 rooms). Fork commit [`7e184fcf1a`](https://github.com/barefootbetters/scummvm/commit/7e184fcf1a) stages its 10 files by name, inside `engines/scooby/`, and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ On both titles:
+   - **The sliders.** The six markers are hidden and give three sliders: Showdown 363,232–551,232, 359,282–549,281 and 363,334–550,331. Volumes 256, 205 and 150 start the knobs at 1, 0.3359 and 0 (150 is under the original's 0.7 floor).
+   - **Dragging.** Each slider is dragged twice through six points along and across its line, ending past its right or its left end. The value and the knob's place match at each point, and so do the volume and sample left on release (179 at the left end, 256 at the right). Phantom's sample is `Knights.Glass_Breaks.3`.
+   - **Credits.** Each of the ten villains gets movie `0x21`–`0x31` and another name none. Movie 58 comes next. In Showdown, the TLC, WB and TGI texts (3600, 1555 and 5800 pixels) change parts at ticks 1977 and 2931 and end at 6006, then Sign In; the game ends with the player gone, `StartRoom` `ROOM_Difficulty` and all 75 movies seen. A skip at tick 40 reaches Sign In at tick 41 with the player kept.
+2. **Live, Showdown:** ✅ The input played through `test_script`, minimized:
+   - **Options.** The screen showed the three nails at 0.167 (ScummVM's default 192). The music nail was dragged by its head to 0.699 (volume 233), and the sounds nail past its left end (179, with the splat). Both volumes were in the config file afterwards.
+   - **Credits.** The TLC logo and text rolled while Shaggy and Scooby said `Credits.1100A2_`'s four lines; Escape went to Sign In.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 
