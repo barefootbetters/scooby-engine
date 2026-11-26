@@ -11,6 +11,39 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-26 — Ship the free Google TV app first
+
+**Context.** The engine's Google TV work has two possible first goals: get an
+app onto Google TV, or get a first paying customer. They share the technology
+but not necessarily the first game. Licensed TerraGlyph titles are gated on
+rights that aren't in hand, and the studio's internal review found no paid
+first product that is both lawful and defensible today: the freeware classics
+ScummVM distributes (*Beneath a Steel Sky*, *Flight of the Amazon Queen* and
+others) may only be distributed free, and the openly licensed candidate
+reviewed earlier needed several assets cleared or replaced. Microsoft Copilot
+recommended putting the free app first; Jeff relayed that recommendation, and
+[WP-084](../work-packets/WP-084-google-tv-first-release.md) was drafted from it.
+
+**Decision (Jeff, 2026-11-26).** "Log the decision to ship the free Google TV
+app first." **The first Google TV / Android TV release is a free, standalone
+app built from the fork, with a freeware classic included;** paid distribution
+comes after it. WP-084 is the vehicle, with *Beneath a Steel Sky* as its game.
+
+**Scope boundary.**
+
+- **In:** the priority order (free app first, paid later) and WP-084 as the
+  work that delivers it.
+- **Out (not decided here):** WP-084's Gate 0. Revolution Software's
+  confirmation, or Jeff's separate decision to proceed on the freeware license
+  alone, is still required before implementation starts. Also out: WP-084's
+  D1–D5 (app identity, TerraGlyph in the build, account type, signing key,
+  audience), the paid product and its licensing, and any Google Play launch
+  date or public promise. The product name and prices stay private under the
+  [2026-11-26 naming decision](#2026-11-26--public-naming-the-packaged-edition-targets-google-tv).
+
+**Tracked as:** [WP-084](../work-packets/WP-084-google-tv-first-release.md)
+and its run sheet [EC-007](../execution-checklists/EC-007-google-tv-first-release.md).
+
 ## 2026-11-26 — Public naming: the packaged edition targets Google TV
 
 **Context.** The studio's plan for a ready-to-run (packaged) edition of the engine

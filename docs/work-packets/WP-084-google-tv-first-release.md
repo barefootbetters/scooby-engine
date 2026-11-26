@@ -39,6 +39,9 @@ computer.**
 
 ## Background
 
+- **Decided priority.** Shipping this free app before any paid distribution
+  is Jeff's [2026-11-26 decision](../ai/DECISIONS.md#2026-11-26--ship-the-free-google-tv-app-first).
+  It doesn't clear Gate 0.
 - **Why a freeware classic first.** Licensed TerraGlyph titles are gated on
   rights that aren't in hand. The ScummVM freeware classics let the publishing
   path be built and proven now. The candidate comparison (BASS, *Flight of the
