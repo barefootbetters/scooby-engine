@@ -283,3 +283,8 @@ this WP):
 - **Fork maintenance.** This is the fork's first change outside
   `engines/terraglyph/`; keep it small and isolated so upstream merges stay
   clean.
+- **Possible re-scope.** [WP-085](WP-085-tv-app-pipeline.md) (drafted
+  2026-11-26) plans a multi-game app: library, import, verified test packages,
+  updates. If Jeff picks its D0 option (a), this WP becomes the store release
+  of that app, and scope items 4–5 (direct launch, single-game posture) and
+  the gamepad-only input give way to WP-085's design.
