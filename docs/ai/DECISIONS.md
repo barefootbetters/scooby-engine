@@ -11,6 +11,53 @@ the ones specific to this engine.
 
 ---
 
+## 2026-11-26 — Ship the free Google TV app first
+
+**Context.** The engine's Google TV work has two possible first goals: get an
+app onto Google TV, or get a first paying customer. They share the technology
+but not necessarily the first game. Licensed TerraGlyph titles are gated on
+rights that aren't in hand, and the studio's internal review found no paid
+first product that is both lawful and defensible today: the freeware classics
+ScummVM distributes (*Beneath a Steel Sky*, *Flight of the Amazon Queen* and
+others) may only be distributed free, and the openly licensed candidate
+reviewed earlier needed several assets cleared or replaced. Microsoft Copilot
+recommended putting the free app first; Jeff relayed that recommendation, and
+[WP-084](../work-packets/WP-084-google-tv-first-release.md) was drafted from it.
+
+**Decision (Jeff, 2026-11-26).** "Log the decision to ship the free Google TV
+app first." **The first Google TV / Android TV release is a free app built
+from the fork, with a freeware classic included;** paid distribution comes
+after it.
+
+**Sequencing (Jeff, 2026-11-26, the same day).** Copilot then recommended
+proving the delivery pipeline before choosing the first shipped game, and
+[WP-085](../work-packets/WP-085-tv-app-pipeline.md) was drafted from it: a
+multi-game app with a library, import of legally obtained games, verified
+game-data packages, and updates. Asked how WP-085 relates to WP-084, Jeff
+answered: "Pipeline first (a)." **WP-085 builds the app first; WP-084 is
+re-scoped as that app's free Google Play release,** a multi-game app rather
+than a single-game one. **The first bundled game is not decided here:** WP-084
+plans *Beneath a Steel Sky*, subject to its Gate 0.
+
+**Scope boundary.**
+
+- **In:** the priority order (free app first, paid later), the sequencing
+  (WP-085, then WP-084), and WP-084's re-scope.
+- **Out (not decided here):** the first bundled game, and WP-084's Gate 0. Revolution Software's
+  confirmation, or Jeff's separate decision to proceed on the freeware license
+  alone, is still required before WP-084's implementation starts (WP-085 needs
+  no rights holder: it distributes no game). Also out: WP-085's D1–D4 and
+  WP-084's remaining decisions (app identity, account type, signing key,
+  audience, input requirement), the paid product and its licensing, and any
+  Google Play launch date or public promise. The product name and prices stay
+  private under the
+  [2026-11-26 naming decision](#2026-11-26--public-naming-the-packaged-edition-targets-google-tv).
+
+**Tracked as:** [WP-085](../work-packets/WP-085-tv-app-pipeline.md) with
+[EC-008](../execution-checklists/EC-008-tv-app-pipeline.md), then
+[WP-084](../work-packets/WP-084-google-tv-first-release.md) with
+[EC-007](../execution-checklists/EC-007-google-tv-first-release.md).
+
 ## 2026-11-26 — Public naming: the packaged edition targets Google TV
 
 **Context.** The studio's plan for a ready-to-run (packaged) edition of the engine

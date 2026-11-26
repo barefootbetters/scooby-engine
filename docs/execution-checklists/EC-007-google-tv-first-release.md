@@ -10,7 +10,7 @@ title: "EC-007: First Google TV release run sheet"
 build from a tagged commit, one logged device run, one Play submission path.
 Defects found are logged as one-line gaps and the run continues; fixes go to
 the WP's branch or a follow-up WP, never improvised mid-run.
-**Status:** not started. ⏸ Blocked on WP-084 Gate 0.
+**Status:** not started. ⏸ Blocked on WP-085 and WP-084 Gate 0.
 
 **Evidence rule:** every checked box cites a log line, a command output or a
 screenshot captured during the run. A box with no capture stays unchecked.
@@ -50,9 +50,10 @@ screenshot captured during the run. A box with no capture stays unchecked.
 - [ ] Previous builds uninstalled; fresh install over `adb`; `logcat` capture
       running.
 - [ ] Launcher tile shows the app's banner with its name.
-- [ ] First launch adds the bundled game and **starts BASS directly** (log
-      line + screenshot); no ScummVM launcher appears.
-- [ ] Second launch starts BASS directly again.
+- [ ] First launch adds the bundled game and opens the library with **BASS
+      selected**; one button press starts it (log line + screenshot).
+- [ ] Back from the library reaches the TV home screen; quitting the game
+      returns to the library.
 
 ## Step 4 — Playthrough with a gamepad (time-box: 4:00)
 
