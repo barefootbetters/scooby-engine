@@ -18,11 +18,19 @@ title: "WP-028: Sign In and the new game"
 
 The reference is `wp028_ref.py`, written from the trace. It reads the art and the sound indexes through the repo's probes, and never runs the engine. At `script` level 3 the engine drives Sign In through its class and logs 41 lines; the reference prints the same 41 on each title, none different.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ On both titles:<br>**The room.** The list and the typed field are where their placements say (Showdown 184,210 and 192,153; Phantom 118,187 and 157,130). The 36 letter buttons type `M123456789ABCDEFGHIJKL0NOPQRSTUVWXYZ` in placement order. Typing starts on tick 61, the prompt on tick 90, and the idle line on tick 1080.<br>**Names.** Five names lay out letter by letter at the font's first-cel widths, centred in 240 pixels.<br>**Typing.** Keys and buttons: case, the 10-letter limit, no leading or double space, backspace, and Enter playing. Keys before the prompt are dropped.<br>**The list.** Hover holds strictly inside each row, the arrows show and hide over 14 clicks, and Delete removes the scrolled-to last player.<br>**Leaving.** A saved player clicked twice loads their slot. A new player gets a new game at the level select, with Showdown's story values (Phantom: none). Quit goes to `ROOM_Quit`. |
-| 2. Live, Showdown | ✅ The input played through `test_script`, minimized, with keys sent as key events:<br>**A new player.** `scooby` typed, the `1` button and backspace showed `SCOOBY` centred. Play: Shaggy's 5.4 s line, a new game, slot 1, the level select. Spooky played movie 1 and opened Town Center, and `SCOOBY` was saved in slot 1.<br>**The saved player.** The next start listed `SCOOBY`, lit up the name under the mouse, and loaded Town Center on two clicks.<br>**Delete.** A third start selected `SCOOBY` and Delete removed the save. |
-| 3. Build and diff | ✅ Scooby-only build: 18 files, 0 errors, 0 warnings. The exit, click, inventory, hint, profile (with the WP-026 import) and menu checks are identical to WP-027's run. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`c575e2625f`](https://github.com/barefootbetters/scummvm/commit/c575e2625f) stages its 12 files by name, inside `engines/scooby/`, and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ On both titles:
+   - **The room.** The list and the typed field are where their placements say (Showdown 184,210 and 192,153; Phantom 118,187 and 157,130). The 36 letter buttons type `M123456789ABCDEFGHIJKL0NOPQRSTUVWXYZ` in placement order. Typing starts on tick 61, the prompt on tick 90, and the idle line on tick 1080.
+   - **Names.** Five names lay out letter by letter at the font's first-cel widths, centred in 240 pixels.
+   - **Typing.** Keys and buttons: case, the 10-letter limit, no leading or double space, backspace, and Enter playing. Keys before the prompt are dropped.
+   - **The list.** Hover holds strictly inside each row, the arrows show and hide over 14 clicks, and Delete removes the scrolled-to last player.
+   - **Leaving.** A saved player clicked twice loads their slot. A new player gets a new game at the level select, with Showdown's story values (Phantom: none). Quit goes to `ROOM_Quit`.
+2. **Live, Showdown:** ✅ The input played through `test_script`, minimized, with keys sent as key events:
+   - **A new player.** `scooby` typed, the `1` button and backspace showed `SCOOBY` centred. Play: Shaggy's 5.4 s line, a new game, slot 1, the level select. Spooky played movie 1 and opened Town Center, and `SCOOBY` was saved in slot 1.
+   - **The saved player.** The next start listed `SCOOBY`, lit up the name under the mouse, and loaded Town Center on two clicks.
+   - **Delete.** A third start selected `SCOOBY` and Delete removed the save.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

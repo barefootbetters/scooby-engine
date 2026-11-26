@@ -20,11 +20,25 @@ The reference is `wp055_ref.py`: WP-053's, plus the corral, written from the tra
 
 The first run matched 195. The odd line was the reference's. It had Rascal toss as soon as his turn came, but he waits for his head to be still (`0x41D860`, state 1), and his head replays its idle at random while he waits. The run's turn came mid-idle. The check now times his horseshoe from his toss. The class didn't change, and the second run matched all 196.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**Entry.** The piles, the counter's box and numbers (0 and 1 for a new game's snack), the meter at the arrow's place sweeping forward, Scooby, Rascal's head and body, and the three pegs, each at its depth. The exit is there, the meter's placement isn't built, and it is Scooby's turn.<br>**The meter.** Back at tick 55, 37, 19 and forward at 109, 73, 37 by level: Scooby, in front, sees its end the tick after.<br>**A throw.** Held on step 2, strength 2. His pile goes on at tick 6, his horseshoe at 45 (one of strength 2's, ringing as its `H`). It lands and tells at arc + 3 × its steps + 3 × its peg's + 35, since it is ticked in the walk it is made in. Rascal's turn comes a tick later, and his horseshoe 21 ticks into his toss, by its rules.<br>**Chosen horseshoes:**<br>- `1x01H`: peg 1, a snack, done at tick 183.<br>- `3x00`: a miss, done at 87.<br>- `4x02`: at depth 10000, done at 96.<br>- Rascal's 2: peg 2, done at 165.<br>- Rascal's 8: taken as 9, done at 90.<br>- Rascal's 5: done at 117.<br>Each has its sound, and each stays paused on its last sequence.<br>**A whole game.** Ten throws each, both piles on step 10, 20 horseshoes paused, a snack per ringer, then Chase B5. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from a profile starting in the corral, with the button held to stop the meter:<br>**Scooby:** `2x02` and `1x04` miss; `1x06H` rings peg 1 with its peg sound, and the counter goes from 01 to 02.<br>**Rascal:** his 3 rings peg 3; his 6 and 9 miss. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The earlier checks are identical to WP-053's run on both titles. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`da9ad7b744`](https://github.com/barefootbetters/scummvm/commit/da9ad7b744) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **Entry.** The piles, the counter's box and numbers (0 and 1 for a new game's snack), the meter at the arrow's place sweeping forward, Scooby, Rascal's head and body, and the three pegs, each at its depth. The exit is there, the meter's placement isn't built, and it is Scooby's turn.
+   - **The meter.** Back at tick 55, 37, 19 and forward at 109, 73, 37 by level: Scooby, in front, sees its end the tick after.
+   - **A throw.** Held on step 2, strength 2. His pile goes on at tick 6, his horseshoe at 45 (one of strength 2's, ringing as its `H`). It lands and tells at arc + 3 × its steps + 3 × its peg's + 35, since it is ticked in the walk it is made in. Rascal's turn comes a tick later, and his horseshoe 21 ticks into his toss, by its rules.
+   - **Chosen horseshoes:**
+     - `1x01H`: peg 1, a snack, done at tick 183.
+     - `3x00`: a miss, done at 87.
+     - `4x02`: at depth 10000, done at 96.
+     - Rascal's 2: peg 2, done at 165.
+     - Rascal's 8: taken as 9, done at 90.
+     - Rascal's 5: done at 117.
+   - Each has its sound, and each stays paused on its last sequence.
+   - **A whole game.** Ten throws each, both piles on step 10, 20 horseshoes paused, a snack per ringer, then Chase B5.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from a profile starting in the corral, with the button held to stop the meter:
+   - **Scooby:** `2x02` and `1x04` miss; `1x06H` rings peg 1 with its peg sound, and the counter goes from 01 to 02.
+   - **Rascal:** his 3 rings peg 3; his 6 and 9 miss.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

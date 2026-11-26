@@ -20,11 +20,23 @@ The reference is `wp068_ref.py`: WP-066's, plus the storage room, written from t
 
 The first run differed on one line, and the check was wrong. Its helper that waits for the room to change tested its result before ticking, so after the first door exit it returned that exit's movie (65) for the next three. The engine's log showed each exit queued with its own movie. The helper now clears the result first. The second run matched all 88 lines on Phantom and all 224 on Showdown, with no warnings.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**Placements.** In a new game the door, the screwdriver and the shield are requires objects at depth 0, and Fred stands at (284, 376). With the door begun and both items had: the door's `+0x70` (kept as its rollover) is the screwdriver, neither item is built, and Fred is at (140, 363). Open: no door. Hotspot 3 is a clickable with the open hand.<br>**Entry:** the door open, from the kitchen, `200A_`; back through the first door movie, `200D_`; otherwise nothing.<br>**The door:** with the arrow, movie 65, then `200B1_`, `200B2_`, then movie 65 again. With the screwdriver: `DoorClicked` 1, the screwdriver out of its slot, the arrow back, the door's `+0x70` the screwdriver, movie 62. Then movies 63 and 64, each back to this room, to `DoorClicked` 3.<br>**Fred takes the screwdriver** at tick 1, with `Fred_Takes_Screwdriver`, the screwdriver hidden. It is in the toolbar at tick 100 (his step 33); at tick 118 he is idle and `200C_` holds input.<br>**Daphne takes the shield** likewise, then `400A_`; with Brad met, `200G_`.<br>**Leaving** while either is taken still gives both.<br>**The hotspots:** 1 and 2 cycle their three lines; 3 says `200XA_`.<br>**The profile:** a new game's `DoorClicked=0`, and read back.<br>Showdown prints that it has no kitchen storage room. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The takings:** a click on the shield, and Daphne took it (`400A_`); a click on the screwdriver, and Fred took it (`200C_`).<br>**The door,** with the screwdriver in the toolbar: on the door, movie 62 and `200D_`; two more clicks, movies 63 and 64. The door stood open, with Fred beside it. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-066's run but for the clue name that varies by run. Phantom's differ only by the room's new profile key, the drawbridge's random keys, and Ewan's `CurrentQuestion`, which is drawn at random.<br>Fork commit [`cb312009e9`](https://github.com/barefootbetters/scummvm/commit/cb312009e9) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **Placements.** In a new game the door, the screwdriver and the shield are requires objects at depth 0, and Fred stands at (284, 376). With the door begun and both items had: the door's `+0x70` (kept as its rollover) is the screwdriver, neither item is built, and Fred is at (140, 363). Open: no door. Hotspot 3 is a clickable with the open hand.
+   - **Entry:** the door open, from the kitchen, `200A_`; back through the first door movie, `200D_`; otherwise nothing.
+   - **The door:** with the arrow, movie 65, then `200B1_`, `200B2_`, then movie 65 again. With the screwdriver: `DoorClicked` 1, the screwdriver out of its slot, the arrow back, the door's `+0x70` the screwdriver, movie 62. Then movies 63 and 64, each back to this room, to `DoorClicked` 3.
+   - **Fred takes the screwdriver** at tick 1, with `Fred_Takes_Screwdriver`, the screwdriver hidden. It is in the toolbar at tick 100 (his step 33); at tick 118 he is idle and `200C_` holds input.
+   - **Daphne takes the shield** likewise, then `400A_`; with Brad met, `200G_`.
+   - **Leaving** while either is taken still gives both.
+   - **The hotspots:** 1 and 2 cycle their three lines; 3 says `200XA_`.
+   - **The profile:** a new game's `DoorClicked=0`, and read back.
+   - Showdown prints that it has no kitchen storage room.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The takings:** a click on the shield, and Daphne took it (`400A_`); a click on the screwdriver, and Fred took it (`200C_`).
+   - **The door,** with the screwdriver in the toolbar: on the door, movie 62 and `200D_`; two more clicks, movies 63 and 64. The door stood open, with Fred beside it.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-066's run but for the clue name that varies by run. Phantom's differ only by the room's new profile key, the drawbridge's random keys, and Ewan's `CurrentQuestion`, which is drawn at random.
+   - Fork commit [`cb312009e9`](https://github.com/barefootbetters/scummvm/commit/cb312009e9) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

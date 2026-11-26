@@ -24,11 +24,23 @@ The first run matched every line but the storage room's, and both differences th
 
 With the check now letting each room's opening play through first, all 115 lines match.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** each room gets its own.<br>**The first passage:** Velma walks in from the armory's slide, Daphne from the storage room, and nobody from the second passage.<br>**The wall of fire:** a requires object burning (`FLAMEA`) with its sound. At each level it needs the level's snacks plus two. Clicked with none, or with one too few, it gives that level's line, holding input, and the snack box flashes. With enough, it goes out through movie 39. Back in the room it shows `FLAMEB` without the sound. `GargoyleFlameActive` saves as `No`; only `Yes` loads as burning, and a new game lights it again.<br>**The storage room:** the rope is a requires object until had. The hotspots' lines run `370X_`, `370X1_`, `370X2_`, then start over, without holding input; hotspot 3 has none. The rope with the arrow gives `370B_` before the well and `370A_` after it, holding input. As the line ends, Velma takes the rope in the same tick, with the cursor out and input held. The rope reaches the toolbar 102 ticks later (her step 34), and she is done at 165. Leaving before then still gives the rope.<br>**The treasury:** the Princess clicked with the arrow sets `FinalClue` and goes to `ROOM_Suspect_Chooser` through movie 55. With an item, or a click elsewhere, nothing happens.<br>Showdown prints that it has no secret passages. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The fire** clicked with no snacks: `Treasury.360A_`.<br>**Starting with `GargoyleFlameActive=No`:** the gargoyle with the fire out.<br>**The rope:** `370B_`, then Velma took it, and it went into the toolbar.<br>**The Princess:** movie 55, then the suspects with the final clue. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).<br>The other checks match WP-070's run, except that Phantom's profile check now writes and imports `GargoyleFlameActive`, and some random keys vary by run: the drawbridge's, Ewan's `CurrentQuestion`, and Showdown's first clue.<br>Fork commit [`287fe5637b`](https://github.com/barefootbetters/scummvm/commit/287fe5637b) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** each room gets its own.
+   - **The first passage:** Velma walks in from the armory's slide, Daphne from the storage room, and nobody from the second passage.
+   - **The wall of fire:** a requires object burning (`FLAMEA`) with its sound. At each level it needs the level's snacks plus two. Clicked with none, or with one too few, it gives that level's line, holding input, and the snack box flashes. With enough, it goes out through movie 39. Back in the room it shows `FLAMEB` without the sound. `GargoyleFlameActive` saves as `No`; only `Yes` loads as burning, and a new game lights it again.
+   - **The storage room:** the rope is a requires object until had. The hotspots' lines run `370X_`, `370X1_`, `370X2_`, then start over, without holding input; hotspot 3 has none. The rope with the arrow gives `370B_` before the well and `370A_` after it, holding input. As the line ends, Velma takes the rope in the same tick, with the cursor out and input held. The rope reaches the toolbar 102 ticks later (her step 34), and she is done at 165. Leaving before then still gives the rope.
+   - **The treasury:** the Princess clicked with the arrow sets `FinalClue` and goes to `ROOM_Suspect_Chooser` through movie 55. With an item, or a click elsewhere, nothing happens.
+   - Showdown prints that it has no secret passages.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The fire** clicked with no snacks: `Treasury.360A_`.
+   - **Starting with `GargoyleFlameActive=No`:** the gargoyle with the fire out.
+   - **The rope:** `370B_`, then Velma took it, and it went into the toolbar.
+   - **The Princess:** movie 55, then the suspects with the final clue.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).
+   - The other checks match WP-070's run, except that Phantom's profile check now writes and imports `GargoyleFlameActive`, and some random keys vary by run: the drawbridge's, Ewan's `CurrentQuestion`, and Showdown's first clue.
+   - Fork commit [`287fe5637b`](https://github.com/barefootbetters/scummvm/commit/287fe5637b) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

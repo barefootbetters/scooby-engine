@@ -24,11 +24,26 @@ The first run differed on two lines, both the check's own bugs:
 
 The second run matched all 25 lines on Phantom and all 216 on Showdown.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The placements.** The bottle a requires object at depth 0; the hotspot a clickable at its `priority=` 150, placed on its B.<br>**The openings.** From the town, Fred walks in (`DL`, 50 in front). The first visit has `Souvenir_Shop.1201_`, holding input, and sets `IntroDone`; the next has none. While `Screaming`, `330A1_` and one of Jane's screams, 1, 2, 3 and 5 over 100 visits.<br>**The bottle.** With the arrow, `120A_` holds input. With the tokens, they leave the toolbar, the cursor is the arrow, and the shop holds input. Fred fetches it at tick 1 (`OBJ_FRED_P03_GET_WATER_BOTTLE`, state 13, with `Fred_Takes_Bottle`); the shelf shows `EMPTYB`. At tick 67 the bottle is in the toolbar and `120B_` holds input. On the next visit the bottle is a plain sprite.<br>**Leaving while bought** still puts the bottle in the toolbar.<br>**The hotspot:** B gives `120X_`, C nothing, D (next A) `120X1_`.<br>**The profile:** `IntroDone`, cleared by the reset.<br>Showdown prints that it has no souvenir shop. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized, from a profile with the tokens in the toolbar:<br>**The arrow:** the bottle clicked with the arrow gave `120A_`, Shaggy and Fred.<br>**The tokens:** taken from the open toolbar onto the bottle, they left their slot. Fred fetched the bottle with `Fred_Takes_Bottle`; it went in the toolbar's first slot, and Fred said `120B_`. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).<br>**Showdown:** its other checks are identical to WP-057's run but for the imported clue name in the profile check. That line differs between this build's own two runs, so it varies by run (see below).<br>**Phantom:** its checks differ only as expected:<br>• the setup check now shows the shop's first-visit opening;<br>• the profile has the shop's `IntroDone`;<br>• the drawbridge's keys are random by design.<br>Fork commit [`831ce91cc3`](https://github.com/barefootbetters/scummvm/commit/831ce91cc3) (9 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The placements.** The bottle a requires object at depth 0; the hotspot a clickable at its `priority=` 150, placed on its B.
+   - **The openings.** From the town, Fred walks in (`DL`, 50 in front). The first visit has `Souvenir_Shop.1201_`, holding input, and sets `IntroDone`; the next has none. While `Screaming`, `330A1_` and one of Jane's screams, 1, 2, 3 and 5 over 100 visits.
+   - **The bottle.** With the arrow, `120A_` holds input. With the tokens, they leave the toolbar, the cursor is the arrow, and the shop holds input. Fred fetches it at tick 1 (`OBJ_FRED_P03_GET_WATER_BOTTLE`, state 13, with `Fred_Takes_Bottle`); the shelf shows `EMPTYB`. At tick 67 the bottle is in the toolbar and `120B_` holds input. On the next visit the bottle is a plain sprite.
+   - **Leaving while bought** still puts the bottle in the toolbar.
+   - **The hotspot:** B gives `120X_`, C nothing, D (next A) `120X1_`.
+   - **The profile:** `IntroDone`, cleared by the reset.
+   - Showdown prints that it has no souvenir shop.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized, from a profile with the tokens in the toolbar:
+   - **The arrow:** the bottle clicked with the arrow gave `120A_`, Shaggy and Fred.
+   - **The tokens:** taken from the open toolbar onto the bottle, they left their slot. Fred fetched the bottle with `Fred_Takes_Bottle`; it went in the toolbar's first slot, and Fred said `120B_`.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms).
+   - **Showdown:** its other checks are identical to WP-057's run but for the imported clue name in the profile check. That line differs between this build's own two runs, so it varies by run (see below).
+   - **Phantom:** its checks differ only as expected:
+     - the setup check now shows the shop's first-visit opening;
+     - the profile has the shop's `IntroDone`;
+     - the drawbridge's keys are random by design.
+   - Fork commit [`831ce91cc3`](https://github.com/barefootbetters/scummvm/commit/831ce91cc3) (9 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

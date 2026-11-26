@@ -18,11 +18,25 @@ title: "WP-072: Phantom's royal gallery and magic mirror room"
 
 The reference is `wp073_ref.py`: WP-071's, plus the two rooms, written from the trace before the engine ran. It reads the placements from the art. It never runs the engine. At `script` level 3 the chase check now has 6 gallery lines on Phantom (121 in all), and one on Showdown, which has no such rooms (229 in all). Every line matched on both titles on the first run after one fix in the check (its `findSprite` matched the sprite's label, not its object name, so it missed the mirror).
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** each room gets its own.<br>**The gallery's entry:** from the dining room Velma walks in, from the magic mirror room Shaggy; the way on needs the level's snacks plus two (2, 3, 4).<br>**The mirror:** bare it is stopped and the way on hidden. Clicked, it cycles `210A_`, `210A1_`, `210A2_`. The found mirror used on it, Shaggy hangs it (`Shaggy_Puts_Mirror`), it loops, the way on opens, `210B_` by level plays and the snack box flashes. On return it is hung for good.<br>**The red ball** shown: `RedBallFound` set, and the gallery re-entered through movie 3.<br>**The way to the magic mirror room:** with too few snacks it blocks, `210C_` by level and the snack box; with enough, it lets through.<br>**The magic mirror room:** its hum; `HOTSPOT2` toggles `310X1_`/`310X2_`, `HOTSPOT3` holds for `HOTSPOT3_`, `HOTSPOT4` cycles `310X2_`/`310XA2_`/`310XA3_`; the fifth hotspot and the skull are sprites, the four cameras exits.<br>Showdown prints that it has no gallery. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The gallery** draws with the mirror, the hotspots, the red ball and both ways out hit-testable.<br>**The bare mirror** clicked: `Royal_Gallery.210A_`.<br>**The way to the magic mirror room** clicked with no snacks: `Royal_Gallery.210C_`, blocked.<br>**The found mirror used:** Shaggy hangs it (`Royal_Gallery.Shaggy_Puts_Mirror`), the mirror shows and the way on opens.<br>**The magic mirror room** draws, and its hotspots give their lines. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).<br>The other checks match WP-071's run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`, Showdown's first clue).<br>Fork commit [`df99151f9b`](https://github.com/barefootbetters/scummvm/commit/df99151f9b) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** each room gets its own.
+   - **The gallery's entry:** from the dining room Velma walks in, from the magic mirror room Shaggy; the way on needs the level's snacks plus two (2, 3, 4).
+   - **The mirror:** bare it is stopped and the way on hidden. Clicked, it cycles `210A_`, `210A1_`, `210A2_`. The found mirror used on it, Shaggy hangs it (`Shaggy_Puts_Mirror`), it loops, the way on opens, `210B_` by level plays and the snack box flashes. On return it is hung for good.
+   - **The red ball** shown: `RedBallFound` set, and the gallery re-entered through movie 3.
+   - **The way to the magic mirror room:** with too few snacks it blocks, `210C_` by level and the snack box; with enough, it lets through.
+   - **The magic mirror room:** its hum; `HOTSPOT2` toggles `310X1_`/`310X2_`, `HOTSPOT3` holds for `HOTSPOT3_`, `HOTSPOT4` cycles `310X2_`/`310XA2_`/`310XA3_`; the fifth hotspot and the skull are sprites, the four cameras exits.
+   - Showdown prints that it has no gallery.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The gallery** draws with the mirror, the hotspots, the red ball and both ways out hit-testable.
+   - **The bare mirror** clicked: `Royal_Gallery.210A_`.
+   - **The way to the magic mirror room** clicked with no snacks: `Royal_Gallery.210C_`, blocked.
+   - **The found mirror used:** Shaggy hangs it (`Royal_Gallery.Shaggy_Puts_Mirror`), the mirror shows and the way on opens.
+   - **The magic mirror room** draws, and its hotspots give their lines.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).
+   - The other checks match WP-071's run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`, Showdown's first clue).
+   - Fork commit [`df99151f9b`](https://github.com/barefootbetters/scummvm/commit/df99151f9b) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

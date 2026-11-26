@@ -20,11 +20,22 @@ The reference is `wp073_ref.py`: WP-072's, plus the room, written from the trace
 
 `ROOM_P31_KST` is the last room of the audit's group 6, and the only one of the group that is a set piece of its own — the game Phantom gives where Showdown has Pie Noon ([WP-055](WP-055-pie-noon.md)). The two are separate classes sharing a framework; the asserts in Phantom's `enter` still read "...specified in Pie Noon". It splits into no further packet.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The class:** `ROOM_P31_KST` gets `KstRoom`.<br>**The markers:** Shaggy's post; the three knight seats (sorted by y, x read 40 less); the bench-end, bench-floor (y only), drink-spawn and bench-start rows; all sorted by y.<br>**The sprites:** the three table overlays at depth 0; the two counter digits at depth 100, the smaller x the tens.<br>**Entry:** the quota by level (5, 4, 3); the narrator's intro and the ambience found.<br>**The round:** the six `Correct<n>_NARRATOR` lines and `Knights.Zoinks` found; the exit to the dining room.<br>Showdown prints that it has no KST. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The room** draws with the table overlays, the counter scroll, the server and the dishes.<br>**The serving loop** runs: knights walk in and are served (`Knights.Zoinks`), the counter counts the quota down (3 → 2 → 1 → 0), and the room then requests `ROOM_P12_Dining_Room`.<br>**The music, ambience and narrator intro** play on entry. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).<br>The other checks match the prior run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`, Showdown's first clue).<br>Fork commit [`7b87bcb0b7`](https://github.com/barefootbetters/scummvm/commit/7b87bcb0b7) (7 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The class:** `ROOM_P31_KST` gets `KstRoom`.
+   - **The markers:** Shaggy's post; the three knight seats (sorted by y, x read 40 less); the bench-end, bench-floor (y only), drink-spawn and bench-start rows; all sorted by y.
+   - **The sprites:** the three table overlays at depth 0; the two counter digits at depth 100, the smaller x the tens.
+   - **Entry:** the quota by level (5, 4, 3); the narrator's intro and the ambience found.
+   - **The round:** the six `Correct<n>_NARRATOR` lines and `Knights.Zoinks` found; the exit to the dining room.
+   - Showdown prints that it has no KST.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The room** draws with the table overlays, the counter scroll, the server and the dishes.
+   - **The serving loop** runs: knights walk in and are served (`Knights.Zoinks`), the counter counts the quota down (3 → 2 → 1 → 0), and the room then requests `ROOM_P12_Dining_Room`.
+   - **The music, ambience and narrator intro** play on entry.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit, click, inventory and hint checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms, 0 bad).
+   - The other checks match the prior run but for the usual per-run random keys (the drawbridge's crest, Ewan's `CurrentQuestion`, Showdown's first clue).
+   - Fork commit [`7b87bcb0b7`](https://github.com/barefootbetters/scummvm/commit/7b87bcb0b7) (7 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

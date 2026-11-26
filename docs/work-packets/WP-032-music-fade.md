@@ -18,11 +18,17 @@ title: "WP-032: The music's fade"
 
 The reference is `wp032_ref.py` with `wp032_fade.py`, written from the trace; it reads the sound indexes through the repo's probe and never runs the engine. At `script` level 3 the engine drives the fade through `Sound`, the rooms and Big Head and logs 10 lines; the reference prints the same 10 on each title, none different.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ On both titles:<br>**The steps.** Down to 90 every 2 ticks: 99 on tick 2, 90 on tick 20. Up to 100 every 4: 91 on tick 4, 100 on tick 40. A fade down cut short at 96 by up every 3 reaches 100 on tick 12. A fade down at 90 stops on its first step. The cancel leaves 100% and no fade.<br>**The channel.** The music clip's volume of 255 plays at 229 at 90%, and at 255 again after the cancel.<br>**The rooms.** A load fades up 100/3, a scene start down 90/2, a scene end up 100/4. The title leaves 100%. Big Head's opening starts on tick 101 with line 1, and the music reaches 90% on tick 120. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, with the audio channel logged:<br>**Town Center.** Its opening started on tick 100 and turned the music down; its end after two lines brought it back up.<br>**The ending.** Big Head's scene started after its delay and turned the music down; it came back up as the credits loaded.<br>**The credits.** Their opening, `Credits.1100A2_`, started on tick 100 with the music going down, as the room's opening. |
-| 3. Build and diff | ✅ Scooby-only build: 23 files, 0 errors, 0 warnings. Every earlier check is identical to the run before, except the setup check's one credits line, which now has its opening (`'Credits.1100A2_', held 1, starts 100`; Phantom `'Credits.10002_'`). The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`819f0599ad`](https://github.com/barefootbetters/scummvm/commit/819f0599ad), on `1f002172c4`, stages its 10 files by name, inside `engines/scooby/`, and is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ On both titles:
+   - **The steps.** Down to 90 every 2 ticks: 99 on tick 2, 90 on tick 20. Up to 100 every 4: 91 on tick 4, 100 on tick 40. A fade down cut short at 96 by up every 3 reaches 100 on tick 12. A fade down at 90 stops on its first step. The cancel leaves 100% and no fade.
+   - **The channel.** The music clip's volume of 255 plays at 229 at 90%, and at 255 again after the cancel.
+   - **The rooms.** A load fades up 100/3, a scene start down 90/2, a scene end up 100/4. The title leaves 100%. Big Head's opening starts on tick 101 with line 1, and the music reaches 90% on tick 120.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, with the audio channel logged:
+   - **Town Center.** Its opening started on tick 100 and turned the music down; its end after two lines brought it back up.
+   - **The ending.** Big Head's scene started after its delay and turned the music down; it came back up as the credits loaded.
+   - **The credits.** Their opening, `Credits.1100A2_`, started on tick 100 with the music going down, as the room's opening.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 

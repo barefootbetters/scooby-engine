@@ -20,11 +20,24 @@ The reference is `wp070_ref.py`: WP-068's, plus the two arenas, written from the
 
 The first full run matched all 226 lines on Showdown, and all but the rise and the pile on Phantom. Both were faults in the check, not the class. The rise loop never ran: it started with the room the first arena's block had asked for still set. One pile click was swallowed by a rattle, as the game does too, since a rattle that lands while a click plays takes over its event. The check now clears the request and seeds the random source before each click. With both fixed, all 102 lines match.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes:** each arena gets its own.<br>**The first arena:** Velma walks in from the throne room and from the second arena; back from the stone's movie, the toolbar opens. The arrow on the stone cycles `170XB_`, `170A_`, `170A1_`, `170A2_`; the rusty shears play movie 40 back into the room, out of their slot with the arrow back, and the sharp shears come on leaving. Hotspot 3 says `170X_` without holding input.<br>**The second arena's placements:** not won, the pile is a clickable and Brad is in it (`OBJ_BRAD_H`); won, `OBJ_BRAD` and no pile; the mirror at depth -480 until had; the pole on levels 1 and 2 and the arena's shield once the shield is used.<br>**The rise:** on the first visit Brad is hidden and the pile's first click is the room's own. After the opening's fifth line he rises (`ANIM_BRAD_HRISE`), the scene waits while he does, and his sixth line follows. The opening over, the party goes into his game.<br>**The pile:** the player's click leads to `ROOM_Brad_SPOOKY`, `SPOOKIER` or `SPOOKTACULAR` by level; over 6000 ticks it rattles a few times and never changes the room.<br>**The shield:** Big Head through movie 29, `180E_` on `BIG_HEAD_BG_P14` and back. Back, Brad stands 50 aside and Velma takes the mirror into the toolbar.<br>**His clue:** won, `180B_`, his clue, then `Global.Thank_You_` into the suspects and clues.<br>**Idles:** hotspot 2's line on its B; Brad's three idle lines and the chatter once won.<br>Showdown prints that it has no arenas. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The rusty shears** on the stone: movie 40, then the sharp shears in the slot.<br>**The first visit to the second arena:** the opening's eight lines, Brad's head out of the pile after the fifth, and on into `ROOM_Brad_SPOOKY`.<br>**The shield** on Brad: movie 29, Big Head's two lines, back to the arena, and Velma takes the mirror into the toolbar. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). The other checks are identical to WP-068's run, except for random keys that vary by run: the drawbridge's on Phantom, and on Showdown the first clue found in the profile check's import.<br>Fork commit [`eb9f997ae5`](https://github.com/barefootbetters/scummvm/commit/eb9f997ae5) (10 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes:** each arena gets its own.
+   - **The first arena:** Velma walks in from the throne room and from the second arena; back from the stone's movie, the toolbar opens. The arrow on the stone cycles `170XB_`, `170A_`, `170A1_`, `170A2_`; the rusty shears play movie 40 back into the room, out of their slot with the arrow back, and the sharp shears come on leaving. Hotspot 3 says `170X_` without holding input.
+   - **The second arena's placements:** not won, the pile is a clickable and Brad is in it (`OBJ_BRAD_H`); won, `OBJ_BRAD` and no pile; the mirror at depth -480 until had; the pole on levels 1 and 2 and the arena's shield once the shield is used.
+   - **The rise:** on the first visit Brad is hidden and the pile's first click is the room's own. After the opening's fifth line he rises (`ANIM_BRAD_HRISE`), the scene waits while he does, and his sixth line follows. The opening over, the party goes into his game.
+   - **The pile:** the player's click leads to `ROOM_Brad_SPOOKY`, `SPOOKIER` or `SPOOKTACULAR` by level; over 6000 ticks it rattles a few times and never changes the room.
+   - **The shield:** Big Head through movie 29, `180E_` on `BIG_HEAD_BG_P14` and back. Back, Brad stands 50 aside and Velma takes the mirror into the toolbar.
+   - **His clue:** won, `180B_`, his clue, then `Global.Thank_You_` into the suspects and clues.
+   - **Idles:** hotspot 2's line on its B; Brad's three idle lines and the chatter once won.
+   - Showdown prints that it has no arenas.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The rusty shears** on the stone: movie 40, then the sharp shears in the slot.
+   - **The first visit to the second arena:** the opening's eight lines, Brad's head out of the pile after the fifth, and on into `ROOM_Brad_SPOOKY`.
+   - **The shield** on Brad: movie 29, Big Head's two lines, back to the arena, and Velma takes the mirror into the toolbar.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). The other checks are identical to WP-068's run, except for random keys that vary by run: the drawbridge's on Phantom, and on Showdown the first clue found in the profile check's import.
+   - Fork commit [`eb9f997ae5`](https://github.com/barefootbetters/scummvm/commit/eb9f997ae5) (10 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

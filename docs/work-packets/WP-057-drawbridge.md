@@ -20,11 +20,28 @@ The reference is `wp059_ref.py`: WP-056's, plus the drawbridge and the town, wri
 
 The first run differed on one line, and the reference was wrong. Entering the drawbridge, its unplayed opening holds input until the first skip, as `0x40C7B0` has it; the reference had left that out. The second run matched all 18 lines on Phantom and all 215 on Showdown.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Phantom:<br>**The classes** for both rooms.<br>**A new game:** the 17 flags off, `Screaming` on, a villain of the five, the crest a permutation of 1–4, the skull's digits 0–3.<br>**The reset,** 200 times: every banner colour, and each flag one to three colours on from its banner, never on it.<br>**Entry from the town:** each flag waving its saved colour from a random step, clickable with the open hand; each banner waving its colour; the door stopped on its first step at depth −1; no way out yet; one snack needed; Velma walking in, 50 behind; `Fanfare.1` for the flag already right, then `Flag_Loop`.<br>**A flag click:** lowered at tick 1, the next colour raised at tick 22, waving at 43, with `Flag_Raise` twice. A click during the lowering raises at once (tick 2, waving at 23).<br>**Velma,** idle, comments when a flag leaves its banner's colour.<br>**Solved** at tick 43: the flags no longer clickable, the way out built (depth −1, hit by its polygon, to `ROOM_P04_Town`), both fanfares. The door waits while the second plays. When it ends: the door plays once, `Drawbridge.Down`, and `Drawbridge.Enter_` holds input.<br>**The way out:** `110A_` and the snack box's flash before a snack; then it leaves.<br>**The profile:** `FlagState0`–`3`, `BannerState0`–`3`, `PuzzleDone`. Loaded, the flags are not clickable, the door is down (its last step), and the default path builds the way out.<br>**The sign:** `100X1_`, `100X2_`, `100X1_`.<br>**The town:** Velma in from the drawbridge (50 in front), Shaggy from the shop and Fred from the gardener's house (50 behind), Velma from the room of doors; nobody from elsewhere. Screams 1, 2, 3 and 5 over 199 visits; none without `Screaming`.<br>Showdown prints that it has no drawbridge. |
-| 2. Live, Phantom | ✅ Through `test_script`, minimized:<br>**The puzzle,** with three flags right: one click on flag 4 lowered and raised its pennants, then both fanfares, `Drawbridge.Down`, and Fred's two `Drawbridge.Enter_` lines.<br>**The town,** from a solved drawbridge with a snack given: the way out in the castle's doorway led to `ROOM_P04_Town`. Velma walked in from the drawbridge, `Town.Jane_Screaming2` played, and the opening `Town.110_` followed. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-056's run. Phantom's differ in two ways, both expected:<br>• the profile check writes and imports the drawbridge's nine keys, which are random from its reset;<br>• the sign-in check now lists Phantom's story values where it printed `none`.<br>Fork commit [`35eea2ae51`](https://github.com/barefootbetters/scummvm/commit/35eea2ae51) (12 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Phantom:
+   - **The classes** for both rooms.
+   - **A new game:** the 17 flags off, `Screaming` on, a villain of the five, the crest a permutation of 1–4, the skull's digits 0–3.
+   - **The reset,** 200 times: every banner colour, and each flag one to three colours on from its banner, never on it.
+   - **Entry from the town:** each flag waving its saved colour from a random step, clickable with the open hand; each banner waving its colour; the door stopped on its first step at depth −1; no way out yet; one snack needed; Velma walking in, 50 behind; `Fanfare.1` for the flag already right, then `Flag_Loop`.
+   - **A flag click:** lowered at tick 1, the next colour raised at tick 22, waving at 43, with `Flag_Raise` twice. A click during the lowering raises at once (tick 2, waving at 23).
+   - **Velma,** idle, comments when a flag leaves its banner's colour.
+   - **Solved** at tick 43: the flags no longer clickable, the way out built (depth −1, hit by its polygon, to `ROOM_P04_Town`), both fanfares. The door waits while the second plays. When it ends: the door plays once, `Drawbridge.Down`, and `Drawbridge.Enter_` holds input.
+   - **The way out:** `110A_` and the snack box's flash before a snack; then it leaves.
+   - **The profile:** `FlagState0`–`3`, `BannerState0`–`3`, `PuzzleDone`. Loaded, the flags are not clickable, the door is down (its last step), and the default path builds the way out.
+   - **The sign:** `100X1_`, `100X2_`, `100X1_`.
+   - **The town:** Velma in from the drawbridge (50 in front), Shaggy from the shop and Fred from the gardener's house (50 behind), Velma from the room of doors; nobody from elsewhere. Screams 1, 2, 3 and 5 over 199 visits; none without `Screaming`.
+   - Showdown prints that it has no drawbridge.
+2. **Live, Phantom:** ✅ Through `test_script`, minimized:
+   - **The puzzle,** with three flags right: one click on flag 4 lowered and raised its pennants, then both fanfares, `Drawbridge.Down`, and Fred's two `Drawbridge.Enter_` lines.
+   - **The town,** from a solved drawbridge with a snack given: the way out in the castle's doorway led to `ROOM_P04_Town`. Velma walked in from the drawbridge, `Town.Jane_Screaming2` played, and the opening `Town.110_` followed.
+3. **Build and diff:** ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The room check is identical to WP-020's (69 and 53 rooms). Showdown's other checks are identical to WP-056's run. Phantom's differ in two ways, both expected:
+   - the profile check writes and imports the drawbridge's nine keys, which are random from its reset;
+   - the sign-in check now lists Phantom's story values where it printed `none`.
+   - Fork commit [`35eea2ae51`](https://github.com/barefootbetters/scummvm/commit/35eea2ae51) (12 files staged by name) is pushed.
 
 **Deviations and gaps:**
 

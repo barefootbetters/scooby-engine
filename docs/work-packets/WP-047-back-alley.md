@@ -18,11 +18,16 @@ title: "WP-047: Showdown's back alley"
 
 The reference is `wp048_ref.py`: WP-046's, plus the alley, written from the trace before the engine ran. It reads the placements, step counts, clickable states and `priority=` keys from the art and object.ini, and which scenes and sounds are on the disc from the sound archives' indexes. It never runs the engine. At `script` level 3 the chase check now logs 149 lines on Showdown: the earlier 145 and 4 for the alley. The reference prints the same 149, none different, on the first run. On Phantom both print the one line saying there is no chase.
 
-| Exit criterion | Result |
-|---|---|
-| 1. Against the reference | ✅ Showdown:<br>**Entry.** From the store Fred walks in UL, and from the vault and the open safe Shaggy walks in UR. `Back_Alley.Snakes_Distant` plays. Hotspot 3 is a clickable at depth -1, hotspot 1 one at depth 1, its `priority=`. The opening is `350A_`, unplayed.<br>**The hotspots.** Hotspot 3's A has no line and moves to B. Its B gives one of its two lines on the tick it starts, not held. Hotspot 1 scares Daphne and Scooby on tick 25, its step 8.<br>**The way into the store.** At each level the gang is kept with `350B_`, `350B2_` or `350B3_`, held, and the toolbar opens for the flash. The way to the vault isn't kept. At level 1 the gang is kept after 0, 1 and 2 snacks, and goes through after 3. |
-| 2. Live, Showdown | ✅ Through `test_script`, minimized, from a profile in the original's form:<br>**The hotspots.** Hotspot 3's A played its 51 steps without a line. Its B gave `HOTSPOT3B2_` on the tick it started. Hotspot 1 played, and Daphne and Scooby said their frights (`Global.Scared.DAPHNE`, `Global.Scared.SCOOBY`).<br>**The store.** The way in gave `350B_` and the snack box flashed. After two snacks fed to Scooby, the gang walked into the General Store. |
-| 3. Build and diff | ✅ Scooby-only build: 0 errors, 0 warnings. The exit and click checks have nothing stuck. The earlier checks are identical to WP-046's run on both titles. The room check is identical to WP-020's (69 and 53 rooms). Fork commit [`4403e0b7e9`](https://github.com/barefootbetters/scummvm/commit/4403e0b7e9) (5 files staged by name) is pushed. |
+**Exit criteria:**
+
+1. **Against the reference:** ✅ Showdown:
+   - **Entry.** From the store Fred walks in UL, and from the vault and the open safe Shaggy walks in UR. `Back_Alley.Snakes_Distant` plays. Hotspot 3 is a clickable at depth -1, hotspot 1 one at depth 1, its `priority=`. The opening is `350A_`, unplayed.
+   - **The hotspots.** Hotspot 3's A has no line and moves to B. Its B gives one of its two lines on the tick it starts, not held. Hotspot 1 scares Daphne and Scooby on tick 25, its step 8.
+   - **The way into the store.** At each level the gang is kept with `350B_`, `350B2_` or `350B3_`, held, and the toolbar opens for the flash. The way to the vault isn't kept. At level 1 the gang is kept after 0, 1 and 2 snacks, and goes through after 3.
+2. **Live, Showdown:** ✅ Through `test_script`, minimized, from a profile in the original's form:
+   - **The hotspots.** Hotspot 3's A played its 51 steps without a line. Its B gave `HOTSPOT3B2_` on the tick it started. Hotspot 1 played, and Daphne and Scooby said their frights (`Global.Scared.DAPHNE`, `Global.Scared.SCOOBY`).
+   - **The store.** The way in gave `350B_` and the snack box flashed. After two snacks fed to Scooby, the gang walked into the General Store.
+3. **Build and diff:** ✅
 
 **Deviations and gaps:**
 
