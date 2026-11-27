@@ -5,7 +5,7 @@ title: "WP-086: Hotspot Magnet research"
 
 # WP-086: Hotspot Magnet research — input, hotspot features and TerraGlyph targets
 
-**Status:** 📝 Drafted.
+**Status:** 🚧 In Progress (claimed 2026-11-26: branch `docs/wp-086-hotspot-magnet-research`; run in the Hotspot Magnet plan session).
 **Phase:** 5 (polish and accessibility).
 **Depends on:** WP-018 ✅ (TerraGlyph hit testing), WP-021 ✅ (clickables),
 WP-079 ✅ (the fork's TV build path, proven on the TCL 65Q77K).

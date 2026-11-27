@@ -9,7 +9,7 @@ title: "EC-009: Hotspot Magnet research run sheet"
 **Purpose:** Run WP-086's research in a fixed order, recording each finding in
 the [plan's](../reference/hotspot-magnet-plan.md) evidence register as it's
 made, so a stopped session loses nothing.
-**Status:** not started.
+**Status:** in progress (2026-11-26).
 
 **Evidence rule:** every checked box cites a file and symbol at the pinned
 commit, or (Step 3) a command and its date. No citation, no check.
