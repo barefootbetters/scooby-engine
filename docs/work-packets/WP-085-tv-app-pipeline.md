@@ -5,10 +5,15 @@ title: "WP-085: Google TV app pipeline"
 
 # WP-085: Google TV app pipeline — library, import, test packages and updates
 
-**Status:** 📝 Drafted · **pre-flight READY 2026-11-26**
-([pre-flight](../reference/pre-flight-WP-085-2026-11-26.md); execution prompt
-[session-WP-085-2026-11-26](../sessions/session-WP-085-2026-11-26.md)). Claimed:
-fork worktree `wp-085-tv-app-pipeline` off `ff490ad9449f`. Not blocked on any rights holder: it distributes no
+**Status:** 🚧 **In progress** — executed 2026-11-26/27 on the TCL 65Q77K
+([§Result](#result)). Milestones 1, 3 and 4 verified; fork PR
+[barefootbetters/scummvm#13](https://github.com/barefootbetters/scummvm/pull/13)
+open. **Open:** exit criterion 3, an import route that works without a computer
+(USB and the system picker don't work on this TV; the cloud route is untested
+on a personal account). Pre-flight
+[READY 2026-11-26](../reference/pre-flight-WP-085-2026-11-26.md); execution
+prompt [session-WP-085-2026-11-26](../sessions/session-WP-085-2026-11-26.md).
+Not blocked on any rights holder: it distributes no
 game, and tests only with legally obtained data. **Built first:** Jeff chose
 "Pipeline first (a)" on 2026-11-26, so this app ships to Google Play through
 [WP-084](WP-084-google-tv-first-release.md) once it's done
@@ -222,21 +227,23 @@ Reasoning and code citations are in the
 ## Exit criteria
 
 1. [x] D0–D4 answered (2026-11-26; [§Decisions](#decisions-for-jeff)).
-2. [ ] Milestone 1: the app installs on the TCL with its own identity, shows
+2. [x] Milestone 1: the app installs on the TCL with its own identity, shows
    the library, and launches a game; keyboard, mouse, gamepad and remote
-   results recorded.
+   results recorded. (The gamepad is recorded as not tested: none was paired.)
 3. [ ] Milestone 2: at least one import route works on the TCL without a
    computer; the imported game launches, saves and restores (logged). Routes
-   that don't work are recorded.
-4. [ ] Milestone 3: a test package is listed, downloaded, verified, installed,
+   that don't work are recorded. **Open:** only `adb push` worked; launch,
+   save and restore passed.
+4. [x] Milestone 3: a test package is listed, downloaded, verified, installed,
    detected, launched and removed on the TCL (logged); a package with a wrong
    SHA-256 is refused (logged).
-5. [ ] Milestone 4: an app update keeps games and saves; a game-data update
+5. [x] Milestone 4: an app update keeps games and saves; a game-data update
    installs after verification; an interrupted update leaves the old version
    playable (logged).
-6. [ ] No executable code is downloaded by the app (code review note in
+6. [x] No executable code is downloaded by the app (code review note in
    §Result).
-7. [ ] Fork PR open with the four milestone commits; §Result written.
+7. [x] Fork PR open with the milestone commits; §Result written. Three
+   commits: milestone 2 needed no code.
 
 ## Deliverables
 
@@ -244,6 +251,92 @@ Reasoning and code citations are in the
 - The manifest format, documented in this repo.
 - `pre-flight-WP-085-<date>.md`, EC-008 filled in, §Result.
 - Never committed: game data, signing keys, endpoint credentials.
+
+## Result
+
+Executed 2026-11-26/27 on the TCL 65Q77K (Google TV, Android 14, armeabi-v7a)
+from the [execution prompt](../sessions/session-WP-085-2026-11-26.md). Every
+result below comes from a capture made in the session (logcat, `dumpsys`,
+`run-as` file listings, screenshots) or is Jeff's live confirmation, marked
+as his. Per-step evidence is in
+[EC-008](../execution-checklists/EC-008-tv-app-pipeline.md). Raw captures
+stay local, because they show the TV's address and the app's id.
+
+**Fork PR:** [barefootbetters/scummvm#13](https://github.com/barefootbetters/scummvm/pull/13),
+branch `wp-085-tv-app-pipeline` off `ff490ad9449f`. Three commits, all inside
+`dists/android/` and `backends/platform/android/`:
+
+| Commit | Milestone | What |
+|---|---|---|
+| `99d611a9d8` | 1 | Identity injected from Gradle properties (`tvAppId`, `tvAppLabel`, `tvAppResDir`); grid launcher by default, when the build has PNG support |
+| `70a3ba0a5c` | 3 | The hidden advanced mode, test builds only: manifest, download, verify, data-only extract, add, launch, remove, update, diagnostics |
+| `1c625e57c9` | 4 | `tvAppVersionCode` / `tvAppVersionName`, so the app numbers its own releases |
+
+Milestone 2 needed no code. The manifest format is
+[tv-package-manifest](../reference/tv-package-manifest.md). The test packages
+are on [barefootbetters/tv-test-packages](https://github.com/barefootbetters/tv-test-packages)
+release `packages-2026-11-26`, created on Jeff's go (Q2).
+
+### Per milestone
+
+| Milestone | Result |
+|---|---|
+| 1, app shell | ✅ Installs as the injected id beside the WP-079 app; its own icon and name in Google TV's Your apps (the banner is in the APK; this Google TV row shows icons). The grid launcher opens. BASS was added and **launched with the remote**. Keyboard typing works; the combo keyboard's F-row sends media keys, so F5 is **Fn+F5**. Touchpad pointer and click work. **Gaps:** right-click and two-finger scroll did nothing; no gamepad was available |
+| 2, import | ⚠️ `adb push` into the app's own folder, then **Add Game…** ✅. USB by path ❌ (`Permission denied`: Android 14 hides non-media files on removable storage). USB through the system picker ❌ (no picker on this TV: only `com.android.tv.frameworkpackagestubs` handles `OPEN_DOCUMENT_TREE`, which says "You don't have an app that can do this"). Cloud ❌ with a company Box account (Box sign-in error 5253-5020); a personal account is untested. Save, close, reopen, restore ✅ |
+| 3, test packages | ✅ The gesture opens the mode. The manifest loads over HTTPS. BASS 1.2 is downloaded from GitHub Releases, verified, extracted, added (`[sky]` → `packages/bass-cd/1.2/…`), launched and removed with its saves kept. With only the manifest changed, it installs from `downloads.scummvm.org` (host independence). Wrong SHA-256, zip-slip, ELF and `.so` packages are refused with nothing left behind. Diagnostics show the engine version and each package's detection result, and save the log for `adb pull` (this TV has no share target) |
+| 4, updates | ✅ Test app 26041001 installed over 26041000: library, packages and saves identical byte for byte. BASS 1.2 → 1.2.1: downloaded and verified, extracted beside 1.2, then the target switched and 1.2 deleted; saves kept. An update killed mid-download (`am force-stop` with 21 of 69 MB staged) left 1.2 installed and playable; the partial file was cleaned up. *Showdown* (TerraGlyph), pushed to the app's folder over `adb`, was added, played, saved and loaded |
+
+### D4: the release build has no advanced mode
+
+On the release APK (`ScummVM-release-unsigned.apk`, SHA-256 `06dd2fe3…1adde`,
+identical across three builds): `apkanalyzer dex packages --defined-only` lists
+no `org.scummvm.scummvm.advanced` package and no `TestFeatures` class, and the
+merged manifest has no `PackagesActivity`. `unzip -p … 'classes*.dex' | strings
+| grep -c TVPKG_MANIFEST_URL` (the advanced mode's preference key) returns
+**0**. On the debug APK the same checks find the package (23 classes) and
+return **1**, so they do detect the code.
+
+### Code review note (exit criterion 6)
+
+The app downloads only data. A package's entries are written as files and
+nothing from them is loaded or run. The extractor refuses `.so`, `.dex`,
+`.jar`, `.apk`, `.odex`, `.oat` and `.vdex` entries, any file that starts with
+ELF or dex magic, and any path that leaves the package folder. `git diff
+origin/scooby-engine..HEAD` contains no `DexClassLoader`, `PathClassLoader`,
+`InMemoryDexClassLoader`, `System.load`, `Runtime.exec` or `PackageInstaller`
+(0 matches). Android 14 rejects a `../` zip entry itself, before the app's own
+check. That check was exercised against the same zips on a desktop JVM, where
+nothing pre-empts it.
+
+### Fixed during the run
+
+- **Grid view crash:** without PNG support, ScummVM's grid aborts with "No PNG
+  support compiled". The build machine now has libpng 1.6.59 for armeabi-v7a,
+  and the grid default needs `USE_PNG`. The WP-079 app on the TV was saved in
+  grid view and crashed on every start; its `gui_launcher_chooser` is now
+  `list` again (config backed up).
+- **Zip-slip** was logged as a failure, not a refusal. It's now a refusal.
+- **Log sharing** went to the TV's stub and was logged as shared. The app now
+  detects the stub and points to the saved file.
+- **The remote reports each press twice**, and the ring's edge sends OK. The
+  gesture is now up, down, up, down, left, right, left, right: repeats and
+  other keys are ignored, within ten seconds.
+
+### Open, and follow-ups
+
+1. **Exit criterion 3**, an import route without a computer. Next: test the
+   cloud route with a personal Dropbox or Google Drive. If that fails, the
+   options are a file-manager app that provides a document picker, or an
+   import path inside the app (a Play-policy question).
+2. **Gamepad** (TV-GP, required for Play per D2): not tested. It must pass
+   before WP-084.
+3. **Touchpad right-click and two-finger scroll** did nothing in the launcher.
+4. **Entering the gesture by hand on the TCL remote** hasn't registered yet.
+   The gesture is verified with the remote's own key codes over `adb`.
+5. ScummVM's on-screen keyboard opens by itself at launcher start on the TV.
+6. The [smart-TV guide](../reference/scummvm-smart-tv.md) needs the libpng
+   build step and "drive the TV from Windows `adb`" (WSL in NAT mode can't
+   see the TV's mDNS). That file is outside this WP's scope.
 
 ## Notes
 
