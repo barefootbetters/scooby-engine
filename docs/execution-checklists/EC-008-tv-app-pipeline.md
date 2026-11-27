@@ -9,7 +9,9 @@ title: "EC-008: Google TV app pipeline run sheet"
 **Purpose:** Verify each WP-085 milestone on the TCL 65Q77K before the next one
 starts, with evidence. Defects are logged as one-line gaps; fixes go on the WP
 branch before moving on.
-**Status:** not started.
+**Status:** pre-flight READY (2026-11-26); execution not started. The
+execution prompt is
+[session-WP-085-2026-11-26](../sessions/session-WP-085-2026-11-26.md).
 
 **Evidence rule:** every checked box cites a `logcat` excerpt, a command output
 or a screenshot captured during the run. No capture, no check.
@@ -18,12 +20,20 @@ or a screenshot captured during the run. No capture, no check.
 
 ## Pre-flight
 
-- [ ] WP-085 D0–D4 answered; pre-flight verdict **READY**
-      (`docs/reference/pre-flight-WP-085-<date>.md`).
-- [ ] Fork branch and commit recorded; toolchain recorded (SDK 37,
-      NDK 23.2.8568313, Oboe for the target ABI).
-- [ ] Test data staged outside both repos: BASS freeware (SHA-256 checked),
-      Jeff's *Showdown* data. Capture sink ready.
+- [x] WP-085 D0–D4 answered; pre-flight verdict **READY**
+      ([pre-flight-WP-085-2026-11-26](../reference/pre-flight-WP-085-2026-11-26.md)).
+- [x] Fork branch and commit recorded: `wp-085-tv-app-pipeline` in
+      `C:\claude-worktrees\scummvm-wp-085-tv-app-pipeline`, base
+      `ff490ad9449f`. Toolchain recorded: `platforms/android-37.0`, NDK
+      `23.2.8568313`, Oboe 1.11.0 for armeabi-v7a built against `android-16`
+      (the TCL's ABI list is `armeabi-v7a,armeabi`). Outputs are in the
+      [pre-flight §Repo + disc state](../reference/pre-flight-WP-085-2026-11-26.md#repo--disc-state).
+- [ ] Test data staged outside both repos: BASS freeware at
+      `P:\games\BeneathASteelSky\bass-cd-1.2.zip` (SHA-256 matches), Jeff's
+      *Showdown* at `P:\scooby-engine\Showdown.iso` (`Scooby.exe` is the
+      WP-079 identity). **Capture sink: open.** It's set up at the start of
+      execution, with the peripheral check (keyboard, mouse and gamepad shown
+      in `dumpsys input`), which the pre-flight carried forward.
 
 ## Step 1 — Milestone 1: app shell (time-box: 1:00)
 
