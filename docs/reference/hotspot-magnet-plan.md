@@ -199,9 +199,23 @@ means *Showdown* and *Phantom*; the shared-code findings carry no generation.
   `735ad86c21` among these files: mouse pointer capture with relative motion.
   It changes no D-pad or key finding.
 
-**The TCL 65Q77K's remote** (E22). **Not captured: a gap.** On 2026-11-26
-`adb shell getevent -lt` ran for 3 minutes with no button presses, so no key
-codes or long-press behavior were recorded. What it did show: `getevent`
+**The TCL 65Q77K's remote** (E22, E25). **Short presses captured; held
+presses still a gap.** A second 10-minute capture on 2026-11-26 recorded 17
+short presses on `/dev/input/event7`, each a single press and release held
+0.10–0.16 s:
+
+| Button | Kernel key | HID usage (page 0x0C) |
+|---|---|---|
+| D-pad up | not pressed | — |
+| D-pad down | `KEY_DOWN` | `0x43` |
+| D-pad left | `KEY_LEFT` | `0x44` |
+| D-pad right | `KEY_RIGHT` | `0x45` |
+| OK | `KEY_SELECT` | `0x41` |
+| BACK | `KEY_BACK` | `0x224` |
+
+No button was held, and MENU and Home weren't pressed, so whether a held OK
+sends one press and a late release (which H6 needs) or repeats is still
+unknown. The first 3-minute capture had no presses. What it did show: `getevent`
 works over adb without root, and the TV's input devices are the Bluetooth
 remote `BT_RC923A_B1 Consumer Control` (`/dev/input/event7`), a
 `virtual-remote`, the `MTK Smart TV IR Receiver`, the TV keypad, a
@@ -397,7 +411,8 @@ Pinned commits: fork `origin/scooby-engine` **`ff490ad9449f`**; upstream
 | E19 | 3.5 | `terraglyph.cpp:112`, `:125`, `:336-381`, `:471-477`, `:1541-1556`; `inventory.cpp:148`, `:241-242`, `:427`; `inventory.h:165`, `:227` | One room object; toolbar at depth 5000 in it; input gated in `handleMouse` | Eligibility must include the toolbar and follow `handleMouse`'s gates | Whether every close-up is a room like the chase close-up |
 | E20 | 3.5 | `terraglyph.cpp:231-237`, `:336-381`, `:414-417`, `:2003-2045`; `chase_check.cpp:259-270` | `handleMouse(false/true, p)` is the click path; the test script already synthesizes clicks; the self-test lists sprites and hit-tests headlessly | Activation reuses `handleMouse`; the reachability check is feasible | — |
 | E21 | 3.2 | `git diff 2982fe324b6c 7b6fa644d74a` over the files in E1–E15 | Only `735ad86c21` (Android mouse pointer capture) changed | No finding changes upstream | — |
-| E22 | 3.2 | `adb shell getevent -lt`, `getevent -lp`, `dumpsys input` on the TCL 65Q77K, 2026-11-26 | Devices listed; no presses captured | The remote table is still a gap | Every button's code and held behavior |
+| E22 | 3.2 | `adb shell getevent -lt`, `getevent -lp`, `dumpsys input` on the TCL 65Q77K, 2026-11-26 | Devices listed; no presses captured | The remote's devices | — |
+| E25 | 3.2 | `adb shell "timeout 600 getevent -lt"` on the TCL 65Q77K, 2026-11-26 | Short presses of down, left, right, OK and BACK: kernel keys and HID usages, one press and release each, held 0.10–0.16 s | The D-pad and OK arrive as single key events | D-pad up, MENU, and every button held for 2 s (H6) |
 | E23 | 3.7 | `engines/advancedDetector.h:400-405`, `:715`; `advancedDetector.cpp:333-341`; `engines/metaengine.h:71-78`; `engines/dialogs.cpp:472-495`; `metaengine.cpp:460-468`; `base/main.cpp:225`; `awe/metaengine.cpp:31-75`, `awe/detection_tables.h:40`, `awe/awe.cpp:195` | Declare, tie to entries by GUIO flag, persist per game, read with `ConfMan.getBool` | The Phase 1 setting is a standard extra option | — |
 | E24 | 3.7 | `engines/terraglyph/metaengine.h:29-41`; `detection_tables.h:50-123` | No extra options; only `GUIO_NOMIDI` | Where "Hotspot Assist" goes | — |
 
@@ -830,7 +845,7 @@ Approved, Approved for prototype, Provisional, or Pending.
 | H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | **Approved** (2026-11-26) | (b), a validated interaction point. Prefer a point the engine supplies when it has one; otherwise the hit-tested grid. Never assume the rectangle's centre is clickable |
 | H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | **Provisional** (2026-11-26) | `engines/` as the preferred future location, subject to ScummVM maintainer feedback ([13.3](#133-maintainer-feedback-register)). The first implementation stays inside `engines/terraglyph/` |
 | H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | **Approved** (2026-11-26) | (a), TerraGlyph-specific at first |
-| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22 | **Pending** remote testing | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
+| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22, E25 | **Pending** remote testing | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
 | H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | **Approved** (2026-11-26) | The rule in 3.5: only objects that are visible, eligible and hittable now. Characters come later, once their click behavior is verified |
 | H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | **Approved** (2026-11-26) | (a), refresh on directional input. Also invalidate the current selection when game state changes: a hotspot that disappears or is disabled must never stay activatable |
 
@@ -1053,4 +1068,4 @@ it stays unresolved.
 | 2026-11-26 | First version, from Jeff's plan. |
 | 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
 | 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |
-| 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). |
+| 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). A second remote capture recorded short presses of the D-pad, OK and BACK (3.2, E25); held presses are still a gap. |
