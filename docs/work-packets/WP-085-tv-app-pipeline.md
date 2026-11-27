@@ -336,10 +336,10 @@ nothing pre-empts it.
 4. **Entering the gesture by hand on the TCL remote** hasn't registered yet.
    The gesture is verified with the remote's own key codes over `adb`.
 5. ScummVM's on-screen keyboard opens by itself at launcher start on the TV.
-6. The [smart-TV guide](../reference/scummvm-smart-tv.md) has the libpng
-   build step ([added 2026-11-27](../reference/scummvm-smart-tv.md#libpng-for-the-launchers-grid-view)).
-   It still needs "drive the TV from Windows `adb`" (WSL in NAT mode can't
-   see the TV's mDNS).
+6. ✅ Done 2026-11-27: the [smart-TV guide](../reference/scummvm-smart-tv.md)
+   has the [libpng build step](../reference/scummvm-smart-tv.md#libpng-for-the-launchers-grid-view)
+   and says to [drive the TV from Windows `adb`](../reference/scummvm-smart-tv.md#connect-adb-over-the-network)
+   (WSL in NAT mode can't see the TV's mDNS).
 
 ## Notes
 

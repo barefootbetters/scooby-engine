@@ -356,9 +356,38 @@ The menu names vary by TV maker and Android version.
 ### Connect `adb` over the network
 
 The PC and the TV must be on the same network. The TV's IP address is under
-**Settings → Network & Internet**. The commands below are the same in WSL,
-Linux, macOS and Windows PowerShell; in WSL, either put
-`$ANDROID_SDK_ROOT/platform-tools` on your `PATH` or type the full path to `adb`.
+**Settings → Network & Internet**. The commands below are the same on Linux,
+macOS and in Windows PowerShell.
+
+**On Windows, run `adb` from Windows, not from WSL.** Build in WSL, but talk to
+the TV with Windows' own `adb`. WSL's default networking (NAT) puts it on a
+private network of its own. mDNS doesn't cross that, so in WSL `adb mdns
+services` lists nothing, and the TV never shows up in `adb devices`. That's
+the case on the build machine below, and it's the route `adb pair` and the
+automatic reconnect depend on. Install Google's platform tools on Windows:
+
+```powershell
+winget install Google.PlatformTools
+```
+
+Open a new PowerShell window afterwards so `adb` is on the `PATH`. The
+[WP-085](../work-packets/WP-085-tv-app-pipeline.md) runs on the TCL
+(2026-11-26 and 27) used that `adb`, version 1.0.41 (platform-tools 37.0.3).
+Then take the APK from WSL to Windows. Either copy it out
+from the WSL shell:
+
+```bash
+cp debug/ScummVM-debug.apk /mnt/c/Users/<you>/Downloads/
+```
+
+or install it straight from WSL's files in PowerShell:
+
+```powershell
+adb install -r \\wsl.localhost\Ubuntu\home\<you>\scummvm\debug\ScummVM-debug.apk
+```
+
+Windows has its own `adb` keys, so pair the TV once from Windows even if WSL
+was paired before.
 
 A Google TV offers two network routes, and the TCL 65Q77K accepts both (checked
 2026-11-26):
@@ -426,7 +455,8 @@ ro.product.cpu.abilist` is the property that matters for the build
 
 ### Install it on the TV
 
-With `adb` [connected](#connect-adb-over-the-network):
+With `adb` [connected](#connect-adb-over-the-network) (on Windows, from
+PowerShell with the APK copied out of WSL):
 
 ```bash
 adb install -r debug/ScummVM-debug.apk
@@ -673,6 +703,7 @@ separately logged yet. Record other TVs' results here.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `adb pair` fails with `protocol fault (couldn't read status message)` | Seen when the PC was already paired and connected; a closed pairing dialog is the other likely cause | Run `adb devices` first. If the TV isn't listed, reopen the pairing dialog for a fresh code ([Connect `adb`](#connect-adb-over-the-network)) |
+| In WSL, `adb devices` is empty and `adb mdns services` lists nothing, though the TV's Wireless debugging is on | WSL's default (NAT) networking doesn't pass mDNS | Use Windows' own `adb` from PowerShell ([Connect `adb`](#connect-adb-over-the-network)) |
 | `adb` stops with `more than one device/emulator` | The TV is connected on both port 5555 and Wireless debugging | Add `-s <serial>` from `adb devices`, or `adb disconnect <tv-ip>:5555` |
 | `adb install` fails with `INSTALL_FAILED_NO_MATCHING_ABIS` | APK built for the wrong CPU | Build `android-arm-v7a`; check `adb shell getprop ro.product.cpu.abilist` first |
 | Launch crash `UnsatisfiedLinkError: ... is 64-bit instead of 32-bit` | Stale `libloader.so` left from the previous ABI | `rm -f libloader.so && rm -rf android_project`, then repackage |
