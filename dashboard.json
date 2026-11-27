@@ -116,7 +116,8 @@
       "workstream": "tv",
       "title": "Google Play developer account and beta testing",
       "status": "next",
-      "doneWhen": "A test build installs on the TV from a Google Play testing track."
+      "doneWhen": "A test build installs on the TV from a Google Play testing track.",
+      "note": "How long it takes depends on WP-084's D3, the account type: a personal account created after 2023-11-13 must run a closed test with 12 testers for 14 consecutive days before production; an organization account (D-U-N-S) skips that."
     },
     {
       "id": "tv-release",
