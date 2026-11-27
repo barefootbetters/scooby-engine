@@ -9,7 +9,8 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 > is done for everything except SCUMM/HE
 > ([WP-086](../work-packets/WP-086-hotspot-magnet-research.md), 2026-11-26).
 > Jeff decided H1–H5, H7 and H8 in [§10.4](#104-open-design-decisions) the
-> same day; H6, the cursor fallback, waits on the TCL remote capture. The
+> same day. H6, the cursor fallback, waits on Jeff; the TCL remote capture it
+> needed was done on 2026-11-27. The
 > design in Part II is still intent only, and nothing here is built.
 > **Date:** 2026-11-26 ([Revision history](#revision-history)). **Author:**
 > Jeff (with AI assistance).
@@ -176,9 +177,9 @@ means *Showdown* and *Phantom*; the shared-code findings carry no generation.
   and Java never sends that event.
 - **Holding a key** (E7). Key events carry a repeat count, and the Keymapper
   drops repeats. `JE_GAMEPAD` ignores the count, so if the remote repeats a
-  held D-pad press, each repeat arrives as a fresh `JOYBUTTON_DOWN`.
-  **Unverified:** whether the TCL's remote repeats while held (3.2 remote,
-  below). Long-press detection exists only for BACK and MENU.
+  held D-pad press, each repeat arrives as a fresh `JOYBUTTON_DOWN`. On the
+  TCL the remote itself doesn't repeat, but Android does (3.2 remote, below).
+  Long-press detection exists only for BACK and MENU.
 - **Keys the backend uses itself** (E8):
 
   | Key | Short press | Long press |
@@ -199,30 +200,43 @@ means *Showdown* and *Phantom*; the shared-code findings carry no generation.
   `735ad86c21` among these files: mouse pointer capture with relative motion.
   It changes no D-pad or key finding.
 
-**The TCL 65Q77K's remote** (E22, E25). **Short presses captured; held
-presses still a gap.** A second 10-minute capture on 2026-11-26 recorded 17
-short presses on `/dev/input/event7`, each a single press and release held
-0.10–0.16 s:
+**The TCL 65Q77K's remote** (E22, E25, E26). Captured with `getevent -lt` on
+2026-11-26 and 2026-11-27 (Android 14):
 
-| Button | Kernel key | HID usage (page 0x0C) |
-|---|---|---|
-| D-pad up | not pressed | — |
-| D-pad down | `KEY_DOWN` | `0x43` |
-| D-pad left | `KEY_LEFT` | `0x44` |
-| D-pad right | `KEY_RIGHT` | `0x45` |
-| OK | `KEY_SELECT` | `0x41` |
-| BACK | `KEY_BACK` | `0x224` |
+| Button | Kernel key | HID usage (page 0x0C) | Short press | Held 3.4–4.3 s |
+|---|---|---|---|---|
+| D-pad up | `KEY_UP` | `0x42` | one press, one release | — |
+| D-pad down | `KEY_DOWN` | `0x43` | same | — |
+| D-pad left | `KEY_LEFT` | `0x44` | same | one press, one release |
+| D-pad right | `KEY_RIGHT` | `0x45` | same | one press, one release |
+| OK | `KEY_SELECT` | `0x41` | same | one press, one release (three holds) |
+| BACK | `KEY_BACK` | `0x224` | same | — |
 
-No button was held, and MENU and Home weren't pressed, so whether a held OK
-sends one press and a late release (which H6 needs) or repeats is still
-unknown. The first 3-minute capture had no presses. What it did show: `getevent`
+Short presses last 0.10–0.20 s. **The remote never repeats**: a held button
+sends one press and one release, nothing between. **Android does repeat.**
+`dumpsys input` shows `HandlesKeyRepeat: false` for every input device, with
+`KeyRepeatTimeout: 400ms` and `KeyRepeatDelay: 50ms`, so Android's input
+dispatcher adds a repeated key-down 400 ms into a hold and then every 50 ms.
+ScummVM's `JE_GAMEPAD` path ignores the repeat count (E7), so **a held OK
+reaches the engine as `JOYBUTTON_DOWN`, repeated every 50 ms after 400 ms,
+then one `JOYBUTTON_UP`** at release. This is inferred from the kernel
+capture, the dispatcher settings and the source, not observed inside
+ScummVM. A held D-pad direction does the same, which matters for navigation
+([6.3](#63-standard-tv-remote-limitations)).
+
+For H6, a hold of OK can be timed from the first `JOYBUTTON_DOWN` to the
+`JOYBUTTON_UP` if the engine ignores repeated downs while the button is
+already down. MENU and Home weren't pressed in either capture. MENU is
+already taken (E8) and Home never reaches an app, so neither is needed for
+H6. The remote was `/dev/input/event7` in the first capture and
+`/dev/input/event9` in the second (the TV had restarted), so a tool must find
+it by name, not by node. The first 3-minute capture had no presses. What it did show: `getevent`
 works over adb without root, and the TV's input devices are the Bluetooth
 remote `BT_RC923A_B1 Consumer Control` (`/dev/input/event7`), a
 `virtual-remote`, the `MTK Smart TV IR Receiver`, the TV keypad, a
 `gIrTouch_Mouse` and a `virtual-search` device. The remote's HID report lists
 about 150 possible keys, many more than its buttons, so only presses show
-which exist. To fill this in: run `adb shell getevent -lt` and press each
-button short, then held for 2 s. Android's Home key never reaches an app.
+which exist.
 
 #### 3.3 Existing hotspot navigation and display features
 
@@ -412,7 +426,8 @@ Pinned commits: fork `origin/scooby-engine` **`ff490ad9449f`**; upstream
 | E20 | 3.5 | `terraglyph.cpp:231-237`, `:336-381`, `:414-417`, `:2003-2045`; `chase_check.cpp:259-270` | `handleMouse(false/true, p)` is the click path; the test script already synthesizes clicks; the self-test lists sprites and hit-tests headlessly | Activation reuses `handleMouse`; the reachability check is feasible | — |
 | E21 | 3.2 | `git diff 2982fe324b6c 7b6fa644d74a` over the files in E1–E15 | Only `735ad86c21` (Android mouse pointer capture) changed | No finding changes upstream | — |
 | E22 | 3.2 | `adb shell getevent -lt`, `getevent -lp`, `dumpsys input` on the TCL 65Q77K, 2026-11-26 | Devices listed; no presses captured | The remote's devices | — |
-| E25 | 3.2 | `adb shell "timeout 600 getevent -lt"` on the TCL 65Q77K, 2026-11-26 | Short presses of down, left, right, OK and BACK: kernel keys and HID usages, one press and release each, held 0.10–0.16 s | The D-pad and OK arrive as single key events | D-pad up, MENU, and every button held for 2 s (H6) |
+| E25 | 3.2 | `adb shell "timeout 600 getevent -lt"` on the TCL 65Q77K, 2026-11-26 | Short presses of down, left, right, OK and BACK: kernel keys and HID usages, one press and release each, held 0.10–0.16 s | The D-pad and OK arrive as single key events | — |
+| E26 | 3.2 | `adb shell "timeout 600 getevent -lt"` and `dumpsys input` on the TCL 65Q77K, 2026-11-27; `events.cpp:1242-1252` (`JE_GAMEPAD`) | D-pad up is `KEY_UP` (`0x42`). OK held three times (3.4–4.3 s) and left and right held once each: one press and one release, no hardware repeat. Android repeats held keys (400 ms, then every 50 ms); `JE_GAMEPAD` turns each repeat into a new `JOYBUTTON_DOWN` | A held OK can be timed from the first down to the up (H6); held D-pad presses repeat | ScummVM's own event log during a hold (inferred, not observed) |
 | E23 | 3.7 | `engines/advancedDetector.h:400-405`, `:715`; `advancedDetector.cpp:333-341`; `engines/metaengine.h:71-78`; `engines/dialogs.cpp:472-495`; `metaengine.cpp:460-468`; `base/main.cpp:225`; `awe/metaengine.cpp:31-75`, `awe/detection_tables.h:40`, `awe/awe.cpp:195` | Declare, tie to entries by GUIO flag, persist per game, read with `ConfMan.getBool` | The Phase 1 setting is a standard extra option | — |
 | E24 | 3.7 | `engines/terraglyph/metaengine.h:29-41`; `detection_tables.h:50-123` | No extra options; only `GUIO_NOMIDI` | Where "Hotspot Assist" goes | — |
 
@@ -603,6 +618,11 @@ final mapping. This is a Phase 1 acceptance criterion
 #### 6.3 Standard TV remote limitations
 
 - The physical buttons available.
+- **Held buttons repeat** (3.2, E26). Android adds a repeated press 400 ms
+  into a hold and then every 50 ms, and ScummVM passes each one on as a new
+  button press. Holding a D-pad direction would step through hotspots 20
+  times a second unless navigation ignores or slows repeats. The navigation
+  algorithm packet must decide which.
 - Android TV system-reserved buttons.
 - Long-press detection reliability.
 - Button conflicts.
@@ -845,7 +865,7 @@ Approved, Approved for prototype, Provisional, or Pending.
 | H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | **Approved** (2026-11-26) | (b), a validated interaction point. Prefer a point the engine supplies when it has one; otherwise the hit-tested grid. Never assume the rectangle's centre is clickable |
 | H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | **Provisional** (2026-11-26) | `engines/` as the preferred future location, subject to ScummVM maintainer feedback ([13.3](#133-maintainer-feedback-register)). The first implementation stays inside `engines/terraglyph/` |
 | H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | **Approved** (2026-11-26) | (a), TerraGlyph-specific at first |
-| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22, E25 | **Pending** remote testing | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
+| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a).** BACK and MENU are taken (skip, main menu, keyboard). The capture supports it: the remote sends one press and one release for a held OK, and Android's repeats (every 50 ms after 400 ms) can be ignored while the button is down. Proposed: a short press activates on release; a hold past a threshold (over 400 ms, so it's a deliberate hold) enters cursor mode, and its release activates nothing | E7, E8, E22, E25, E26 | **Pending**: capture done 2026-11-27, awaiting Jeff | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
 | H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | **Approved** (2026-11-26) | The rule in 3.5: only objects that are visible, eligible and hittable now. Characters come later, once their click behavior is verified |
 | H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | **Approved** (2026-11-26) | (a), refresh on directional input. Also invalidate the current selection when game state changes: a hotspot that disappears or is disabled must never stay activatable |
 
@@ -1001,8 +1021,9 @@ Requirements adopted on 2026-11-26 from the review:
 1. ~~Run WP-086~~ ✅ 2026-11-26: Section 3 is verified except 3.6.
 2. ~~Jeff decides H1–H8~~ ✅ 2026-11-26: H1–H5, H7 and H8 decided in
    [§10.4](#104-open-design-decisions); H6 pending.
-3. Capture the TCL remote's buttons (3.2): short and long OK presses, and
-   whether a long press repeats or reaches the app. This settles H6.
+3. ~~Capture the TCL remote's buttons~~ ✅ 2026-11-27 (3.2, E26): held OK
+   sends one press and one release; Android repeats it. Jeff decides H6 on
+   that evidence.
 4. Get early maintainer feedback, which also settles H4.
 5. Draft the interface design packet from the §10.4 decisions. It doesn't
    start until the remote capture has verified the input assumptions.
@@ -1069,3 +1090,4 @@ it stays unresolved.
 | 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
 | 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |
 | 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). A second remote capture recorded short presses of the D-pad, OK and BACK (3.2, E25); held presses are still a gap. |
+| 2026-11-27 | Third remote capture (3.2, E26): D-pad up's code, and held OK, left and right send one press and one release; Android repeats held keys (400 ms, then every 50 ms), and ScummVM turns each repeat into a new press. H6's evidence is in and waits on Jeff; repeating D-pad presses added to the remote limitations (6.3). |
