@@ -8,7 +8,7 @@ title: "WP-085: Google TV app pipeline"
 **Status:** 🚧 **In progress** — executed 2026-11-26/27 on the TCL 65Q77K
 ([§Result](#result)). Milestones 1, 3 and 4 verified; fork PR
 [barefootbetters/scummvm#13](https://github.com/barefootbetters/scummvm/pull/13)
-open. **Open:** exit criterion 3, an import route that works without a computer
+merged into `scooby-engine` 2026-11-27 (`0d5a69c769`). **Open:** exit criterion 3, an import route that works without a computer
 (USB and the system picker don't work on this TV; the cloud route is untested
 on a personal account). Pre-flight
 [READY 2026-11-26](../reference/pre-flight-WP-085-2026-11-26.md); execution
@@ -242,7 +242,8 @@ Reasoning and code citations are in the
    playable (logged).
 6. [x] No executable code is downloaded by the app (code review note in
    §Result).
-7. [x] Fork PR open with the milestone commits; §Result written. Three
+7. [x] Fork PR open with the milestone commits; §Result written. (Merged
+   2026-11-27.) Three
    commits: milestone 2 needed no code.
 
 ## Deliverables
@@ -263,6 +264,7 @@ as his. Per-step evidence is in
 stay local, because they show the TV's address and the app's id.
 
 **Fork PR:** [barefootbetters/scummvm#13](https://github.com/barefootbetters/scummvm/pull/13),
+merged 2026-11-27 with a merge commit (`0d5a69c769`) so the milestone SHAs below stay as cited;
 branch `wp-085-tv-app-pipeline` off `ff490ad9449f`. Three commits, all inside
 `dists/android/` and `backends/platform/android/`:
 
