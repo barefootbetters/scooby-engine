@@ -99,7 +99,7 @@
       "title": "Google TV app pipeline (WP-085)",
       "status": "active",
       "doneWhen": "All four milestones are verified on the TV, and the app downloads no executable code.",
-      "note": "Drafted and ready for pre-flight; built first (decided 2026-11-26)."
+      "note": "Pre-flight ready and claimed 2026-11-26; built first (decided 2026-11-26)."
     },
     {
       "id": "tv-dpad",
@@ -107,7 +107,8 @@
       "workstream": "tv",
       "title": "D-pad with fine cursor movement",
       "status": "next",
-      "doneWhen": "With only the TV remote, the pointer moves finely enough to click a button or object."
+      "doneWhen": "With only the TV remote, the pointer moves finely enough to click a button or object.",
+      "note": "Related: WP-086 (drafted 2026-11-26) researches D-pad jumps between hotspots, a different route to the same TV-remote gap."
     },
     {
       "id": "play-testing",
