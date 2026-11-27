@@ -5,8 +5,10 @@ title: "WP-085: Google TV app pipeline"
 
 # WP-085: Google TV app pipeline — library, import, test packages and updates
 
-**Status:** 📝 Drafted · **ready for pre-flight** (D0–D4 answered
-2026-11-26). Not blocked on any rights holder: it distributes no
+**Status:** 📝 Drafted · **pre-flight READY 2026-11-26**
+([pre-flight](../reference/pre-flight-WP-085-2026-11-26.md); execution prompt
+[session-WP-085-2026-11-26](../sessions/session-WP-085-2026-11-26.md)). Claimed:
+fork worktree `wp-085-tv-app-pipeline` off `ff490ad9449f`. Not blocked on any rights holder: it distributes no
 game, and tests only with legally obtained data. **Built first:** Jeff chose
 "Pipeline first (a)" on 2026-11-26, so this app ships to Google Play through
 [WP-084](WP-084-google-tv-first-release.md) once it's done
@@ -163,6 +165,34 @@ verified by sideloading; the Google Play release is a separate step.
 | D3 | Where test packages are hosted | **Answered 2026-11-26.** Jeff: "Split, own repo (Rec)". Freely redistributable packages (the BASS freeware, readme intact) go on **GitHub Releases in a dedicated repo**, which keeps game data out of the engine repos; anything licensed goes on **Cloudflare behind Access**. The downloader is host-independent (§Scope 7). WP-085 hosts only BASS, so the Access host isn't built here: it's set up when licensed data first needs it |
 | D4 | Whether advanced mode ships in the Play build or only in test builds | **Answered 2026-11-26.** Jeff: "Test builds only (Rec)". Test builds only for v1; revisit after the first Play release |
 
+### Pre-flight answers (2026-11-26)
+
+Put to Jeff at the [pre-flight](../reference/pre-flight-WP-085-2026-11-26.md),
+recommendation first. The answers are the option labels he picked.
+
+| # | Question | Jeff's answer |
+|---|---|---|
+| Q1 | Keeping the package id private on the public fork | "Inject at build time (Rec)". The fork keeps `org.scummvm.scummvm` and ScummVM's name and art as defaults. The real id, label and art come from Gradle properties (`tvAppId`, `tvAppLabel`, `tvAppResDir`) in the build environment's user-level `gradle.properties`, outside every repo, with the values recorded privately. `namespace` is unchanged |
+| Q2 | The test-package repo's name | "tv-test-packages (Rec)": `barefootbetters/tv-test-packages`. Created on Jeff's go during Milestone 3 |
+| Q3 | Icon and banner for sideloaded test builds | "Placeholders OK (Rec)". The real art is needed only for the Play release |
+
+### Engineering calls (pre-flight, 2026-11-26)
+
+Reasoning and code citations are in the
+[pre-flight](../reference/pre-flight-WP-085-2026-11-26.md#engineering-calls-claudes-with-reasoning).
+
+1. **Java download, verify and extract** (§Scope 10's preference), feeding
+   ScummVM's own `--add --path=… --recursive --no-exit`. Porting `backends/dlc/`
+   would also need a SHA-256 implementation, Android store wiring, a manifest
+   adapter and update logic.
+2. **D4 by build-type source sets:** the advanced-mode classes are compiled
+   into the debug (test) build only, with a stub in release, so the Play build
+   holds no advanced-mode code. EC-008 Step 3 checks the release APK with
+   `apkanalyzer` and a dex string search.
+3. **Packages live in `getFilesDir()/packages/<id>/<version>/`**, staged in
+   `packages/.staging/`. App updates keep folders in the data dir, and only
+   `assets/` and `doc/` are resynced.
+
 ## Dependencies
 
 - Fork worktree `wp-085-tv-app-pipeline` off a freshly fetched
@@ -176,13 +206,13 @@ verified by sideloading; the Google Play release is a separate step.
   - Jeff's own *Showdown in Ghost Town* disc data, for TerraGlyph. Used only
     on Jeff's devices, **never hosted where anyone else can download it**.
 - A manifest and package host per D3: a dedicated GitHub repo whose releases
-  hold the BASS test package (its name is set at pre-flight; it's created on
-  Jeff's go, never by a session on its own). Never *Showdown* or any other
+  hold the BASS test package (`barefootbetters/tv-test-packages`, named at
+  pre-flight; it's created on Jeff's go, never by a session on its own). Never *Showdown* or any other
   licensed data on GitHub Releases, because they're public.
 
 ## Execution
 
-1. Pre-flight (`pre-flight-WP-085-<date>.md`).
+1. Pre-flight: [pre-flight-WP-085-2026-11-26](../reference/pre-flight-WP-085-2026-11-26.md), READY.
 2. Milestone 1 → verify on the TCL (EC-008 step 1) → Milestone 2 → verify →
    Milestone 3 → verify → Milestone 4 → verify. Each milestone lands as its
    own commit on the fork branch; a failed verification is fixed before the
