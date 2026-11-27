@@ -85,6 +85,14 @@
       "done": "2026-11-22"
     },
     {
+      "id": "phantom-closeout",
+      "phase": 5,
+      "workstream": "engine",
+      "title": "Phantom closeout and release readiness (WP-087)",
+      "status": "next",
+      "doneWhen": "A full playthrough reaches the credits, save and load work, and Phantom is declared ADGF_TESTING."
+    },
+    {
       "id": "tv-pipeline",
       "phase": 5,
       "workstream": "tv",
