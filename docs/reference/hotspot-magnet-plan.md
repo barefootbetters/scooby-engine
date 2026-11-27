@@ -7,8 +7,9 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 
 > **Status:** Planning baseline. The research in [Section 3](#3-existing-scummvm-architecture-research-findings)
 > is done for everything except SCUMM/HE
-> ([WP-086](../work-packets/WP-086-hotspot-magnet-research.md), 2026-11-26),
-> and its proposals wait on Jeff in [§10.4](#104-open-design-decisions). The
+> ([WP-086](../work-packets/WP-086-hotspot-magnet-research.md), 2026-11-26).
+> Jeff decided H1–H5, H7 and H8 in [§10.4](#104-open-design-decisions) the
+> same day; H6, the cursor fallback, waits on the TCL remote capture. The
 > design in Part II is still intent only, and nothing here is built.
 > **Date:** 2026-11-26 ([Revision history](#revision-history)). **Author:**
 > Jeff (with AI assistance).
@@ -404,9 +405,9 @@ Pinned commits: fork `origin/scooby-engine` **`ff490ad9449f`**; upstream
 
 ## Part II — Technical design
 
-**Status: design intent only.** Interfaces and algorithms are provisional
-until Jeff decides the [§10.4](#104-open-design-decisions) proposals that
-Section 3's findings support.
+**Status: design intent only.** The [§10.4](#104-open-design-decisions)
+decisions (2026-11-26) bound it; interfaces and algorithms stay provisional
+until the interface design packet, which waits on H6.
 
 ### 4. Proposed software architecture
 
@@ -674,8 +675,13 @@ without modifying the original game assets. Phase 1 is valuable on its own.
 
 #### 7.6 Phase 1 acceptance criteria
 
-- Every eligible hotspot can be reached and selected ([5.8](#58-hotspot-reachability)),
-  checked for every room's starting state in both Gen 1 titles.
+- **Reachability** ([5.8](#58-hotspot-reachability)): every eligible
+  interactive hotspot is reachable through a finite sequence of D-pad inputs,
+  and the navigation algorithm never traps the player within a subset of
+  hotspots. Checked for every room's starting state in both Gen 1 titles.
+- A hotspot that disappears or is disabled is never activatable, even while
+  selected (H8).
+- A long OK press never activates a hotspot (H6).
 - Activating a selected hotspot clicks that hotspot: its interaction point
   hit-tests to it.
 - Cursor mode can be entered and left with the standard remote alone, with
@@ -730,6 +736,8 @@ Questions to ask before deep implementation:
 #### 8.6 Phase 2 acceptance criteria
 
 - At least one HE title works.
+- The reachability criterion of [7.6](#76-phase-1-acceptance-criteria) holds
+  in that title's rooms.
 - The same navigation core is reused.
 - SCUMM-specific code stays isolated.
 - Existing controls are unchanged when the feature is disabled.
@@ -810,19 +818,21 @@ Rank by severity × likelihood once the research is done.
 
 #### 10.4 Open design decisions
 
-A living decision register. Mark each row settled, proposed, or unverified.
-The recommendations are WP-086's proposals; each is Jeff's call.
+A living decision register. The recommendations are WP-086's proposals. Jeff
+decided H1–H5, H7 and H8 on 2026-11-26; H6 waits on the remote capture
+([3.2](#32-android-tv-and-gamepad-input)). Status is Jeff's word for each:
+Approved, Approved for prototype, Provisional, or Pending.
 
 | # | Question | Alternatives | Recommendation | Evidence | Status | Resolution |
 |---|---|---|---|---|---|---|
-| H1 | Input integration | (a) a game keymap that binds `JOY_UP`…`JOY_CENTER` while Magnet mode is on; (b) handle raw joystick events in the engine; (c) a new Global keymap | **(a)**: it wins over the Virtual Mouse for those buttons only in games, stays rebindable, and turning it off is the fallback. Add `JOY_HAT_*` for game controllers | E2, E3, E6 | Proposed | — |
-| H2 | Provider interface | (a) `Engine::getHotspotPositions()` as is; (b) it, plus a stable id; (c) a new interface | **(a) first, (b) if keeping the selection across refreshes needs it.** Five engine implementations already fill it, SCUMM's among them; TerraGlyph implementing it also gets the hotspot display | E12, E13, E16 | Proposed | — |
-| H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | Proposed | — |
-| H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | Proposed | — |
-| H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | Proposed | — |
-| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22 | Unverified | — |
-| H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | Proposed | — |
-| H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | Proposed | — |
+| H1 | Input integration | (a) a game keymap that binds `JOY_UP`…`JOY_CENTER` while Magnet mode is on; (b) handle raw joystick events in the engine; (c) a new Global keymap | **(a)**: it wins over the Virtual Mouse for those buttons only in games, stays rebindable, and turning it off is the fallback. Add `JOY_HAT_*` for game controllers | E2, E3, E6 | **Approved** (2026-11-26) | (a), a game keymap |
+| H2 | Provider interface | (a) `Engine::getHotspotPositions()` as is; (b) it, plus a stable id; (c) a new interface | **(a) first, (b) if keeping the selection across refreshes needs it.** Five engine implementations already fill it, SCUMM's among them; TerraGlyph implementing it also gets the hotspot display | E12, E13, E16 | **Approved for prototype** (2026-11-26) | (a), the existing interface. If refreshing the list makes the selection unstable, investigate stable hotspot ids (b) |
+| H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | **Approved** (2026-11-26) | (b), a validated interaction point. Prefer a point the engine supplies when it has one; otherwise the hit-tested grid. Never assume the rectangle's centre is clickable |
+| H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | **Provisional** (2026-11-26) | `engines/` as the preferred future location, subject to ScummVM maintainer feedback ([13.3](#133-maintainer-feedback-register)). The first implementation stays inside `engines/terraglyph/` |
+| H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | **Approved** (2026-11-26) | (a), TerraGlyph-specific at first |
+| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22 | **Pending** remote testing | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
+| H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | **Approved** (2026-11-26) | The rule in 3.5: only objects that are visible, eligible and hittable now. Characters come later, once their click behavior is verified |
+| H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | **Approved** (2026-11-26) | (a), refresh on directional input. Also invalidate the current selection when game state changes: a hotspot that disappears or is disabled must never stay activatable |
 
 ### 11. Development work packets
 
@@ -867,6 +877,9 @@ documentation updates.
 #### 12.2 Navigation tests
 
 - All four directions.
+- Reachability: from each eligible hotspot, every other one is reachable by
+  D-pad presses, with no subset the player can't leave
+  ([5.8](#58-hotspot-reachability)).
 - Overlapping, sparse, and dense layouts.
 - Edge cases and repeatability.
 
@@ -971,10 +984,13 @@ Requirements adopted on 2026-11-26 from the review:
 #### 14.3 Immediate next steps
 
 1. ~~Run WP-086~~ ✅ 2026-11-26: Section 3 is verified except 3.6.
-2. Jeff decides H1–H8 in [§10.4](#104-open-design-decisions).
-3. Capture the TCL remote's buttons (3.2), which settles H6.
-4. Get early maintainer feedback.
-5. Draft the interface design packet, from the H1–H8 decisions.
+2. ~~Jeff decides H1–H8~~ ✅ 2026-11-26: H1–H5, H7 and H8 decided in
+   [§10.4](#104-open-design-decisions); H6 pending.
+3. Capture the TCL remote's buttons (3.2): short and long OK presses, and
+   whether a long press repeats or reaches the app. This settles H6.
+4. Get early maintainer feedback, which also settles H4.
+5. Draft the interface design packet from the §10.4 decisions. It doesn't
+   start until the remote capture has verified the input assumptions.
 
 ### 15. Appendices
 
@@ -1037,3 +1053,4 @@ it stays unresolved.
 | 2026-11-26 | First version, from Jeff's plan. |
 | 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
 | 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |
+| 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). |
