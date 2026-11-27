@@ -94,6 +94,22 @@
       "note": "Drafted and ready for pre-flight; built first (decided 2026-11-26)."
     },
     {
+      "id": "tv-dpad",
+      "phase": 5,
+      "workstream": "tv",
+      "title": "D-pad with fine cursor movement",
+      "status": "next",
+      "doneWhen": "With only the TV remote, the pointer moves finely enough to click a button or object."
+    },
+    {
+      "id": "play-testing",
+      "phase": 5,
+      "workstream": "tv",
+      "title": "Google Play developer account and beta testing",
+      "status": "next",
+      "doneWhen": "A test build installs on the TV from a Google Play testing track."
+    },
+    {
       "id": "tv-release",
       "phase": 5,
       "workstream": "tv",
