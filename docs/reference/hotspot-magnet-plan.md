@@ -5,9 +5,12 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 
 # Hotspot Magnet: directional hotspot navigation
 
-> **Status:** Planning. The research in [Section 3](#3-existing-scummvm-architecture-research-findings)
+> **Status:** Planning baseline. The research in [Section 3](#3-existing-scummvm-architecture-research-findings)
 > isn't done, so the design in Part II is intent only and nothing here is
-> built. **Date:** 2026-11-26. **Author:** Jeff (with AI assistance).
+> built. The first work packet, [WP-086](../work-packets/WP-086-hotspot-magnet-research.md),
+> is that research. **Date:** 2026-11-26, revised the same day after a review
+> ([Revision history](#revision-history)). **Author:** Jeff (with AI
+> assistance).
 >
 > **Primary prototype:** the TerraGlyph engine. **Secondary integration:**
 > SCUMM / Humongous Entertainment. **Long-term objective:** a shared ScummVM
@@ -16,6 +19,7 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 **Related pages:** [WP-008 `object.ini` catalog](../work-packets/WP-008-object-ini-catalog.md) ·
 [WP-018 hotspots and exits](../work-packets/WP-018-hotspots-and-exits.md) ·
 [WP-021 clickable actions](../work-packets/WP-021-clickable-actions.md) ·
+[WP-085 Google TV app pipeline](../work-packets/WP-085-tv-app-pipeline.md) ·
 [ScummVM on smart TVs](scummvm-smart-tv.md) ·
 [ScummVM on the Raspberry Pi](scummvm-raspberry-pi.md) ·
 [Upstream submission decision brief](upstream-submission-decision-brief.md)
@@ -29,6 +33,16 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 Conventional D-pad cursor movement on televisions (ScummVM's Virtual Mouse)
 is continuous and imprecise. Young children and players with motor
 impairments struggle to stop the cursor exactly on small interactive objects.
+Jeff saw this on the TCL 65Q77K on 2026-11-26: the D-pad moves ScummVM's
+pointer but lacks the fine movement needed to click a button or object
+([WP-085 D2](../work-packets/WP-085-tv-app-pipeline.md#decisions-for-jeff)).
+
+**Why it matters for the TV app.** Google's TV app quality rules require an
+app to be navigable with a five-way D-pad unless it requires a game controller.
+Because the D-pad pointer can't click reliably, WP-085 chose "gamepad required"
+for the Play release and left D-pad-only control as its open remote-first
+item. Hotspot Magnet is that item: if it makes the games playable with the
+standard remote, a later release could reconsider that requirement.
 
 **Hotspot Magnet** is a directional, hotspot-to-hotspot navigation system.
 The four D-pad directions move the selection from one currently interactive
@@ -58,7 +72,10 @@ shared-code integration is declined or delayed.
 - OK/Select activates the selected hotspot (left-click equivalent).
 - Support secondary actions (right-click / alternate verb) where the engine
   allows.
-- Instant fallback to conventional Virtual Mouse / free-cursor movement.
+- Instant fallback to conventional Virtual Mouse / free-cursor movement,
+  reachable with the standard remote alone ([6.2](#62-cursor-mode-fallback-requirement)).
+- Every eligible hotspot reachable by directional input
+  ([5.8](#58-hotspot-reachability)).
 - Work across multiple ScummVM engines via engine-supplied hotspot data.
 - Optional visual indication of the selected hotspot.
 
@@ -92,7 +109,9 @@ shared-code integration is declined or delayed.
 
 **This section must be completed from actual source-code inspection before
 Sections 4–6 are finalized.** The findings below are unverified assumptions
-or high-level observations.
+or high-level observations, except where 3.5 cites an earlier work packet.
+[WP-086](../work-packets/WP-086-hotspot-magnet-research.md) does the research
+for 3.1–3.5 and 3.7; 3.6 (SCUMM/HE) is a later packet.
 
 #### 3.1 Keymapper and input events
 
@@ -121,6 +140,17 @@ or high-level observations.
 - Mouse-wheel cursor-cycling implementations.
 - Existing keyboard navigation that could be reused or conflict.
 
+Two different kinds of reuse, which the research keeps apart:
+
+- **Visual reuse:** Hotspot Magnet draws the selected target with the
+  existing hotspot display's renderer.
+- **Data reuse:** Hotspot Magnet gets hotspot geometry through an existing
+  shared interface that engines already fill.
+
+Find out whether the hotspot display exposes reusable hotspot geometry or
+only draws it. Don't assume the display system can serve as a hotspot
+provider until the source shows it.
+
 #### 3.4 Shared component conventions
 
 Evaluate the candidate locations and recommend one, with reasoning:
@@ -135,12 +165,31 @@ Evaluate the candidate locations and recommend one, with reasoning:
 
 #### 3.5 TerraGlyph hotspot data
 
-- `object.ini` structure (catalogued in
-  [WP-008](../work-packets/WP-008-object-ini-catalog.md)).
-- Interactive objects, exits, cursor definitions, bounding rectangles
-  (the engine side is [WP-018](../work-packets/WP-018-hotspots-and-exits.md)
-  and [WP-021](../work-packets/WP-021-clickable-actions.md)).
-- Dynamic hotspot availability and room/scene changes.
+Already established (Gen 1: *Showdown* and *Phantom*):
+
+- **`object.ini` names the objects and their kinds, not their shapes.** It
+  is catalogued in [WP-008](../work-packets/WP-008-object-ini-catalog.md).
+  The kinds that matter here are `exitobject`, `clickableobject`,
+  `requiresobject` and `inventoryobject`; simple sprites and characters can
+  also be hit.
+- **Hits are polygons and pixels, not rectangles**
+  ([WP-018](../work-packets/WP-018-hotspots-and-exits.md)). Exits,
+  clickables, requires and inventory objects test the polygon of their
+  *current animation step*. Characters test their cel pixels and masks. The
+  hit walk goes front to back in draw order, skips hidden sprites, and the
+  first hit wins. The engine exposes this as `Room::hitTest(x, y)`.
+- **So a shape's bounding box isn't a click target.** The box's centre can
+  fall outside a concave polygon, or under a sprite drawn in front, and a
+  hotspot's shape changes as its animation steps.
+- **Availability is runtime state.** Clickables start stopped at step 0 and
+  move to saved states ([WP-021](../work-packets/WP-021-clickable-actions.md)).
+  The ghost is hidden. Rooms, the toolbar rooms and close-ups change what can
+  be clicked.
+
+For WP-086 to answer: which placements count as *eligible* (an
+interactive kind, not hidden, not under the toolbar or a dialog), whether
+characters are interaction targets, and how to find an interaction point that
+`Room::hitTest()` resolves to the intended placement.
 
 #### 3.6 SCUMM / Humongous Entertainment
 
@@ -186,16 +235,22 @@ until Section 3 is complete.
 
 | Component | Lives in | Responsibility |
 |---|---|---|
-| **A. Engine Hotspot Provider** | Engine | Identifies currently interactive objects, supplies geometry and metadata, reports availability changes |
-| **B. Hotspot Navigation Core** | Shared | Holds the active selection, evaluates directional requests, picks the next hotspot, handles unavailable or changing targets |
-| **C. Input Adapter** | Shared, or thin engine glue | Turns D-pad / Keymapper events into navigation requests, handles OK/Select and secondary actions, provides the conventional cursor fallback |
-| **D. Cursor and Feedback Adapter** | Engine or shared | Moves the game cursor, optionally highlights the selected target (possible synergy with the existing hotspot display), handles coordinate conversion |
+| **A. Engine Hotspot Provider** | Engine | Supplies only the targets that are eligible right now ([4.6](#46-eligibility)), each with its geometry, metadata and an interaction point; reports availability changes |
+| **B. Hotspot Navigation Core** | Shared | **Selection:** holds the active selection, evaluates directional requests, picks the next hotspot, handles unavailable or changing targets |
+| **C. Input Adapter** | Shared, or thin engine glue | Turns D-pad / Keymapper events into navigation requests and OK/Select and secondary actions into activation requests; provides the conventional cursor fallback |
+| **D. Cursor Adapter** | Engine or shared | **Cursor positioning:** moves the game cursor to the target's interaction point, with coordinate conversion; optionally highlights the selected target (possible reuse of the existing hotspot display) |
+| **E. Activation** | Engine | **Activation:** invokes the engine's own interaction behavior at the interaction point, as a real click would. The shared code never triggers game logic directly |
+
+Selection, cursor positioning and activation are separate steps. Moving the
+cursor to a target doesn't by itself guarantee the game will accept a click
+there, so the engine owns both the point and the click.
 
 #### 4.3 Proposed interfaces (sketches)
 
 Design-level concepts only, no implementation:
 
-- Hotspot identifier, bounding rectangle, category, priority, enabled state.
+- Hotspot identifier, bounding rectangle (for navigation geometry only),
+  interaction point, category, priority.
 - Current selection.
 - Directional navigation request.
 - Selected target result (or "none").
@@ -216,6 +271,24 @@ Design-level concepts only, no implementation:
 - Cursor placement policy inside a hotspot (center, nearest point,
   engine-preferred point, and so on).
 - Scaling and aspect-ratio correction.
+
+**Interaction point.** The engine hotspot provider may supply a preferred
+interaction point independent of the hotspot's bounding rectangle. The
+navigation core must not assume the geometric centre is a valid activation
+location. In TerraGlyph a valid point is one where `Room::hitTest()` returns
+the intended placement (see [3.5](#35-terraglyph-hotspot-data)); a target with
+no such point isn't eligible.
+
+#### 4.6 Eligibility
+
+Who decides whether a hotspot is interactive right now? There's a difference
+between an object defined in the game data, an object currently visible, an
+object currently clickable, and an object currently meaningful to click.
+
+**Requirement:** the engine hotspot provider supplies only targets the engine
+currently considers eligible for interaction. Static object definitions
+alone aren't enough when game state controls availability. This keeps
+engine-specific scripting out of the shared navigation core.
 
 ### 5. Directional navigation algorithm
 
@@ -269,6 +342,31 @@ Design-level concepts only, no implementation:
 - Hotspot refresh frequency.
 - Avoid unnecessary per-frame work.
 
+#### 5.8 Hotspot reachability
+
+The basic requirement isn't that the selection moves intelligently. It's that
+a child can reach every interactive object. Scoring alone can leave a target
+that is never the preferred candidate from any direction, for example the
+middle one of three objects on a diagonal.
+
+- Every eligible hotspot must be reachable from every other through a finite
+  sequence of directional inputs.
+- Navigation must not trap the player in a subset of hotspots.
+- The algorithm must handle isolated, overlapping and unusually placed
+  hotspots.
+- If directional navigation alone can't guarantee reachability, the design
+  adds a deterministic alternative (for example, a fixed reading-order cycle
+  when no candidate lies in the pressed direction).
+
+**How to test it.** Reachability is a property of a room's layout, so it can
+be checked exhaustively rather than sampled. The headless self-test already
+walks every room in both Gen 1 titles (WP-018's grid hit test covers all 69
+*Showdown* and 53 *Phantom* rooms). A reachability check can build the
+navigation graph for each room's eligible targets (each target × four
+directions → the target selected) and confirm it's strongly connected. That
+covers each room's starting state; states reached by play (clickables
+moved, objects revealed) need the live tests in [12](#12-testing-and-validation-matrix).
+
 ### 6. Input and user experience
 
 #### 6.1 Default control scheme (provisional)
@@ -281,13 +379,25 @@ Design-level concepts only, no implementation:
 | D-pad Right | Next hotspot right |
 | OK / Select | Left-click the selected hotspot |
 | Secondary button | Right-click / alternate action |
-| Long press | Enter conventional cursor mode |
+| Long press | Enter conventional cursor mode (candidate only; see 6.2) |
 
 The mapping stays provisional until Android TV remote capabilities and
 Keymapper integration are verified. The existing Virtual Mouse bindings must
 be considered.
 
-#### 6.2 Standard TV remote limitations
+#### 6.2 Cursor-mode fallback requirement
+
+A long press may already mean something on a remote: holding OK might repeat
+the click instead of switching modes.
+
+**Requirement:** Hotspot Magnet must provide a reliable way to enter and
+leave conventional cursor mode using only the standard TV remote. The method
+must not depend on a system-reserved button, need extra hardware, or
+unintentionally activate a game object. Device testing on the TV sets the
+final mapping. This is a Phase 1 acceptance criterion
+([7.6](#76-phase-1-acceptance-criteria)).
+
+#### 6.3 Standard TV remote limitations
 
 - The physical buttons available.
 - Android TV system-reserved buttons.
@@ -295,13 +405,13 @@ be considered.
 - Button conflicts.
 - Accessibility implications.
 
-#### 6.3 Gamepad and keyboard support
+#### 6.4 Gamepad and keyboard support
 
 - Configurable actions via the Keymapper.
 - Platform-independent navigation behavior.
 - Coexistence with existing engine keymaps.
 
-#### 6.4 Visual feedback
+#### 6.5 Visual feedback
 
 - An optional hotspot outline or marker (possibly reusing the existing
   hotspot display renderer).
@@ -310,14 +420,14 @@ be considered.
 - Avoiding interference with the game's artwork.
 - Highlight rendering limitations across engines.
 
-#### 6.5 Parent-friendly configuration
+#### 6.6 Parent-friendly configuration
 
 - A single per-game checkbox: "Hotspot Assist" (or similar).
 - Disabled by default.
 - Saved configuration.
 - Clear fallback instructions in the GUI.
 
-#### 6.6 Accessibility considerations
+#### 6.7 Accessibility considerations
 
 - Reduced fine-motor requirements.
 - Predictable navigation.
@@ -342,16 +452,20 @@ without modifying the original game assets. Phase 1 is valuable on its own.
 - Use the existing TerraGlyph hotspot data.
 - No shared ScummVM changes unless the prototype strictly needs them.
 
-#### 7.2 `object.ini` integration
+#### 7.2 TerraGlyph hotspot provider
 
-- Parse the interactive object definitions.
-- Identify usable bounding rectangles.
-- Determine which objects are currently active.
+- Take the targets from the room's live placements, which the engine already
+  built from `object.ini` and the art, not by parsing `object.ini` again.
+- Keep only eligible targets ([4.6](#46-eligibility)): an interactive kind,
+  not hidden, in the room the player is in.
+- Use each target's current step polygon (or cel bounds) for navigation
+  geometry, and find an interaction point that `Room::hitTest()` resolves to
+  that target.
 - Supply normalized hotspot data to the navigation core.
 
 #### 7.3 Cursor and input integration
 
-- Move the cursor to the selected target.
+- Move the cursor to the selected target's interaction point.
 - Activate through the game's existing interaction mechanisms.
 - Preserve conventional mouse and Virtual Mouse operation.
 - Implement the fallback.
@@ -373,7 +487,13 @@ without modifying the original game assets. Phase 1 is valuable on its own.
 
 #### 7.6 Phase 1 acceptance criteria
 
-- All reachable hotspots can be selected.
+- Every eligible hotspot can be reached and selected ([5.8](#58-hotspot-reachability)),
+  checked for every room's starting state in both Gen 1 titles.
+- Activating a selected hotspot clicks that hotspot: its interaction point
+  hit-tests to it.
+- Cursor mode can be entered and left with the standard remote alone, with
+  no system-reserved button and no accidental click
+  ([6.2](#62-cursor-mode-fallback-requirement)).
 - Navigation is predictable and repeatable.
 - No unintended clicks.
 - Dynamic hotspots and room transitions are handled.
@@ -514,26 +634,28 @@ A living decision register. Mark each row settled, proposed, or unverified.
 Work packets live in their own `WP-NNN` files under
 [work-packets](../work-packets/WORK_INDEX.md). This plan sets only their
 sequence and goals; detailed tasks, files touched, and test procedures belong
-in the packets. Numbers are assigned when each packet is drafted (WP-085 is
-the newest as of 2026-11-26).
+in the packets. Numbers are assigned when each packet is drafted.
 
-| # | Proposed packet |
-|---|---|
-| 1 | Existing input architecture research |
-| 2 | Existing hotspot navigation research |
-| 3 | Hotspot Magnet interface design |
-| 4 | Directional selection prototype |
-| 5 | TerraGlyph hotspot provider |
-| 6 | TerraGlyph input integration |
-| 7 | Dynamic hotspot handling |
-| 8 | Configuration and fallback |
-| 9 | Windows validation |
-| 10 | Android TV validation |
-| 11 | Raspberry Pi validation |
-| 12 | SCUMM/HE research |
-| 13 | SCUMM maintainer consultation |
-| 14 | SCUMM/HE prototype |
-| 15 | Shared code proposal |
+| # | Proposed packet | WP |
+|---|---|---|
+| 1 | Input and hotspot-feature research (Section 3 except 3.6) | [WP-086](../work-packets/WP-086-hotspot-magnet-research.md) 📝 |
+| 2 | Hotspot Magnet interface design | — |
+| 3 | Directional algorithm design and test cases (including the reachability check) | — |
+| 4 | Directional selection implementation (hand-written) | — |
+| 5 | TerraGlyph hotspot provider | — |
+| 6 | TerraGlyph input integration | — |
+| 7 | Dynamic hotspot handling | — |
+| 8 | Configuration and fallback | — |
+| 9 | Windows validation | — |
+| 10 | Android TV validation | — |
+| 11 | Raspberry Pi validation | — |
+| 12 | SCUMM/HE research | — |
+| 13 | SCUMM maintainer consultation | — |
+| 14 | SCUMM/HE prototype | — |
+| 15 | Shared code proposal | — |
+
+The two research packets of the first draft are one, and the directional
+algorithm is split into its design with test cases and its implementation.
 
 Each packet includes: goal, prerequisites, files touched, design constraints,
 hand-written implementation tasks, test procedure, done-when criteria, and
@@ -568,6 +690,21 @@ documentation updates.
 
 Record for each test: environment, game and version, build identification,
 steps, expected and actual result, pass/fail.
+
+#### 12.6 User experience validation
+
+The technical criteria can all pass and the feature still feel confusing.
+Watch whether a child can:
+
+- tell which object is selected;
+- move to another object without being told how;
+- activate the object they meant;
+- recover from a wrong selection;
+- switch to conventional cursor movement when they need it;
+- finish a representative game interaction without a mouse.
+
+These are observational tests, recorded as what was seen, not claims that a
+given age group will succeed.
 
 ---
 
@@ -608,6 +745,18 @@ in the [upstream submission decision brief](upstream-submission-decision-brief.m
 - Research and work packets stay in this repository.
 - All engine C++ is written by hand.
 
+Requirements adopted on 2026-11-26 from the review:
+
+- A cursor-mode fallback that works with the standard remote alone
+  ([6.2](#62-cursor-mode-fallback-requirement)).
+- Every eligible hotspot reachable ([5.8](#58-hotspot-reachability)).
+- Selection, cursor positioning and activation kept separate, with the engine
+  supplying the interaction point ([4.2](#42-component-responsibilities),
+  [4.5](#45-coordinate-systems)).
+- The engine supplies only currently eligible targets ([4.6](#46-eligibility)).
+- Observational user-experience tests
+  ([12.6](#126-user-experience-validation)).
+
 #### 14.2 Decisions requiring research
 
 - Final module interfaces.
@@ -618,14 +767,20 @@ in the [upstream submission decision brief](upstream-submission-decision-brief.m
 - SCUMM integration point.
 - Cursor placement policy.
 - Wrap-around default.
+- The remote mapping for the cursor-mode fallback.
+- Whether reachability needs a deterministic alternative beyond directional
+  input.
+- Whether the existing hotspot display offers data reuse, visual reuse,
+  both or neither.
 
 #### 14.3 Immediate next steps
 
-1. Complete the source-code research (Section 3).
-2. Record verified findings in the evidence register.
-3. Resolve the architecture decisions.
-4. Get early maintainer feedback.
-5. Define and number the first implementation work packet.
+1. Run [WP-086](../work-packets/WP-086-hotspot-magnet-research.md): the
+   source-code research for Section 3 (except 3.6), with every finding in the
+   evidence register.
+2. Resolve the architecture decisions it makes answerable.
+3. Get early maintainer feedback.
+4. Draft the interface design packet.
 
 ### 15. Appendices
 
@@ -645,3 +800,10 @@ This page is the authoritative architecture and roadmap for Hotspot Magnet.
 Individual work packets govern implementation, testing, and completion.
 Source-dependent conclusions stay unresolved until the ScummVM source is
 inspected.
+
+## Revision history
+
+| Date | Change |
+|---|---|
+| 2026-11-26 | First version, from Jeff's plan. |
+| 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
