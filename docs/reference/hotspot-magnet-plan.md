@@ -6,11 +6,12 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 # Hotspot Magnet: directional hotspot navigation
 
 > **Status:** Planning baseline. The research in [Section 3](#3-existing-scummvm-architecture-research-findings)
-> isn't done, so the design in Part II is intent only and nothing here is
-> built. The first work packet, [WP-086](../work-packets/WP-086-hotspot-magnet-research.md),
-> is that research. **Date:** 2026-11-26, revised the same day after a review
-> ([Revision history](#revision-history)). **Author:** Jeff (with AI
-> assistance).
+> is done for everything except SCUMM/HE
+> ([WP-086](../work-packets/WP-086-hotspot-magnet-research.md), 2026-11-26),
+> and its proposals wait on Jeff in [§10.4](#104-open-design-decisions). The
+> design in Part II is still intent only, and nothing here is built.
+> **Date:** 2026-11-26 ([Revision history](#revision-history)). **Author:**
+> Jeff (with AI assistance).
 >
 > **Primary prototype:** the TerraGlyph engine. **Secondary integration:**
 > SCUMM / Humongous Entertainment. **Long-term objective:** a shared ScummVM
@@ -107,119 +108,305 @@ shared-code integration is declined or delayed.
 
 ### 3. Existing ScummVM architecture: research findings
 
-**This section must be completed from actual source-code inspection before
-Sections 4–6 are finalized.** The findings below are unverified assumptions
-or high-level observations, except where 3.5 cites an earlier work packet.
-[WP-086](../work-packets/WP-086-hotspot-magnet-research.md) does the research
-for 3.1–3.5 and 3.7; 3.6 (SCUMM/HE) is a later packet.
+**Verified by [WP-086](../work-packets/WP-086-hotspot-magnet-research.md)
+on 2026-11-26**, except 3.6 (SCUMM/HE, a later packet). Every finding cites
+the fork at `origin/scooby-engine` **`ff490ad9449f`**, and each has a row in
+the [evidence register](#38-research-evidence-register) (E1, E2, …). Gen 1
+means *Showdown* and *Phantom*; the shared-code findings carry no generation.
+
+**What the research changes.** Three findings matter most to the design:
+
+- **The remote's D-pad reaches ScummVM as joystick buttons, and a game can
+  take it over** (3.1, 3.2). Android binds those buttons to the Virtual Mouse
+  in the Global keymap, and an exact match in the game's keymap is checked
+  first, so an engine keymap that binds them gets them instead. Turning that
+  keymap off hands the D-pad back to the Virtual Mouse.
+- **ScummVM already has an engine hotspot interface,
+  `Engine::getHotspotPositions()`, and five engine implementations fill it**
+  (3.3), SCUMM's among them. Each returns a point that is checked to hit the
+  object, which is the interaction point the design needs. TerraGlyph doesn't
+  implement it yet.
+- **TerraGlyph already has a single click path,
+  `TerraglyphEngine::handleMouse()`, which the test script drives with
+  synthetic clicks** (3.5). Activation can go through it unchanged.
 
 #### 3.1 Keymapper and input events
 
-- Keymapper architecture and engine-specific actions.
-- The Virtual Mouse implementation (`backends/keymapper/virtual-mouse.*`) and
-  its default D-pad / joystick bindings.
-- Mouse movement and click emulation paths.
-- Opportunities for reuse versus conflicts with existing arrow-key / D-pad
-  bindings.
+- **Dispatch** (E1). `EventDispatcher::dispatch` passes each event to
+  `Keymapper::mapEvent`. That runs `getMappedActions` on the enabled keymaps
+  of the current type (Game or GUI), and `Keymapper::executeAction` builds the
+  output events. An unmapped event goes through raw, and any match swallows
+  the raw event.
+- **Priority** (E2). Game (or GUI) keymaps are searched first. The Global
+  keymap is searched only when that first pass has no exact match. Joystick
+  inputs always match exactly when bound. Game and GUI keymaps are never
+  searched together.
+- **Can an engine keymap take the D-pad from the Virtual Mouse? Yes** (E2,
+  E3). The Virtual Mouse's D-pad bindings live in the Global keymap. While a
+  game runs, an enabled game keymap that binds `JOY_UP`/`DOWN`/`LEFT`/`RIGHT`
+  matches first, so the Virtual Mouse never sees those presses. Its other
+  bindings (the left stick) keep working. In ScummVM's own menus, game keymaps
+  aren't searched, so the D-pad moves the pointer there as before.
+- **The Virtual Mouse** (E4). Its actions are `VMOUSEUP`, `VMOUSEDOWN`,
+  `VMOUSELEFT`, `VMOUSERIGHT` and `VMOUSESLOW`. **It has no click action**: an
+  in-game left click is the engine-default `LCLK` on `MOUSE_LEFT`/`JOY_A`. It
+  moves the pointer at a constant velocity every 12 ms (no acceleration),
+  scaled by `kbdmouse_speed` and `joystick_deadzone`. It is always built on
+  Android, with no enable flag (E5).
+- **Precedent for an engine-defined action:** the hotspot display's
+  "Show/hide hotspots" action is added by each engine through
+  `MetaEngine::createHotspotAction()` (E11).
 
 #### 3.2 Android TV and gamepad input
 
-- Android backend D-pad handling (mapped to the Virtual Mouse by default).
-- The difference between remote D-pad button events and gamepad HAT/axis
-  events.
-- Cursor acceleration and the Pointer Speed setting.
-- Long-press detection and system-reserved buttons.
-- Virtual gamepad overlay behavior.
+- **D-pad and OK** (E6). `ScummVMEvents.onKey` sends `DPAD_UP`, `DOWN`,
+  `LEFT`, `RIGHT` and `CENTER` as `JE_GAMEPAD`. The native side turns them
+  into `EVENT_JOYBUTTON_DOWN`/`UP` with `JOYSTICK_BUTTON_DPAD_*`, which are
+  the hardware inputs `JOY_UP` … `JOY_CENTER`. They are **not key events, not
+  hat axes and not mouse movement**. Android's defaults bind the four
+  directions to the Virtual Mouse (Global keymap) and `JOY_CENTER` to
+  "interact" in the GUI only. **In a game, `JOY_CENTER` is unbound**, so the
+  engine receives it raw. `ENTER` from a keyboard arrives as `KEYCODE_RETURN`.
+- **Gamepad hat D-pads** arrive separately, as `EVENT_JOYAXIS_MOTION` on the
+  hat axes (E6). A design that binds the remote's buttons doesn't cover a
+  game controller's D-pad, which needs its own binding.
+- **The old D-pad-to-mouse code is dead** (E6). The native `JE_DPAD` path,
+  which emulated the mouse with acceleration, is commented "no longer used",
+  and Java never sends that event.
+- **Holding a key** (E7). Key events carry a repeat count, and the Keymapper
+  drops repeats. `JE_GAMEPAD` ignores the count, so if the remote repeats a
+  held D-pad press, each repeat arrives as a fresh `JOYBUTTON_DOWN`.
+  **Unverified:** whether the TCL's remote repeats while held (3.2 remote,
+  below). Long-press detection exists only for BACK and MENU.
+- **Keys the backend uses itself** (E8):
+
+  | Key | Short press | Long press |
+  |---|---|---|
+  | BACK | `KEYCODE_AC_BACK`: skip (ESC) in a game, close in the GUI | `KEYCODE_MENU`: ScummVM's main menu |
+  | MENU | ScummVM's main menu | Toggles the on-screen keyboard |
+  | Volume up/down | Left to Android | — |
+  | Play/pause | `VMOUSESLOW` (Virtual Mouse slow) | — |
+  | Gamepad START / SELECT | Main menu / virtual keyboard | — |
+
+- **Pointer Speed** is `kbdmouse_speed` (default 2 on Android), read only by
+  the Virtual Mouse. There is no cursor-acceleration setting (E9).
+- **The on-screen gamepad** (`touchcontrols.cpp`) becomes active only from
+  touch input, so on a TV with no touch screen it never shows and never takes
+  input (E10).
+- **Upstream drift** (E21). Since the fork's base (`2982fe324b6c`),
+  `scummvm/scummvm` master (`7b6fa644d74a`, 2026-11-26) changed only
+  `735ad86c21` among these files: mouse pointer capture with relative motion.
+  It changes no D-pad or key finding.
+
+**The TCL 65Q77K's remote** (E22). **Not captured: a gap.** On 2026-11-26
+`adb shell getevent -lt` ran for 3 minutes with no button presses, so no key
+codes or long-press behavior were recorded. What it did show: `getevent`
+works over adb without root, and the TV's input devices are the Bluetooth
+remote `BT_RC923A_B1 Consumer Control` (`/dev/input/event7`), a
+`virtual-remote`, the `MTK Smart TV IR Receiver`, the TV keypad, a
+`gIrTouch_Mouse` and a `virtual-search` device. The remote's HID report lists
+about 150 possible keys, many more than its buttons, so only presses show
+which exist. To fill this in: run `adb shell getevent -lt` and press each
+button short, then held for 2 s. Android's Home key never reaches an app.
 
 #### 3.3 Existing hotspot navigation and display features
 
-- The recent shared "Enable hotspot display" feature (visual markers and
-  labels, configurable style).
-- Engines with hotspot highlighting or object cycling (Riven keyboard
-  navigation, MADS, others).
-- Mouse-wheel cursor-cycling implementations.
-- Existing keyboard navigation that could be reused or conflict.
+- **The data: `Graphics::HotspotInfo` is a point, a name and a type** (E12):
+  `Common::Point position` ("in game coordinates"), `Common::U32String name`,
+  and `HotspotType type` (default, object, exit or NPC). It has no rectangle
+  and no identifier.
+- **The engine interface** (E13). `Engine::getHotspotPositions(Common::Array<HotspotInfo> &)`
+  is empty by default. `Engine::drawHotspots()`, which each implementing
+  engine calls once per frame, asks for positions only when `hotspotDirty()`
+  (default: every frame), creates the renderer lazily and draws to the
+  overlay. `showHotspots()` turns the display on and off, and pausing or
+  opening the GUI suspends it.
+- **The key and the setting** (E11, E14). The "Show/hide hotspots" action
+  (`HOTS`, key `h`) sends `EVENT_HOTSPOTS_SHOW` on press and `…_HIDE` on
+  release. `DefaultEventManager` handles both as hold or toggle (the
+  `hotspot_key_mode` setting) and doesn't pass them to the engine. The
+  per-game `enable_hotspots` checkbox sits in the edit-game dialog's Misc tab
+  for every game, and defaults to **off**. An engine opts in by adding the
+  action in its `initKeymaps` only when `hotspotsEnabled(target)`; there is
+  no feature flag.
+- **The renderer** (E15) draws markers (crosshair, square or point), leader
+  lines and labels at the given points, scaled from game to overlay size. It
+  draws no outlines, ignores `type`, and always draws the whole list it's
+  given. **It can draw one selected target only by being given a one-item
+  list**, and it has no selected style. It draws through the generic overlay
+  API; no backend has hotspot-specific code.
+- **Who fills it** (E16): five engine implementations, each returning only
+  interactive things, and each placing the point so it hits the object:
 
-Two different kinds of reuse, which the research keeps apart:
+  | Engine | What it returns | How the point is chosen |
+  |---|---|---|
+  | `scumm` (v0–v8 and HE; the HE sports games, rebel1/2 and moonbase are excluded at the keymap) | Touchable objects in view, and visible actors other than the player | The first point of a 3 × 3 grid over the object where `findObject()` returns that object |
+  | `touche` | Hit boxes not locked or hidden, and characters | The rectangle's centre, or the centre of its visible part |
+  | `hollywood` (both games) | Named hotspot ids found by scanning the viewport | The bounding box's centre, or the nearest pixel of the region if the centre falls outside |
+  | `macs2` | Colour-map regions and scene objects | Each region's centroid, snapped into the region |
 
-- **Visual reuse:** Hotspot Magnet draws the selected target with the
-  existing hotspot display's renderer.
-- **Data reuse:** Hotspot Magnet gets hotspot geometry through an existing
-  shared interface that engines already fill.
-
-Find out whether the hotspot display exposes reusable hotspot geometry or
-only draws it. Don't assume the display system can serve as a hotspot
-provider until the source shows it.
+- **Data reuse or visual reuse? Both, with limits.** For **data**,
+  `getHotspotPositions()` is usable as the Hotspot Magnet provider as it
+  stands: its points are hit-checked interaction points, and directional
+  navigation can run on points alone. It lacks a stable identifier, which
+  keeping a selection across refreshes would want; an addition may be needed
+  there. For **visuals**, the renderer can mark one target if given a
+  one-item list, but it has no highlight style, and it shares the overlay with
+  the show-all display.
+- **Other navigation** (E17). **Lab** is the only engine that moves the
+  cursor between interactive items: its "FOCUS" action (TAB / `JOY_X`) moves
+  the mouse to the centre of the next close-up in its list, wrapping. Its
+  logic is tied to Lab's data. Riven's arrow keys run named hotspots
+  ("forward", "left") without moving the cursor. MADS's tab swaps the cursor
+  between two saved positions. Grim cycles objects through script keys
+  (unverified past the key events). AGOS and Sword25 only reveal all
+  hotspots. **None is reusable as a navigation core.**
+- Two small inaccuracies in the fork, recorded for the record: the comment at
+  `engines/engine.h:560` says the markers are "semi-transparent circles", but
+  the default is a crosshair, and `HotspotType` is never used in drawing.
 
 #### 3.4 Shared component conventions
 
-Evaluate the candidate locations and recommend one, with reasoning:
+What already lives where (E11–E15):
 
-| Location | Evaluation |
-|---|---|
-| `common/` | General-purpose navigation logic |
-| `gui/` | User interface integration |
-| `engines/` | Engine-facing helper |
-| `backends/keymapper/` | Input mapping integration |
-| `graphics/` | Possible synergy with the hotspot display renderer |
+| Location | What's there now | Fit for Hotspot Magnet |
+|---|---|---|
+| `common/` | General utilities | Could hold a pure point-navigation function, but nothing hotspot-related lives there |
+| `gui/` | The `enable_hotspots` checkbox and its sibling options (edit-game dialog) | The shared setting, in Phase 3 |
+| `engines/` | `Engine::getHotspotPositions()`, `drawHotspots()`, `showHotspots()`; `MetaEngine::createHotspotAction()` and `hotspotsEnabled()` | **The data source and the action pattern** |
+| `backends/keymapper/` | The Virtual Mouse and the Keymapper | Only the bindings; a navigation action is an engine-level action, as `HOTS` is |
+| `graphics/` | `HotspotInfo`, `HotspotRenderer` | The selected-target marker |
+
+**Recommendation (proposed):** `engines/`, beside the hotspot display. Its
+input is `getHotspotPositions()`, its action follows `createHotspotAction()`,
+and its marker can come from `graphics/hotspot_renderer`. Keep the directional
+algorithm a standalone class with no engine dependency, so it can be tested
+without an engine. Phase 1 still prototypes inside `engines/terraglyph/`
+(7.1); this is where the shared extraction would land.
 
 #### 3.5 TerraGlyph hotspot data
 
-Already established (Gen 1: *Showdown* and *Phantom*):
+From earlier packets, Gen 1: `object.ini` names the objects and their kinds
+([WP-008](../work-packets/WP-008-object-ini-catalog.md)), and hits test step
+polygons or cel pixels, front to back
+([WP-018](../work-packets/WP-018-hotspots-and-exits.md)). In the source:
 
-- **`object.ini` names the objects and their kinds, not their shapes.** It
-  is catalogued in [WP-008](../work-packets/WP-008-object-ini-catalog.md).
-  The kinds that matter here are `exitobject`, `clickableobject`,
-  `requiresobject` and `inventoryobject`; simple sprites and characters can
-  also be hit.
-- **Hits are polygons and pixels, not rectangles**
-  ([WP-018](../work-packets/WP-018-hotspots-and-exits.md)). Exits,
-  clickables, requires and inventory objects test the polygon of their
-  *current animation step*. Characters test their cel pixels and masks. The
-  hit walk goes front to back in draw order, skips hidden sprites, and the
-  first hit wins. The engine exposes this as `Room::hitTest(x, y)`.
-- **So a shape's bounding box isn't a click target.** The box's centre can
-  fall outside a concave polygon, or under a sprite drawn in front, and a
-  hotspot's shape changes as its animation steps.
-- **Availability is runtime state.** Clickables start stopped at step 0 and
-  move to saved states ([WP-021](../work-packets/WP-021-clickable-actions.md)).
-  The ghost is hidden. Rooms, the toolbar rooms and close-ups change what can
-  be clicked.
+- **Hit testing** (E18). `Room::hitTest(x, y)` returns a **sprite index**
+  into the room's sprites, or −1. It walks the private draw list front to
+  back, skips a sprite that is `hidden` or has `hitType` 0, tests the current
+  step's polygon (type 2) or the current frame's cels (type 1), and returns
+  the first hit. Detached sprites aren't in the list. The cursor is a
+  separate sprite and is never hit.
+- **The placements** (E18). Each is a private `Room::Sprite` with a `Kind`
+  (layer, simple, character, ghost, exit, requires, inventory, clickable,
+  engine). A room's class can override the kind. They are listed through
+  `getSpriteCount()` and per-index accessors: `getLabel`, `getMode`,
+  `getStep`, `isHidden`, `getHitType`, `isDetached`, `getDestination` (an
+  exit is a sprite with a destination), `isClickable`, `isInventoryObject`,
+  `isRequiresObject`, `isEngineSprite`, `getCharacters()`. Geometry is
+  `getFrameRect()` (first cel only) or `getSize()`; **the polygon and its
+  bounding box are private** (`getPolygon`), so an interaction-point search
+  over a polygon needs a small accessor.
+- **One room, gated input** (E19). Play uses a single `Room` object. The
+  toolbar's sprites are added to it at depth 5000, so `hitTest()` covers the
+  toolbar too, and close-ups and Big Head are rooms loaded into the same
+  object. Nothing reroutes input. Instead `TerraglyphEngine::handleMouse()`
+  drops clicks while a script runs or the inventory blocks input, and turns a
+  click into a skip while the room's class is busy.
+- **The click path** (E20). `TerraglyphEngine::handleMouse(bool click, Point)`
+  updates the hover through `hitTest()` and then hands the click on, in
+  order: character, room class, inventory, hint, then exit or clickable. **The
+  `test_script` `click x y` command already calls `handleMouse(false, p)` and
+  then `handleMouse(true, p)`**: a synthetic click through the real path.
+- **Headless listing: yes** (E20). The self-test's `checkAllRooms` builds a
+  bare `Room` (no room class, no toolbar) and hit-tests a 4-pixel grid; other
+  checks drive the live room with `hitTest(x, y) == sprite`. The accessors
+  above are enough to list each room's sprites headlessly.
 
-For WP-086 to answer: which placements count as *eligible* (an
-interactive kind, not hidden, not under the toolbar or a dialog), whether
-characters are interaction targets, and how to find an interaction point that
-`Room::hitTest()` resolves to the intended placement.
+**Proposed eligibility rule** (Gen 1, from E18–E20): a sprite is a target
+when it is not hidden, not detached, has `hitType` ≠ 0, and is an exit (has a
+destination), a clickable, a requires object, an inventory object or a
+toolbar sprite; **and** `handleMouse()` would accept a click now (no script
+busy, input not blocked, room class not busy). Leave out simple sprites, which
+are hittable but do nothing, and the ghost. **Characters:** the engine passes
+a click to `clickCharacter()` only with the arrow cursor, and whether that
+does something in every room is unverified, so leave them out at first and
+revisit.
+
+**Proposed interaction point:** search the sprite's polygon bounding box (or
+cel rect) on a small grid, centre first, and keep the first point where
+`hitTest()` returns that sprite, as SCUMM does with `findObject()`. A sprite
+with no such point (fully covered by another) isn't eligible.
 
 #### 3.6 SCUMM / Humongous Entertainment
 
-- Object storage, coordinates, and bounding boxes.
-- Room transitions and interactive object availability.
-- Differences between HE game versions.
-- Candidate integration points.
+Not researched yet (the SCUMM/HE research packet). One lead from 3.3: SCUMM
+already implements `getHotspotPositions()` for v0–v8 and HE, with
+hit-checked points (E16).
 
 #### 3.7 Per-game configuration
 
-- The `ExtraGuiOptions` pattern.
-- Configuration persistence.
-- Engine-specific feature availability declarations.
-- Default-disabled behavior.
+- **The engine mechanism** (E23). An engine declares a per-game checkbox as
+  an `ADExtraGuiOptionsMap` entry (a GUIO flag plus an `ExtraGuiOption`:
+  label, tooltip, config key, default) returned from
+  `getAdvancedExtraGuiOptions()` on its meta-engine. The option shows only for
+  detection entries whose GUIO list has the flag (`GUIO_GAMEOPTIONSn`), it's
+  saved in the game's own config domain, and `registerDefaultSettings()`
+  registers its default, so the engine just calls `ConfMan.getBool(key)`.
+  Example: Awe's `copy_protection` (`engines/awe/metaengine.cpp`,
+  `detection_tables.h`).
+- **TerraGlyph today** (E24). It declares no extra options: its meta-engine
+  overrides only `getName`, `createInstance` and `hasFeature`, and every
+  detection entry has only `GUIO1(GUIO_NOMIDI)`. A default-off "Hotspot
+  Assist" would go in an override of
+  `TerraglyphMetaEngine::getAdvancedExtraGuiOptions()`
+  (`engines/terraglyph/metaengine.{h,cpp}`), with a `GAMEOPTION_` flag added
+  to the entries in `detection_tables.h`.
+- **The shared model** (E14). `enable_hotspots` is the other pattern: a
+  shared per-game key in the edit-game dialog for every game, with each
+  engine opting in through its keymap. **Proposed:** the engine option for
+  Phase 1, and a shared key on the `enable_hotspots` model for Phase 3.
 
 #### 3.8 Research evidence register
 
-For every finding, record:
+Pinned commits: fork `origin/scooby-engine` **`ff490ad9449f`**; upstream
+`scummvm/scummvm` master **`7b6fa644d74a`** (2026-11-26), merge base
+`2982fe324b6c`. Paths are in the fork.
 
-- Source file path and the relevant class/method.
-- Verified behavior.
-- Implications for Hotspot Magnet.
-- Remaining unverified assumptions.
+| # | Section | Source (file, symbol) | Verified behavior | Implication for Hotspot Magnet | Still unverified |
+|---|---|---|---|---|---|
+| E1 | 3.1 | `common/events.cpp` `EventDispatcher::dispatch`; `backends/keymapper/keymapper.cpp` `Keymapper::mapEvent`, `getMappedActions`, `executeAction`; `keymap.cpp` `Keymap::getMappedActions`, `loadMappings` | Events map to actions through enabled keymaps; unmapped events pass raw; a match swallows the raw event | Navigation can be Keymapper actions, rebindable like any other | — |
+| E2 | 3.1 | `keymapper.cpp:183-199` `Keymapper::mapEvent`; `keymap.cpp:240` | Game/GUI keymaps first; Global only without an exact match; joystick inputs match exactly | An engine keymap wins over the Virtual Mouse for the same buttons | — |
+| E3 | 3.1, 3.2 | `backends/platform/android/android.cpp:742-754` `getKeymapperDefaultBindings`; `hardware-input.cpp:266-270` | Android binds `VMOUSE*` to `JOY_UP`…`JOY_RIGHT` in the Global keymap and GUI interact to `JOY_A`, `JOY_CENTER`, `SELECT` | Binding the D-pad in a game keymap takes it from the Virtual Mouse; disabling that keymap gives it back | — |
+| E4 | 3.1 | `backends/keymapper/virtual-mouse.cpp` `addActionsToKeymap`, `handleAxisMotion`, `pollEvent`, `computeJoystickMouseSpeedFactor`; `engines/metaengine.cpp:97-101` | Five movement actions, no click; constant velocity every 12 ms; in-game click is `LCLK` on `MOUSE_LEFT`/`JOY_A` | Conventional cursor mode is the Virtual Mouse as it is | — |
+| E5 | 3.1 | `backends/events/default/default-events.cpp:57`; `android.cpp:457`, `:364` | The Virtual Mouse is always built on Android; `kbdmouse_speed` defaults to 2 | No enable step needed for the fallback | — |
+| E6 | 3.2 | `ScummVMEvents.java:519-545` `onKey`; `events.cpp:1243-1337` (`JE_GAMEPAD`), `:613-617` (`JE_DPAD`), `:1359-1369` (`JE_JOYSTICK`) | D-pad keys become `JOYBUTTON` events; `JOY_CENTER` is unbound in games; hat D-pads are axis events; `JE_DPAD` is dead | Bind `JOY_UP`…`JOY_CENTER` for the remote; a gamepad hat needs `JOY_HAT_*` too | — |
+| E7 | 3.2 | `ScummVMEvents.java:446`, `:456-486`, `:593`; `events.cpp:422-424`; `keymapper.cpp:308` | Key repeats are flagged and dropped; gamepad repeats arrive as new presses; long press only for BACK and MENU | A held OK can be timed from `JOYBUTTON_DOWN` to `UP` in the engine | Whether the TCL's remote repeats a held press |
+| E8 | 3.2 | `ScummVMEvents.java:238-261`, `:423-441`, `:508-511`; `android.cpp:711`, `:728`, `:733`; `events.cpp:678-718`, `:1261` | BACK, MENU, volume, play/pause and START/SELECT are taken (table in 3.2) | The fallback can't use BACK or MENU without losing skip, the main menu or the keyboard | — |
+| E9 | 3.2 | `gui/options.cpp:290`, `:970`, `:1446`; `android.cpp:592`; `virtual-mouse.cpp:204` | Pointer Speed is `kbdmouse_speed`; no acceleration setting | Magnet mode doesn't need to touch pointer settings | — |
+| E10 | 3.2 | `touchcontrols.cpp:214`, `:241-281`; `ScummVMEvents.java:720-745`; `options.cpp:496-527` | The on-screen gamepad activates only from touch | No conflict on a TV | — |
+| E11 | 3.1, 3.3, 3.4 | `engines/metaengine.cpp:73-78` `createHotspotAction`, `:80-85` `hotspotsEnabled`; `standard-actions.cpp:44` | `HOTS` action, key `h`, added by each engine in `initKeymaps` when enabled | The pattern for a shared navigation action | — |
+| E12 | 3.3 | `graphics/hotspot_renderer.h:41-60` `HotspotType`, `HotspotInfo` | Position, name, type; no rectangle, no id | Points are enough to navigate; a stable id is missing | — |
+| E13 | 3.3 | `engines/engine.h:555-594`, `engine.cpp:751-826` | Default empty; queried when dirty (default every frame) from `drawHotspots()`; suspended on pause and GUI | Hotspot Magnet can query the same interface on each press | — |
+| E14 | 3.3, 3.7 | `gui/editgamedialog.cpp:332-372`, `:587-608`; `engines/metaengine.cpp:80-85`; `default-events.cpp:123-142`; `keymapper.cpp:380-381` | Per-game `enable_hotspots`, default off, every game; hold/toggle handled in the event manager | The shared-setting model for Phase 3 | — |
+| E15 | 3.3 | `graphics/hotspot_renderer.h:73-133`, `hotspot_renderer.cpp:181-309`, `:322`, `:449`, `:699` | Markers, leader lines, labels for the whole list; no outline; type unused; overlay API | One-item list marks a target; no highlight style | How it looks with one marker on the TV |
+| E16 | 3.3, 3.6 | `engines/scumm/object.cpp:559-649`; `scumm/metaengine.cpp:1176-1188`; `touche/touche.cpp:1511-1575`; `hollywood/hotspots.cpp:113-156`, `monsters/hollywood.cpp:404-408`, `runaway/engine.cpp:104-110`; `macs2/macs2.cpp:2202-2386` | Each returns interactive things only, with hit-checked points | The interface is already filled by five engines; SCUMM covers v0–v8 and HE | macs2 map scrolling; touche's player hit box |
+| E17 | 3.3 | `engines/lab/metaengine.cpp:284-288`, `lab/engine.cpp:755-762`, `processroom.cpp:170-206`; `mohawk/riven_card.cpp:1174-1244`; `mads/core/game.cpp:997-1001`; `grim/grim.cpp:605-614` | Only Lab moves the cursor to the next interactive item, by its own data | Precedent for a "next object" action; no reusable core | What Grim's scripts do with PageUp/PageDown |
+| E18 | 3.5 | `engines/terraglyph/room.h:52-73`, `:108-235`, `:278-356`; `room.cpp:145-255`, `:294-344`, `:563-565`, `:838-898`; `cel.cpp:192` | `hitTest` returns a sprite index; kinds, hidden, hitType, accessors; polygon private | The provider can be built from public accessors plus one polygon-box accessor | Whether a hidden parent hides its children |
+| E19 | 3.5 | `terraglyph.cpp:112`, `:125`, `:336-381`, `:471-477`, `:1541-1556`; `inventory.cpp:148`, `:241-242`, `:427`; `inventory.h:165`, `:227` | One room object; toolbar at depth 5000 in it; input gated in `handleMouse` | Eligibility must include the toolbar and follow `handleMouse`'s gates | Whether every close-up is a room like the chase close-up |
+| E20 | 3.5 | `terraglyph.cpp:231-237`, `:336-381`, `:414-417`, `:2003-2045`; `chase_check.cpp:259-270` | `handleMouse(false/true, p)` is the click path; the test script already synthesizes clicks; the self-test lists sprites and hit-tests headlessly | Activation reuses `handleMouse`; the reachability check is feasible | — |
+| E21 | 3.2 | `git diff 2982fe324b6c 7b6fa644d74a` over the files in E1–E15 | Only `735ad86c21` (Android mouse pointer capture) changed | No finding changes upstream | — |
+| E22 | 3.2 | `adb shell getevent -lt`, `getevent -lp`, `dumpsys input` on the TCL 65Q77K, 2026-11-26 | Devices listed; no presses captured | The remote table is still a gap | Every button's code and held behavior |
+| E23 | 3.7 | `engines/advancedDetector.h:400-405`, `:715`; `advancedDetector.cpp:333-341`; `engines/metaengine.h:71-78`; `engines/dialogs.cpp:472-495`; `metaengine.cpp:460-468`; `base/main.cpp:225`; `awe/metaengine.cpp:31-75`, `awe/detection_tables.h:40`, `awe/awe.cpp:195` | Declare, tie to entries by GUIO flag, persist per game, read with `ConfMan.getBool` | The Phase 1 setting is a standard extra option | — |
+| E24 | 3.7 | `engines/terraglyph/metaengine.h:29-41`; `detection_tables.h:50-123` | No extra options; only `GUIO_NOMIDI` | Where "Hotspot Assist" goes | — |
 
 ---
 
 ## Part II — Technical design
 
 **Status: design intent only.** Interfaces and algorithms are provisional
-until Section 3 is complete.
+until Jeff decides the [§10.4](#104-open-design-decisions) proposals that
+Section 3's findings support.
 
 ### 4. Proposed software architecture
 
@@ -624,10 +811,18 @@ Rank by severity × likelihood once the research is done.
 #### 10.4 Open design decisions
 
 A living decision register. Mark each row settled, proposed, or unverified.
+The recommendations are WP-086's proposals; each is Jeff's call.
 
-| Question | Alternatives | Recommendation | Evidence | Status | Resolution |
-|---|---|---|---|---|---|
-| *(none yet)* | | | | | |
+| # | Question | Alternatives | Recommendation | Evidence | Status | Resolution |
+|---|---|---|---|---|---|---|
+| H1 | Input integration | (a) a game keymap that binds `JOY_UP`…`JOY_CENTER` while Magnet mode is on; (b) handle raw joystick events in the engine; (c) a new Global keymap | **(a)**: it wins over the Virtual Mouse for those buttons only in games, stays rebindable, and turning it off is the fallback. Add `JOY_HAT_*` for game controllers | E2, E3, E6 | Proposed | — |
+| H2 | Provider interface | (a) `Engine::getHotspotPositions()` as is; (b) it, plus a stable id; (c) a new interface | **(a) first, (b) if keeping the selection across refreshes needs it.** Five engine implementations already fill it, SCUMM's among them; TerraGlyph implementing it also gets the hotspot display | E12, E13, E16 | Proposed | — |
+| H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | Proposed | — |
+| H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | Proposed | — |
+| H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | Proposed | — |
+| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a), pending the remote capture.** BACK and MENU are taken (skip, main menu, keyboard) | E7, E8, E22 | Unverified | — |
+| H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | Proposed | — |
+| H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | Proposed | — |
 
 ### 11. Development work packets
 
@@ -638,7 +833,7 @@ in the packets. Numbers are assigned when each packet is drafted.
 
 | # | Proposed packet | WP |
 |---|---|---|
-| 1 | Input and hotspot-feature research (Section 3 except 3.6) | [WP-086](../work-packets/WP-086-hotspot-magnet-research.md) 📝 |
+| 1 | Input and hotspot-feature research (Section 3 except 3.6) | [WP-086](../work-packets/WP-086-hotspot-magnet-research.md) ✅ |
 | 2 | Hotspot Magnet interface design | — |
 | 3 | Directional algorithm design and test cases (including the reachability check) | — |
 | 4 | Directional selection implementation (hand-written) | — |
@@ -775,22 +970,56 @@ Requirements adopted on 2026-11-26 from the review:
 
 #### 14.3 Immediate next steps
 
-1. Run [WP-086](../work-packets/WP-086-hotspot-magnet-research.md): the
-   source-code research for Section 3 (except 3.6), with every finding in the
-   evidence register.
-2. Resolve the architecture decisions it makes answerable.
-3. Get early maintainer feedback.
-4. Draft the interface design packet.
+1. ~~Run WP-086~~ ✅ 2026-11-26: Section 3 is verified except 3.6.
+2. Jeff decides H1–H8 in [§10.4](#104-open-design-decisions).
+3. Capture the TCL remote's buttons (3.2), which settles H6.
+4. Get early maintainer feedback.
+5. Draft the interface design packet, from the H1–H8 decisions.
 
 ### 15. Appendices
 
 | Appendix | Contents |
 |---|---|
-| A | Source code reference index (verified paths, classes, methods) |
+| A | Source code reference index, [below](#appendix-a-source-code-reference-index) |
 | B | Interface sketches (short design-level C++ declarations, no implementation) |
 | C | Navigation examples (representative layouts and expected behavior) |
 | D | Terminology (hotspot, active target, logical coordinates, engine adapter, cursor fallback, and so on) |
 | E | References (ScummVM contribution guidelines, source references, accessibility guidance, maintainer discussions) |
+
+#### Appendix A: source code reference index
+
+Every file WP-086 read, at the fork's `ff490ad9449f`, with the symbols used.
+
+| File | Symbols |
+|---|---|
+| `common/events.cpp` | `EventDispatcher::dispatch` |
+| `backends/keymapper/keymapper.cpp` | `Keymapper::mapEvent`, `getMappedActions`, `executeAction`, `hardcodedEventMapping` |
+| `backends/keymapper/keymap.cpp` | `Keymap::getMappedActions`, `loadMappings`, `getActionDefaultMappings` |
+| `backends/keymapper/hardware-input.cpp` | `JOY_UP`…`JOY_CENTER` definitions |
+| `backends/keymapper/virtual-mouse.cpp`, `.h` | `VirtualMouse::addActionsToKeymap`, `handleAxisMotion`, `pollEvent`, `notifyEvent`, `computeJoystickMouseSpeedFactor` |
+| `backends/keymapper/standard-actions.cpp` | `kStandardActionToggleHotspots` |
+| `backends/events/default/default-events.cpp` | Virtual Mouse construction; `EVENT_HOTSPOTS_SHOW`/`HIDE` handling; Global keymap |
+| `backends/platform/android/android.cpp` | `getKeymapperDefaultBindings`, feature flags, `kbdmouse_speed` default |
+| `backends/platform/android/events.cpp` | `OSystem_Android::pushEvent` (`JE_KEY`, `JE_GAMEPAD`, `JE_DPAD`, `JE_JOYSTICK`, `JE_TV_REMOTE`), `pollEvent` |
+| `backends/platform/android/jni-android.cpp` | `JNI::pushEvent` |
+| `backends/platform/android/touchcontrols.cpp`, `options.cpp` | `TouchControls::draw`, `update`; `applyTouchSettings` |
+| `backends/platform/android/org/scummvm/scummvm/ScummVMEvents.java` | `onKey`, `onGenericMotionEvent`, `processJoystickInput`, BACK/MENU long press |
+| `gui/editgamedialog.cpp`, `gui/options.cpp` | `enable_hotspots` and sibling options; Pointer Speed |
+| `engines/engine.h`, `engine.cpp` | `getHotspotPositions`, `drawHotspots`, `createHotspotRenderer`, `hotspotDirty`, `showHotspots`, `suspendHotspots`, `effectiveHotspotKeyMode` |
+| `engines/metaengine.cpp`, `.h` | `createHotspotAction`, `hotspotsEnabled`, `ExtraGuiOption`, `registerDefaultSettings`, engine-default keymap |
+| `engines/advancedDetector.h`, `.cpp` | `ADExtraGuiOptionsMap`, `getAdvancedExtraGuiOptions`, `getExtraGuiOptions` |
+| `engines/dialogs.cpp` | `ExtraGuiOptionsWidget::load`, `save` |
+| `graphics/hotspot_renderer.h`, `.cpp` | `HotspotType`, `HotspotInfo`, `HotspotStyle`, `HotspotRenderer` |
+| `engines/scumm/object.cpp`, `scumm/metaengine.cpp` | `ScummEngine::getHotspotPositions`, `findObject`; keymap opt-in |
+| `engines/touche/touche.cpp` | `ToucheEngine::getHotspotPositions` |
+| `engines/hollywood/hotspots.cpp`, `monsters/hollywood.cpp`, `runaway/engine.cpp` | `HotspotSource::getHotspotPositions` and both games' overrides |
+| `engines/macs2/macs2.cpp` | `getHotspotPositions` and its snapshot |
+| `engines/lab/metaengine.cpp`, `lab/engine.cpp`, `lab/processroom.cpp` | "FOCUS" action, `setCurrentClose` |
+| `engines/mohawk/riven.cpp`, `riven_card.cpp`; `engines/mads/core/game.cpp`; `engines/grim/grim.cpp`; `agos/metaengine.cpp`; `sword25/metaengine.cpp` | Keyboard hotspot actions (none reusable) |
+| `engines/awe/metaengine.cpp`, `detection_tables.h`, `awe.cpp` | Extra-option example |
+| `engines/terraglyph/room.h`, `room.cpp`, `cel.cpp` | `Room::hitTest`, `Room::Sprite`, `Kind`, sprite accessors, `getPolygon`, `hitPolygon`, `hitCels` |
+| `engines/terraglyph/terraglyph.cpp`, `inventory.cpp`, `inventory.h` | `handleMouse`, `updateHover`, `test_script` click, `checkAllRooms`; toolbar sprites |
+| `engines/terraglyph/metaengine.h`, `detection_tables.h`; `chase_check.cpp`, `chase_rooms.h`, `accusation_rooms.h` | Meta-engine overrides, GUIO flags; check harness; close-up and Big Head classes |
 
 ---
 
@@ -798,8 +1027,8 @@ Requirements adopted on 2026-11-26 from the review:
 
 This page is the authoritative architecture and roadmap for Hotspot Magnet.
 Individual work packets govern implementation, testing, and completion.
-Source-dependent conclusions stay unresolved until the ScummVM source is
-inspected.
+Source-dependent conclusions rest on the evidence register; one that isn't in
+it stays unresolved.
 
 ## Revision history
 
@@ -807,3 +1036,4 @@ inspected.
 |---|---|
 | 2026-11-26 | First version, from Jeff's plan. |
 | 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
+| 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |

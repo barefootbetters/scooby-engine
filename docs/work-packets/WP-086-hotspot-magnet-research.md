@@ -5,7 +5,14 @@ title: "WP-086: Hotspot Magnet research"
 
 # WP-086: Hotspot Magnet research — input, hotspot features and TerraGlyph targets
 
-**Status:** 🚧 In Progress (claimed 2026-11-26: branch `docs/wp-086-hotspot-magnet-research`; run in the Hotspot Magnet plan session).
+**Status:** ✅ Done (2026-11-26). All 14 exit criteria met
+([§Close](#close-2026-11-26)); the TCL remote's button capture is recorded
+as a gap, as criterion 5 allows. **Findings landed in:** the
+[plan's Section 3](../reference/hotspot-magnet-plan.md#3-existing-scummvm-architecture-research-findings),
+its [evidence register](../reference/hotspot-magnet-plan.md#38-research-evidence-register),
+[decision register](../reference/hotspot-magnet-plan.md#104-open-design-decisions)
+(H1–H8, all proposed or unverified) and
+[Appendix A](../reference/hotspot-magnet-plan.md#appendix-a-source-code-reference-index).
 **Phase:** 5 (polish and accessibility).
 **Depends on:** WP-018 ✅ (TerraGlyph hit testing), WP-021 ✅ (clickables),
 WP-079 ✅ (the fork's TV build path, proven on the TCL 65Q77K).
@@ -21,7 +28,9 @@ changes nothing under `engines/terraglyph/**`, `docs/formats/**` or
 **Targets generation(s):** Gen 1 (*Showdown*, *Phantom*) for the TerraGlyph
 findings. The ScummVM findings are about shared code and carry no generation.
 **Estimated effort:** about one working day (5–7 hours) across the EC's
-steps.
+steps. **Actual:** one session on 2026-11-26. The source reading ran as three
+parallel read-only passes, and every finding the write-up relies on was
+re-checked against the source before it went in.
 
 ---
 
@@ -263,3 +272,27 @@ All findings go into the [plan page](../reference/hotspot-magnet-plan.md):
 - **Copyright.** Findings cite ScummVM's GPL source by path and symbol and
   quote only short identifiers. No game data is involved beyond the room
   layouts WP-018 already characterized.
+
+## Close (2026-11-26)
+
+| # | Exit criterion | Met | Evidence |
+|---|---|---|---|
+| 1 | Pinned commits recorded | ✅ | Plan §3.8: fork `ff490ad9449f`; upstream master `7b6fa644d74a`, merge base `2982fe324b6c` |
+| 2 | §3.1–3.5 and §3.7 have no unverified bullets left | ✅ | Each is a finding with an E-number, or marked unverified with the reason (E7 repeat, E15 TV look, E16, E17, E18, E19) |
+| 3 | A register row per finding; Appendix A lists every file read | ✅ | E1–E24; Appendix A |
+| 4 | Engine keymap vs the Virtual Mouse on the D-pad | ✅ | **Yes**: E2 (`keymapper.cpp:183-199`), E3 (`android.cpp:742-754`) |
+| 5 | The remote table, or the gap with the commands tried | ✅ (gap) | E22: `getevent -lt` (3 min, no presses), `getevent -lp`, `dumpsys input`; devices listed |
+| 6 | Item 4's two questions, and the implementations described | ✅ | Plan §3.3: provider usable as is (stable id may need adding); renderer marks one target only as a one-item list; E16 covers scumm, touche, macs2 and both hollywood games |
+| 7 | Eligibility rule, interaction-point method, headless listing | ✅ | Plan §3.5 (E18–E20); headless listing **yes** (E20) |
+| 8 | One recommended location | ✅ | Plan §3.4: `engines/` (H4) |
+| 9 | Other engine navigation | ✅ | E17: Lab's FOCUS only; Riven, MADS, Grim, AGOS, Sword25 described |
+| 10 | Upstream drift | ✅ | E21: only `735ad86c21` (mouse pointer capture), no finding changes |
+| 11 | Where "Hotspot Assist" is declared; the `enable_hotspots` model | ✅ | E24: `TerraglyphMetaEngine::getAdvancedExtraGuiOptions()` plus a `GAMEOPTION_` flag in `detection_tables.h`; E14 and H5 |
+| 12 | Decision register, none settled | ✅ | H1–H8: seven proposed, H6 unverified |
+| 13 | Only the four files changed; no fork branch | ✅ | `git diff --name-only main` lists the plan page, WP-086, EC-009 and `WORK_INDEX.md`; the fork was read through `git show`/`git grep` only |
+| 14 | Strict wiki build passes | ✅ | `hugo --config ewiki/hugo.toml --minify --panicOnWarning`, 0 warnings |
+
+**For the next packet.** H1–H8 are Jeff's to decide before the interface
+design packet is drafted. H6 (the fallback button) also needs the remote
+capture: run `adb shell getevent -lt` on the TCL and press each button short,
+then held for 2 s.
