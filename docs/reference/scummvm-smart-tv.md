@@ -108,6 +108,10 @@ You need:
   neither the repo nor the NDK provides it, so `make` stops on that header
   without it. (ScummVM's own release builds use a prebuilt toolchain that already
   has it.) Building it takes about a minute: [step 2](#2-add-oboe-to-the-ndk).
+- **[libpng](https://github.com/pnggroup/libpng), built for Android.**
+  ScummVM's grid launcher shows each game's thumbnail, and without PNG support
+  it stops the app instead (`No PNG support compiled`). Our Android build opens
+  the grid by default, so it needs libpng too: [below](#libpng-for-the-launchers-grid-view).
 - **`git`, `make`, a C++ compiler for the build machine, `pkg-config`, `cmake`
   and `ninja`.**
 
@@ -177,6 +181,49 @@ and the matching `-DCMAKE_CXX_FLAGS` to the `cmake -S ~/oboe ...` configure line
 Because it's static, Oboe ends up inside the app. The TV doesn't need anything
 extra.
 
+##### libpng, for the launcher's grid view
+
+Build libpng as a static library for each ABI, into its own folder.
+`configure` is pointed at that folder in [step 4](#4-configure). zlib, which
+libpng needs, is already in the NDK.
+
+```bash
+curl -L -o ~/libpng-1.6.59.tar.gz https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.59.tar.gz
+sha256sum ~/libpng-1.6.59.tar.gz   # 2540302a1844ad2b2b501977abecfa850f265f97b78f065a712ab4074a89f5b5
+tar -xzf ~/libpng-1.6.59.tar.gz -C ~
+
+cmake -S ~/libpng-1.6.59 -B ~/libpng-build -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/libpng-arm64-v8a" \
+    -DPNG_SHARED=OFF -DPNG_TESTS=OFF -DPNG_TOOLS=OFF -DPNG_HARDWARE_OPTIMIZATIONS=OFF
+cmake --build ~/libpng-build
+cmake --install ~/libpng-build
+```
+
+For a 32-bit build, the same again against API level 16, as with Oboe:
+
+```bash
+cmake -S ~/libpng-1.6.59 -B ~/libpng-build-v7a -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+    -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=android-16 \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/libpng-armeabi-v7a" \
+    -DPNG_SHARED=OFF -DPNG_TESTS=OFF -DPNG_TOOLS=OFF -DPNG_HARDWARE_OPTIMIZATIONS=OFF
+cmake --build ~/libpng-build-v7a
+cmake --install ~/libpng-build-v7a
+```
+
+CMake prints deprecation warnings about the NDK's toolchain file. They're
+harmless. The 32-bit library built this way needs nothing from the C library
+beyond the stack protector, so it doesn't hit Oboe's `__vsprintf_chk` problem.
+Checked 2026-11-27: both ABIs built from these exact commands, `configure`
+found PNG for each, and a full arm64-v8a APK linked against them. An
+armeabi-v7a libpng 1.6.59 built with the same options (but CMake's default
+generator) ran on the [TCL 65Q77K](#your-tv-the-tcl-65q77k) in the grid
+launcher ([WP-085](../work-packets/WP-085-tv-app-pipeline.md#result)).
+
+Like Oboe, libpng is static and ends up inside the app.
+
 #### 3. Get the source
 
 ```bash
@@ -189,10 +236,15 @@ git checkout scooby-engine
 
 ```bash
 ./configure --host=android-arm64-v8a --disable-all-engines --enable-engine=terraglyph \
-    --disable-debug --enable-release
+    --with-png-prefix="$HOME/libpng-arm64-v8a" --disable-debug --enable-release
 ```
 
-Swap the `--host` value for a [different processor](#pick-the-processor-type-abi).
+Swap the `--host` value for a [different processor](#pick-the-processor-type-abi),
+and point `--with-png-prefix` at the matching libpng folder
+(`$HOME/libpng-armeabi-v7a` with `--host=android-arm-v7a`). Check that
+`configure` prints `Checking for PNG >= 1.2.8... yes`. Without libpng it prints
+`no`, and the build still succeeds, but the app then stops as soon as it opens
+the grid launcher.
 The TerraGlyph engine is off by default, so `--enable-engine=terraglyph` is required.
 Check that `configure`'s engine summary lists TerraGlyph before you build. Leaving
 out `--disable-all-engines` builds every default engine as well, but see the
@@ -200,7 +252,8 @@ next paragraph for why that doesn't get you a full ScummVM.
 
 **This makes a Scooby build, not a full ScummVM.** `configure` looks for about
 thirty optional libraries built for Android, and a plain build machine has none
-of them: no Ogg Vorbis, FLAC, MP3, JPEG, PNG, FreeType, FluidSynth or SDL_net.
+of them except the libpng added above: no Ogg Vorbis, FLAC, MP3, JPEG, FreeType,
+FluidSynth or SDL_net.
 Without them it switches off the engines that need them (26 on 2026-11-22,
 including Wintermute, Myst 3, The Longest Journey, Broken Sword 2.5, Nancy Drew
 and Thimbleweed Park), and the remaining engines can't play compressed audio or
@@ -624,6 +677,7 @@ separately logged yet. Record other TVs' results here.
 | `adb install` fails with `INSTALL_FAILED_NO_MATCHING_ABIS` | APK built for the wrong CPU | Build `android-arm-v7a`; check `adb shell getprop ro.product.cpu.abilist` first |
 | Launch crash `UnsatisfiedLinkError: ... is 64-bit instead of 32-bit` | Stale `libloader.so` left from the previous ABI | `rm -f libloader.so && rm -rf android_project`, then repackage |
 | Link fails with `undefined symbol: __vsprintf_chk` | 32-bit Oboe built with FORTIFY on | Rebuild Oboe for `android-16` ([step 2](#2-add-oboe-to-the-ndk)), or with `-D_FORTIFY_SOURCE=0` |
+| The app closes back to the TV's home screen when the launcher opens, or when you switch to the grid view; `adb logcat -b crash` shows `Abort message: 'ERROR: No PNG support compiled!'` | Built without libpng: the grid launcher needs it for thumbnails | Build [libpng](#libpng-for-the-launchers-grid-view) and reconfigure with `--with-png-prefix`. For an app already stuck in the grid view, switch it back to the list: set `gui_launcher_chooser=list` in its `scummvm.ini` (`adb shell run-as <app id> …` for a debug build) |
 | `ERROR: JNI::initSurface failed!` | App launched while backgrounded, or the screensaver took the surface | Launch with the screen awake and ScummVM in the foreground |
 | `Error running game: Game data not found` | External path not granted through the Storage Access Framework | Add the game with the in-app **Add Game…** picker and allow access |
 | The remote moves the cursor but can't land it on a button or object | The D-pad has no fine pointer movement yet | Use a Bluetooth controller or a mouse ([Controls on a TV](#controls-on-a-tv)) |
