@@ -879,7 +879,7 @@ in the packets. Numbers are assigned when each packet is drafted.
 | # | Proposed packet | WP |
 |---|---|---|
 | 1 | Input and hotspot-feature research (Section 3 except 3.6) | [WP-086](../work-packets/WP-086-hotspot-magnet-research.md) ✅ |
-| 2 | Hotspot Magnet interface design | — |
+| 2 | Hotspot Magnet interface design | [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md) 📝 |
 | 3 | Directional algorithm design and test cases (including the reachability check) | — |
 | 4 | Directional selection implementation (hand-written) | — |
 | 5 | TerraGlyph hotspot provider | — |
@@ -1024,8 +1024,11 @@ Requirements adopted on 2026-11-26 from the review:
 3. ~~Capture the TCL remote's buttons~~ ✅ 2026-11-27 (3.2, E26): held OK
    sends one press and one release; Android repeats it.
 4. Get early maintainer feedback, which also settles H4.
-5. Draft the interface design packet from the §10.4 decisions. The remote
-   capture has verified the input assumptions it rests on.
+5. ~~Draft the interface design packet~~ 📝 2026-11-27:
+   [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md), from
+   the §10.4 decisions and the remote capture.
+6. Run WP-089, then draft the directional algorithm packet (§11, packet 3)
+   against its core contract.
 
 ### 15. Appendices
 
@@ -1090,3 +1093,4 @@ it stays unresolved.
 | 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |
 | 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). A second remote capture recorded short presses of the D-pad, OK and BACK (3.2, E25); held presses are still a gap. |
 | 2026-11-27 | Third remote capture (3.2, E26): D-pad up's code, and held OK, left and right send one press and one release; Android repeats held keys (400 ms, then every 50 ms), and ScummVM turns each repeat into a new press. Repeating D-pad presses added to the remote limitations (6.3). Jeff approved H6, hold OK (10.4). |
+| 2026-11-27 | Packet 2 drafted as [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md) (11, 14.3). |
