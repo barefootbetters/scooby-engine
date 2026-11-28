@@ -5,7 +5,7 @@ title: "WP-094: Phantom's Wizard's Rule Room, the original's game"
 
 # WP-094: Phantom's Wizard's Rule Room: the original's game (Gen 1)
 
-**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#18](https://github.com/barefootbetters/scummvm/pull/18) is open.
+**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#18](https://github.com/barefootbetters/scummvm/pull/18) merged on 2026-11-28 (merge commit `bfeaa1c7ba`).
 **Phase:** 5 (a reconstruction found while searching packets for setup-only checks)
 **Depends on:** WP-083 ✅ (the room's claim, entry and exit), WP-081 ✅ (the bedroom the room returns to)
 **Companion EC:** none (inline checklist under Exit criteria)
@@ -77,7 +77,7 @@ them, and this room led the list.
 2. [x] **Live (session).** The beats follow the song. Clicking the beat's
    bottles plays a phrase clean and earns a snack. A missed beat breaks a
    glass and costs a life.
-3. [x] **Process.** The fork PR against `scooby-engine` is open, and each claim
+3. [x] **Process.** The fork PR against `scooby-engine` is open (merged the next day), and each claim
    carries its evidence label.
 
 ## Result
@@ -193,7 +193,8 @@ and level 0.
 ## Deliverables
 
 - Fork: `wp-094-wfr-game`, PR [barefootbetters/scummvm#18](https://github.com/barefootbetters/scummvm/pull/18)
-  (`8bc6cf2994`). Staged by name: `wfr_rooms.{h,cpp}` and `wfr_check.cpp`.
+  (`8bc6cf2994`), merged on 2026-11-28 as `bfeaa1c7ba`; the fork worktree is
+  removed, and `C:\dev\scummvm` was rebuilt from it. Staged by name: `wfr_rooms.{h,cpp}` and `wfr_check.cpp`.
 - Docs: this packet, its pre-flight, the WFR section in scooby-exe, the
   pointers in WP-083 and WP-087, and the index row.
 - Local only: the decompile dumps, the table generator, the self-test and live
