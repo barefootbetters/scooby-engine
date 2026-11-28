@@ -5,7 +5,18 @@ title: "WP-089: Hotspot Magnet interface design"
 
 # WP-089: Hotspot Magnet interface design — components, contracts and modes (Gen 1)
 
-**Status:** 📝 Drafted (2026-11-27).
+**Status:** ✅ Done (2026-11-27). All 17 exit criteria met
+([§Close](#close-2026-11-27)); proposals H9–H16 wait on Jeff. **Findings
+landed in:** the plan's
+[Part II](../reference/hotspot-magnet-plan.md#part-ii--technical-design)
+(§4.2–4.6, §5.6, §6.1–6.6 and the new §6.8), §7.4, the new
+[§12.7](../reference/hotspot-magnet-plan.md#127-test-hooks), the
+[evidence register](../reference/hotspot-magnet-plan.md#38-research-evidence-register)
+(E27–E44), the
+[decision register](../reference/hotspot-magnet-plan.md#104-open-design-decisions)
+(H9–H16), and
+[Appendices B](../reference/hotspot-magnet-plan.md#appendix-b-interface-declarations)
+and [D](../reference/hotspot-magnet-plan.md#appendix-d-terminology).
 **Phase:** 5 (polish and accessibility).
 **Depends on:** WP-086 ✅ (research, plan §3), and Jeff's decisions H1–H8 in
 the plan's [§10.4](../reference/hotspot-magnet-plan.md#104-open-design-decisions)
@@ -23,7 +34,9 @@ note. It changes nothing under `engines/terraglyph/**`, `docs/formats/**` or
 navigation core it specifies carries no generation; every TerraGlyph adapter
 it specifies is Gen 1.
 **Estimated effort:** about one working day (5–7 hours) across the EC's
-steps.
+steps. **Actual:** one session on 2026-11-27. The source reading ran as two
+parallel read-only passes (ScummVM's input side, TerraGlyph), and every fact
+the design rests on was re-checked against the source before it went in.
 
 ---
 
@@ -375,3 +388,40 @@ plus the dashboard note at close:
   SCUMM provider without changing them (plan §4.1).
 - **Copyright.** Findings cite ScummVM's GPL source by path and symbol and
   quote only short identifiers.
+
+## Close (2026-11-27)
+
+| # | Exit criterion | Met | Evidence |
+|---|---|---|---|
+| 1 | Pin, drift, E3/E8/E9 refreshed | ✅ | Plan §3.8: fork `0d5a69c7694f`; `git diff --stat ff490ad9449f` lists 12 files, all WP-085's Android work; `android.cpp` +6 lines at 363, E3/E8/E9 cite new and old lines; the Android key intercept is E33 |
+| 2 | Contracts A–E and Appendix B | ✅ | Plan §4.2 contracts table; Appendix B, declarations only |
+| 3 | B and C name no TerraGlyph symbol | ✅ | Appendix B: `HotspotMagnet::navigate` and `InputAdapter` use only `Graphics::HotspotInfo`, `Common::Array` and `uint32` |
+| 4 | Record mapped to `HotspotInfo`; points or box; identity outside | ✅ | Plan §4.3 (field table, points only); identity (room, sprite index) beside the list; H12 |
+| 5 | Provider filter and point search | ✅ | Plan §4.6 (H7, H13, on screen) and §4.5 (box, centre then 4 px rings, `Room::getHitBox()`, cache); E36, E37 |
+| 6 | One override, two consumers | ✅ | Plan §6.5: one list serves the show-all display and Magnet; a marker would replace the display while shown (E32); H14 |
+| 7 | Selection lifetime and re-check | ✅ | Plan §4.4: identity, the drop table with each signal and how it's noticed (E38), the activation re-check |
+| 8 | Mode state machine and per-mode table | ✅ | Plan §6.1 table (D-pad, OK short and held, BACK, MENU per mode) and §6.2 (states, transitions, OK in cursor mode) |
+| 9 | Keymaps | ✅ | Plan §6.4: three keymaps with standard action ids, bindings for the remote, hats and the keyboard, enabling; keypad Enter keeps Sign In whole (E43); a raw SDL hat isn't mappable (E44); H16 |
+| 10 | Held-button and drag rooms | ✅ (with a gap) | Plan §6.8: each room's input (E35) and how it's played. Six are played in Magnet or cursor mode; the Options knobs, Brad's game and the vault's clock need room assists (H11), which are proposed but not designed or scheduled. Until then they're Phase 1 gaps, playable with a mouse or a gamepad holding `JOY_X` (6.4) |
+| 11 | Hold timing contract | ✅ | Plan §6.2: first start to end, repeats ignored, 600 ms (H10), switch at the threshold by tick, resets on room change, movie and pause (E29, E30, E40) |
+| 12 | Test-build gesture; repeat entry point | ✅ | Plan §6.3: H15; repeats are the input adapter's own, the same on every device, passed to the core with a flag (§4.3) |
+| 13 | Coordinates, cursor, activation, option | ✅ | Plan §4.5 (one space, off-screen drop, warp then push, E31, E37, E39); §4.2 activation, engine-owned so its release can't be lost, and what blocks it (E34, E40, H9); §6.6 option table (E42) |
+| 14 | Feedback, test hooks, core contract | ✅ | Plan §6.5 (H14); §12.7 (the listing hook on `showRoom()` after the opening, with unpointed sprites reported; the `test_script` verbs calling the adapter, since pushed events aren't mapped, E41, E44); §4.3 core contract, with the cursor's position |
+| 15 | Every "proposed (H*n*)" has a row, every H9+ row cited | ✅ | Checked by script over Part II: rows H9–H16 all cited; no citation without a row |
+| 16 | Only the five allowed files; no fork branch | ✅ | `git diff --name-only main` lists the plan page, WP-089, EC-012, `WORK_INDEX.md` and `dashboard.json`; the fork was read through `git show`/`git grep` only |
+| 17 | Strict wiki build passes | ✅ | `hugo --config ewiki/hugo.toml --minify --panicOnWarning`, 0 warnings |
+
+**Cold review.** A second read of the design against the source found real holes, all fixed before close: activation now owns its press instead of pushing events (a pushed release can be lost, H9); the click gate and an item in hand are back in the filter (§4.6); repeats are the adapter's own; the core gets the cursor's position; room-class targets have an identity; and off the TV the D-pad doesn't move the Virtual Mouse (§6.1, E44).
+
+**Corrected on the way.** WP-086 recorded that Android gives the D-pad to the
+Virtual Mouse in a game. That's true only for an engine whose game keymaps
+leave the D-pad unbound. ScummVM's default game keymap, which TerraGlyph has
+today, binds it to keypad arrow keys (E27; plan §3.2 carries the correction).
+H1 still holds, because TerraGlyph's own keymaps replace the default.
+
+**For the next packets.** H9–H16 are Jeff's to decide. Packet 3 designs the
+algorithm against the core's contract (plan §4.3) and the listing hook
+(§12.7). If Jeff takes H11, plan §11 gains a packet for the room assists.
+Two facts are inferred from source and need the TV (packet 6, then 10): that
+the D-pad does nothing in a TerraGlyph game today (E27), and that Android's
+warp produces no mouse event (E31).
