@@ -4,7 +4,7 @@
     upstream scummvm/scummvm, verify the engine still compiles, then push.
 
 .DESCRIPTION
-    The scooby engine is fully self-contained in engines/scooby/ — it touches no
+    The terraglyph engine is fully self-contained in engines/terraglyph/ — it touches no
     shared ScummVM file (configure auto-discovers the engine from the directory).
     So bringing upstream's changes in is a plain MERGE of upstream/master into
     scooby-engine, which is conflict-free in practice. This script does that
@@ -16,7 +16,7 @@
              - If the merge hits conflicts, it ABORTS the merge and stops. The
                engine is self-contained, so a conflict means upstream changed
                something the engine *includes* from core — worth a human look.
-        4. Smoke-builds Scooby-only (MSYS2 UCRT64) to confirm it still compiles
+        4. Smoke-builds TerraGlyph-only (MSYS2 UCRT64) to confirm it still compiles
            against the new upstream. If the build fails, it ROLLS BACK the merge
            (git reset --hard to the pre-merge HEAD) and stops — nothing is pushed.
         5. Pushes the updated branch to origin.
@@ -45,7 +45,7 @@
     Parallel build jobs for the smoke build (default: number of logical CPUs).
 
 .PARAMETER SkipBuild
-    Skip the Scooby-only smoke build (merge + push only). Use only if MSYS2/UCRT64
+    Skip the TerraGlyph-only smoke build (merge + push only). Use only if MSYS2/UCRT64
     is unavailable; you then verify the build yourself before relying on the push.
 
 .PARAMETER NoPush
@@ -141,11 +141,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Ok "Merged cleanly."
 
-# --- Smoke build (Scooby-only) -------------------------------------------------
+# --- Smoke build (TerraGlyph-only) ---------------------------------------------
 if ($SkipBuild) {
     Write-Warn "-SkipBuild set: NOT verifying the build. Verify it yourself before trusting this push."
 } else {
-    Write-Step "Smoke-building Scooby-only (MSYS2 UCRT64) to confirm it still compiles..."
+    Write-Step "Smoke-building TerraGlyph-only (MSYS2 UCRT64) to confirm it still compiles..."
 
     $msys2 = "C:\msys64\usr\bin\bash.exe"
     if (-not (Test-Path $msys2)) {
@@ -160,7 +160,7 @@ if ($SkipBuild) {
     $buildDir = "build-fork-sync"
 
     $env:MSYSTEM = "UCRT64"
-    $bashCmd = "cd '$forkUnix' && rm -rf '$buildDir' && mkdir '$buildDir' && cd '$buildDir' && ../configure --disable-all-engines --enable-engine=scooby > build.log 2>&1 && make -j$Jobs >> build.log 2>&1"
+    $bashCmd = "cd '$forkUnix' && rm -rf '$buildDir' && mkdir '$buildDir' && cd '$buildDir' && ../configure --disable-all-engines --enable-engine=terraglyph > build.log 2>&1 && make -j$Jobs >> build.log 2>&1"
     & $msys2 -lc $bashCmd
     $buildExit = $LASTEXITCODE
 
@@ -168,16 +168,16 @@ if ($SkipBuild) {
     if ($buildExit -ne 0) {
         Write-Warn "Smoke build FAILED (see $buildLog). Rolling back the merge."
         git reset --hard $preMerge | Out-Null
-        Fail "Build failed against $UpstreamRemote/$UpstreamBranch — merge rolled back, nothing pushed. Likely upstream API drift touching the engine; inspect build.log, fix engines/scooby, then re-run."
+        Fail "Build failed against $UpstreamRemote/$UpstreamBranch — merge rolled back, nothing pushed. Likely upstream API drift touching the engine; inspect build.log, fix engines/terraglyph, then re-run."
     }
 
     # Surface any engine warnings (upstream core warnings are expected; engine ones aren't).
-    $engineWarn = Select-String -Path $buildLog -Pattern "engines/scooby/.*(warning|error):" -ErrorAction SilentlyContinue
+    $engineWarn = Select-String -Path $buildLog -Pattern "engines/terraglyph/.*(warning|error):" -ErrorAction SilentlyContinue
     if ($engineWarn) {
-        Write-Warn "Build succeeded but engines/scooby produced warnings:"
+        Write-Warn "Build succeeded but engines/terraglyph produced warnings:"
         $engineWarn | ForEach-Object { Write-Host "      $($_.Line)" -ForegroundColor Yellow }
     } else {
-        Write-Ok "Build clean — 0 warnings in engines/scooby/."
+        Write-Ok "Build clean — 0 warnings in engines/terraglyph/."
     }
 }
 
