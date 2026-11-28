@@ -108,7 +108,7 @@
       "title": "D-pad with fine cursor movement",
       "status": "next",
       "doneWhen": "With only the TV remote, the pointer moves finely enough to click a button or object.",
-      "note": "Related: Hotspot Magnet, D-pad jumps between hotspots, is a different route to the same TV-remote gap. Its research WP-086 and interface design WP-089 are done (2026-11-26 and 27); the algorithm packet is next."
+      "note": "Related: Hotspot Magnet, D-pad jumps between hotspots, is a different route to the same TV-remote gap. Its research WP-086 and interface design WP-089 are done (2026-11-26 and 27); the algorithm packet WP-091 is drafted."
     },
     {
       "id": "play-testing",
