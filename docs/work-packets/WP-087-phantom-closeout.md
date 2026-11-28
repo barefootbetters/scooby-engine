@@ -63,7 +63,9 @@ stood in front of *Showdown* at WP-079:
    engine's `leaving()` hook does not expose. The destination and every gameplay
    contract are the same either way
    ([WP-083 §One deferral](WP-083-wfr.md)). The run records whether it is
-   visible; the verdict decides whether it blocks.
+   visible; the verdict decides whether it blocks. *(Resolved 2026-11-27 by
+   [WP-094](WP-094-wfr-game.md), which ports the variant with the room's
+   original game.)*
 
 **On evidence.** WP-079's first §Result reported a live run that never happened
 ([DECISIONS 2026-11-21](../ai/DECISIONS.md)). This WP labels every piece of
