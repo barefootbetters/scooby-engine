@@ -5,7 +5,7 @@ title: "WP-093: Phantom's fountain piranha and the tokens"
 
 # WP-093: Phantom's fountain piranha and the tokens (Gen 1)
 
-**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#17](https://github.com/barefootbetters/scummvm/pull/17) is open.
+**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#17](https://github.com/barefootbetters/scummvm/pull/17) merged on 2026-11-27 (merge commit `3960fdbaa8`).
 **Phase:** 5 (a soft-lock found while checking WP-075's modelled items)
 **Depends on:** WP-075 ✅ (the maze interior: the fountain and the centre the way back leads to)
 **Companion EC:** none (inline checklist under Exit criteria)
@@ -76,8 +76,8 @@ reach the bottle chain: **a progression soft-lock.**
 2. [x] **Live (session).** The burger fed to the piranha gives the tokens and
    takes the gang back to the centre. A plain click plays a line, and the
    piranha lunges.
-3. [x] **Process.** The fork PR against `scooby-engine` is open, and each claim
-   carries its evidence label.
+3. [x] **Process.** The fork PR against `scooby-engine` is open (merged later
+   the same day), and each claim carries its evidence label.
 
 ## Result
 
@@ -167,8 +167,9 @@ changed files.
 ## Deliverables
 
 - Fork: `wp-093-fountain-piranha`, PR [barefootbetters/scummvm#17](https://github.com/barefootbetters/scummvm/pull/17)
-  (`7db942e513`). Staged by name: `maze_interior_rooms.{h,cpp}` and
-  `maze_interior_check.cpp`.
+  (`7db942e513`), merged on 2026-11-27 as `3960fdbaa8`; the fork worktree is
+  removed, and `C:\dev\scummvm` was rebuilt from it. Staged by name:
+  `maze_interior_rooms.{h,cpp}` and `maze_interior_check.cpp`.
 - Docs: this packet, its pre-flight, the fountain's section in scooby-exe,
   the correction in WP-075, and the index row.
 - Local only: the decompile dump, the self-test and live logs, and the
