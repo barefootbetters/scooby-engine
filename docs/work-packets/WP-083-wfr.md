@@ -84,6 +84,8 @@ movie variant by clue ownership is noted but not reproduced (see Result).
 
 ## Exit criteria
 
+> **Superseded in part by [WP-094](WP-094-wfr-game.md) (2026-11-27).** The game this packet ported was a reconstruction (a growing Simon on a tick counter, over 48 of the table's 304 entries). The original is a rhythm game on the wizard's song, clocked by its play position, which the fork can read. WP-094 ports it, with the movie-`0xb` exit variant this packet deferred. The claim, the clips and the exit stand.
+
 1. [x] The title matches an independent reference line for line:
    - the class; the music and the lines (`Wizards_Rule.Music`,
      `Wizards_Rule.Red`/`Green`/`Blue`/`Pink`/`Yellow`/`Brown`, `WFR.Potion_`,

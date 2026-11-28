@@ -3401,36 +3401,78 @@ Traced 2026-11-22 for [WP-083](../work-packets/WP-083-wfr.md); the game's larges
 class (1022 lines) and the last of Phantom's group-8 (Upstairs) rooms. Showdown
 has no such room. With it, **every game class in Phantom's audit is ported.**
 
-`ROOM_P30_WFR` (`0x41BEA0`, vtable `0x45EE7C`) is the wizard's Simon-says potion
-game. The wizard sets a rule — a number on a two-digit counter and a run of
-coloured ingredients (Red, Green, Blue, Pink, Yellow, Brown) he DANCEs in turn
-while the gang WATCHes; the player repeats it by clicking. A right run plays
-`Wizards_Rule.Correct%i_1_NARRATOR` and advances; a wrong one plays
-`Wizards_Rule.Incorrect[/2/3]_1_NARRATOR` (one of three) and
-`Knights.Glass_Breaks.1` and spends a difficulty-scaled life. Each lit colour
-plays `Wizards_Rule.<Colour>` and `WFR.Potion_%i`. Out of lives, or the run
-finished, returns the gang to `ROOM_P24_Wizards_Bedroom`, where the wizard's
-clue is given (WP-081).
+> **Corrected by [WP-094](../work-packets/WP-094-wfr-game.md) (2026-11-27).**
+> WP-083 described a reconstruction here: a Simon run that grows each round,
+> with a "spinner" on a scene's playback. The decompile shows a rhythm game
+> on the wizard's song, which replaces that account and its table below.
 
-The ingredients, Scooby and the wizard are a WFR animated sub-class (`0x41BAC0`,
-vtable `0x45EE54`) whose mode (`+0x5C`) plays `ANIM_WFR_<name><suffix>`
-(`0x41BC80`): the idle, `TURN_DANCE`, `TURN_WATCH`, `DANCE<n>` or `WATCH`. The
-spinner the original drives off a scene's fractional playback position
-(`0x4358D0`) over a position→ingredient table (`0x46C5B0`); the fork drives it on
-a tick counter over the same table (the Maria-game idiom, WP-064).
+`ROOM_P30_WFR` (`0x41BEA0`, vtable `0x45EE7C`) is a **rhythm game on the
+wizard's song**, `Wizards_Rule.Music`, which ships in `Voice.dat` (418 s).
+
+**The clock.** Each tick reads the song's play position in seconds
+(`0x4358D0`; Showdown's `0x434BA0`, the fork's `Sound::getClipMillis`) and
+multiplies it by 1.3795 beats a second (`0x45EED0`). A beat counts only in its
+first 0.49 (`0x45EEC0`). When the song is over (position −1.0, `0x45E48C`), the
+room exits to `ROOM_P24_Wizards_Bedroom`.
+
+**The beats.** A phrase is 16 beats. The table at `0x46C5B0` has 304 entries,
+eight a phrase, each the bottle (0–5: red, green, blue, pink, yellow, brown) or
+a gap (6). The beat's entry is at `(beat & 3) + (((beat >> 2) & 1) + (beat >> 4)
+* 2) * 4`, so beats 8–15 reuse beats 0–7's entries. The 38 phrases hold 3, 4,
+5, 6, 7 and then 8 bottles, six phrases each, and end with two empty phrases.
+
+- **Beats 0–7, the wizard's.** He dances (a phrase's eight dances are drawn
+  at its first beat, `rand() % 6 + 1`) and lights each beat's bottle. Scooby
+  turns to watch.
+- **Beats 8–15, the player's.** A click on the beat's bottle, while the
+  pointer is over it and inside the beat's window, lights it for 12 ticks and
+  plays `WFR.Potion_(bottle + 1)` and `Wizards_Rule.<Colour>`. Scooby dances
+  along.
+- **A beat not done** clears "all good" (`+0xE1`) at the next beat. On the
+  player's next beat (any but the second bar's last two), the phrase is marked
+  missed (`+0x11C`) once: a life is hidden, `Knights.Glass_Breaks.1` plays,
+  then `Wizards_Rule.Incorrect[/2/3]_1_NARRATOR` (`rand() % 3`), and Scooby
+  stops. At the next phrase the miss counts (`+0x118`). At 5 − difficulty
+  misses, the bedroom.
+- **A phrase played clean** earns a snack (`0x407E00`), the counter, and
+  `Wizards_Rule.Correct(rand() % 5 + 1)_1_NARRATOR`. It's given at the first
+  gap of the player's half, or at the next phrase's first beat if no gap came,
+  once a phrase (`+0x11D`). "All good" restarts on beat 7.
+
+**Entry** (`0x41C0C0`):
+- the voice channel's volume is set to the music's, and restored on leaving;
+- the `Wizards_Rule.` and `WFR.` sections are preloaded;
+- the asserts run (six bottles, the wizard, Scooby, two counter numbers);
+- the toolbar goes away (`0x407CC0`);
+- the counter shows the snacks, each cel one back;
+- the lives: the placed one, plus 4 − difficulty more, each under the last and
+  a life's width to its left (5 − difficulty in all);
+- the song plays.
+
+**The bottles** are plain sprites (`0x4314C0`) at depth 10, stopped, hit by
+their step polygon (`+4` = 2); the tick reads the click itself. Below row 240,
+the cursor opens over a bottle. **The skulls** (`ANIM_WFR_SKULLSWIZARD`,
+`…SCOOBY`) mouth the song and the colour last called (their lip shape,
+`0x435A70`). **Scooby and the wizard** are the dancers (`0x41BAC0`, vtable
+`0x45EE54`): mode `+0x5C` (`0x41BC80`) plays `ANIM_WFR_<name>`:
+- `IDLE`, looping;
+- `TURN_DANCE`, `TURN_WATCH`, `DANCE<n>` or `WATCH`, once each.
+
+Their update (`0x41BC50`) chains a turn into the dance or the watching.
 
 | Address | What |
 |---|---|
-| `0x41BEA0` | WFR constructor (music `Wizards_Rule.Music`, no opening) |
-| `0x45EE7C` vs `0x45E5FC` | Vtable diff: overrides the destructor, tick, enter, reset, claim and the +0x24 leave builder |
-| `0x41C3A0` (+0x04) | tick: the Simon run — DANCE the colours, repeat by click, Correct/Incorrect, the counter, exit to the bedroom |
-| `0x41C0C0` (+0x0C) | enter: assert the placements (6 bottles, wizard, Scooby, 2 counter numbers), build the difficulty-scaled lives, start the music |
-| `0x41C350` (+0x08) | reset: zero the run and the wired objects |
-| `0x41CF50` (+0x18) | claim: classify every `OBJ_WFR_*` / `ANIM_WFR_*` placement; the colours are clickable |
-| `0x41BF30` (+0x24) | leave builder: a transition-movie variant (movie `0xb`) by `isClueOwner(WIZARD)` |
-| `0x41BAC0` / `0x45EE54` | WFR animated sub-class (ingredients, Scooby, wizard); mode `+0x5C` |
-| `0x41BC80` | sub-class mode → `ANIM_WFR_<name>` + {``, `TURN_DANCE`, `TURN_WATCH`, `DANCE<n>`, `WATCH`} |
-| `0x46C5B0` | Position → ingredient (0-5), 6 a gap |
+| `0x41BEA0` | WFR constructor (no room music, no opening) |
+| `0x45EE7C` vs `0x45E5FC` | Vtable diff: the destructor, tick, enter, leave, claim and the ways out (+0x24) |
+| `0x41C3A0` (+0x04) | Tick: the skulls, the song's clock, the beats, the clicks, the misses and snacks, the exits |
+| `0x41C0C0` (+0x0C) | Entry: the asserts, the counter, the lives, the song |
+| `0x41C350` (+0x10) | Leave: the placements to be read again; the voice volume restored (WP-083 read this as a reset) |
+| `0x41CF50` (+0x18) | Claim: the bottles, the dancers, the skulls, the lives and the counter |
+| `0x41BF30` (+0x24) | The ways out: movie `0xB` while the wizard's clue isn't owned (`0x40A870`) |
+| `0x41BAC0` / `0x45EE54` | A dancer; update `0x41BC50` |
+| `0x41BBD0` / `0x41BC10` / `0x41BC80` | Dance this, turn to watch, set the mode |
+| `0x46C5B0` | The table: 304 entries, eight a phrase, 0–5 a bottle, 6 a gap |
+| `0x45EED0` / `0x45EEC0` | 1.3795 beats a second; the beat's window, 0.49 |
 
 ##### Movies (WP-022)
 
