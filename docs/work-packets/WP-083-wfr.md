@@ -123,6 +123,11 @@ name: `wfr_rooms.{h,cpp}`, `wfr_check.cpp`, the factory line and include in
 the room's music is played in `enter`, and WP-081's bedroom already reads the
 return `from == ROOM_P30_WFR`.
 
+**Merged 2026-11-27.** This WP closed on 2026-11-22 with PR #9 still open, so
+`scooby-engine` had no Wizard's Rule Room until the PR was merged on 2026-11-27
+(merge commit `00e3076da7`). A fork build from before that date has no
+`WizardsRuleRoom` class.
+
 **Exit criteria.**
 
 1. **Engine == reference (captured).** On Phantom the self-test reports: the
