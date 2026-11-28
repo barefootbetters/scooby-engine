@@ -1227,7 +1227,7 @@ in the packets. Numbers are assigned when each packet is drafted.
 |---|---|---|
 | 1 | Input and hotspot-feature research (Section 3 except 3.6) | [WP-086](../work-packets/WP-086-hotspot-magnet-research.md) ✅ |
 | 2 | Hotspot Magnet interface design | [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md) ✅ |
-| 3 | Directional algorithm design and test cases (including the reachability check) | — |
+| 3 | Directional algorithm design and test cases (including the reachability check) | [WP-091](../work-packets/WP-091-hotspot-magnet-algorithm.md) 📝 |
 | 4 | Directional selection implementation (hand-written) | — |
 | 5 | TerraGlyph hotspot provider | — |
 | 6 | TerraGlyph input integration | — |
@@ -1410,7 +1410,8 @@ Requirements adopted on 2026-11-26 from the review:
 6. ~~Run WP-089~~ ✅ 2026-11-27: Part II designed except the algorithm;
    evidence E27–E44, proposals H9–H16.
 7. Jeff decides H9–H16 in [§10.4](#104-open-design-decisions).
-8. Draft the directional algorithm packet (§11, packet 3) against the core's
+8. ~~Draft the directional algorithm packet~~ 📝 2026-11-27:
+   [WP-091](../work-packets/WP-091-hotspot-magnet-algorithm.md) (§11, packet 3), against the core's
    contract ([4.3](#43-interfaces)) and the target-listing hook
    ([12.7](#127-test-hooks)).
 9. Add a packet for the room assists of [6.8](#68-rooms-that-arent-plain-clicks)
@@ -1616,3 +1617,4 @@ it stays unresolved.
 | 2026-11-27 | Third remote capture (3.2, E26): D-pad up's code, and held OK, left and right send one press and one release; Android repeats held keys (400 ms, then every 50 ms), and ScummVM turns each repeat into a new press. Repeating D-pad presses added to the remote limitations (6.3). Jeff approved H6, hold OK (10.4). |
 | 2026-11-27 | Packet 2 drafted as [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md) (11, 14.3). |
 | 2026-11-27 | WP-089 run: Part II designed for the Phase 1 TerraGlyph prototype (4.2–4.6, 5.6, 6.1–6.6, the new 6.8 and 12.7, 7.4, Appendices B and D), evidence E27–E44 at fork `0d5a69c7694f`, proposals H9–H16. Corrected 3.2: ScummVM's default game keymap, which TerraGlyph has today, binds the D-pad to keypad keys (E27). A cold review of the design then corrected it before close: activation owns its press (H9), the click gate and an item in hand are in the filter (4.6), repeats are the adapter's own, and off the TV the D-pad doesn't reach the Virtual Mouse (6.1, E44). E3, E8 and E9 cite `android.cpp`'s new line numbers. |
+| 2026-11-27 | Packet 3 drafted as [WP-091](../work-packets/WP-091-hotspot-magnet-algorithm.md) (§11, §14.3). |
