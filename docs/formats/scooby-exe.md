@@ -2688,6 +2688,8 @@ Traced 2026-11-18 for [WP-073](../work-packets/WP-073-kst.md), in Phantom's
 `Scooby.exe`. The difficulty is read through the game's `int *` as byte
 `+0x160`.
 
+> **Corrected by [WP-090](#phantoms-knights-of-the-snack-table-the-serving-game-wp-090) (2026-11-27).** This section's account of the serving loop, the quota and the counter was read from names and the trace's outline, and is wrong in those parts: `+0xE8` is the mugs left, the counter shows the snacks, the sub-controllers are the full-mug, empty-mug and mugs-left lists, and the room exits to the dining room when the mugs run out. The placements and the class layout below stand.
+
 **Knights of the Snack Table** (`ROOM_P31_KST`, `0x419700`, vtable
 `0x45EDEC`, opening `Knights_of_the_Snack_Table.350X_`, music
 `Knights.Music`) is the one room of the audit's group 6 that is a set piece
@@ -2757,6 +2759,108 @@ no event, save or load of its own, and exits only to `ROOM_P12_Dining_Room`.
 | `0x41A970` (+0x18) | Placements: the seats, the benches, the drinks, the counter |
 | `0x41A5C0` | Laying out a round: the knight slots and the mugs |
 | `0x418CA0` | A knight: its walk, its reach, its drinking states |
+
+##### Phantom's Knights of the Snack Table: the serving game (WP-090)
+
+Traced 2026-11-27 for [WP-090](../work-packets/WP-090-kst-serving.md), in
+Phantom's `Scooby.exe` (SHA-256 `619EA687…AF807ED`), decompiled with Ghidra
+12.1.4 headless in a scratch project. The addresses are Phantom's. This
+section corrects WP-073's reading above: the room is a bartender game, not a
+quota to serve, and `+0xE8` is the mugs the player has left, not knights owed.
+
+**The game.** Three benches run from the knights' door on the left to
+Shaggy's tap on the right. Shaggy follows the mouse up and down to the bench
+row nearest it; pressing the button fills a mug and releasing it slides the
+mug down the bench. A knight walks in along a bench toward the tap. A full
+mug that reaches him he takes, and he drinks while it pushes him back to the
+door; there he drops the empty mug, which slides back toward the tap for
+Shaggy to catch. A full mug past the door end, an empty mug off the tap end,
+or a knight reaching the tap costs a mug: the round starts again, one mug
+fewer. Every knight of a round served earns a snack, and the next round has
+one knight more. Out of mugs, the room goes to `ROOM_P12_Dining_Room`. The
+counter shows the snacks, and the mugs left stand on the counter. There is
+also the room's exit (`OBJ_KST_EXIT`, base path, to the dining room), and
+the cursor shows only over the top 100 rows, where it is.
+
+**The sprites.** Each updates itself in the tree walk (vtable `+0x0C`); the
+knights' and the mugs' players (`+0x08`) and updates are held while the room
+pauses (`+0xC0 > 0` or `+0x1A4 > 0`). Shaggy's player is not.
+
+| Sprite | Constructor / vtable | Update | Notes |
+|---|---|---|---|
+| Shaggy | `0x4192F0` / `0x45EDB4` | `0x419370` | Built by the claim at the post. State `+0x68`: 0 free, 1 fills, 2 full, 3 slides, 4 back to idle; walk direction `+0x60` (0 away, 1 forward, 2 idle); grab flag `+0x64`; fill bench `+0x6C`. |
+| Knight | `0x418CA0` / `0x45ED78` | `0x418EE0` | Bench `+0x68` = slot % 3 (two per bench); body depth `ftol(bench-end y − 5)`, arm (`+0x80`) `ftol(bench-end y) + 32`, drawn at the body's step (`0x419160`); 9 ticks a step. States (`0x4191B0`): 0 drinks, 1 walks, 2 starts drinking, 3 finishes, 4 gone (x = y = −5000). Reach `+0x64` = (bench-end x − door x) × 0.005. |
+| Full mug | `0x418710` / `0x45ED20` | `0x418860` | At the tap (drink x, bench-end y), depth `ftol(y)`; speed (bench-end x − bench-start x) × 0.01. |
+| Empty mug | `0x4189B0` / `0x45ED4C` | `0x418B10` | Where the knight finished, depth `ftol(bench-end y) + 31` (+15 while falling); same speed; fall (floor y − bench-end y) × 0.1. |
+| Mug left | `0x4314C0` | — | Under game `+0x5C`, depth 100, looping; from (550, 40) stepping −35 (`0x45EE48`). |
+
+The room's lists: full mugs `+0xCC` (with `+0xC8`, iterator `+0xD8`), empty
+mugs `+0xD4` (`+0xD0`, `+0xDC`), the mugs left `+0xE4` (`+0xE0`). Each node
+is `{vtable, item +4, next +8, refcount +0xC}`; a new node goes at the front.
+
+**Each tick** (`0x419E40`, after the base tick):
+1. The cursor shown if its y ≤ 100 (`0x435EF0`), else hidden (`0x435E80`).
+2. Shaggy's depth `ftol(y) + 30`; a falling empty mug's `ftol(bench-end y) + 15`.
+3. The narrator's intro (`+0x1A8`, set at entry only before the opening has
+   played) holds the rest until the scene is over and the line has ended.
+4. A miss (`+0x194`, set by `0x419E30`): Shaggy's `DROP_MUG` and
+   `Knights.Zoinks` (`0x419680`); `+0xC0` = 36; a mug fewer (`+0xE8`).
+5. No mugs and `+0xC0` = 0: `ROOM_P12_Dining_Room` (game vtable `+0x04`).
+6. `+0xC0` counts down; at 0 the round again (`0x41A5C0`). `+0x1A4` counts down.
+7. The round's knights (`+0x198`) walk in one at a time (`0x419110`, the
+   first slot gone), `rand() % 0x48 + 0x24` ticks apart (`+0x1A0`, `+0x19C`).
+8. Every knight in, every knight gone, both lists empty: the round served —
+   `+0x19C` = 0, `+0x198` + 1, `+0x1A4` = 36, `+0x1A0` = `rand() % 100 + 50`,
+   Shaggy's `SUCCESS` (`0x4196D0`), a snack (`0x407E00`, at most 99), the
+   counter, and `Knights_of_the_Snack_Table.Correct(rand() % 6 + 1)_NARRATOR`.
+
+**Shaggy** (`0x419370`): the bench row nearest the mouse (game `+0x1E`), his
+step toward it clamped to ±10. Free (state 0), a press (game `+0x20` bit 0)
+within 10 of the row starts `FILL_MUG`. Filled (its sequence over) he waits
+for the release; a release while filling also slides (the state falls
+through). `SLIDE_MUG` over: the full mug down the bench (`0x41A2B0`,
+`Knights.Mug_Slide`, `Knights.Mugdown.(rand()%3+1)`), `SLIDE_MUG_TO_IDLE`.
+Free, he walks: x on the tap line through the three drink markers
+(`0x41B2E0`, by the bench rows) plus `+0xEC` (the post's x less drink x[0]);
+`WALK_FORWARD` going down, `WALK_AWAY` going up; at the row, `IDLE` restarted
+each tick. Then, free, he catches an empty mug on his bench (`0x41A820`):
+one falling off the tap end, or past the tap, with `GRAB_MUG`.
+
+**A knight** (`0x418EE0`): walking, x += reach, footsteps
+(`Knights.Knight_Walks.(rand()%5+1)`, two in turn) on step 0; at the tap
+(x ≥ drink x) a miss; else a full mug within 5 of him (`0x41A410`, `0x45EE40`)
+taken: `STARTS_DRINKS`, then `DRINKS` with `Knights.Knight_Gulp.(bench+1)`.
+While starting and drinking he is pushed back at half his reach; at the door
+`FINISH_DRINKS` and an empty mug where he stands (`0x41A370`); finished,
+`rand() % 3 == 0` walks again from there, else gone.
+
+**The mugs.** A full mug slides toward the door; past bench-start x,
+`MUGFULL_BREAKS` and `Knights.Glass_Breaks.(rand()%4+1)`, and over, a miss. An
+empty mug slides toward the tap; past bench-end x it falls; at the floor row
+`MUGEMPTY_BREAKS` and the glass, and over, a miss.
+
+**Entry** (`0x419A80`), corrected: `0x407CC0` on the inventory (the toolbar
+away); `+0xEC` −= drink x[0]; the counter's two cels are the snacks (game
+`+0xAC`, `+0x30`) each one back, `(d + 9) % 10` (cel 0 shows a 1); the
+overlays' depth bench-end y − 1; `Knights` preloaded; `+0xE8` = 5 − the
+difficulty (the mugs); the round laid out; the intro on a first visit;
+`+0xC0` = 1; `Knights.Ambience`.
+
+**Laying out a round** (`0x41A5C0`), corrected: both mug lists cleared;
+`+0x194` = 0, one knight (`+0x198` = 1), none in, timer 0; six knights made
+the first time, else set gone; the mugs left rebuilt, one per mug.
+
+| Address | What it does |
+|---|---|
+| `0x419370` | Shaggy's update: the mouse, the fill and slide, the walk, the catch |
+| `0x419680` / `0x4196D0` | Shaggy drops a mug (Zoinks) / a round served |
+| `0x41B2E0` | Shaggy's x on the tap line |
+| `0x418EE0` / `0x4191B0` / `0x419110` | A knight's update / its states / walking in |
+| `0x418860` / `0x418B10` | The full / the empty mug's update |
+| `0x41A2B0` / `0x41A370` | A full mug slid / an empty mug dropped |
+| `0x41A410` / `0x41A820` | A knight takes a full mug / Shaggy catches an empty one |
+| `0x419E30` | A miss |
+| `0x407E00` | A snack (game `+0xAC`, `+0x30`, at most 99) |
 
 ##### Phantom's hedge maze and maze map (WP-074)
 

@@ -16,6 +16,8 @@ title: "WP-073: Phantom's Knights of the Snack Table"
 
 ## Result (2026-11-18)
 
+> **Superseded in part by [WP-090](WP-090-kst-serving.md) (2026-11-27).** Jeff's live play found this room unplayable: no knights, no response to the mouse, and a counter reading 13. WP-090 ported the serving game from the decompile. The room is a bartender game in which `+0xE8` is the mugs left, the counter shows the snacks, and running out of mugs leads to the dining room. This packet's claim, markers and class stand; its serving loop, quota and counter readings do not.
+
 The reference is `wp073_ref.py`: WP-072's, plus the room, written from the trace before the engine ran. It reads the placements from the art and the clips from the sound index. It never runs the engine. At `script` level 3 the chase check now has 5 KST lines on Phantom (126 in all), and one on Showdown, which has no such room (230 in all). Every line matched on both titles after the geometry fix below.
 
 `ROOM_P31_KST` is the last room of the audit's group 6, and the only one of the group that is a set piece of its own — the game Phantom gives where Showdown has Pie Noon ([WP-055](WP-055-pie-noon.md)). The two are separate classes sharing a framework; the asserts in Phantom's `enter` still read "...specified in Pie Noon". It splits into no further packet.
