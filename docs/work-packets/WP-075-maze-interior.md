@@ -50,7 +50,7 @@ group-7 packet (`ROOM_P27_Below_Balcony` and its door) stays separate.
 - **The piranha eat and the well's ball-game are modelled, not frame-exact.**
   The fountain's tick runs a short lunge/eat/grab sequence that grants the
   tokens; the well holds a ball-game sub-object (`+0xb8`) the fork does not
-  reproduce. The deterministic surface the check proves — the classes, the
+  reproduce. *(Corrected by [WP-092](WP-092-well-jester.md), 2026-11-27: the `+0xb8` member is the shared Jester (`0x4122D0`), not a ball game; the well now keeps him.)* The deterministic surface the check proves — the classes, the
   clips, the placements and their gating, the save key, the movies — is
   independent of that, and the live run confirms the rooms, the opening, the
   music and the `WellVisited` flag.

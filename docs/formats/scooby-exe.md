@@ -3012,10 +3012,21 @@ guards the tokens.
 **The well** (`ROOM_P22_Well_In_Maze`, `0x42C740`, vtable `0x45F404`, no
 opening) sits in the maze and links back to the royal gallery.
 
+- **The Jester** (corrected 2026-11-27,
+  [WP-092](../work-packets/WP-092-well-jester.md)): the member at `+0xB8`,
+  which WP-075 called a ball-game sub-object, is the Jester the room of doors
+  and the royal gallery keep ([his notes](#phantoms-room-of-doors-its-jester-and-phantoms-clues-wp-061)).
+  The constructor builds it (`0x4122D0`), the entry runs his entry
+  (`0x412B80`) after the base entry, and the tick (`0x42C7F0`) runs his tick
+  (`0x4122E0`) after the base tick. He is placed here (`OBJ_JESTER_B`,
+  563, 393), so in the well he takes the balls found, gives his clue once
+  all three are, and answers a click as he does elsewhere.
+
 - **Entry** (`0x42C810`): a queued return bounces to `ROOM_P07_Royal_Gallery`
   through movie `0x36` (54) from the gallery or `0x39` (57) otherwise, unless
-  the full bottle has been used; otherwise it sets `WellVisited` (`game+0x262`,
-  read by the treasury's rope line, WP-071).
+  the full bottle has been used; otherwise the base entry, the Jester's
+  (`0x412B80`), and `WellVisited` (`game+0x262`, read by the treasury's rope
+  line, WP-071). A visit that bounces runs neither the base entry nor his.
 - **Placements** (`0x42CA20`): `OBJ_INV_BALL_YELLOW` gone once found
   (`YellowBallFound`, `game+0x25d` — the flag the Jester reads to take it;
   WP-075 first mislabelled it `YellowBallTaken`, corrected 2026-11-19);
@@ -3044,8 +3055,9 @@ opening) sits in the maze and links back to the royal gallery.
 | `0x429CC0` (+0x18) | Fountain placements: the piranha, the tokens, the exit, the grab |
 | `0x429B50` (+0x14) | Fountain event: the burger fed, the cycling fountain lines |
 | `0x429800` (+0x04) | Fountain tick: the lunge, the eat, the token grab |
-| `0x42C740` | Well constructor (music `1`, no opening) |
-| `0x42C810` (+0x0C) | Well entry: `WellVisited`, the queued return to the gallery |
+| `0x42C740` | Well constructor (music `1`, no opening; the Jester at `+0xB8`) |
+| `0x42C7F0` (+0x04) | Well tick: the Jester's (`0x4122E0`) |
+| `0x42C810` (+0x0C) | Well entry: the queued return to the gallery, else the Jester's entry and `WellVisited` |
 | `0x42CA20` (+0x18) | Well placements: the yellow ball, the rope-gated climb |
 | `0x42C8E0` (+0x14) | Well event: the yellow ball's movie, the rope on the well, the lines |
 
