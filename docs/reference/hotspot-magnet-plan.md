@@ -9,8 +9,8 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 > is done for everything except SCUMM/HE
 > ([WP-086](../work-packets/WP-086-hotspot-magnet-research.md), 2026-11-26).
 > Jeff decided H1–H5, H7 and H8 in [§10.4](#104-open-design-decisions) the
-> same day. H6, the cursor fallback, waits on Jeff; the TCL remote capture it
-> needed was done on 2026-11-27. The
+> same day, and H6, the cursor fallback, on 2026-11-27 after the TCL remote
+> capture. The
 > design in Part II is still intent only, and nothing here is built.
 > **Date:** 2026-11-26 ([Revision history](#revision-history)). **Author:**
 > Jeff (with AI assistance).
@@ -436,8 +436,8 @@ Pinned commits: fork `origin/scooby-engine` **`ff490ad9449f`**; upstream
 ## Part II — Technical design
 
 **Status: design intent only.** The [§10.4](#104-open-design-decisions)
-decisions (2026-11-26) bound it; interfaces and algorithms stay provisional
-until the interface design packet, which waits on H6.
+decisions (2026-11-26 and 27) bound it; interfaces and algorithms stay
+provisional until the interface design packet.
 
 ### 4. Proposed software architecture
 
@@ -854,8 +854,8 @@ Rank by severity × likelihood once the research is done.
 #### 10.4 Open design decisions
 
 A living decision register. The recommendations are WP-086's proposals. Jeff
-decided H1–H5, H7 and H8 on 2026-11-26; H6 waits on the remote capture
-([3.2](#32-android-tv-and-gamepad-input)). Status is Jeff's word for each:
+decided H1–H5, H7 and H8 on 2026-11-26, and H6 on 2026-11-27 after the
+remote capture ([3.2](#32-android-tv-and-gamepad-input)). Status is Jeff's word for each:
 Approved, Approved for prototype, Provisional, or Pending.
 
 | # | Question | Alternatives | Recommendation | Evidence | Status | Resolution |
@@ -865,7 +865,7 @@ Approved, Approved for prototype, Provisional, or Pending.
 | H3 | Cursor placement | (a) the target's centre; (b) the first point on a small grid, centre first, that hit-tests to the target | **(b)**, as SCUMM does; no such point means not eligible | E16, E18 | **Approved** (2026-11-26) | (b), a validated interaction point. Prefer a point the engine supplies when it has one; otherwise the hit-tested grid. Never assume the rectangle's centre is clickable |
 | H4 | Shared-code location | `common/`, `gui/`, `engines/`, `backends/keymapper/`, `graphics/` | **`engines/`**, beside the hotspot display, with the algorithm a standalone class | E11–E15 | **Provisional** (2026-11-26) | `engines/` as the preferred future location, subject to ScummVM maintainer feedback ([13.3](#133-maintainer-feedback-register)). The first implementation stays inside `engines/terraglyph/` |
 | H5 | Per-game setting | (a) an engine extra option now, a shared key in Phase 3; (b) a shared key now | **(a)**: a standard option in `TerraglyphMetaEngine`, default off | E14, E23, E24 | **Approved** (2026-11-26) | (a), TerraGlyph-specific at first |
-| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a).** BACK and MENU are taken (skip, main menu, keyboard). The capture supports it: the remote sends one press and one release for a held OK, and Android's repeats (every 50 ms after 400 ms) can be ignored while the button is down. Proposed: a short press activates on release; a hold past a threshold (over 400 ms, so it's a deliberate hold) enters cursor mode, and its release activates nothing | E7, E8, E22, E25, E26 | **Pending**: capture done 2026-11-27, awaiting Jeff | (a), hold OK, if the TCL 65Q77K capture supports it. The test must show short and long OK presses apart; a long press must never activate a hotspot; the fallback must work on the standard remote with no extra hardware |
+| H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a).** BACK and MENU are taken (skip, main menu, keyboard). The capture supports it: the remote sends one press and one release for a held OK, and Android's repeats (every 50 ms after 400 ms) can be ignored while the button is down. Proposed: a short press activates on release; a hold past a threshold (over 400 ms, so it's a deliberate hold) enters cursor mode, and its release activates nothing | E7, E8, E22, E25, E26 | **Approved** (2026-11-27) | (a), hold OK: a short press activates on release; a hold past a threshold over 400 ms enters cursor mode and its release activates nothing; repeated downs while OK is held are ignored. A long press must never activate a hotspot, and the fallback works on the standard remote with no extra hardware. The input integration packet confirms the event sequence inside ScummVM on the TV (E26's open item) |
 | H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | **Approved** (2026-11-26) | The rule in 3.5: only objects that are visible, eligible and hittable now. Characters come later, once their click behavior is verified |
 | H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | **Approved** (2026-11-26) | (a), refresh on directional input. Also invalidate the current selection when game state changes: a hotspot that disappears or is disabled must never stay activatable |
 
@@ -1020,13 +1020,12 @@ Requirements adopted on 2026-11-26 from the review:
 
 1. ~~Run WP-086~~ ✅ 2026-11-26: Section 3 is verified except 3.6.
 2. ~~Jeff decides H1–H8~~ ✅ 2026-11-26: H1–H5, H7 and H8 decided in
-   [§10.4](#104-open-design-decisions); H6 pending.
+   [§10.4](#104-open-design-decisions); H6 on 2026-11-27.
 3. ~~Capture the TCL remote's buttons~~ ✅ 2026-11-27 (3.2, E26): held OK
-   sends one press and one release; Android repeats it. Jeff decides H6 on
-   that evidence.
+   sends one press and one release; Android repeats it.
 4. Get early maintainer feedback, which also settles H4.
-5. Draft the interface design packet from the §10.4 decisions. It doesn't
-   start until the remote capture has verified the input assumptions.
+5. Draft the interface design packet from the §10.4 decisions. The remote
+   capture has verified the input assumptions it rests on.
 
 ### 15. Appendices
 
@@ -1090,4 +1089,4 @@ it stays unresolved.
 | 2026-11-26 | Accepted as the planning baseline after Microsoft Copilot's review, relayed by Jeff. Adopted its four corrections (remote fallback 6.2, reachability 5.8, separate selection, positioning and activation 4.2/4.5, and data vs visual reuse of the hotspot display 3.3), its eligibility requirement (4.6), its packet resequencing (11) and its user-experience tests (12.6). Also added the link to WP-085's gamepad requirement (1), what WP-018 already established about TerraGlyph hit testing (3.5, 7.2), and an exhaustive per-room reachability check (5.8). |
 | 2026-11-26 | WP-086's research: Section 3 verified except 3.6, with the evidence register (E1–E24), the decision register's proposals (H1–H8) and Appendix A. The TCL remote's button capture is still a gap. |
 | 2026-11-26 | Jeff's decisions on H1–H8 (10.4): H1, H3, H5, H7 and H8 approved, H2 approved for the prototype, H4 provisional, H6 pending remote testing, each with his conditions. Reachability, never activating a vanished hotspot, and no activation on a long OK press added to the acceptance criteria (7.6, 8.6) and navigation tests (12.2). A second remote capture recorded short presses of the D-pad, OK and BACK (3.2, E25); held presses are still a gap. |
-| 2026-11-27 | Third remote capture (3.2, E26): D-pad up's code, and held OK, left and right send one press and one release; Android repeats held keys (400 ms, then every 50 ms), and ScummVM turns each repeat into a new press. H6's evidence is in and waits on Jeff; repeating D-pad presses added to the remote limitations (6.3). |
+| 2026-11-27 | Third remote capture (3.2, E26): D-pad up's code, and held OK, left and right send one press and one release; Android repeats held keys (400 ms, then every 50 ms), and ScummVM turns each repeat into a new press. Repeating D-pad presses added to the remote limitations (6.3). Jeff approved H6, hold OK (10.4). |
