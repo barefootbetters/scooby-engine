@@ -372,9 +372,6 @@ default is `origin/scooby-engine` at its tip on the execution date.
 - **SCUMM/HE.** The rules must not assume TerraGlyph's 640×480 screen or its
   layouts. Screen size doesn't appear in them; if it must, that's a row.
 - **Device validation and the user-experience tests** (§12.6). Packets 9–11.
-- **The stale E34 implication** (plan §3.8: "Activation pushes real button
-  events (H9)", which H9's recommendation (c) no longer does). A separate
-  small fix, not this packet's.
 
 ## Dependencies
 
