@@ -31,8 +31,9 @@ where it was written.
       that no session's worktree has it.
 - [ ] Pre-flight is not required (WP-091 header). The session starts from
       WP-091 and this EC.
-- [ ] Check H11, H12 and H13 in plan §10.4. If Jeff has changed any from
-      WP-089's proposal, note what this packet must redo:
+- [ ] H11, H12 and H13 were approved on 2026-11-27 as WP-089 proposed them.
+      Check plan §10.4 for any later change, and if there is one, note what
+      this packet must redo:
   - H12 to (b) puts a box or id on the record, so the filter may use extents.
   - H13 rejected removes the menu-room targets from the examples.
   - H11 rejected means no room class takes a direction, so item 13's
