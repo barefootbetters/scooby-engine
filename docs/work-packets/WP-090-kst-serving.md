@@ -5,7 +5,7 @@ title: "WP-090: Phantom's Knights of the Snack Table, the serving game"
 
 # WP-090: Phantom's Knights of the Snack Table: the serving game (Gen 1)
 
-**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#15](https://github.com/barefootbetters/scummvm/pull/15) is open.
+**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#15](https://github.com/barefootbetters/scummvm/pull/15) merged on 2026-11-27 (merge commit `d18cb66884`).
 **Phase:** 5 (a defect found in the Phantom closeout's live play)
 **Depends on:** WP-055 ✅ (Pie Noon, the sibling class), WP-057 ✅ (a room's own `Room::Actor` sprites), WP-073 ✅ (the room's claim and entry)
 **Companion EC:** none (inline checklist under Exit criteria)
@@ -83,8 +83,9 @@ code differs from it.
 2. [x] **Self-test.** The KST lines match the reference line for line. The
    rest of the self-test matches the `1c02ca7ecd` baseline except the per-run
    random keys. The build of `engines/terraglyph/` has no new warnings.
-3. [x] **Process.** The fork PR against `scooby-engine` is open, and this
-   packet records each claim with its evidence label.
+3. [x] **Process.** The fork PR against `scooby-engine` is open (merged
+   later the same day), and this packet records each claim with its
+   evidence label.
 
 ## Result (2026-11-27)
 
@@ -119,7 +120,8 @@ In brief:
   draws a 1). That is why the old code's "2 to serve" drew "13".
 
 **The port (source).** The fork branch is `wp-090-kst-serving`, commit
-`a5829afe4e`, PR [#15](https://github.com/barefootbetters/scummvm/pull/15).
+`a5829afe4e`, PR [#15](https://github.com/barefootbetters/scummvm/pull/15),
+merged into `scooby-engine` on 2026-11-27 as `d18cb66884`.
 Every state, constant and sound name above is in `kst_rooms.cpp`, with the
 address it came from. The lists keep the original's order (newest first), and
 `rand()` draws are taken in the original's order.
@@ -240,7 +242,8 @@ a new game (1 snack, level 0), and the engine's `--debugflags=script,input` log.
 
 ## Deliverables
 
-- Fork: `wp-090-kst-serving` (`a5829afe4e`), PR [barefootbetters/scummvm#15](https://github.com/barefootbetters/scummvm/pull/15).
+- Fork: `wp-090-kst-serving` (`a5829afe4e`), PR [barefootbetters/scummvm#15](https://github.com/barefootbetters/scummvm/pull/15),
+  merged on 2026-11-27 (`d18cb66884`); the fork worktree is removed.
   Staged by name: `kst_rooms.{h,cpp}`, `kst_check.cpp`, `room.{h,cpp}`.
 - Docs: this packet, its pre-flight, the index row,
   [scooby-exe](../formats/scooby-exe.md#phantoms-knights-of-the-snack-table-the-serving-game-wp-090),
@@ -251,7 +254,8 @@ a new game (1 snack, level 0), and the engine's `--debugflags=script,input` log.
 ## Notes
 
 - The Phantom closeout ([WP-087](WP-087-phantom-closeout.md)) should replay
-  the room live once the fork PR is merged. This packet's live evidence is
+  the room live. The fork PR is merged, and `C:\dev\scummvm` was rebuilt at
+  `d18cb66884` on 2026-11-27. This packet's live evidence is
   session-driven, not Jeff's.
 - WP-075's well ball game (`+0xB8`, "not reproduced") is the next candidate
   for the same kind of check. Its decompile route is now known, and is the
