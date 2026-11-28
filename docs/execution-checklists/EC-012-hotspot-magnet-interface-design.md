@@ -85,7 +85,7 @@ buttons as targets (H13).
       and §5.6.
 - [x] Activation, its blocks and what the player sees written in §4.2.
 
-**Outcome:** activation pushes real button events, the release a tick later
+**Outcome:** activation sets `_mouseDown` and calls `handleMouse(true, p)` itself, the release a tick later
 (H9).
 
 ## Step 4 — Modes, input and coordinates (time-box: 1:15)
