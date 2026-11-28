@@ -47,7 +47,7 @@ group-7 packet (`ROOM_P27_Below_Balcony` and its door) stays separate.
 
 **Deviations and gaps:**
 
-- **The piranha eat and the well's ball-game are modelled, not frame-exact.**
+- **The piranha eat and the well's ball-game are modelled, not frame-exact.** *(Both corrected 2026-11-27: the piranha by [WP-093](WP-093-fountain-piranha.md), where feeding it the burger never gave the tokens, a soft-lock; the "ball game" by [WP-092](WP-092-well-jester.md).)*
   The fountain's tick runs a short lunge/eat/grab sequence that grants the
   tokens; the well holds a ball-game sub-object (`+0xb8`) the fork does not
   reproduce. *(Corrected by [WP-092](WP-092-well-jester.md), 2026-11-27: the `+0xb8` member is the shared Jester (`0x4122D0`), not a ball game; the well now keeps him.)* The deterministic surface the check proves — the classes, the

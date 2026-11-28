@@ -2994,20 +2994,51 @@ balcony.
 guards the tokens.
 
 - **Entry** (`0x4297D0`): plays the water `FOUNTAIN_CLOSEUP.WATER` (dotted).
-- **Placements** (`0x429CC0`): `OBJ_PIRANHA` a looping sprite at depth `−1`,
-  `ANIM_PIRANHAFULL` when the burger has been used else `ANIM_PIRANHAIDLE`
-  (with the `Fountain_Closeup.Fountain_Closeup.Piranha_Swims` loop — the exe
-  literally doubles the prefix); `OBJ_INV_TOKENS` a requires object answering
-  the burger (`ANIM_CURSORBURGER`) at depth `−100` until taken; `OBJ_P44_TO_P23`
-  the exit back to the centre at depth `100`; `OBJ_SHAGGY_P44_GRAB_TOKENS` a
-  hidden sprite at depth `100`.
-- **The event** (`0x429B50`): the burger used on the piranha
-  (`OBJ_INV_BURGER` removed) sets it eating (`ANIM_PIRANHALUNGE_EAT_START`,
-  `Fountain_Closeup.Piranha_Eats`); a plain click cycles `Fountain.250D_` /
-  `.250D1_` / `.250D2_`.
-- **Each tick** (`0x429800`): fed, the piranha lunges and eats, then Shaggy
-  grabs the tokens (`Fountain_Closeup.Shaggy_Takes_Tokens`) into the toolbar
-  and the exit list (`Fountain.250F_`, `ROOM_P23_Maze_Center`) is built.
+- **Placements** (`0x429CC0`), corrected 2026-11-27
+  ([WP-093](../work-packets/WP-093-fountain-piranha.md)):
+  - `OBJ_PIRANHA` is a **requires object** (`0x402D90`, `+0xB8`): it reads
+    `requiredanim=` (the burger) and shows the open-hand cursor, under layer 0
+    at depth `−1`, hit by its step polygon (`+4` = 2). It plays
+    `ANIM_PIRANHAFULL` looping once the burger has been used. Otherwise it plays
+    `ANIM_PIRANHAIDLE` **once**, with
+    `Fountain_Closeup.Fountain_Closeup.Piranha_Swims` (the exe doubles the
+    prefix).
+  - `OBJ_INV_TOKENS` is a requires object answering the burger at depth
+    `−100` until taken (`+0xBC`).
+  - `OBJ_P44_TO_P23` is the exit back to the centre, under game `+0x5C` at
+    depth `100`.
+  - `OBJ_SHAGGY_P44_GRAB_TOKENS` is a sprite under game `+0x5C` at depth
+    `100`, hidden and stopped (`+0xC0`).
+- **Reset** (`0x4297A0`): a lunge pending (`+0xC8` = 1), the line cycle at
+  its first (`+0xC4`), no grab under way (`+0xC9`), not fed (`+0xCA`).
+- **The event** (`0x429B50`), on the piranha or the tokens:
+  - **The burger:** it is spent; the piranha starts eating
+    (`ANIM_PIRANHALUNGE_EAT_START`, once) with
+    `Fountain_Closeup.Piranha_Eats`; no lunge; fed, so input is held (game
+    `+0x09`) and the cursor hidden.
+  - **A plain click** (the cursor is `ANIM_CURSOROPEN`): a lunge is pending,
+    and the next of `Fountain.250D_`, `.250D1_` and `.250D2_` plays, holding
+    input.
+- **Each tick** (`0x429800`), after the base tick, once the piranha's
+  sequence ends (it is shown and stopped):
+  - **A lunge pending:** `ANIM_PIRANHALUNGE_ATTACK` and
+    `Fountain_Closeup.Piranha_Lunge_Attack`.
+  - **It has just started eating:** it is hidden, and so are the tokens;
+    Shaggy's grab is shown and played once, with
+    `Fountain_Closeup.Shaggy_Takes_Tokens` (`+0xC9`).
+  - **Otherwise:** after `EAT_FINISH`, `ANIM_PIRANHAFULL` looping; else its
+    idle again. Either way, its swim.
+
+  Once Shaggy's grab ends:
+  - the tokens go into the toolbar;
+  - the grab is hidden, and the piranha is shown playing
+    `ANIM_PIRANHALUNGE_EAT_FINISH`;
+  - an exit to `ROOM_P23_Maze_Center` with `Fountain.250F_` is built
+    (`0x404820`) and taken through the room's `+0x24`;
+  - fed ends.
+
+  While fed, input stays held and the cursor hidden.
+- **Leaving** (`0x42A040`): during Shaggy's grab, the tokens are given anyway.
 
 **The well** (`ROOM_P22_Well_In_Maze`, `0x42C740`, vtable `0x45F404`, no
 opening) sits in the maze and links back to the royal gallery.
@@ -3055,6 +3086,8 @@ opening) sits in the maze and links back to the royal gallery.
 | `0x429CC0` (+0x18) | Fountain placements: the piranha, the tokens, the exit, the grab |
 | `0x429B50` (+0x14) | Fountain event: the burger fed, the cycling fountain lines |
 | `0x429800` (+0x04) | Fountain tick: the lunge, the eat, the token grab |
+| `0x4297A0` (+0x08) | Fountain reset: a lunge pending |
+| `0x42A040` (+0x10) | Fountain leave: the tokens if the grab was under way |
 | `0x42C740` | Well constructor (music `1`, no opening; the Jester at `+0xB8`) |
 | `0x42C7F0` (+0x04) | Well tick: the Jester's (`0x4122E0`) |
 | `0x42C810` (+0x0C) | Well entry: the queued return to the gallery, else the Jester's entry and `WellVisited` |
