@@ -5,7 +5,7 @@ title: "WP-092: Phantom's well and its Jester"
 
 # WP-092: Phantom's well and its Jester (Gen 1)
 
-**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#16](https://github.com/barefootbetters/scummvm/pull/16) is open.
+**Status:** ✅ Done (2026-11-27). Fork PR [barefootbetters/scummvm#16](https://github.com/barefootbetters/scummvm/pull/16) merged on 2026-11-27 (merge commit `8410401169`).
 **Phase:** 5 (a gap found while checking WP-075 after WP-090)
 **Depends on:** WP-061 ✅ (the room of doors and its Jester, `JesterControl`), WP-072 ✅ (the royal gallery, which keeps him the same way), WP-075 ✅ (the well)
 **Companion EC:** none (inline checklist under Exit criteria)
@@ -83,8 +83,8 @@ and the checks that end a visit without `roomLeft()` (see WP-090).
    `d18cb66884` baseline except the per-run random keys. The build has no
    new warnings.
 2. [x] **Live (session).** In the well, the Jester answers a click.
-3. [x] **Process.** A fork PR against `scooby-engine` is open, and each claim
-   here carries its evidence label.
+3. [x] **Process.** A fork PR against `scooby-engine` is open (merged later
+   the same day), and each claim here carries its evidence label.
 
 ## Result
 
@@ -149,8 +149,10 @@ three balls, which the self-test sets up directly.
 
 ## Deliverables
 
-- Fork: `wp-092-well-jester`, PR [barefootbetters/scummvm#16](https://github.com/barefootbetters/scummvm/pull/16) (`b6c6319dfc`). Staged by name:
-  `maze_interior_rooms.{h,cpp}` and `maze_interior_check.cpp`.
+- Fork: `wp-092-well-jester`, PR [barefootbetters/scummvm#16](https://github.com/barefootbetters/scummvm/pull/16) (`b6c6319dfc`), merged on
+  2026-11-27 as `8410401169`; the fork worktree is removed, and `C:\dev\scummvm`
+  was rebuilt from it. Staged by name: `maze_interior_rooms.{h,cpp}` and
+  `maze_interior_check.cpp`.
 - Docs: this packet, the well's section in scooby-exe, the pointer in
   WP-075, and the index row.
 - Local only: the decompile dump, the self-test logs and the screenshots.
