@@ -6,7 +6,7 @@ title: "WP-089: Hotspot Magnet interface design"
 # WP-089: Hotspot Magnet interface design — components, contracts and modes (Gen 1)
 
 **Status:** ✅ Done (2026-11-27). All 17 exit criteria met
-([§Close](#close-2026-11-27)); proposals H9–H16 wait on Jeff. **Findings
+([§Close](#close-2026-11-27)); Jeff decided its proposals H9–H16 on 2026-11-27. **Findings
 landed in:** the plan's
 [Part II](../reference/hotspot-magnet-plan.md#part-ii--technical-design)
 (§4.2–4.6, §5.6, §6.1–6.6 and the new §6.8), §7.4, the new

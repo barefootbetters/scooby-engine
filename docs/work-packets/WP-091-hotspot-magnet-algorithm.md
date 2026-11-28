@@ -12,8 +12,8 @@ interface design: the core's contract in the plan's
 [§4.3](../reference/hotspot-magnet-plan.md#43-interfaces) and the
 target-listing hook in
 [§12.7](../reference/hotspot-magnet-plan.md#127-test-hooks). This packet also
-builds on WP-089's proposals H9–H16 as written. If Jeff changes H11, H12 or
-H13 before it runs, the EC's pre-flight says what to redo.
+builds on H9–H16, which Jeff decided on 2026-11-27 as WP-089 proposed them
+(H15 conditional, and not this packet's to solve).
 **Unblocks:**
 - packet 4 of the
   [plan's sequence](../reference/hotspot-magnet-plan.md#11-development-work-packets),
@@ -123,6 +123,11 @@ It also gives:
     up and down in that room.
   - Everywhere else the core's rules apply. That includes the menu rooms,
     whose `ButtonRoom` buttons are targets under proposed H13.
+- **Carried forward with H9–H16** (Jeff, 2026-11-27):
+  - every eligible hotspot, menu buttons and room-specific targets
+    included, stays reachable with the standard TV remote, and the algorithm
+    never traps the player in a subset of targets;
+  - with Hotspot Assist off, today's behavior is preserved.
 - **The reachability requirement** (plan §5.8, Jeff, 2026-11-26).
   - **The requirement:**
     - every eligible hotspot is reachable from every other through a finite
@@ -342,6 +347,9 @@ default is `origin/scooby-engine` at its tip on the execution date.
     - **On failure it reports:** the room, the stranded targets, and the
       presses that reach them or don't.
     - **Where it runs:** the debug channel and level.
+    - **Option off:** state that with Hotspot Assist off the core and the
+      listing hook never run and input is today's (§6.6, H16), and name the
+      §12.4 regression test that shows it.
 
     Say what it can't cover (states reached by play, a graph changing
     between presses), and point those at the live tests (§12.2).
@@ -444,7 +452,8 @@ plus the dashboard note at close:
 7. §5.8 holds one of item 7's three outcomes, with the graph built from
    presses only, over the directions a room leaves to the core. It shows that
    no selection is never a trap, that repeats needn't differ, and the
-   worst-case press count.
+   worst-case press count. Menu buttons and room-specific targets are
+   included (H11, H13).
 8. The repeat delay and interval (in ticks, or "never") are stated, with how
    a repeat differs from a press and how a double-reported press is handled.
    §6.3 agrees with §4.3.
@@ -458,8 +467,8 @@ plus the dashboard note at close:
     `test/module.mk` change weighed and what it means for H4.
 13. The per-room check is designed: the graph over the room's directions,
     the connectivity test, the two-order comparison, the toolbar-open state,
-    the no-selection smoke check, the failure report, and the channel and
-    level. What it can't cover is stated.
+    the no-selection smoke check, the failure report, the channel and level,
+    and the option-off statement. What it can't cover is stated.
 14. Every "proposed (H*n*)" in the plan has a matching §10.4 row, and every
     H17+ row is cited from §5, §6.3, §6.8 or §12.2. None is marked settled.
 15. `git diff --name-only main` lists only the plan page, this WP, EC-013,

@@ -12,8 +12,8 @@ title: "Hotspot Magnet — directional hotspot navigation plan"
 > same day, and H6, the cursor fallback, on 2026-11-27 after the TCL remote
 > capture. Part II is designed for the Phase 1 TerraGlyph prototype
 > ([WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md),
-> 2026-11-27), except the directional algorithm (packet 3); its new choices
-> H9–H16 wait on Jeff. Nothing here is built.
+> 2026-11-27), except the directional algorithm (packet 3); Jeff decided its
+> new choices H9–H16 the same day (H15 conditional). Nothing here is built.
 > **Date:** 2026-11-26 ([Revision history](#revision-history)). **Author:**
 > Jeff (with AI assistance).
 >
@@ -467,9 +467,9 @@ line numbers with the old ones beside them. Paths are in the fork.
 
 **Status: designed for the Phase 1 TerraGlyph prototype**
 ([WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md),
-2026-11-27), within Jeff's decisions H1–H8. Choices H1–H8 don't make are
-marked **proposed (H*n*)** and wait on Jeff in
-[§10.4](#104-open-design-decisions). §5.1–5.5, §5.7 and §5.8 (the
+2026-11-27), within Jeff's decisions H1–H8. The choices WP-089 added are
+marked with their row, (H*n*); Jeff decided H9–H16 on 2026-11-27
+([§10.4](#104-open-design-decisions)). §5.1–5.5, §5.7 and §5.8 (the
 directional algorithm) are still intent, for packet 3. Source facts are E27
 onward in [§3.8](#38-research-evidence-register), at fork `0d5a69c7694f`;
 everything is Gen 1 except the shared core and input adapter, which carry no
@@ -508,9 +508,9 @@ there, so the engine owns both the point and the click.
 | **B** | The target list, the current selection's index or none, the cursor's position, the direction, whether the press is a repeat | The index to select, or none (stay) | Shared, with no engine type; in `engines/terraglyph/` for Phase 1 (H4) | On each directional press in Magnet mode | Nothing; a pure function (4.3) |
 | **C** | Magnet's action starts and ends, the clock, each engine tick | One of: navigate (direction, repeat), activate, enter cursor mode, enter Magnet mode, nothing | Shared, with no engine type | On each Magnet action event and each engine tick | Keymapper custom engine actions (E28, E29) |
 | **D** | The point to move to | The game cursor at that point, hover and rollover updated | TerraGlyph | When the selection changes | `OSystem::warpMouse()` and a pushed `EVENT_MOUSEMOVE` (E31, E39) |
-| **E** | The selected target, or the pointer in cursor mode | A left-button press at the point, released after one game tick has seen it | TerraGlyph | On OK's short press (H6) | `handleMouse(true, p)` and `_mouseDown`, owned by the engine (E34) — proposed (H9) |
+| **E** | The selected target, or the pointer in cursor mode | A left-button press at the point, released after one game tick has seen it | TerraGlyph | On OK's short press (H6) | `handleMouse(true, p)` and `_mouseDown`, owned by the engine (E34) (H9) |
 
-**Activation** (E) — proposed (H9). After the re-check (4.4) the engine
+**Activation** (E) (H9). After the re-check (4.4) the engine
 sets `_mouseDown`, calls `handleMouse(true, p)` itself, and clears
 `_mouseDown` once at least one game tick has run with it set. That is what a
 real press does to TerraGlyph's state (the main loop sets `_mouseDown` on a
@@ -544,8 +544,7 @@ With the room, that is the selection (4.4). `HotspotInfo` gets no id, so
 H2's condition (b) isn't needed yet. **The core navigates over points
 only**: the interaction point is where the player's eye goes and where the
 click lands, and a polygon's box can be far bigger than the object it
-outlines. If packet 3's scoring needs a box, it raises H2 (b) then —
-proposed (H12).
+outlines. If packet 3's scoring needs a box, it raises H2 (b) then (H12).
 
 **The navigation core's contract for packet 3.** One pure function: given
 the targets, the current selection's index (or none), the cursor's position,
@@ -565,7 +564,7 @@ packet 3 sets (which may be "never"). The remote, a hat and a keyboard then
 behave alike: a hat never repeats and the Keymapper drops keyboard repeats
 (E29).
 
-**Room-class hooks** — proposed (H11). Some rooms aren't sprite clicks
+**Room-class hooks** (H11). Some rooms aren't sprite clicks
 ([6.8](#68-rooms-that-arent-plain-clicks)). A room class may add targets of
 its own (a point, a label, and a sprite if it has one), say whether each is
 still valid, take a directional press for itself, and let OK click with no
@@ -658,7 +657,7 @@ engine-specific scripting out of the shared navigation core.
 2. It's one of: an exit, a clickable, a requires object, an inventory
    object, a toolbar sprite (H7); or a target the room class adds through
    its hook, which for a `ButtonRoom` is each visible button
-   (`getButtonSprite()`) — proposed (H13). Without this, the main menu,
+   (`getButtonSprite()`) (H13). Without this, the main menu,
    level select, quit screen, Sign In and the clue book would have no
    targets: their buttons are room-class buttons and engine sprites, not
    those kinds. `getButtonSprite()` is on `ButtonRoom`, not `RoomClass`, so
@@ -779,9 +778,9 @@ to skip a movie (E40), so there is no secondary action.
 Magnet mode is where a game starts. At each room change the room class says
 which mode it starts in: Magnet by default, cursor mode for the rooms 6.8
 plays with the pointer, and a close-up or Big Head keeps the mode the player
-was in — proposed (H10). A child who drifts into cursor mode is brought back
+was in (H10). A child who drifts into cursor mode is brought back
 at the next ordinary room. The threshold is **600 ms**: over Android's
-400 ms repeat start (E26), short enough not to feel stuck — proposed (H10),
+400 ms repeat start (E26), short enough not to feel stuck (H10),
 to be tuned in the user-experience tests (12.6).
 
 **Off the TV.** The D-pad moves the Virtual Mouse only because Android binds
@@ -832,7 +831,7 @@ final mapping. This is a Phase 1 acceptance criterion
   (E2, E3; off the TV, see 6.1). OK stays bound, because it's in a second
   keymap that stays enabled: the Virtual Mouse has no click (E4), and
   `setEnabled()` works on a whole keymap (E28). This refines H1, whose
-  "turning it off is the fallback" would also unbind OK — proposed (H16).
+  "turning it off is the fallback" would also unbind OK (H16).
 
 #### 6.3 Standard TV remote limitations
 
@@ -858,9 +857,11 @@ final mapping. This is a Phase 1 acceptance criterion
 - **The test-build gesture** (E33). Test builds of the TV app (WP-085) open
   their hidden advanced mode on up, down, up, down, left, right, left, right
   within 10 s, swallowing the last right. A player moving between hotspots
-  could make it. Release builds don't have it. Proposed (H15): live with it
-  in test builds and tell testers; changing the gesture is WP-085's
-  successor's call, not Magnet's.
+  could make it. Release builds don't have it. H15 (conditional): the
+  gesture stays for testing but must not unexpectedly interrupt Magnet
+  navigation. Disabling it while Magnet mode is active is investigated
+  (14.3); if that needs disproportionate changes, the conflict is documented
+  as a temporary test-build limitation. Release builds stay unaffected.
 - Android TV system-reserved buttons.
 - Long-press detection reliability.
 - Button conflicts.
@@ -868,7 +869,7 @@ final mapping. This is a Phase 1 acceptance criterion
 
 #### 6.4 Gamepad and keyboard support
 
-**The keymaps** (H1, WP-089) — the structure is proposed (H16). TerraGlyph
+**The keymaps** (H1, WP-089) — the structure is H16's. TerraGlyph
 declares no keymap today, so it gets ScummVM's default game keymap, which
 binds the D-pad to keypad arrow keys that the engine ignores (E27). Its own
 `initKeymaps()` replaces that default, so:
@@ -908,7 +909,7 @@ binds the D-pad to keypad arrow keys that the engine ignores (E27). Its own
 
 #### 6.5 Visual feedback
 
-**Phase 1** (WP-089) — proposed (H14):
+**Phase 1** (WP-089) (H14):
 
 - **The selection** is the game's own cursor at the interaction point, with
   its rollover cursor, and a `ButtonRoom` button's hover sound, exactly as
@@ -982,14 +983,14 @@ isn't practical (an inference about the remote's layout).
 | Brad's game (*Phantom*) | Press on a piece, drag it its way more than 60 px, release | **Not playable** on the remote |
 | The vault's clock (*Showdown*) | Press on a hand, circle the pointer while held, release | **Not playable** on the remote |
 
-**Proposed (H11):** room-class hooks (4.3), with one assist per room in its
+**H11:** room-class hooks (4.3), with one assist per room in its
 own later packet: the hook adds the room's own targets, and a directional
 press in Magnet mode is passed to the class first, so a knob or a clock hand
 turns with left and right, and a piece of Brad's armour comes off with the
-direction it needs. The assists aren't designed here and no packet is
-scheduled for them yet (14.3). Until each lands, that room is played with a
-mouse, or a gamepad holding `JOY_X` (left click, 6.4) and steering with the
-stick, and the gap is listed in the Phase 1 results.
+direction it needs. The assists aren't designed here; they're packet 16 in
+§11. Until each lands, that room is tracked as **unsupported by the standard remote**: it's
+played with a mouse, or a gamepad holding `JOY_X` (left click, 6.4) and
+steering with the stick, and the gap is listed in the Phase 1 results.
 
 ---
 
@@ -1052,7 +1053,12 @@ tab, and the same self-test results.
 - **Reachability** ([5.8](#58-hotspot-reachability)): every eligible
   interactive hotspot is reachable through a finite sequence of D-pad inputs,
   and the navigation algorithm never traps the player within a subset of
-  hotspots. Checked for every room's starting state in both Gen 1 titles.
+  hotspots, with the standard TV remote, menu buttons and room-specific
+  targets included (H11, H13). Checked for every room's starting state in
+  both Gen 1 titles.
+- The Options knobs, Brad's game and the vault's clock are listed as
+  unsupported by the standard remote until their assists (packet 16, H11)
+  land.
 - A hotspot that disappears or is disabled is never activatable, even while
   selected (H8).
 - A long OK press never activates a hotspot (H6).
@@ -1194,8 +1200,14 @@ Rank by severity × likelihood once the research is done.
 
 A living decision register. The recommendations are WP-086's proposals. Jeff
 decided H1–H5, H7 and H8 on 2026-11-26, and H6 on 2026-11-27 after the
-remote capture ([3.2](#32-android-tv-and-gamepad-input)). Status is Jeff's word for each:
-Approved, Approved for prototype, Provisional, or Pending.
+remote capture ([3.2](#32-android-tv-and-gamepad-input)). H9–H16 are WP-089's proposals; Jeff
+decided them on 2026-11-27. Status is Jeff's word for each, and what's
+still provisional is said in its resolution.
+
+With H9–H16 Jeff carried one requirement forward: every eligible hotspot,
+menu buttons and room-specific targets included, stays reachable with the
+standard TV remote, with no subset of targets the player can't leave
+([5.8](#58-hotspot-reachability), [7.6](#76-phase-1-acceptance-criteria)).
 
 | # | Question | Alternatives | Recommendation | Evidence | Status | Resolution |
 |---|---|---|---|---|---|---|
@@ -1207,14 +1219,14 @@ Approved, Approved for prototype, Provisional, or Pending.
 | H6 | Cursor-mode fallback on the remote | (a) hold OK, timed from press to release, with a short press activating on release; (b) BACK or MENU | **(a).** BACK and MENU are taken (skip, main menu, keyboard). The capture supports it: the remote sends one press and one release for a held OK, and Android's repeats (every 50 ms after 400 ms) can be ignored while the button is down. Proposed: a short press activates on release; a hold past a threshold (over 400 ms, so it's a deliberate hold) enters cursor mode, and its release activates nothing | E7, E8, E22, E25, E26 | **Approved** (2026-11-27) | (a), hold OK: a short press activates on release; a hold past a threshold over 400 ms enters cursor mode and its release activates nothing; repeated downs while OK is held are ignored. A long press must never activate a hotspot, and the fallback works on the standard remote with no extra hardware. The input integration packet confirms the event sequence inside ScummVM on the TV (E26's open item) |
 | H7 | TerraGlyph eligibility | The rule in 3.5, with or without characters | **The rule in 3.5, without characters at first** | E18–E20 | **Approved** (2026-11-26) | The rule in 3.5: only objects that are visible, eligible and hittable now. Characters come later, once their click behavior is verified |
 | H8 | Hotspot refresh | (a) query on each press; (b) every frame, as the display does | **(a)**: navigation only needs the targets when a key is pressed | E13 | **Approved** (2026-11-26) | (a), refresh on directional input. Also invalidate the current selection when game state changes: a hotspot that disappears or is disabled must never stay activatable |
-| H9 | Activation (4.2 E) | (a) push `EVENT_LBUTTONDOWN` and `EVENT_LBUTTONUP` through the event queue; (b) call `handleMouse(false, p)` then `handleMouse(true, p)`, as `test_script`'s `click`; (c) the engine sets `_mouseDown`, calls `handleMouse(true, p)` itself, and clears `_mouseDown` after one game tick has seen it | **(c)**: it gives the rooms that read the held button (the corral, Pie Noon, `ButtonRoom`'s pressed frame) a real press, which (b) doesn't; and unlike (a) its release can't be lost, since a movie's event loop drops releases and `warpMouse()` purges queued mouse events, which would leave `_mouseDown` stuck. Ticks are counted in the tick loop (36/s), not frames (60/s) | E31, E34, E35, E40, E41 | Proposed (WP-089) | — |
-| H10 | Starting mode and hold threshold (6.1) | Mode: (a) the room class says its starting mode, Magnet by default and cursor mode for the pointer rooms of 6.8, with close-ups and Big Head keeping the player's mode; (b) Magnet at every room change; (c) keep the mode across rooms. Threshold: 600 ms, or another value over 400 ms | **(a) and 600 ms**, tuned in the user-experience tests (12.6). (b) would throw a child out of cursor mode at every close-up | E26, E29, E35, E38 | Proposed (WP-089) | — |
-| H11 | Rooms that aren't plain clicks (6.8) | (a) room-class hooks (own targets, a direction for the class, a click with no target, a starting mode), with one assist per room in its own later packet; (b) cursor mode only, and the three hold-and-drag rooms left to a mouse or a gamepad; (c) a drag lock in cursor mode | **(a)**: the Options knobs, Brad's game and the vault's clock can't be played on the remote any other way, since OK sits inside the D-pad ring. The assists aren't designed yet and need a packet in §11 (14.3); until each lands, its room is a Phase 1 gap, playable with a mouse or a gamepad holding `JOY_X` | E35 | Proposed (WP-089) | — |
-| H12 | Identity and geometry (4.3) | (a) an identity (source, index) beside the list, and points only; (b) an id or a box on the shared record (H2's (b)) | **(a)**: `HotspotInfo` unchanged; packet 3 raises (b) if its scoring needs a box | E12, E18 | Proposed (WP-089) | — |
-| H13 | Room-class targets (4.6) | Extend H7's kinds with the targets a room class adds (a `ButtonRoom`'s visible buttons), or keep H7's kinds only | **Extend**: without it the main menu, level select, quit screen, Sign In and the clue book have no targets. H7's click gate and its other conditions still apply | E36 | Proposed (WP-089) | — |
-| H14 | Feedback (6.5) | (a) the game's own cursor and rollover, no marker, and the mode shown by behavior; (b) a one-item marker from ScummVM's hotspot renderer in Magnet mode | **(a) for Phase 1**, with (b) next if the user-experience tests show children can't tell the modes apart | E32 | Proposed (WP-089) | — |
-| H15 | The test-build gesture (6.3) | Live with it in test builds and tell testers; ask WP-085's successor to change the gesture | **Live with it**: release builds don't have it, and the gesture is WP-085's | E33 | Proposed (WP-089) | — |
-| H16 | Keymap structure (6.4); refines H1 | (a) three keymaps: the default without the directions and with `JOY_A` moved to OK and `JOY_X` to left click, OK always on, the directions in Magnet mode only; the default unchanged when the option is off; (b) one Magnet keymap toggled whole, as H1's wording has it | **(a)**: turning one whole keymap off, as H1 says, would also unbind OK in cursor mode, where the Virtual Mouse can't click; and a direction left in an always-on keymap would keep the Virtual Mouse from the D-pad. H1's intent, that the D-pad goes back to the pointer, is kept | E4, E27, E28, E44 | Proposed (WP-089) | — |
+| H9 | Activation (4.2 E) | (a) push `EVENT_LBUTTONDOWN` and `EVENT_LBUTTONUP` through the event queue; (b) call `handleMouse(false, p)` then `handleMouse(true, p)`, as `test_script`'s `click`; (c) the engine sets `_mouseDown`, calls `handleMouse(true, p)` itself, and clears `_mouseDown` after one game tick has seen it | **(c)**: it gives the rooms that read the held button (the corral, Pie Noon, `ButtonRoom`'s pressed frame) a real press, which (b) doesn't; and unlike (a) its release can't be lost, since a movie's event loop drops releases and `warpMouse()` purges queued mouse events, which would leave `_mouseDown` stuck. Ticks are counted in the tick loop (36/s), not frames (60/s) | E31, E34, E35, E40, E41 | **Approved** (2026-11-27) | (c), an engine-managed press and release through the existing click path. The release is guaranteed, including during room transitions, cutscenes and interruptions. Provisional: whether the one-tick release satisfies the rooms that need a held button is verified in implementation |
+| H10 | Starting mode and hold threshold (6.1) | Mode: (a) the room class says its starting mode, Magnet by default and cursor mode for the pointer rooms of 6.8, with close-ups and Big Head keeping the player's mode; (b) Magnet at every room change; (c) keep the mode across rooms. Threshold: 600 ms, or another value over 400 ms | **(a) and 600 ms**, tuned in the user-experience tests (12.6). (b) would throw a child out of cursor mode at every close-up | E26, E29, E35, E38 | **Approved, provisional timing** (2026-11-27) | (a), room-specific starting modes, with close-ups and Big Head keeping the player's mode. 600 ms is the initial long-press threshold, provisional, subject to TCL remote testing and usability validation |
+| H11 | Rooms that aren't plain clicks (6.8) | (a) room-class hooks (own targets, a direction for the class, a click with no target, a starting mode), with one assist per room in its own later packet; (b) cursor mode only, and the three hold-and-drag rooms left to a mouse or a gamepad; (c) a drag lock in cursor mode | **(a)**: the Options knobs, Brad's game and the vault's clock can't be played on the remote any other way, since OK sits inside the D-pad ring. The assists aren't designed yet and need a packet in §11 (14.3); until each lands, its room is a Phase 1 gap, playable with a mouse or a gamepad holding `JOY_X` | E35 | **Approved** (2026-11-27) | (a), room-specific assist hooks, with a dedicated packet for special-room accessibility (§11, packet 16). The Options knobs, Brad's game and the vault's clock are tracked as unsupported by the standard remote until their assists are implemented |
+| H12 | Identity and geometry (4.3) | (a) an identity (source, index) beside the list, and points only; (b) an id or a box on the shared record (H2's (b)) | **(a)**: `HotspotInfo` unchanged; packet 3 raises (b) if its scoring needs a box | E12, E18 | **Approved** (2026-11-27) | (a), points with separate stable target identities. ScummVM's hotspot record stays unchanged at first; the interface is revisited only if WP-091 shows a concrete need |
+| H13 | Room-class targets (4.6) | Extend H7's kinds with the targets a room class adds (a `ButtonRoom`'s visible buttons), or keep H7's kinds only | **Extend**: without it the main menu, level select, quit screen, Sign In and the clue book have no targets. H7's click gate and its other conditions still apply | E36 | **Approved** (2026-11-27) | Extend. Menu buttons are eligible targets whenever they are visible and accept interaction, under the same eligibility checks as every other hotspot |
+| H14 | Feedback (6.5) | (a) the game's own cursor and rollover, no marker, and the mode shown by behavior; (b) a one-item marker from ScummVM's hotspot renderer in Magnet mode | **(a) for Phase 1**, with (b) next if the user-experience tests show children can't tell the modes apart | E32 | **Approved** (2026-11-27) | (a) for Phase 1. The usability tests (12.6) must establish whether children can tell Magnet mode from free-pointer mode; if they can't, add an explicit selection or mode indicator |
+| H15 | The test-build gesture (6.3) | Live with it in test builds and tell testers; ask WP-085's successor to change the gesture | **Live with it**: release builds don't have it, and the gesture is WP-085's | E33 | **Conditional** (2026-11-27) | Not "live with it" as proposed. Keep WP-085's diagnostic gesture, but it must not unexpectedly interrupt normal Magnet navigation. Investigate disabling it while Magnet mode is active; if that needs disproportionate changes, document the conflict as a temporary test-build limitation. Release builds must be unaffected. WP-091 is not expanded for it |
+| H16 | Keymap structure (6.4); refines H1 | (a) three keymaps: the default without the directions and with `JOY_A` moved to OK and `JOY_X` to left click, OK always on, the directions in Magnet mode only; the default unchanged when the option is off; (b) one Magnet keymap toggled whole, as H1's wording has it | **(a)**: turning one whole keymap off, as H1 says, would also unbind OK in cursor mode, where the Virtual Mouse can't click; and a direction left in an always-on keymap would keep the Virtual Mouse from the D-pad. H1's intent, that the D-pad goes back to the pointer, is kept | E4, E27, E28, E44 | **Approved, subject to input testing** (2026-11-27) | (a), three keymaps. Required: Magnet mode captures directional navigation; free-pointer mode restores conventional D-pad movement; OK works in both modes; turning Hotspot Assist off restores the existing input behavior; no button is left permanently unavailable after a mode switch. Provisional: keymap precedence and activation are verified in implementation |
 
 ### 11. Development work packets
 
@@ -1240,9 +1252,11 @@ in the packets. Numbers are assigned when each packet is drafted.
 | 13 | SCUMM maintainer consultation | — |
 | 14 | SCUMM/HE prototype | — |
 | 15 | Shared code proposal | — |
+| 16 | Special-room accessibility: room assists for the Options knobs, Brad's game and the vault's clock ([6.8](#68-rooms-that-arent-plain-clicks), H11) | — |
 
 The two research packets of the first draft are one, and the directional
 algorithm is split into its design with test cases and its implementation.
+Packet 16 was added with Jeff's H11 (2026-11-27).
 
 Each packet includes: goal, prerequisites, files touched, design constraints,
 hand-written implementation tasks, test procedure, done-when criteria, and
@@ -1409,13 +1423,19 @@ Requirements adopted on 2026-11-26 from the review:
    the §10.4 decisions and the remote capture.
 6. ~~Run WP-089~~ ✅ 2026-11-27: Part II designed except the algorithm;
    evidence E27–E44, proposals H9–H16.
-7. Jeff decides H9–H16 in [§10.4](#104-open-design-decisions).
+7. ~~Jeff decides H9–H16~~ ✅ 2026-11-27 in [§10.4](#104-open-design-decisions):
+   all approved except H15, which is conditional; H10's timing and H16's
+   keymap behavior are provisional.
 8. ~~Draft the directional algorithm packet~~ 📝 2026-11-27:
    [WP-091](../work-packets/WP-091-hotspot-magnet-algorithm.md) (§11, packet 3), against the core's
    contract ([4.3](#43-interfaces)) and the target-listing hook
    ([12.7](#127-test-hooks)).
-9. Add a packet for the room assists of [6.8](#68-rooms-that-arent-plain-clicks)
-   to §11, if Jeff takes H11.
+9. ~~Add a packet for the room assists~~ ✅ 2026-11-27: packet 16 in §11
+   (H11), for the rooms of [6.8](#68-rooms-that-arent-plain-clicks).
+10. Run WP-091.
+11. Investigate disabling the test-build D-pad gesture while Magnet mode is
+    active (H15), with the input integration (packet 6). Release builds must
+    stay unaffected.
 
 ### 15. Appendices
 
@@ -1555,7 +1575,7 @@ public:
 	Common::Rect getHitBox(int sprite) const;
 };
 
-class RoomClass {  // proposed (H11); ButtonRoom implements addNavTargets (H13)
+class RoomClass {  // H11; ButtonRoom implements addNavTargets (H13)
 public:
 	struct NavTarget {
 		Common::Point point;
@@ -1618,3 +1638,4 @@ it stays unresolved.
 | 2026-11-27 | Packet 2 drafted as [WP-089](../work-packets/WP-089-hotspot-magnet-interface-design.md) (11, 14.3). |
 | 2026-11-27 | WP-089 run: Part II designed for the Phase 1 TerraGlyph prototype (4.2–4.6, 5.6, 6.1–6.6, the new 6.8 and 12.7, 7.4, Appendices B and D), evidence E27–E44 at fork `0d5a69c7694f`, proposals H9–H16. Corrected 3.2: ScummVM's default game keymap, which TerraGlyph has today, binds the D-pad to keypad keys (E27). A cold review of the design then corrected it before close: activation owns its press (H9), the click gate and an item in hand are in the filter (4.6), repeats are the adapter's own, and off the TV the D-pad doesn't reach the Virtual Mouse (6.1, E44). E3, E8 and E9 cite `android.cpp`'s new line numbers. |
 | 2026-11-27 | Packet 3 drafted as [WP-091](../work-packets/WP-091-hotspot-magnet-algorithm.md) (§11, §14.3). |
+| 2026-11-27 | Jeff's decisions on H9–H16 (10.4): H9 and H11–H14 approved, H10 approved with provisional timing, H16 approved subject to input testing, H15 conditional, each with his conditions. Reachability with the standard remote, menu buttons and room targets included, carried forward (7.6). Packet 16, the room assists, added to §11; §14.3 updated. |
